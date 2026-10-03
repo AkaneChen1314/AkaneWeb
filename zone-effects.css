@@ -1,0 +1,505 @@
+/*
+ * 分區動畫與表情觀察室。
+ * 背景全部固定定位，不佔內容空間，也不攔截滑鼠與觸控。
+ * 調整 opacity 改變透明度；調整 mask-image 改變圖片的柔邊範圍。
+ */
+body[data-zone-view] .edge-film[data-edge-zone] {
+  display: block;
+}
+.edge-film[data-edge-zone] {
+  display: block;
+  top: 15vh;
+  right: -170px;
+  width: 560px;
+  height: 560px;
+  opacity: 0.22;
+  filter: saturate(1.15);
+  -webkit-mask-image: radial-gradient(ellipse, #000 12%, transparent 70%);
+  mask-image: radial-gradient(ellipse, #000 12%, transparent 70%);
+}
+.edge-film[data-edge-zone][hidden] {
+  display: none;
+}
+.edge-film[data-edge-zone="akane"] {
+  top: 30vh;
+  opacity: 0.24;
+}
+.edge-film[data-edge-zone="games"] {
+  top: 12vh;
+  right: -185px;
+  width: 550px;
+  height: 640px;
+  opacity: 0.23;
+}
+.edge-film.game-companion {
+  top: auto;
+  right: auto;
+  left: -68px;
+  bottom: 1vh;
+  width: 330px;
+  height: 285px;
+  opacity: 0.38;
+  -webkit-mask-image: radial-gradient(ellipse, #000 15%, transparent 70%);
+  mask-image: radial-gradient(ellipse, #000 15%, transparent 70%);
+}
+.ambient-motion-toggle {
+  position: fixed;
+  z-index: 8;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  right: 18px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 10px 15px;
+  border: 1px solid #9cbcf242;
+  border-radius: 30px;
+  background: #10263de8;
+  color: #d5e9f6;
+  font-size: 12px;
+  box-shadow: 0 4px 18px #030a2066;
+}
+.ambient-motion-toggle span {
+  color: #8ee0e8;
+}
+.ambient-motion-toggle:hover {
+  background: #204462;
+}
+body.playing .ambient-motion-toggle {
+  display: none;
+}
+.actor-room {
+  margin: 70px 0 60px;
+  scroll-margin-top: 24px;
+}
+.actor-room-layout {
+  display: grid;
+  grid-template-columns: 1.08fr 1fr;
+  overflow: hidden;
+  border: 1px solid #8999d945;
+  border-radius: 24px;
+  background:
+    radial-gradient(ellipse at 85% 0, #4b347b50, transparent 65%),
+    linear-gradient(125deg, #183853c9, #11273bdb);
+}
+.actor-room-art {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+  display: grid;
+  align-items: center;
+  overflow: hidden;
+}
+.actor-room-art img {
+  width: 100%;
+  height: 100%;
+  min-height: 340px;
+  object-fit: cover;
+  -webkit-mask-image: linear-gradient(90deg, #000 75%, transparent);
+  mask-image: linear-gradient(90deg, #000 75%, transparent);
+}
+.actor-room-art figcaption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 35px 24px 21px;
+  background: linear-gradient(transparent, #091727bf);
+  color: #d1e9ef;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+.actor-room-copy {
+  min-width: 0;
+  padding: 30px 32px;
+}
+.actor-room-choices {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.actor-room-choices button {
+  min-height: 44px;
+  padding: 8px 13px;
+  border: 1px solid #96b5d23d;
+  border-radius: 30px;
+  background: #11253c80;
+  color: #bbd6e7;
+  font-size: 12px;
+}
+.actor-room-choices button[aria-pressed="true"] {
+  background: linear-gradient(110deg, #aaa0ed, #81dce3);
+  border-color: transparent;
+  color: #09233c;
+}
+.actor-room-note {
+  min-height: 190px;
+  padding-top: 25px;
+}
+.actor-room-note .eyebrow {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #8bd3e4;
+}
+.actor-room-note h3 {
+  margin: 10px 0 16px;
+  font-size: clamp(22px, 2vw, 28px);
+  line-height: 1.5;
+}
+.actor-room-note > p:last-child {
+  color: #b4cadc;
+  font-size: 13px;
+  line-height: 1.95;
+}
+.actor-room-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 15px;
+}
+.little-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+  margin-top: 17px;
+}
+.little-facts details {
+  padding: 19px;
+  border: 1px solid #829ac633;
+  border-radius: 15px;
+  background: linear-gradient(140deg, #26394e8c, #0b233c9c);
+}
+.little-facts summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  gap: 12px;
+  cursor: pointer;
+  color: #d6e5f0;
+  font-size: 13px;
+  list-style: none;
+}
+.little-facts summary::-webkit-details-marker {
+  display: none;
+}
+.little-facts summary span {
+  color: #88bdd6;
+  font-size: 20px;
+  font-weight: 300;
+}
+.little-facts summary b {
+  margin-left: auto;
+  color: #a8ccdf;
+  font-size: 17px;
+  font-weight: 400;
+  transition: transform 0.2s;
+}
+.little-facts details[open] summary b {
+  transform: rotate(45deg);
+}
+.little-facts details p {
+  margin: 14px 0;
+  color: #adcadc;
+  font-size: 12px;
+  line-height: 1.9;
+}
+.actor-room-footnote {
+  margin-top: 14px;
+  color: #86a2b9;
+  font-size: 11px;
+}
+@media (max-width: 900px) {
+  .actor-room-layout {
+    grid-template-columns: 1fr;
+  }
+  .actor-room-art img {
+    min-height: 0;
+    aspect-ratio: 16 / 9;
+    -webkit-mask-image: linear-gradient(#000 75%, transparent);
+    mask-image: linear-gradient(#000 75%, transparent);
+  }
+  .actor-room-note {
+    min-height: 0;
+  }
+  .little-facts {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+@media (max-width: 680px) {
+  .edge-film[data-edge-zone] {
+    top: 27vh;
+    right: -115px;
+    width: 290px;
+    height: 390px;
+    opacity: 0.12;
+  }
+  .edge-film.game-companion {
+    top: auto;
+    right: auto;
+    left: -38px;
+    bottom: 12vh;
+    width: 185px;
+    height: 165px;
+    opacity: 0.22;
+  }
+  .actor-room {
+    margin-top: 44px;
+  }
+  .actor-room-copy {
+    padding: 20px;
+  }
+  .actor-room-choices {
+    gap: 6px;
+  }
+  .actor-room-choices button {
+    font-size: 11px;
+    padding: 8px 10px;
+  }
+  .actor-room-actions {
+    gap: 12px;
+  }
+  .little-facts details {
+    padding: 13px 17px;
+  }
+  .ambient-motion-toggle {
+    right: 12px;
+    padding: 8px 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .little-facts summary b {
+    transition: none;
+  }
+}
+
+/* 左右背景影片使用同一個柔邊遮罩，不佔內容欄位。 */
+.edge-film.edge-left {
+  right: auto;
+  left: -170px;
+  top: 35vh;
+  width: 560px;
+  height: 520px;
+  opacity: 0.22;
+}
+.special-room {
+  margin: 60px 0;
+  scroll-margin-top: 24px;
+}
+.special-art-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+.special-art-card {
+  overflow: hidden;
+  border: 1px solid #b6b9ff30;
+  border-radius: 24px;
+  background: linear-gradient(145deg, #162c44, #231d3b);
+}
+.special-art-image {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.special-art-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1.44;
+  object-fit: cover;
+  mask-image: linear-gradient(#000 80%, transparent);
+  transition: filter 0.25s;
+}
+.special-art-image:hover img {
+  filter: saturate(1.12) brightness(1.05);
+}
+.special-art-copy {
+  padding: 8px 27px 27px;
+}
+.special-art-copy .eyebrow {
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+.special-art-copy h3 {
+  font-size: 23px;
+  margin: 10px 0;
+}
+.special-art-copy > p:not(.eyebrow) {
+  font-size: 13px;
+  line-height: 1.9;
+  color: #b5cadc;
+}
+button.text-link {
+  min-height: 44px;
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.chibi-postcard {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 0.62fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 22px;
+  margin-top: 22px;
+  padding: 26px;
+  border: 1px solid #a9b8ff30;
+  border-radius: 24px;
+  background: linear-gradient(120deg, #19384b, #282147);
+}
+.chibi-image-button {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 22px;
+  background: transparent;
+  overflow: hidden;
+  cursor: pointer;
+}
+.chibi-image-button img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  mask-image: radial-gradient(ellipse, #000 55%, transparent 76%);
+}
+.chibi-tap {
+  position: absolute;
+  bottom: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 12px;
+  border-radius: 30px;
+  white-space: nowrap;
+  background: #0a182be6;
+  color: #c8efff;
+  font-size: 12px;
+}
+.chibi-copy h3 {
+  font-size: clamp(23px, 3vw, 31px);
+}
+.chibi-copy > p:not(.eyebrow) {
+  max-width: 480px;
+  font-size: 13px;
+  line-height: 1.9;
+}
+.chibi-star-note {
+  min-height: 26px;
+  margin-top: 14px;
+  color: #b2e7ff;
+}
+.chibi-spark {
+  position: absolute;
+  bottom: 25px;
+  left: var(--spark-x);
+  pointer-events: none;
+  color: #b8edff;
+  font-size: 25px;
+  animation: chibi-spark-rise 1.1s ease-out forwards;
+}
+@keyframes chibi-spark-rise {
+  from {
+    opacity: 0.8;
+    transform: translateY(0) rotate(-10deg);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-100px) rotate(20deg);
+  }
+}
+.special-viewer {
+  width: min(1020px, calc(100vw - 30px));
+  max-height: 92dvh;
+  padding: 0;
+  overflow: auto;
+  border: 1px solid #aac6ff55;
+  border-radius: 20px;
+  background: #0c1b30;
+  color: #eaf4ff;
+}
+.special-viewer::backdrop {
+  background: #020814db;
+}
+.special-viewer > img {
+  display: block;
+  width: 100%;
+  max-height: 68dvh;
+  object-fit: contain;
+  background: #081327;
+}
+.special-viewer-info {
+  padding: 21px 25px;
+}
+.special-viewer-info h2 {
+  font-size: 23px;
+}
+.special-viewer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+.special-viewer-actions .soft-button {
+  min-width: 44px;
+}
+.gallery-toolbar {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+#random-gallery-image {
+  min-height: 44px;
+}
+#random-gallery-image:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+@media (max-width: 680px) {
+  .edge-film.edge-left {
+    left: -112px;
+    top: 37vh;
+    width: 290px;
+    height: 370px;
+    opacity: 0.11;
+  }
+  .special-art-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .special-art-copy {
+    padding: 8px 20px 20px;
+  }
+  .special-art-copy h3 {
+    font-size: 21px;
+  }
+  .chibi-postcard {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 19px;
+    gap: 17px;
+  }
+  .chibi-image-button {
+    max-width: 250px;
+  }
+  .special-viewer-info {
+    padding: 19px;
+  }
+  .special-viewer-actions {
+    gap: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .special-art-image img {
+    transition: none;
+  }
+  .chibi-spark {
+    animation: none;
+  }
+}

@@ -1,0 +1,580 @@
+/* Blue World 1.2 / r10
+ * 最終視覺調整集中在此，既有專區與遊戲保持獨立。
+ * 使用 CSS 繪製光環、海平線與柔光，沒有新增重複角色照片。
+ */
+:root {
+  --world-light: #79d5ff;
+  --world-second: #a294fa;
+  --world-pink: #e8adce;
+}
+body[data-world-tone="twilight"] {
+  --world-light: #b5afff;
+  --world-second: #ce8acb;
+  --world-pink: #8edcf1;
+}
+body[data-world-tone="petal"] {
+  --world-light: #a2e4ef;
+  --world-second: #eeabc9;
+  --world-pink: #b6afff;
+}
+body:not(.playing) {
+  overflow-x: clip;
+  background:
+    radial-gradient(ellipse at 75% 8%, #423c762d, transparent 44%),
+    radial-gradient(ellipse at 0% 25%, #18466d47, transparent 46%), #071523;
+}
+::selection {
+  color: #071523;
+  background: #9bdfff;
+}
+.site-header {
+  border-bottom: 1px solid #a4cafa20;
+  margin-bottom: 25px;
+}
+.brand {
+  font-size: 19px;
+  letter-spacing: 2.5px;
+}
+.brand-symbol {
+  color: var(--world-light);
+  text-shadow: 0 0 28px #8cbdfa60;
+}
+.site-header nav {
+  gap: 12px;
+}
+.site-header nav a {
+  padding: 8px 16px;
+  border-radius: 30px;
+  transition:
+    color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+.site-header nav a[aria-current="page"] {
+  background: linear-gradient(120deg, #758ce327, #4dbada17);
+  box-shadow: inset 0 0 0 1px #97c8ed35;
+}
+.blue-hour-hero {
+  min-height: 750px;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 44px;
+  padding-top: 30px;
+  padding-bottom: 48px;
+}
+.blue-hour-hero::before {
+  inset: 1% -3% 2% 22%;
+  opacity: 1;
+  background:
+    radial-gradient(
+      ellipse at 68% 26%,
+      color-mix(in srgb, var(--world-second) 28%, transparent),
+      transparent 48%
+    ),
+    radial-gradient(
+      ellipse at 45% 70%,
+      color-mix(in srgb, var(--world-light) 22%, transparent),
+      transparent 57%
+    ),
+    radial-gradient(ellipse at 90% 80%, #eaaecb18, transparent 48%);
+}
+.blue-hour-hero .hero-type h1 {
+  margin-top: 21px;
+  margin-bottom: 14px;
+}
+.blue-hour-hero .hero-type h1 strong.world-title {
+  position: relative;
+  display: block;
+  width: fit-content;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(82px, 8.4vw, 122px);
+  line-height: 0.88;
+  letter-spacing: -5px;
+  font-weight: 400;
+  background: linear-gradient(
+    130deg,
+    #e1f3ff 12%,
+    var(--world-light) 43%,
+    var(--world-second) 79%,
+    #ffcfe5
+  );
+  background-clip: text;
+  filter: none;
+}
+.world-title-star {
+  position: absolute;
+  right: -56px;
+  top: 12px;
+  font-size: 38px;
+  color: var(--world-light);
+  -webkit-text-fill-color: var(--world-light);
+  text-shadow: 0 0 35px #aebaf260;
+}
+.blue-hour-hero .hero-type h1 .hero-poetry {
+  font-size: clamp(22px, 2.3vw, 30px);
+  margin-top: 27px;
+  letter-spacing: 2px;
+  line-height: 1.7;
+}
+.blue-hour-hero .hero-japanese {
+  font-size: 20px;
+  color: #cceafb;
+}
+.blue-hour-hero .archive-intro {
+  max-width: 420px;
+  line-height: 1.9;
+}
+.blue-hour-hero .hero-about {
+  margin-top: 23px;
+  border-color: #7fd5ef40;
+}
+.blue-hour-hero .hero-about h2 {
+  font-size: 17px;
+}
+.blue-hour-hero .hero-stage {
+  min-height: 650px;
+  position: relative;
+}
+.blue-hour-hero .hero-character {
+  height: 650px;
+  padding-top: 35px;
+}
+.blue-hour-hero .hero-character img {
+  height: 555px;
+  position: relative;
+  z-index: 2;
+}
+.blue-hour-hero .hero-character figcaption {
+  opacity: 0.75;
+}
+.blue-hour-hero .character-signature {
+  bottom: 10px;
+  z-index: 3;
+}
+.blue-hour-hero .stage-ring {
+  width: min(100%, 540px);
+  border-color: #c2b8ff36;
+  box-shadow:
+    0 0 80px #547ed514,
+    inset 0 0 55px #aa8adb10;
+}
+.world-orbit-label {
+  position: absolute;
+  z-index: 1;
+  top: 44px;
+  right: 0;
+  font:
+    9px/1.5 Arial,
+    sans-serif;
+  letter-spacing: 3px;
+  writing-mode: vertical-rl;
+  color: #a9bedb;
+}
+.world-horizon {
+  position: absolute;
+  bottom: 13%;
+  left: -20%;
+  width: 136%;
+  height: 18%;
+  border: 1px solid #90cee648;
+  border-radius: 50%;
+  transform: rotate(-12deg);
+  background: linear-gradient(180deg, transparent 50%, #99a7e610);
+  box-shadow: 0 12px 40px #839af91a;
+  pointer-events: none;
+}
+.hero-notes {
+  /* 用整組卡片的中心對齊主視覺，避免三張卡片沉到封面底部。 */
+  top: 50%;
+  transform: translateY(-50%);
+  left: 42%;
+  width: 156px;
+  gap: 8px;
+}
+.hero-notes-label {
+  font-size: 7px;
+  line-height: 1.8;
+}
+.hero-collection-note {
+  padding: 13px;
+  border-radius: 12px 25px 12px 12px;
+}
+.hero-collection-note h3 {
+  font-size: 13px;
+}
+.hero-collection-note p {
+  font-size: 10px;
+}
+.hero-collection-note:nth-of-type(2) {
+  transform: translateX(8px);
+}
+.blue-hour-hero .stage-index {
+  bottom: 5%;
+  right: 0;
+  letter-spacing: 2px;
+}
+.world-palette-bar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px 30px;
+  align-items: center;
+  padding: 25px 30px;
+  margin: 4px 0 65px;
+  border-top: 1px solid #a2c7e940;
+  border-bottom: 1px solid #a2c7e921;
+  background: linear-gradient(110deg, #657dcc16, transparent 65%);
+}
+.world-palette-bar .eyebrow {
+  font-size: 8px;
+  color: var(--world-light);
+}
+.world-palette-bar p {
+  margin: 5px 0 0;
+  font-size: 16px;
+}
+.world-palette-bar > p {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: #8da9c0;
+}
+.world-tones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.world-tones button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  border-radius: 30px;
+  border: 1px solid #9abbef29;
+  background: #17304b60;
+  color: #bbd2e6;
+  min-height: 44px;
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    transform 180ms ease;
+}
+.world-tones i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: linear-gradient(130deg, #7ccfff, #9286de);
+}
+[data-world-tone="twilight"] i {
+  background: linear-gradient(130deg, #b6b0ff, #df8ab8);
+}
+[data-world-tone="petal"] i {
+  background: linear-gradient(130deg, #99e3ff, #f0accb);
+}
+.world-tones button[aria-pressed="true"] {
+  border-color: var(--world-light);
+  color: #f0f7ff;
+  background: linear-gradient(120deg, #6f8ee132, #55c8da24);
+  box-shadow: 0 0 24px #6dbde21b;
+}
+@media (hover: hover) {
+  .world-tones button:hover {
+    transform: translateY(-2px);
+    border-color: #bce9ff99;
+  }
+}
+.gateway {
+  border-radius: 28px;
+  box-shadow:
+    inset 0 1px 0 #d0d8fd20,
+    0 25px 60px #00000024;
+}
+.gateway::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(125deg, #ffffff10, transparent 24% 74%, #8bdfff0c);
+}
+.gateway-link {
+  border-radius: 15px;
+  background: linear-gradient(100deg, #88b3fb2b, #84e4e81a);
+  border-color: #a5d8ef80;
+}
+.gateway-link:hover {
+  background: linear-gradient(100deg, #88b3fb48, #84e4e82b);
+}
+.home-season-strip {
+  padding: 25px 0;
+  border-color: #a5c8e536;
+}
+.home-season-strip a:hover {
+  background: #83b6e716;
+}
+.loop-card {
+  border-radius: 24px;
+  box-shadow: 0 20px 45px #0003;
+}
+.curator-note {
+  border-radius: 26px;
+  background:
+    radial-gradient(ellipse at 5% 50%, #7882c322, transparent 65%), #14283c66;
+}
+.zone-heading {
+  padding-top: 35px;
+  padding-bottom: 25px;
+}
+.zone-heading h2 {
+  color: #d9f1ff;
+}
+.profile-portrait {
+  /* 留下有辨識度的弧角，但不再壓到右下角的官方連結。 */
+  border-radius: 35px 35px 86px 35px;
+  box-shadow:
+    inset 0 1px 0 #d8efff19,
+    0 28px 70px #020b172f,
+    0 0 70px color-mix(in srgb, var(--world-second) 10%, transparent);
+}
+.profile-portrait figcaption {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+  min-height: 61px;
+  gap: 18px;
+  padding-right: 52px;
+  background: linear-gradient(90deg, #0b2138ed, #0b2138cc);
+}
+.profile-portrait figcaption a {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  color: #9dd5eb;
+}
+.profile-content h3 {
+  color: #d8e9ff;
+  text-shadow: 0 10px 35px #a38fff16;
+}
+.archive-compass {
+  border-color: #9bccec38;
+  background: linear-gradient(130deg, #29345870, #0c223c80);
+  box-shadow: inset 0 1px 0 #d7eaff13;
+}
+.gallery-card {
+  border-radius: 19px;
+  border-color: #7fa7e52b;
+  background: #0b2134;
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+.gallery-card:hover {
+  transform: translateY(-4px);
+  border-color: #a7cbe988;
+  box-shadow: 0 16px 36px #0004;
+}
+.game-card {
+  position: relative;
+  border-radius: 26px;
+  box-shadow: 0 20px 55px #030c192e;
+}
+.game-card::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 1px 0 #e3f5ff13;
+}
+.card-button {
+  border-radius: 12px;
+  min-height: 46px;
+}
+.collection > .section-heading {
+  padding-top: 38px;
+}
+.games-welcome {
+  font-size: 20px;
+  color: #beeafa;
+}
+.mood-picker {
+  border-radius: 22px;
+  background: linear-gradient(115deg, #536caf20, #40778e10);
+  box-shadow: inset 0 1px 0 #dff3ff12;
+}
+footer {
+  border-top-color: #89bfdd35;
+}
+
+/* 每次切換專區時只做一次短暫淡入，讓頁面有舞台換景的感覺。 */
+.zone-panel:not([hidden]) {
+  animation: world-zone-in 420ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+@keyframes world-zone-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.section-heading h2 {
+  text-wrap: balance;
+}
+.section-heading .eyebrow {
+  text-shadow: 0 0 24px color-mix(in srgb, var(--world-light) 32%, transparent);
+}
+@media (min-width: 761px) and (max-width: 1250px) {
+  .hero-notes {
+    position: static;
+    transform: none;
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .hero-collection-note:nth-of-type(2) {
+    transform: none;
+  }
+  .blue-hour-hero {
+    gap: 25px;
+  }
+  .blue-hour-hero .hero-character {
+    height: 605px;
+  }
+  .blue-hour-hero .hero-character img {
+    height: 510px;
+  }
+  .blue-hour-hero .hero-stage {
+    min-height: 610px;
+  }
+}
+@media (max-width: 760px) {
+  .site-header {
+    margin-bottom: 10px;
+  }
+  .brand {
+    font-size: 15px;
+    letter-spacing: 1.4px;
+  }
+  .brand small {
+    font-size: 7px;
+    letter-spacing: 2px;
+  }
+  .site-header nav {
+    gap: 4px;
+  }
+  .site-header nav a {
+    padding: 8px 10px;
+  }
+  .blue-hour-hero {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    min-height: 0;
+    padding-top: 25px;
+    padding-bottom: 28px;
+  }
+  .blue-hour-hero .hero-type h1 strong.world-title {
+    font-size: clamp(85px, 23vw, 130px);
+    letter-spacing: -4px;
+  }
+  .world-title-star {
+    font-size: 29px;
+    right: -43px;
+  }
+  .blue-hour-hero .hero-type h1 .hero-poetry {
+    font-size: 25px;
+    margin-top: 25px;
+  }
+  .blue-hour-hero .hero-about {
+    margin-top: 18px;
+  }
+  .blue-hour-hero .hero-japanese {
+    font-size: 17px;
+  }
+  .blue-hour-hero .hero-stage {
+    min-height: 460px;
+  }
+  .blue-hour-hero .hero-character {
+    height: 450px;
+    padding-top: 15px;
+  }
+  .blue-hour-hero .hero-character img {
+    height: 365px;
+  }
+  .world-orbit-label {
+    font-size: 7px;
+    right: 4%;
+  }
+  .world-horizon {
+    left: -10%;
+    width: 120%;
+  }
+  .blue-hour-hero .stage-index {
+    bottom: 3%;
+  }
+  .hero-notes {
+    position: static;
+    transform: none;
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 15px 0 0;
+  }
+  .hero-collection-note {
+    padding: 12px 9px;
+  }
+  .hero-collection-note h3 {
+    font-size: 12px;
+  }
+  .hero-collection-note:nth-of-type(2) {
+    transform: none;
+  }
+  .world-palette-bar {
+    grid-template-columns: 1fr;
+    padding: 20px 15px;
+    margin-bottom: 42px;
+  }
+  .world-tones {
+    gap: 7px;
+  }
+  .world-tones button {
+    padding: 9px 11px;
+    font-size: 11px;
+  }
+  .games-welcome {
+    font-size: 17px;
+  }
+  .profile-portrait {
+    border-radius: 28px 28px 58px 28px;
+  }
+  .profile-portrait figcaption {
+    min-height: 58px;
+    gap: 12px;
+    padding: 16px 40px 16px 20px;
+  }
+}
+@media (max-width: 400px) {
+  .site-header nav {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .site-header nav a {
+    padding: 8px;
+    font-size: 11px;
+  }
+  .profile-portrait figcaption {
+    padding-right: 30px;
+    font-size: 9px;
+  }
+  .profile-portrait figcaption a {
+    font-size: 9px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .world-tones button,
+  .gateway-link,
+  .gallery-card {
+    transition: none;
+  }
+  .zone-panel:not([hidden]) {
+    animation: none;
+  }
+}

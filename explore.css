@@ -1,0 +1,518 @@
+/* 閱讀路線與小茜遊樂室。色彩集中在各主題變數，手機尺寸在底部。 */
+#profile,
+#little-facts,
+#traits,
+#story-notes,
+#archive-compass,
+#chibi-room {
+  scroll-margin-top: 28px;
+}
+.archive-compass {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(210px, 0.55fr) minmax(0, 1.45fr);
+  gap: 32px;
+  align-items: center;
+  margin: 48px 0 60px;
+  padding: 28px 0;
+  border-top: 1px solid #93d3ff25;
+  border-bottom: 1px solid #93d3ff25;
+}
+.compass-intro {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+.compass-orbit {
+  font-size: 48px;
+  color: #8ae1ff;
+  text-shadow: 0 0 36px #82aaff55;
+}
+.compass-intro .eyebrow {
+  font-size: 8px;
+  letter-spacing: 2px;
+}
+.compass-intro h3 {
+  margin: 9px 0;
+  font-size: 21px;
+}
+.compass-intro p:last-child {
+  font-size: 12px;
+  color: #9eb9cd;
+  line-height: 1.8;
+}
+.compass-links {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.compass-links a {
+  display: block;
+  padding: 12px 13px;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  color: #c6dcec;
+  font-size: 12px;
+  text-decoration: none;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    color 0.2s;
+}
+.compass-links a span {
+  display: block;
+  margin-top: 4px;
+  font-size: 9px;
+  color: #83a1ba;
+}
+.compass-links a:hover,
+.compass-links a:focus-visible {
+  border-color: #99dcff55;
+  background: #83cfff0b;
+  color: #9ce8ff;
+}
+.chibi-playroom {
+  --chibi-glow: #78d9ff;
+  --chibi-tone: #344773;
+  --chibi-tint: #102c40;
+  margin-top: 42px;
+}
+.chibi-playroom[data-chibi-light="rose"] {
+  --chibi-glow: #e8acf8;
+  --chibi-tone: #52355f;
+  --chibi-tint: #272546;
+}
+.chibi-playroom[data-chibi-light="night"] {
+  --chibi-glow: #a5bcff;
+  --chibi-tone: #282252;
+  --chibi-tint: #102035;
+}
+.playroom-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: end;
+  margin-bottom: 20px;
+}
+.playroom-heading h3 {
+  margin: 10px 0 0;
+  font-size: clamp(23px, 3vw, 31px);
+}
+.playroom-heading .eyebrow {
+  font-size: 10px;
+}
+.playroom-heading > a {
+  white-space: nowrap;
+  font-size: 11px;
+}
+.chibi-playroom .chibi-postcard {
+  overflow: hidden;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  padding: 36px;
+  gap: 36px;
+  background:
+    radial-gradient(ellipse at 10% 20%, var(--chibi-tone), transparent 65%),
+    linear-gradient(135deg, var(--chibi-tint), #1e243d);
+  box-shadow:
+    inset 0 1px 0 #d4efff17,
+    0 16px 65px #04132138;
+  border-color: #bddfff30;
+}
+.chibi-stage {
+  position: relative;
+  isolation: isolate;
+  text-align: center;
+  min-width: 0;
+}
+.chibi-stage::before {
+  content: "";
+  position: absolute;
+  inset: 5% 0 30%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, var(--chibi-glow), transparent 65%);
+  opacity: 0.16;
+}
+.chibi-orbit {
+  position: absolute;
+  z-index: -1;
+  inset: 10% 0 26%;
+  border: 1px solid #b1dfff24;
+  border-radius: 50%;
+  transform: rotate(-20deg);
+}
+.chibi-orbit.orbit-b {
+  inset: 3% 8% 24%;
+  transform: rotate(25deg);
+}
+.chibi-playroom .chibi-image-button {
+  max-width: 360px;
+}
+.chibi-playroom[data-chibi-look="kimono"] .chibi-image-button img,
+.chibi-playroom[data-chibi-look="orchestra"] .chibi-image-button img {
+  mask-image: radial-gradient(ellipse, #000 65%, transparent 78%);
+}
+.chibi-stage > p {
+  margin: 16px auto 9px;
+  max-width: 350px;
+  color: #abc5db;
+  font-size: 10px;
+  line-height: 1.8;
+}
+.chibi-stage > .source-link {
+  font-size: 10px;
+}
+.chibi-look-picker {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+.chibi-look-picker button,
+.chibi-light-picker button,
+.chibi-mode-picker button {
+  border: 1px solid #95c7ff30;
+  border-radius: 30px;
+  padding: 10px 12px;
+  background: #142d4566;
+  color: #b8ccde;
+  cursor: pointer;
+  font-size: 11px;
+  min-height: 44px;
+}
+.chibi-look-picker button[aria-pressed="true"],
+.chibi-light-picker button[aria-pressed="true"] {
+  color: #051724;
+  background: var(--chibi-glow);
+  border-color: transparent;
+}
+.chibi-light-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 19px 0;
+}
+.chibi-light-picker > span {
+  font-size: 10px;
+  color: #a5bdd3;
+  margin-right: 9px;
+}
+.chibi-light-picker button {
+  min-height: 34px;
+  padding: 7px 13px;
+  font-size: 10px;
+}
+.chibi-mode-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #aac8ff27;
+}
+.chibi-mode-picker button[aria-pressed="true"] {
+  color: #def2ff;
+  background: #94caff1a;
+  border-color: #b3e6ff66;
+}
+.chibi-activity {
+  padding-top: 9px;
+  min-height: 222px;
+}
+.chibi-activity > p {
+  color: #b3c8da;
+  font-size: 12px;
+  line-height: 1.9;
+}
+.chibi-activity .chibi-star-note {
+  color: var(--chibi-glow);
+  font-size: 13px;
+}
+.chibi-activity .chibi-pocket {
+  font-size: 10px;
+  color: #849eb6;
+}
+.chibi-copy > h3 {
+  margin: 10px 0 14px;
+  font-size: clamp(22px, 2.5vw, 29px);
+}
+.chibi-copy > .eyebrow {
+  font-size: 9px;
+}
+.constellation-board {
+  position: relative;
+  height: 190px;
+  margin-top: 12px;
+  border: 1px solid #a8d5ff25;
+  border-radius: 20px;
+  background: radial-gradient(circle at 50% 30%, #293e61, #0c1b31);
+  overflow: hidden;
+}
+.constellation-board > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.constellation-board line {
+  stroke: var(--chibi-glow);
+  stroke-width: 0.55;
+  stroke-linecap: round;
+  opacity: 0.65;
+}
+.constellation-board button {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: #6c829f;
+  cursor: pointer;
+  font-size: 23px;
+}
+.constellation-board button.star-next {
+  color: #eafaff;
+  border-color: var(--chibi-glow);
+  box-shadow: 0 0 24px #96dbff55;
+  background: #aee0ff12;
+}
+.constellation-board button.star-connected {
+  color: var(--chibi-glow);
+}
+.constellation-board.constellation-complete {
+  box-shadow: inset 0 0 60px #b7caff14;
+}
+.activity-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.activity-footer p {
+  font-size: 11px;
+  color: var(--chibi-glow);
+  line-height: 1.8;
+}
+.activity-footer .text-link,
+.activity-footer .source-link {
+  font-size: 10px;
+}
+.chibi-quiz-answers {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 7px;
+}
+.chibi-quiz-answers button {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid #8cb7f03a;
+  border-radius: 13px;
+  background: #0d233950;
+  color: #c9dfef;
+  text-align: left;
+  font-size: 12px;
+  cursor: pointer;
+}
+.chibi-quiz-answers .answer-correct {
+  background: #80e5cc1c;
+  border-color: #94e7d2;
+  color: #bbffe9;
+}
+.chibi-quiz-answers .answer-missed {
+  border-color: #e8c0dc;
+  color: #e8c0dc;
+}
+.chibi-quiz-answers button:disabled {
+  cursor: default;
+  opacity: 0.8;
+}
+.chibi-activity > h4 {
+  margin: 9px 0 13px;
+  font-size: 15px;
+  line-height: 1.8;
+}
+.chibi-activity .quiz-progress {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #a4c0dd;
+}
+#chibi-quiz-feedback {
+  min-height: 44px;
+}
+.archive-bookmark {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 12;
+  max-width: calc(100vw - 40px);
+}
+.archive-bookmark summary {
+  width: fit-content;
+  min-height: 44px;
+  list-style: none;
+  padding: 12px 15px;
+  border-radius: 25px;
+  border: 1px solid #acdfff40;
+  background: #10283ddf;
+  backdrop-filter: blur(16px);
+  color: #b5d8ef;
+  font-size: 11px;
+  cursor: pointer;
+}
+.archive-bookmark summary::-webkit-details-marker {
+  display: none;
+}
+.archive-bookmark[open] summary {
+  color: #b4efff;
+  border-color: #aadeff80;
+}
+.archive-bookmark > nav {
+  position: absolute;
+  bottom: 56px;
+  left: 0;
+  width: min(355px, calc(100vw - 40px));
+  max-height: calc(100dvh - 110px);
+  overflow: auto;
+  padding: 20px;
+  border: 1px solid #aadeff40;
+  border-radius: 20px;
+  background: #0e243bf2;
+  box-shadow: 0 20px 60px #01081890;
+  backdrop-filter: blur(20px);
+}
+.archive-bookmark nav > p {
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: #c9e6f9;
+}
+.archive-bookmark nav > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+.archive-bookmark nav a {
+  display: block;
+  padding: 12px 10px;
+  border-radius: 9px;
+  color: #99bfd8;
+  font-size: 11px;
+  text-decoration: none;
+}
+.archive-bookmark nav a:hover,
+.archive-bookmark nav a:focus-visible {
+  color: #dcf4ff;
+  background: #8bddff13;
+}
+@media (max-width: 1000px) {
+  .archive-compass {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .compass-links {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .chibi-playroom .chibi-postcard {
+    gap: 24px;
+    padding: 26px;
+  }
+}
+@media (max-width: 760px) {
+  .chibi-playroom .chibi-postcard {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 22px;
+  }
+  .chibi-stage {
+    max-width: 440px;
+    margin: auto;
+  }
+  .chibi-playroom .chibi-image-button {
+    max-width: 300px;
+  }
+  .chibi-activity {
+    min-height: 0;
+  }
+  .constellation-board {
+    height: 210px;
+  }
+  .playroom-heading {
+    display: block;
+  }
+  .playroom-heading > a {
+    display: inline-block;
+    margin-top: 14px;
+  }
+}
+@media (max-width: 520px) {
+  .archive-compass {
+    margin: 36px 0 44px;
+    padding: 22px 0;
+    gap: 12px;
+  }
+  .compass-links {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .compass-links a {
+    padding: 12px 7px;
+    font-size: 11px;
+  }
+  .compass-links a span {
+    font-size: 8px;
+  }
+  .chibi-playroom .chibi-postcard {
+    padding: 19px;
+    gap: 25px;
+  }
+  .chibi-playroom .chibi-image-button {
+    max-width: 260px;
+  }
+  .chibi-mode-picker {
+    gap: 5px;
+  }
+  .chibi-mode-picker button {
+    font-size: 10px;
+    padding: 9px 11px;
+  }
+  .archive-bookmark {
+    left: 12px;
+    bottom: 16px;
+  }
+  .archive-bookmark summary {
+    padding: 11px 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .compass-links a {
+    transition: none;
+  }
+}
+
+.motion-source-list {
+  padding: 18px 0;
+  border-bottom: 1px solid #92cfff25;
+  color: #a9c5d9;
+}
+.motion-source-list summary {
+  cursor: pointer;
+  font-size: 12px;
+}
+.motion-source-list p {
+  font-size: 11px;
+  line-height: 1.9;
+}
+.motion-source-list > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+.motion-source-list a {
+  font-size: 11px;
+  color: #8fc5e4;
+}
