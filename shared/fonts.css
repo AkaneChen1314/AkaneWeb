@@ -1,0 +1,217 @@
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-90-400-normal.woff2") format("woff2");
+  unicode-range:
+    U+2197, U+221E, U+2318, U+2460, U+2461, U+2462, U+2463, U+2464, U+2465,
+    U+2466, U+2467, U+2468, U+2469;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-88-400-normal.woff2") format("woff2");
+  unicode-range:
+    U+25A3, U+25BD, U+25C7, U+25C9, U+25CC, U+2600, U+2601, U+260E, U+262F,
+    U+2642;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-87-400-normal.woff2") format("woff2");
+  unicode-range: U+2660, U+2663, U+2666, U+2668, U+26A0, U+271A;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-118-400-normal.woff2") format("woff2");
+  unicode-range: U+FF01, U+FF08, U+FF09, U+FF1F;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-103-400-normal.woff2") format("woff2");
+  unicode-range: U+2198, U+2571, U+25B6;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-114-400-normal.woff2") format("woff2");
+  unicode-range: U+3042, U+304B, U+30FB;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-115-400-normal.woff2") format("woff2");
+  unicode-range: U+FF1B, U+FF5E;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-108-400-normal.woff2") format("woff2");
+  unicode-range: U+25C6, U+2665;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-113-400-normal.woff2") format("woff2");
+  unicode-range: U+FF0F, U+FF5C;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-107-400-normal.woff2") format("woff2");
+  unicode-range: U+25CE, U+FF0B;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-119-400-normal.woff2") format("woff2");
+  unicode-range: U+FF0C, U+FF1A;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-105-400-normal.woff2") format("woff2");
+  unicode-range: U+25A0, U+266A;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-112-400-normal.woff2") format("woff2");
+  unicode-range: U+2192, U+25B2;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-111-400-normal.woff2") format("woff2");
+  unicode-range: U+2605;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-109-400-normal.woff2") format("woff2");
+  unicode-range: U+25CF;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-78-400-normal.woff2") format("woff2");
+  unicode-range: U+55B0;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-85-400-normal.woff2") format("woff2");
+  unicode-range: U+306D;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-89-400-normal.woff2") format("woff2");
+  unicode-range: U+24D8;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-54-400-normal.woff2") format("woff2");
+  unicode-range: U+7341;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-86-400-normal.woff2") format("woff2");
+  unicode-range: U+3030;
+}
+
+@font-face {
+  font-family: "Akane Symbols";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-extra-102-400-normal.woff2") format("woff2");
+  unicode-range: U+2713;
+}
+
+/* 本機中文字型，不依賴 Google Fonts 或外部網路。 */
+@font-face {
+  font-family: "Akane Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/noto-tc-regular.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Akane Sans";
+  font-style: normal;
+  font-weight: 600 900;
+  font-display: swap;
+  src: url("../assets/fonts/noto-tc-bold.woff2") format("woff2");
+}
+body,
+button,
+input,
+textarea,
+select {
+  font-family:
+    "Akane Sans", "Akane Japanese", "Akane Symbols", "Microsoft JhengHei",
+    "PingFang TC", system-ui, sans-serif;
+}
