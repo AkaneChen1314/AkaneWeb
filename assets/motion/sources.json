@@ -1,0 +1,62 @@
+[
+  {
+    "file": "assets/motion/nod.mp4",
+    "poster": "assets/motion/nod-poster.webp",
+    "source_page": "https://tenor.com/view/akane-kurokawa-%E9%BB%92%E5%B7%9D%E3%81%82%E3%81%8B%E3%81%AD-oshi-no-ko-nod-gif-1308739037435258621",
+    "original_url": "https://media.tenor.com/EimTOHYD5v0AAAPo/akane-kurokawa-%E9%BB%92%E5%B7%9D%E3%81%82%E3%81%8B%E3%81%AD.mp4",
+    "type": "public user-uploaded anime GIF clip from Tenor, downloaded as MP4; muted loop; no official episode attribution",
+    "downloaded": "2026-10-03",
+    "duration": "2.800000",
+    "width": 498,
+    "height": 282,
+    "has_audio": false,
+    "sha256": "305c4e72a3c3ac508c0809841b8a10946cbefd5dea5b75846f0ee662112b31e7",
+    "webm": "assets/motion/nod.webm",
+    "webm_sha256": "7e115c6a8f9e36667591ccdef88ec2274d3a402092a07ca5efa24d95f3ab2651"
+  },
+  {
+    "file": "assets/motion/blush.mp4",
+    "poster": "assets/motion/blush-poster.webp",
+    "source_page": "https://tenor.com/view/%E9%BB%92%E5%B7%9D%E3%81%82%E3%81%8B%E3%81%AD-kurokawa-akane-oshi-no-ko-blush-blushing-gif-14233494808018365348",
+    "original_url": "https://media.tenor.com/xYeIHZhNK6QAAAPo/%E9%BB%92%E5%B7%9D%E3%81%82%E3%81%8B%E3%81%AD-kurokawa-akane.mp4",
+    "type": "public user-uploaded anime GIF clip from Tenor, downloaded as MP4; muted loop; no official episode attribution",
+    "downloaded": "2026-10-03",
+    "duration": "11.920000",
+    "width": 498,
+    "height": 282,
+    "has_audio": false,
+    "sha256": "6a81154f5ea6eb4d7fa6b8bb773bd468db4e791eb77a4f4d9a822c936c536fcf",
+    "webm": "assets/motion/blush.webm",
+    "webm_sha256": "20d98f138598200c4d40dd781d860e1ae5313f7c0e8b010e557abbff42b44376"
+  },
+  {
+    "file": "assets/motion/smile.mp4",
+    "poster": "assets/motion/smile-poster.webp",
+    "source_page": "https://tenor.com/view/akane-kurokawa-kurokawa-akane-smile-happy-oshi-no-ko-gif-2284915875427857695",
+    "original_url": "https://media.tenor.com/H7Wm4fiHNR8AAAPo/akane-kurokawa-kurokawa-akane.mp4",
+    "type": "public user-uploaded anime GIF clip from Tenor, downloaded as MP4; muted loop; no official episode attribution",
+    "downloaded": "2026-10-03",
+    "duration": "1.700000",
+    "width": 498,
+    "height": 376,
+    "has_audio": false,
+    "sha256": "5d0532b207b90971f0b9aba667f628015c0293c350a37be94e2bc20dd9b1b276",
+    "webm": "assets/motion/smile.webm",
+    "webm_sha256": "bb3ecc8057fabc08910c48d26a854f4d094050c8853acb11a49ba316ffd3edc7"
+  },
+  {
+    "file": "assets/motion/sunglasses.mp4",
+    "poster": "assets/motion/sunglasses-poster.webp",
+    "source_page": "https://tenor.com/view/akane-kurokawa-oshi-no-ko-anime-cute-smile-gif-13528364357598957397",
+    "original_url": "https://media.tenor.com/u75ntPa9z1UAAAPo/akane-kurokawa-oshi-no-ko.mp4",
+    "type": "public user-uploaded anime GIF clip from Tenor, downloaded as MP4; muted loop; no official episode attribution",
+    "downloaded": "2026-10-03",
+    "duration": "0.833333",
+    "width": 498,
+    "height": 280,
+    "has_audio": false,
+    "sha256": "84a61b55f90558bebe20010d4fe85113f1c284afc73bc170f4e09dc9775d8f4d",
+    "webm": "assets/motion/sunglasses.webm",
+    "webm_sha256": "d183cf97b01738261ecef49fcd6eb5265105b453415baf9d93517fb97f284aec"
+  }
+]
