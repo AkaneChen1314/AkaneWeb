@@ -1,0 +1,549 @@
+/* 首頁氣氛與互動樣式；遊戲視窗的樣式仍在 styles.css。 */
+body {
+  background: #060f22;
+}
+#lounge {
+  position: relative;
+  z-index: 1;
+}
+.ambient-scene {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 0, #102950 0, transparent 65%);
+}
+.ambient-scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.17;
+  background-image:
+    linear-gradient(#71b9ff20 1px, transparent 1px),
+    linear-gradient(90deg, #71b9ff20 1px, transparent 1px);
+  background-size: 92px 92px;
+  mask-image: linear-gradient(
+    90deg,
+    #000,
+    transparent 35%,
+    transparent 65%,
+    #000
+  );
+}
+.ambient-aurora {
+  position: absolute;
+  width: 560px;
+  height: 900px;
+  filter: blur(65px);
+  opacity: 0.48;
+  border-radius: 50%;
+}
+.aurora-left {
+  left: -400px;
+  top: -150px;
+  background: radial-gradient(ellipse, #166aa1, #0a3559 40%, transparent 68%);
+  transform: rotate(-20deg);
+}
+.aurora-right {
+  right: -410px;
+  top: 160px;
+  background: radial-gradient(ellipse, #395e9f, #182e65 45%, transparent 68%);
+  transform: rotate(20deg);
+}
+#star-field {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.orbit {
+  position: absolute;
+  width: 480px;
+  aspect-ratio: 1;
+  border: 1px solid #77bfff18;
+  border-radius: 50%;
+}
+.orbit::before,
+.orbit::after {
+  content: "";
+  position: absolute;
+  inset: 30px;
+  border: 1px dashed #78caff14;
+  border-radius: 50%;
+}
+.orbit::after {
+  inset: 65px;
+  border-style: solid;
+}
+.orbit-left {
+  left: -370px;
+  top: 31%;
+}
+.orbit-right {
+  right: -340px;
+  top: 65%;
+}
+.pointer-glow {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(
+    350px circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
+    #4ba9ef19,
+    transparent 72%
+  );
+  transition: opacity 0.5s;
+}
+body.pointer-active .pointer-glow {
+  opacity: 1;
+}
+body.playing .ambient-scene {
+  visibility: hidden;
+}
+.site-header {
+  position: relative;
+}
+.site-header nav a {
+  padding-bottom: 4px;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+.site-header nav a:hover {
+  border-color: #69c4ff;
+}
+.hero {
+  box-shadow:
+    0 24px 70px #0004,
+    0 0 60px #4da5ff09;
+}
+.hero-sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.hero-sparkles i {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #c5edff;
+  box-shadow: 0 0 18px 3px #64ceff70;
+  animation: star-breathe 4s ease-in-out infinite alternate;
+}
+.hero-sparkles i:nth-child(1) {
+  top: 18%;
+  left: 48%;
+}
+.hero-sparkles i:nth-child(2) {
+  top: 56%;
+  left: 61%;
+  animation-delay: -2s;
+}
+.hero-sparkles i:nth-child(3) {
+  top: 28%;
+  left: 92%;
+  animation-delay: -1s;
+}
+.hero-sparkles i:nth-child(4) {
+  top: 76%;
+  left: 85%;
+  animation-delay: -3s;
+}
+@keyframes star-breathe {
+  from {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0.9;
+    transform: translateY(-9px);
+  }
+}
+.story-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 23px 25px;
+  margin-top: 18px;
+  border: 1px solid #5daeff21;
+  border-radius: 14px;
+  background: linear-gradient(100deg, #15305477, #0d203566);
+  gap: 20px;
+  color: #bdcee4;
+  font-size: 13px;
+}
+.story-strip span + span {
+  border-left: 1px solid #6aabdd26;
+  padding-left: 28px;
+}
+.story-strip b {
+  display: block;
+  color: #87c7ef;
+  font-size: 10px;
+  letter-spacing: 1.9px;
+  margin-bottom: 5px;
+}
+.mood-picker {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 20px;
+  border: 1px solid #6aaee02b;
+  border-radius: 16px;
+  background: #102541c9;
+}
+.mood-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.mood-title > span {
+  color: #8cd4ff;
+  font-size: 28px;
+}
+.mood-title strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+}
+.mood-title small {
+  display: block;
+  font-size: 11px;
+  color: #8da9c6;
+}
+.mood-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+.mood-buttons button,
+.surprise-button {
+  border: 1px solid #456888;
+  border-radius: 30px;
+  background: #122e4a;
+  color: #bdd8ec;
+  padding: 8px 15px;
+  font-size: 12px;
+  min-height: 42px;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+.mood-buttons button:hover,
+.mood-buttons button[aria-pressed="true"] {
+  background: #235579;
+  border-color: #8dcfff;
+  color: #fff;
+}
+.surprise-button {
+  flex-shrink: 0;
+  background: transparent;
+  border-color: transparent;
+  color: #a7d9ff;
+}
+.surprise-button:hover {
+  background: #1d3c59;
+}
+.surprise-button span {
+  margin-left: 7px;
+}
+.mood-result {
+  font-size: 12px;
+  color: #99b8d1;
+  min-height: 21px;
+  margin: 12px 6px 24px;
+}
+.game-card {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(150deg, #142b49e8, #0a1a30f5);
+}
+.game-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    300px circle at var(--card-x, 50%) var(--card-y, 0%),
+    #73bbff21,
+    transparent 75%
+  );
+  transition: opacity 0.25s;
+}
+.game-card:hover::before {
+  opacity: 1;
+}
+.game-card.recommended {
+  border-color: #91dbff;
+  box-shadow:
+    0 0 0 1px #7ecbff33,
+    0 8px 36px #41a4ff19;
+}
+.card-visual {
+  aspect-ratio: 1.6;
+}
+.card-visual::after {
+  background: linear-gradient(0deg, #091b35f2, #07132600 60%);
+}
+.cover-caption {
+  position: absolute;
+  z-index: 1;
+  left: 22px;
+  right: 18px;
+  bottom: 18px;
+  pointer-events: none;
+  text-shadow: 0 2px 14px #0009;
+}
+.cover-caption span {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #e5f5ff;
+}
+.cover-caption small {
+  display: block;
+  font-size: 12px;
+  color: #aaccdf;
+  margin-top: 3px;
+}
+.card-number {
+  width: 35px;
+  height: 35px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  border: 1px solid #a4d5ff55;
+  backdrop-filter: blur(8px);
+}
+.card-version {
+  backdrop-filter: blur(8px);
+}
+.card-button {
+  background: linear-gradient(100deg, #1a4265, #163654);
+}
+.akane-room {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  margin-top: 58px;
+  overflow: hidden;
+  border: 1px solid #426c8c77;
+  border-radius: 22px;
+  background: linear-gradient(110deg, #122c4b, #0a1d34e8);
+}
+.room-portrait {
+  position: relative;
+  min-height: 410px;
+  overflow: hidden;
+}
+.room-portrait::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, #071a32cc, transparent 55%);
+}
+.room-portrait img {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  object-fit: cover;
+  object-position: 83% center;
+}
+.portrait-label {
+  position: absolute;
+  z-index: 1;
+  bottom: 28px;
+  left: 28px;
+  letter-spacing: 3px;
+  font-size: 14px;
+}
+.portrait-label small {
+  display: block;
+  font-size: 9px;
+  margin-top: 6px;
+  color: #a6d4f4;
+  letter-spacing: 4px;
+}
+.portrait-star {
+  position: absolute;
+  z-index: 1;
+  top: 18px;
+  right: 25px;
+  color: #b7e9ff;
+  font-size: 45px;
+  text-shadow: 0 0 22px #acdfff;
+}
+.room-content {
+  padding: 42px 45px;
+}
+.room-content .eyebrow {
+  font-size: 10px;
+  letter-spacing: 1.8px;
+}
+.room-content h2 {
+  font-size: clamp(25px, 2.5vw, 34px);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+.room-content > p:not(.eyebrow) {
+  font-size: 14px;
+  line-height: 1.95;
+  color: #b1c7df;
+}
+.room-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 23px 0;
+}
+.room-chips span {
+  font-size: 11px;
+  padding: 3px 12px;
+  border: 1px solid #73b6e03b;
+  border-radius: 20px;
+  color: #9ed1f4;
+}
+.room-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  color: #a2d9ff;
+  font-size: 13px;
+  border-bottom: 1px solid #81c6ef66;
+  padding-bottom: 5px;
+}
+.room-link:hover {
+  color: #fff;
+}
+.welcome-note {
+  background: linear-gradient(100deg, #0e2843c9, #0b1e3680);
+}
+@media (max-width: 1100px) {
+  .mood-picker {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .mood-buttons {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+  }
+  .surprise-button {
+    margin-left: auto;
+  }
+  .room-content {
+    padding: 30px;
+  }
+  .cover-caption {
+    left: 18px;
+  }
+  .cover-caption span {
+    font-size: 9px;
+    letter-spacing: 1.1px;
+  }
+}
+@media (max-width: 680px) {
+  .site-header nav a[href="#about"] {
+    display: none;
+  }
+  .ambient-aurora {
+    opacity: 0.3;
+    filter: blur(40px);
+  }
+  .story-strip {
+    gap: 12px;
+    padding: 18px 15px;
+    grid-template-columns: 1fr;
+    font-size: 12px;
+  }
+  .story-strip span {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+  }
+  .story-strip span + span {
+    border-left: 0;
+    padding-left: 0;
+  }
+  .story-strip b {
+    margin: 0;
+    font-size: 8px;
+    min-width: 102px;
+  }
+  .mood-picker {
+    padding: 16px 14px;
+    gap: 12px;
+  }
+  .mood-title {
+    gap: 8px;
+  }
+  .mood-title strong {
+    font-size: 13px;
+  }
+  .mood-title small {
+    font-size: 10px;
+  }
+  .surprise-button {
+    padding: 8px;
+    font-size: 11px;
+  }
+  .mood-buttons {
+    gap: 7px;
+  }
+  .mood-buttons button {
+    font-size: 11px;
+    padding: 7px 12px;
+  }
+  .mood-result {
+    margin-bottom: 20px;
+  }
+  .card-visual {
+    aspect-ratio: 1.6;
+  }
+  .cover-caption span {
+    font-size: 11px;
+    letter-spacing: 1.8px;
+  }
+  .akane-room {
+    grid-template-columns: 1fr;
+    margin-top: 36px;
+  }
+  .room-portrait {
+    min-height: 280px;
+  }
+  .room-portrait img {
+    object-position: 85% 30%;
+  }
+  .room-content {
+    padding: 27px 24px;
+  }
+  .room-content .eyebrow {
+    font-size: 8px;
+  }
+  .room-content h2 {
+    font-size: 27px;
+  }
+}
+@media (hover: none), (pointer: coarse) {
+  .pointer-glow {
+    display: none;
+  }
+  .game-card:hover {
+    transform: none;
+  }
+  .game-card:hover .card-visual img {
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pointer-glow {
+    display: none;
+  }
+  .hero-sparkles i {
+    animation: none;
+  }
+}
