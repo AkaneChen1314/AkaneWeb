@@ -5,17 +5,46 @@ const $$ = (selector) => [...document.querySelectorAll(selector)];
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const pick = (items) => items[Math.floor(Math.random() * items.length)];
-const card = (id, name, type, ap, data = {}) => ({ id, name, type, ap, ...data });
+const card = (id, name, type, ap, data = {}) => ({
+  id,
+  name,
+  type,
+  ap,
+  ...data,
+});
+
+let viewportFrame = 0;
+let previousViewportHeight = 0;
 
 function syncViewportHeight() {
-  const viewportHeight = window.visualViewport?.height || window.innerHeight;
-  document.documentElement.style.setProperty("--app-height", `${Math.round(viewportHeight)}px`);
+  // 雙指放大只改變可見範圍，不應把整個戰場重新壓縮。
+  const viewport = window.visualViewport;
+  if (viewport?.scale > 1.01 && previousViewportHeight) return;
+  const viewportHeight = Math.round(viewport?.height || window.innerHeight);
+  if (viewportHeight === previousViewportHeight) return;
+  previousViewportHeight = viewportHeight;
+  document.documentElement.style.setProperty(
+    "--app-height",
+    `${viewportHeight}px`,
+  );
+}
+
+function scheduleViewportUpdate() {
+  if (viewportFrame) return;
+  viewportFrame = requestAnimationFrame(() => {
+    viewportFrame = 0;
+    syncViewportHeight();
+  });
 }
 
 syncViewportHeight();
-window.addEventListener("resize", syncViewportHeight, { passive: true });
-window.addEventListener("orientationchange", syncViewportHeight, { passive: true });
-window.visualViewport?.addEventListener("resize", syncViewportHeight, { passive: true });
+window.addEventListener("resize", scheduleViewportUpdate, { passive: true });
+window.addEventListener("orientationchange", scheduleViewportUpdate, {
+  passive: true,
+});
+window.visualViewport?.addEventListener("resize", scheduleViewportUpdate, {
+  passive: true,
+});
 
 const shared = {
   strike: () =>
@@ -62,8 +91,16 @@ const fighters = [
     supportSlots: 3,
     desc: "攻守平衡的御劍者，能從防禦轉入反擊，適合觀察敵方意圖後精準出牌。",
     traits: [
-      { name: "觀測演算", icon: "◉", desc: "每回合第一張防禦牌額外獲得 30 護盾。" },
-      { name: "劍心回流", icon: "✦", desc: "每回合第一張攻擊牌額外獲得 8 星能。" },
+      {
+        name: "觀測演算",
+        icon: "◉",
+        desc: "每回合第一張防禦牌額外獲得 30 護盾。",
+      },
+      {
+        name: "劍心回流",
+        icon: "✦",
+        desc: "每回合第一張攻擊牌額外獲得 8 星能。",
+      },
     ],
     cards: [
       shared.strike(),
@@ -125,7 +162,11 @@ const fighters = [
     desc: "手牌少但單卡爆發極高，以生命與防禦換取火焰劍勢，適合強攻。",
     traits: [
       { name: "不滅餘燼", icon: "炎", desc: "攻擊灼燒敵人時，傷害提高 18%。" },
-      { name: "逆境劍勢", icon: "▲", desc: "生命低於 50% 時，所有攻擊傷害提高 25%。" },
+      {
+        name: "逆境劍勢",
+        icon: "▲",
+        desc: "生命低於 50% 時，所有攻擊傷害提高 25%。",
+      },
     ],
     cards: [
       card("ember-slash", "裂焰斬", "攻擊", 1, {
@@ -203,7 +244,11 @@ const fighters = [
     desc: "初始星能與抽牌數最高，以低費術法連鎖創造單回合大量操作。",
     traits: [
       { name: "月相輪轉", icon: "☾", desc: "每使用 3 張牌，自動抽 1 張牌。" },
-      { name: "法力折返", icon: "∞", desc: "每回合第一張術法牌返還 1 點行動力。" },
+      {
+        name: "法力折返",
+        icon: "∞",
+        desc: "每回合第一張術法牌返還 1 點行動力。",
+      },
     ],
     cards: [
       card("lunar-string", "星弦", "術法", 1, {
@@ -378,8 +423,16 @@ const fighters = [
     supportSlots: 3,
     desc: "以標記、穿甲與多段射擊持續輸出，能在單回合快速累積星能。",
     traits: [
-      { name: "破空標記", icon: "◎", desc: "每回合第一張攻擊牌額外施加 1 層破綻。" },
-      { name: "追月連矢", icon: "➶", desc: "每回合第二張攻擊牌追加一次 45 點傷害。" },
+      {
+        name: "破空標記",
+        icon: "◎",
+        desc: "每回合第一張攻擊牌額外施加 1 層破綻。",
+      },
+      {
+        name: "追月連矢",
+        icon: "➶",
+        desc: "每回合第二張攻擊牌追加一次 45 點傷害。",
+      },
     ],
     cards: [
       card("frost-shot", "流霜矢", "攻擊", 1, {
@@ -463,7 +516,11 @@ const fighters = [
     supportSlots: 3,
     desc: "行動點最高，以低費卡連鎖、劇毒與首擊爆發在短時間結束戰鬥。",
     traits: [
-      { name: "無聲先手", icon: "影", desc: "每回合第一次攻擊必定造成 60% 額外傷害。" },
+      {
+        name: "無聲先手",
+        icon: "影",
+        desc: "每回合第一次攻擊必定造成 60% 額外傷害。",
+      },
       { name: "影步循環", icon: "∞", desc: "每使用 3 張牌，返還 1 點行動力。" },
     ],
     cards: [
@@ -685,7 +742,13 @@ const villains = [
     moves: [
       { name: "黑棘撕裂", icon: "⚔", damage: 116, text: "攻擊 116" },
       { name: "腐蝕吐息", icon: "♨", damage: 76, burn: 2, text: "攻擊＋灼燒" },
-      { name: "骸骨屏障", icon: "⬡", block: 125, strength: 6, text: "護盾＋強化" },
+      {
+        name: "骸骨屏障",
+        icon: "⬡",
+        block: 125,
+        strength: 6,
+        text: "護盾＋強化",
+      },
       { name: "終末崩落", icon: "☄", damage: 225, text: "致命重擊" },
     ],
   },
@@ -701,9 +764,27 @@ const villains = [
     armor: 0.08,
     trait: "血月魔相：生命低於 50% 時攻擊永久提高。",
     moves: [
-      { name: "血刃橫空", icon: "刃", damage: 132, bleed: 2, text: "攻擊＋流血" },
-      { name: "魔血祭", icon: "血", heal: 105, strength: 10, text: "治療＋強化" },
-      { name: "紅蓮斷界", icon: "炎", damage: 178, burn: 2, text: "強攻＋灼燒" },
+      {
+        name: "血刃橫空",
+        icon: "刃",
+        damage: 132,
+        bleed: 2,
+        text: "攻擊＋流血",
+      },
+      {
+        name: "魔血祭",
+        icon: "血",
+        heal: 105,
+        strength: 10,
+        text: "治療＋強化",
+      },
+      {
+        name: "紅蓮斷界",
+        icon: "炎",
+        damage: 178,
+        burn: 2,
+        text: "強攻＋灼燒",
+      },
       { name: "血月降臨", icon: "月", damage: 245, text: "毀滅重擊" },
     ],
   },
@@ -728,8 +809,20 @@ const villains = [
         limitPenalty: 1,
         text: "封鎖抽牌與出牌",
       },
-      { name: "妖皇靈幕", icon: "扇", block: 155, heal: 45, text: "護盾＋治療" },
-      { name: "青丘葬月", icon: "月", damage: 210, weak: 1, text: "重擊＋弱化" },
+      {
+        name: "妖皇靈幕",
+        icon: "扇",
+        block: 155,
+        heal: 45,
+        text: "護盾＋治療",
+      },
+      {
+        name: "青丘葬月",
+        icon: "月",
+        damage: 210,
+        weak: 1,
+        text: "重擊＋弱化",
+      },
     ],
   },
   {
@@ -744,9 +837,21 @@ const villains = [
     armor: 0.12,
     trait: "劍仙殘心：護甲極高，並會對無護盾目標造成額外傷害。",
     moves: [
-      { name: "斷星一劍", icon: "劍", damage: 145, bonusUnblocked: 45, text: "斬擊；無盾增傷" },
+      {
+        name: "斷星一劍",
+        icon: "劍",
+        damage: 145,
+        bonusUnblocked: 45,
+        text: "斬擊；無盾增傷",
+      },
       { name: "萬劍歸墟", icon: "陣", damage: 72, hits: 2, text: "二連劍陣" },
-      { name: "劍意護體", icon: "界", block: 145, strength: 8, text: "護盾＋劍意" },
+      {
+        name: "劍意護體",
+        icon: "界",
+        block: 145,
+        strength: 8,
+        text: "護盾＋劍意",
+      },
       { name: "仙隕", icon: "星", damage: 235, vuln: 1, text: "重擊＋破綻" },
     ],
   },
@@ -763,8 +868,20 @@ const villains = [
     trait: "燭龍逆鱗：生命與護甲最高，龍焰會持續累積。",
     moves: [
       { name: "龍爪裂地", icon: "爪", damage: 142, text: "龍爪攻擊" },
-      { name: "燭世龍息", icon: "炎", damage: 85, burn: 4, text: "攻擊＋大量灼燒" },
-      { name: "逆鱗天甲", icon: "鱗", block: 175, strength: 7, text: "護盾＋強化" },
+      {
+        name: "燭世龍息",
+        icon: "炎",
+        damage: 85,
+        burn: 4,
+        text: "攻擊＋大量灼燒",
+      },
+      {
+        name: "逆鱗天甲",
+        icon: "鱗",
+        block: 175,
+        strength: 7,
+        text: "護盾＋強化",
+      },
       { name: "日蝕焚天", icon: "日", damage: 260, burn: 2, text: "毀滅龍焰" },
     ],
   },
@@ -780,10 +897,34 @@ const villains = [
     armor: 0.09,
     trait: "無相禁法：會抽走星能、施加中毒並壓縮你的卡牌上限。",
     moves: [
-      { name: "無相魔手", icon: "掌", damage: 110, poison: 2, text: "攻擊＋中毒" },
-      { name: "吞靈禁式", icon: "禁", damage: 72, energyDrain: 24, text: "攻擊＋吸收星能" },
-      { name: "倒懸法界", icon: "界", block: 150, limitPenalty: 1, text: "護盾＋壓制出牌" },
-      { name: "萬相俱滅", icon: "滅", damage: 238, poison: 2, text: "重擊＋中毒" },
+      {
+        name: "無相魔手",
+        icon: "掌",
+        damage: 110,
+        poison: 2,
+        text: "攻擊＋中毒",
+      },
+      {
+        name: "吞靈禁式",
+        icon: "禁",
+        damage: 72,
+        energyDrain: 24,
+        text: "攻擊＋吸收星能",
+      },
+      {
+        name: "倒懸法界",
+        icon: "界",
+        block: 150,
+        limitPenalty: 1,
+        text: "護盾＋壓制出牌",
+      },
+      {
+        name: "萬相俱滅",
+        icon: "滅",
+        damage: 238,
+        poison: 2,
+        text: "重擊＋中毒",
+      },
     ],
   },
 ];
@@ -821,16 +962,49 @@ let battleGeneration = 0;
 
 const fields = [
   { id: "spring", name: "靈泉守陣", desc: "開戰獲得 70 護盾。", icon: "泉" },
-  { id: "stars", name: "星潮湧動", desc: "每回合額外恢復 8 星能。", icon: "星" },
+  {
+    id: "stars",
+    name: "星潮湧動",
+    desc: "每回合額外恢復 8 星能。",
+    icon: "星",
+  },
   { id: "fire", name: "焚天劍域", desc: "雙方攻擊提高 12 點。", icon: "炎" },
-  { id: "mist", name: "雲海悟道", desc: "每回合手牌上限增加 1 張。", icon: "雲" },
-  { id: "iron", name: "玄鐵堡壘", desc: "敵方開戰獲得 90 護盾；你的防禦提高 20。", icon: "盾" },
+  {
+    id: "mist",
+    name: "雲海悟道",
+    desc: "每回合手牌上限增加 1 張。",
+    icon: "雲",
+  },
+  {
+    id: "iron",
+    name: "玄鐵堡壘",
+    desc: "敵方開戰獲得 90 護盾；你的防禦提高 20。",
+    icon: "盾",
+  },
 ];
 
 const rewardCatalog = [
-  { id: "heal", icon: "泉", name: "靈泉補給", desc: "恢復最大生命的 40%。", kind: "補給" },
-  { id: "power", icon: "劍", name: "破軍劍印", desc: "往後每一戰，攻擊基礎值 +12。", kind: "秘寶" },
-  { id: "guard", icon: "盾", name: "玄武甲片", desc: "往後每一戰，防禦基礎值 +18。", kind: "秘寶" },
+  {
+    id: "heal",
+    icon: "泉",
+    name: "靈泉補給",
+    desc: "恢復最大生命的 40%。",
+    kind: "補給",
+  },
+  {
+    id: "power",
+    icon: "劍",
+    name: "破軍劍印",
+    desc: "往後每一戰，攻擊基礎值 +12。",
+    kind: "秘寶",
+  },
+  {
+    id: "guard",
+    icon: "盾",
+    name: "玄武甲片",
+    desc: "往後每一戰，防禦基礎值 +18。",
+    kind: "秘寶",
+  },
   {
     id: "vital",
     icon: "命",
@@ -932,7 +1106,12 @@ function showScreen(id) {
   document.body.classList.toggle("battle-mode", id === "battleScreen");
   document.body.classList.toggle(
     "setup-mode",
-    ["selectScreen", "supportScreen", "challengeScreen", "rewardScreen"].includes(id),
+    [
+      "selectScreen",
+      "supportScreen",
+      "challengeScreen",
+      "rewardScreen",
+    ].includes(id),
   );
   syncViewportHeight();
   window.scrollTo(0, 0);
@@ -965,7 +1144,9 @@ function renderFighters() {
   $$(".fighter-card").forEach(
     (node) =>
       (node.onclick = () => {
-        const fighter = fighters.find((fighter) => fighter.id === node.dataset.id);
+        const fighter = fighters.find(
+          (fighter) => fighter.id === node.dataset.id,
+        );
         if (selectedFighter?.id !== fighter.id) {
           selectedSupports = [];
           selectedVillain = null;
@@ -1025,7 +1206,8 @@ function renderSupports() {
         updateSetupState();
       }),
   );
-  $("#supportSlotText").textContent = `已選 ${selectedSupports.length} / ${slots}`;
+  $("#supportSlotText").textContent =
+    `已選 ${selectedSupports.length} / ${slots}`;
   $("#selectedSkillChips").innerHTML = selectedSupports.length
     ? selectedSupports
         .map((id, index) => {
@@ -1039,11 +1221,15 @@ function renderSupports() {
     : `尚未選擇（需要 ${slots} 張）`;
   $("#toChallengeBtn").disabled = selectedSupports.length !== slots;
   $("#toChallengeBtn").textContent =
-    selectedSupports.length === slots ? "確認技能 →" : `再選 ${slots - selectedSupports.length} 張`;
+    selectedSupports.length === slots
+      ? "確認技能 →"
+      : `再選 ${slots - selectedSupports.length} 張`;
   $$("[data-remove-support]").forEach(
     (button) =>
       (button.onclick = () => {
-        selectedSupports = selectedSupports.filter((id) => id !== button.dataset.removeSupport);
+        selectedSupports = selectedSupports.filter(
+          (id) => id !== button.dataset.removeSupport,
+        );
         renderSupports();
         updateSetupState();
       }),
@@ -1062,7 +1248,9 @@ function renderVillains() {
   $$(".villain-card").forEach(
     (node) =>
       (node.onclick = () => {
-        selectedVillain = villains.find((villain) => villain.id === node.dataset.id);
+        selectedVillain = villains.find(
+          (villain) => villain.id === node.dataset.id,
+        );
         renderVillains();
         updateSetupState();
       }),
@@ -1071,7 +1259,10 @@ function renderVillains() {
 
 function renderDifficulty() {
   $$(".difficulty-card").forEach((node) => {
-    node.classList.toggle("selected", node.dataset.difficulty === selectedDifficulty);
+    node.classList.toggle(
+      "selected",
+      node.dataset.difficulty === selectedDifficulty,
+    );
     node.onclick = () => {
       selectedDifficulty = node.dataset.difficulty;
       renderDifficulty();
@@ -1086,16 +1277,20 @@ function updateSetupState() {
     : "尚未選擇反派";
   $("#battleBtn").disabled =
     !selectedFighter || !selectedVillain || selectedSupports.length !== slots;
-  $("#battleBtn").textContent = selectedMode === "trial" ? "開始試煉 →" : "開始討伐 →";
+  $("#battleBtn").textContent =
+    selectedMode === "trial" ? "開始試煉 →" : "開始討伐 →";
 }
 
 function scaleIntent(move) {
   const difficulty = difficulties[selectedDifficulty];
   const scaled = clone(move);
-  if (scaled.damage) scaled.damage = Math.round(scaled.damage * difficulty.damage);
+  if (scaled.damage)
+    scaled.damage = Math.round(scaled.damage * difficulty.damage);
   if (scaled.block) scaled.block = Math.round(scaled.block * difficulty.block);
   scaled.text = [
-    scaled.damage ? `基礎攻擊 ${scaled.damage}${scaled.hits ? ` × ${scaled.hits}` : ""}` : "",
+    scaled.damage
+      ? `基礎攻擊 ${scaled.damage}${scaled.hits ? ` × ${scaled.hits}` : ""}`
+      : "",
     scaled.block ? `護盾 ${scaled.block}` : "",
     scaled.heal ? `治療 ${scaled.heal}` : "",
     scaled.strength ? `劍勢 +${scaled.strength}` : "",
@@ -1136,7 +1331,9 @@ function startBattle(continuingTrial = false) {
             stage: 0,
             route: [
               selectedVillain,
-              ...shuffle(villains.filter((v) => v.id !== selectedVillain.id)).slice(0, 2),
+              ...shuffle(
+                villains.filter((v) => v.id !== selectedVillain.id),
+              ).slice(0, 2),
             ],
             fields: shuffle([...fields]).slice(0, 3),
             hp: selectedFighter.hp,
@@ -1214,7 +1411,8 @@ function startBattle(continuingTrial = false) {
     player.strength += 12;
     enemy.strength += 12;
   }
-  if (currentField?.id === "mist") player.handSize = Math.min(9, player.handSize + 1);
+  if (currentField?.id === "mist")
+    player.handSize = Math.min(9, player.handSize + 1);
   if (currentField?.id === "iron") {
     enemy.block = 90;
     player.guard += 20;
@@ -1244,7 +1442,8 @@ function startBattle(continuingTrial = false) {
   $("#enemyName").textContent = enemy.name;
   $("#enemyTitle").textContent = enemy.title;
   $("#battleTitle").textContent = enemy.realm;
-  $("#battleScreen .battle-bg").style.backgroundImage = `url("${enemy.background}")`;
+  $("#battleScreen .battle-bg").style.backgroundImage =
+    `url("${enemy.background}")`;
   currentIntent = chooseIntent();
   addLog(
     `${player.name} 進入「${enemy.realm}」，挑戰 ${enemy.name}｜${difficulty.label}難度。`,
@@ -1254,8 +1453,10 @@ function startBattle(continuingTrial = false) {
     `角色規則：${player.ap} 行動點、每回合抽 ${player.handSize} 張、最多使用 ${player.cardLimit} 張、初始星能 ${player.initialEnergy}。`,
     "system",
   );
-  if (currentField) addLog(`場地「${currentField.name}」：${currentField.desc}`, "system");
-  if (trial?.rewards.length) addLog(`攜帶秘寶與獎勵：${trial.rewards.join("、")}`, "system");
+  if (currentField)
+    addLog(`場地「${currentField.name}」：${currentField.desc}`, "system");
+  if (trial?.rewards.length)
+    addLog(`攜帶秘寶與獎勵：${trial.rewards.join("、")}`, "system");
   drawTo(player.handSize);
   renderBattle();
   showScreen("battleScreen");
@@ -1276,12 +1477,16 @@ function drawCards(amount) {
 }
 
 function drawTo(amount) {
-  while (hand.length < amount && (drawPile.length || discardPile.length)) drawOne();
+  while (hand.length < amount && (drawPile.length || discardPile.length))
+    drawOne();
 }
 
 function renderBattle() {
   const hpRatio = player.hp / player.maxHp;
-  $("#battleScreen").classList.toggle("danger-low", hpRatio <= 0.5 && hpRatio > 0.25);
+  $("#battleScreen").classList.toggle(
+    "danger-low",
+    hpRatio <= 0.5 && hpRatio > 0.25,
+  );
   $("#battleScreen").classList.toggle("danger-critical", hpRatio <= 0.25);
   $("#difficultyChip").textContent = difficulties[selectedDifficulty].label;
   $("#roundNum").textContent = round;
@@ -1293,8 +1498,10 @@ function renderBattle() {
   $("#playerHpText").textContent = `${Math.ceil(player.hp)} / ${player.maxHp}`;
   $("#enemyHpText").textContent = `${Math.ceil(enemy.hp)} / ${enemy.maxHp}`;
   $("#playerEnergyText").textContent = `${Math.floor(player.energy)} / 100`;
-  $("#playerHpBar").style.width = `${clamp((player.hp / player.maxHp) * 100, 0, 100)}%`;
-  $("#enemyHpBar").style.width = `${clamp((enemy.hp / enemy.maxHp) * 100, 0, 100)}%`;
+  $("#playerHpBar").style.width =
+    `${clamp((player.hp / player.maxHp) * 100, 0, 100)}%`;
+  $("#enemyHpBar").style.width =
+    `${clamp((enemy.hp / enemy.maxHp) * 100, 0, 100)}%`;
   $("#playerEnergyBar").style.width = `${clamp(player.energy, 0, 100)}%`;
   $("#intentName").textContent = currentIntent.name;
   $("#intentValue").textContent = `${currentIntent.icon} ${currentIntent.text}`;
@@ -1445,25 +1652,58 @@ function cardEffectBadges(item) {
       value: `${Math.round(item.shieldDamage * 100)}%`,
       label: "護盾轉傷",
     });
-  if (item.block) effects.push({ icon: "⬡", value: item.block, label: "基礎護盾" });
-  if (item.heal) effects.push({ icon: "♥", value: item.heal, label: "生命回復" });
-  if (item.energyGain) effects.push({ icon: "✦", value: `+${item.energyGain}`, label: "獲得星能" });
-  if (item.energyCost) effects.push({ icon: "✦", value: `-${item.energyCost}`, label: "消耗星能" });
-  if (item.draw) effects.push({ icon: "▣", value: `+${item.draw}`, label: "抽取卡牌" });
-  if (item.apGain) effects.push({ icon: "●", value: `+${item.apGain}`, label: "獲得行動力" });
-  if (item.burn) effects.push({ icon: "炎", value: item.burn, label: "施加灼燒" });
-  if (item.poison) effects.push({ icon: "毒", value: item.poison, label: "施加中毒" });
-  if (item.bleed) effects.push({ icon: "血", value: item.bleed, label: "施加流血" });
-  if (item.vuln) effects.push({ icon: "破", value: item.vuln, label: "施加破綻" });
-  if (item.weak) effects.push({ icon: "弱", value: item.weak, label: "施加弱化" });
-  if (item.counter) effects.push({ icon: "↶", value: item.counter, label: "反擊傷害" });
+  if (item.block)
+    effects.push({ icon: "⬡", value: item.block, label: "基礎護盾" });
+  if (item.heal)
+    effects.push({ icon: "♥", value: item.heal, label: "生命回復" });
+  if (item.energyGain)
+    effects.push({
+      icon: "✦",
+      value: `+${item.energyGain}`,
+      label: "獲得星能",
+    });
+  if (item.energyCost)
+    effects.push({
+      icon: "✦",
+      value: `-${item.energyCost}`,
+      label: "消耗星能",
+    });
+  if (item.draw)
+    effects.push({ icon: "▣", value: `+${item.draw}`, label: "抽取卡牌" });
+  if (item.apGain)
+    effects.push({ icon: "●", value: `+${item.apGain}`, label: "獲得行動力" });
+  if (item.burn)
+    effects.push({ icon: "炎", value: item.burn, label: "施加灼燒" });
+  if (item.poison)
+    effects.push({ icon: "毒", value: item.poison, label: "施加中毒" });
+  if (item.bleed)
+    effects.push({ icon: "血", value: item.bleed, label: "施加流血" });
+  if (item.vuln)
+    effects.push({ icon: "破", value: item.vuln, label: "施加破綻" });
+  if (item.weak)
+    effects.push({ icon: "弱", value: item.weak, label: "施加弱化" });
+  if (item.counter)
+    effects.push({ icon: "↶", value: item.counter, label: "反擊傷害" });
   if (item.summon)
-    effects.push({ icon: "獸", value: `${item.summon.turns} 回合`, label: "召喚持續" });
-  if (item.regen) effects.push({ icon: "春", value: `${item.regen} 回合`, label: "再生持續" });
-  if (item.strength) effects.push({ icon: "▲", value: `+${item.strength}`, label: "永久攻擊" });
-  if (item.stun) effects.push({ icon: "封", value: item.stun, label: "封鎖回合" });
-  if (item.cleanse) effects.push({ icon: "淨", value: "全部", label: "清除異常" });
-  if (item.ward) effects.push({ icon: "命", value: item.ward, label: "抵擋致命傷" });
+    effects.push({
+      icon: "獸",
+      value: `${item.summon.turns} 回合`,
+      label: "召喚持續",
+    });
+  if (item.regen)
+    effects.push({
+      icon: "春",
+      value: `${item.regen} 回合`,
+      label: "再生持續",
+    });
+  if (item.strength)
+    effects.push({ icon: "▲", value: `+${item.strength}`, label: "永久攻擊" });
+  if (item.stun)
+    effects.push({ icon: "封", value: item.stun, label: "封鎖回合" });
+  if (item.cleanse)
+    effects.push({ icon: "淨", value: "全部", label: "清除異常" });
+  if (item.ward)
+    effects.push({ icon: "命", value: item.ward, label: "抵擋致命傷" });
   return effects.slice(0, 4);
 }
 
@@ -1472,7 +1712,8 @@ function renderHand() {
   $("#hand").innerHTML = hand
     .map((item, index) => {
       const noEnergy = (item.energyCost || 0) > player.energy;
-      const resolving = busy && !battleOver && $("#turnLabel").textContent === "你的回合";
+      const resolving =
+        busy && !battleOver && $("#turnLabel").textContent === "你的回合";
       const reason = battleOver
         ? "戰鬥已結束"
         : busy
@@ -1506,7 +1747,9 @@ function renderHand() {
     </article>`;
     })
     .join("");
-  $$(".battle-card").forEach((node) => (node.onclick = () => playCard(Number(node.dataset.index))));
+  $$(".battle-card").forEach(
+    (node) => (node.onclick = () => playCard(Number(node.dataset.index))),
+  );
   $$("[data-card-info]").forEach(
     (button) =>
       (button.onclick = (event) => {
@@ -1552,14 +1795,18 @@ function dealDamage(target, amount, source, options = {}) {
     if (player.weak) damage = Math.round(damage * 0.72);
     if (enemy.vulnerable) damage = Math.round(damage * 1.22);
     if (player.id === "ember" && enemy.burn) damage = Math.round(damage * 1.18);
-    if (player.id === "ember" && player.hp / player.maxHp < 0.5) damage = Math.round(damage * 1.25);
-    if (player.id === "shadow" && attacksThisTurn === 0) damage = Math.round(damage * 1.6);
-    if (!options.magic) damage = Math.max(1, Math.round(damage * (1 - enemy.armor)));
+    if (player.id === "ember" && player.hp / player.maxHp < 0.5)
+      damage = Math.round(damage * 1.25);
+    if (player.id === "shadow" && attacksThisTurn === 0)
+      damage = Math.round(damage * 1.6);
+    if (!options.magic)
+      damage = Math.max(1, Math.round(damage * (1 - enemy.armor)));
   } else {
     damage += enemy.strength;
     if (enemy.weak) damage = Math.round(damage * 0.72);
     if (player.vulnerable) damage = Math.round(damage * 1.22);
-    if (options.bonusUnblocked && player.block <= 0) damage += options.bonusUnblocked;
+    if (options.bonusUnblocked && player.block <= 0)
+      damage += options.bonusUnblocked;
   }
   const absorbed = Math.min(target.block, damage);
   target.block -= absorbed;
@@ -1570,7 +1817,8 @@ function dealDamage(target, amount, source, options = {}) {
     addLog("逆命護符碎裂，抵擋了致命傷害！", "system");
   }
   target.hp = clamp(target.hp - actual, 0, target.maxHp);
-  if (absorbed) Spectacle.absorb(target === enemy ? "enemy" : "player", absorbed);
+  if (absorbed)
+    Spectacle.absorb(target === enemy ? "enemy" : "player", absorbed);
   if (target === player && damage > 0 && player.counter) {
     const counter = player.counter;
     player.counter = 0;
@@ -1592,25 +1840,35 @@ function playCard(index) {
   const item = hand[index];
   if (!item) return;
   const limit = Math.max(1, player.cardLimit - player.limitPenalty);
-  if (cardsThisTurn >= limit) return toast(`${player.name} 本回合最多使用 ${limit} 張牌`);
+  if (cardsThisTurn >= limit)
+    return toast(`${player.name} 本回合最多使用 ${limit} 張牌`);
   if (item.ap > ap) return toast("行動點不足");
-  if ((item.energyCost || 0) > player.energy) return toast(`需要 ${item.energyCost} 星能`);
+  if ((item.energyCost || 0) > player.energy)
+    return toast(`需要 ${item.energyCost} 星能`);
 
   const visualBefore = Spectacle.attack(item, player);
   ap -= item.ap;
-  player.energy = clamp(player.energy - (item.energyCost || 0) + (item.energyGain || 0), 0, 100);
+  player.energy = clamp(
+    player.energy - (item.energyCost || 0) + (item.energyGain || 0),
+    0,
+    100,
+  );
   animateUnit(".player-unit .unit-art", "cast", item.icon);
   let dealt = 0;
   const isAttack = Boolean(item.damage);
   const hits = item.hits || 1;
-  const shieldDamage = item.shieldDamage ? Math.ceil(player.block * item.shieldDamage) : 0;
+  const shieldDamage = item.shieldDamage
+    ? Math.ceil(player.block * item.shieldDamage)
+    : 0;
   if (shieldDamage) {
     player.block -= shieldDamage;
     addLog(`玄甲震擊：消耗 ${shieldDamage} 護盾，轉為額外基礎傷害。`, "player");
   }
   if (item.damage) {
     for (let i = 0; i < hits; i++)
-      dealt += dealDamage(enemy, item.damage + shieldDamage, player, { magic: item.magic }).actual;
+      dealt += dealDamage(enemy, item.damage + shieldDamage, player, {
+        magic: item.magic,
+      }).actual;
   }
   if (item.block) {
     let block = Math.round((item.block * player.guard) / 100);
@@ -1627,14 +1885,20 @@ function playCard(index) {
       0,
       player.maxHp,
     );
-  if (item.selfDamage) player.hp = clamp(player.hp - item.selfDamage, 1, player.maxHp);
+  if (item.selfDamage)
+    player.hp = clamp(player.hp - item.selfDamage, 1, player.maxHp);
   if (item.strength) player.strength += item.strength;
   if (item.counter) player.counter += item.counter;
   if (item.regen) player.regen = Math.max(player.regen, item.regen);
   if (item.ward) player.ward += item.ward;
   if (item.summon) player.summon = clone(item.summon);
   if (item.cleanse) {
-    player.burn = player.poison = player.bleed = player.vulnerable = player.weak = 0;
+    player.burn =
+      player.poison =
+      player.bleed =
+      player.vulnerable =
+      player.weak =
+        0;
   }
   if (item.burn) enemy.burn += item.burn;
   if (item.poison) enemy.poison += item.poison;
@@ -1652,7 +1916,8 @@ function playCard(index) {
 
   if (player.id === "azure" && isAttack && attacksThisTurn === 0)
     player.energy = clamp(player.energy + 8, 0, 100);
-  if (player.id === "frost" && isAttack && attacksThisTurn === 0) enemy.vulnerable += 1;
+  if (player.id === "frost" && isAttack && attacksThisTurn === 0)
+    enemy.vulnerable += 1;
   if (isAttack) attacksThisTurn++;
   if (player.id === "frost" && isAttack && attacksThisTurn === 2) {
     const bonus = dealDamage(enemy, 45, player, {}).actual;
@@ -1684,7 +1949,10 @@ function playCard(index) {
     ap += 1;
     addLog("影步循環：返還 1 點行動力。", "system");
   }
-  addLog(`${player.name} 使用「${item.name}」${dealt ? `，造成 ${dealt} 傷害` : ""}。`, "player");
+  addLog(
+    `${player.name} 使用「${item.name}」${dealt ? `，造成 ${dealt} 傷害` : ""}。`,
+    "player",
+  );
   totalDamage += dealt;
   Spectacle.outcome(visualBefore, player, "player", item, dealt);
   busy = true;
@@ -1718,7 +1986,13 @@ function enemyTurn() {
   if (enemy.stunned) {
     enemy.stunned--;
     addLog(`${enemy.name} 被封鎖，本回合無法行動。`, "enemy");
-    Spectacle.announce("敵方行動", "封印生效", `${enemy.name} 無法行動。`, "#b3a6df", true);
+    Spectacle.announce(
+      "敵方行動",
+      "封印生效",
+      `${enemy.name} 無法行動。`,
+      "#b3a6df",
+      true,
+    );
   } else {
     const visualBefore = Spectacle.attack(currentIntent, enemy, "enemy");
     const hits = currentIntent.hits || 1;
@@ -1730,7 +2004,8 @@ function enemyTurn() {
         }).actual;
     }
     if (currentIntent.block) enemy.block += currentIntent.block;
-    if (currentIntent.heal) enemy.hp = clamp(enemy.hp + currentIntent.heal, 0, enemy.maxHp);
+    if (currentIntent.heal)
+      enemy.hp = clamp(enemy.hp + currentIntent.heal, 0, enemy.maxHp);
     if (currentIntent.strength) enemy.strength += currentIntent.strength;
     if (currentIntent.burn) player.burn += currentIntent.burn;
     if (currentIntent.poison) player.poison += currentIntent.poison;
@@ -1740,9 +2015,15 @@ function enemyTurn() {
     if (currentIntent.energyDrain)
       player.energy = Math.max(0, player.energy - currentIntent.energyDrain);
     if (currentIntent.drawPenalty)
-      player.drawPenalty = Math.max(player.drawPenalty, currentIntent.drawPenalty);
+      player.drawPenalty = Math.max(
+        player.drawPenalty,
+        currentIntent.drawPenalty,
+      );
     if (currentIntent.limitPenalty)
-      player.limitPenalty = Math.max(player.limitPenalty, currentIntent.limitPenalty);
+      player.limitPenalty = Math.max(
+        player.limitPenalty,
+        currentIntent.limitPenalty,
+      );
     addLog(
       `${enemy.name} 使用「${currentIntent.name}」${total ? `，造成 ${total} 傷害` : ""}。`,
       "enemy",
@@ -1756,11 +2037,21 @@ function enemyTurn() {
     }
   }
   if (selectedVillain.id === "prison" && round % 3 === 0) enemy.strength += 7;
-  if (selectedVillain.id === "bloodmoon" && enemy.hp / enemy.maxHp < 0.5 && !phaseTriggered) {
+  if (
+    selectedVillain.id === "bloodmoon" &&
+    enemy.hp / enemy.maxHp < 0.5 &&
+    !phaseTriggered
+  ) {
     enemy.strength += 24;
     phaseTriggered = true;
     Spectacle.queue("nova", "enemy", "#ee819d", 0, 1.5);
-    Spectacle.announce("魔相覺醒", "血月魔尊", "攻擊永久提高，留意下一回合意圖！", "#ee819d", true);
+    Spectacle.announce(
+      "魔相覺醒",
+      "血月魔尊",
+      "攻擊永久提高，留意下一回合意圖！",
+      "#ee819d",
+      true,
+    );
     addLog("血月魔相覺醒：血月魔尊的攻擊永久提高！", "enemy");
   }
   applyDots(enemy, "enemy");
@@ -1783,8 +2074,17 @@ function applyDots(unit, side) {
       "hit",
       damage,
     );
-    Spectacle.queue("impact", side, unit.poison ? "#9ad78a" : "#f3a06c", 0, 0.75);
-    addLog(`${unit.name} 受到 ${damage} 點持續傷害。`, side === "player" ? "enemy" : "player");
+    Spectacle.queue(
+      "impact",
+      side,
+      unit.poison ? "#9ad78a" : "#f3a06c",
+      0,
+      0.75,
+    );
+    addLog(
+      `${unit.name} 受到 ${damage} 點持續傷害。`,
+      side === "player" ? "enemy" : "player",
+    );
   }
 }
 
@@ -1802,7 +2102,11 @@ function nextRound() {
   attacksThisTurn = 0;
   firstDefenseUsed = false;
   firstSpellUsed = false;
-  player.energy = clamp(player.energy + 7 + (currentField?.id === "stars" ? 8 : 0), 0, 100);
+  player.energy = clamp(
+    player.energy + 7 + (currentField?.id === "stars" ? 8 : 0),
+    0,
+    100,
+  );
   if (player.id === "jade") player.block += 24;
   if (player.regen) {
     const amount = Math.round(player.maxHp * 0.06);
@@ -1814,7 +2118,9 @@ function nextRound() {
   }
   if (player.summon) {
     Spectacle.queue("spell", "enemy", "#8de9c1");
-    const damage = dealDamage(enemy, player.summon.damage, player, { magic: true }).actual;
+    const damage = dealDamage(enemy, player.summon.damage, player, {
+      magic: true,
+    }).actual;
     totalDamage += damage;
     player.summon.turns--;
     addLog(`召喚靈獸造成 ${damage} 點傷害。`, "player");
@@ -1858,7 +2164,8 @@ function addLog(text, type = "system") {
   message.textContent = text;
   row.append(turn, message);
   $("#battleLog").prepend(row);
-  if ($("#battleLog").childElementCount > 160) $("#battleLog").lastElementChild.remove();
+  if ($("#battleLog").childElementCount > 160)
+    $("#battleLog").lastElementChild.remove();
 }
 
 function toast(text) {
@@ -1874,7 +2181,10 @@ function checkEnd() {
   battleOver = true;
   busy = true;
   renderBattle();
-  scheduleBattle(() => finishBattle(enemy.hp <= 0 && player.hp > 0), Spectacle.finishDelay());
+  scheduleBattle(
+    () => finishBattle(enemy.hp <= 0 && player.hp > 0),
+    Spectacle.finishDelay(),
+  );
   return true;
 }
 
@@ -1910,7 +2220,9 @@ function showTrialRewards() {
   selectedReward = null;
   rewardOptions = [
     rewardCatalog[0],
-    ...shuffle(rewardCatalog.slice(1).filter((r) => !trial.rewards.includes(r.name))).slice(0, 2),
+    ...shuffle(
+      rewardCatalog.slice(1).filter((r) => !trial.rewards.includes(r.name)),
+    ).slice(0, 2),
   ];
   $("#rewardTitle").textContent = `第 ${trial.stage + 1} 關突破 · 選擇獎勵`;
   $("#trialProgress").innerHTML =
@@ -1926,7 +2238,9 @@ function showTrialRewards() {
   $$("[data-reward]").forEach(
     (button) =>
       (button.onclick = () => {
-        selectedReward = rewardOptions.find((r) => r.id === button.dataset.reward);
+        selectedReward = rewardOptions.find(
+          (r) => r.id === button.dataset.reward,
+        );
         $$("[data-reward]").forEach((node) => {
           node.classList.toggle("selected", node === button);
           node.setAttribute("aria-pressed", String(node === button));
@@ -1942,7 +2256,8 @@ function continueTrial() {
   if (!trial || !selectedReward || trial.stage >= 2) return;
   const r = selectedReward;
   const maxHp = selectedFighter.hp + trial.maxHpBonus;
-  if (r.id === "heal") trial.hp = Math.min(maxHp, trial.hp + Math.round(maxHp * 0.4));
+  if (r.id === "heal")
+    trial.hp = Math.min(maxHp, trial.hp + Math.round(maxHp * 0.4));
   if (r.id === "power") trial.powerBonus += 12;
   if (r.id === "guard") trial.guardBonus += 18;
   if (r.id === "vital") {
@@ -1978,7 +2293,9 @@ $("#closeRules").onclick = () => {
 $("#rulesModal").onclick = (event) => {
   if (event.target === $("#rulesModal")) closeRules();
 };
-$$("[data-back]").forEach((button) => (button.onclick = () => showScreen(button.dataset.back)));
+$$("[data-back]").forEach(
+  (button) => (button.onclick = () => showScreen(button.dataset.back)),
+);
 $("#toSupportBtn").onclick = () => {
   supportFilter = "all";
   updateSupportFilters();
@@ -1986,7 +2303,11 @@ $("#toSupportBtn").onclick = () => {
   showScreen("supportScreen");
 };
 $("#toChallengeBtn").onclick = () => {
-  if (!selectedFighter || selectedSupports.length !== selectedFighter.supportSlots) return;
+  if (
+    !selectedFighter ||
+    selectedSupports.length !== selectedFighter.supportSlots
+  )
+    return;
   renderVillains();
   renderDifficulty();
   updateSetupState();
@@ -2021,7 +2342,8 @@ function setLogOpen(open) {
     $("#closeLog").focus();
   }
 }
-$("#logToggle").onclick = () => setLogOpen(!$("#logPanel").classList.contains("open"));
+$("#logToggle").onclick = () =>
+  setLogOpen(!$("#logPanel").classList.contains("open"));
 $("#closeLog").onclick = () => {
   setLogOpen(false);
   $("#logToggle").focus();
@@ -2095,9 +2417,9 @@ document.addEventListener("keydown", (event) => {
   }
   const modal = $(".modal.open");
   if (modal && event.key === "Tab") {
-    const targets = [...modal.querySelectorAll('button:not(:disabled),[tabindex="0"]')].filter(
-      (node) => node.getClientRects().length,
-    );
+    const targets = [
+      ...modal.querySelectorAll('button:not(:disabled),[tabindex="0"]'),
+    ].filter((node) => node.getClientRects().length);
     const first = targets[0],
       last = targets[targets.length - 1];
     if (event.shiftKey && document.activeElement === first) {

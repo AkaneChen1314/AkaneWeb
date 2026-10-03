@@ -509,7 +509,13 @@ const CLASS_GEAR_BLUEPRINTS = {
   knight: {
     material: "ore",
     secondary: "fang",
-    weapons: ["鐵衛長劍", "狼牙騎士劍", "聖銀王劍", "龍魂誓約劍", "虹耀天穹聖劍"],
+    weapons: [
+      "鐵衛長劍",
+      "狼牙騎士劍",
+      "聖銀王劍",
+      "龍魂誓約劍",
+      "虹耀天穹聖劍",
+    ],
     weaponIcons: ["🗡️", "⚔️", "⚜️", "🐲", "🌈"],
     armors: ["鐵衛胸甲", "王城重鎧", "聖銀守護鎧", "龍魂神鎧", "虹耀永恆神鎧"],
     armorIcons: ["🥋", "🛡️", "🦾", "🐉", "💠"],
@@ -517,17 +523,41 @@ const CLASS_GEAR_BLUEPRINTS = {
   rogue: {
     material: "wing",
     secondary: "silk",
-    weapons: ["新月匕首", "影翼雙匕首", "夜蛛暗刃", "虛空弒神刃", "幻虹萬象雙刃"],
+    weapons: [
+      "新月匕首",
+      "影翼雙匕首",
+      "夜蛛暗刃",
+      "虛空弒神刃",
+      "幻虹萬象雙刃",
+    ],
     weaponIcons: ["🔪", "🗡️", "🕷️", "🌑", "🌈"],
-    armors: ["暗行皮甲", "影翼斗篷", "夜蛛幻影衣", "虛空無形甲", "幻虹無相夜衣"],
+    armors: [
+      "暗行皮甲",
+      "影翼斗篷",
+      "夜蛛幻影衣",
+      "虛空無形甲",
+      "幻虹無相夜衣",
+    ],
     armorIcons: ["🥋", "🦇", "🕸️", "🌌", "🔮"],
   },
   mage: {
     material: "dust",
     secondary: "ore",
-    weapons: ["學徒法杖", "元素導能杖", "星辰秘法杖", "創世大賢者杖", "七彩神域法杖"],
+    weapons: [
+      "學徒法杖",
+      "元素導能杖",
+      "星辰秘法杖",
+      "創世大賢者杖",
+      "七彩神域法杖",
+    ],
     weaponIcons: ["🪄", "🔮", "🌠", "✨", "🌈"],
-    armors: ["魔法長袍", "元素法衣", "星辰術士袍", "創世法神袍", "七彩神域星袍"],
+    armors: [
+      "魔法長袍",
+      "元素法衣",
+      "星辰術士袍",
+      "創世法神袍",
+      "七彩神域星袍",
+    ],
     armorIcons: ["🥻", "🔥", "🌟", "🌌", "💫"],
   },
   ranger: {
@@ -535,23 +565,53 @@ const CLASS_GEAR_BLUEPRINTS = {
     secondary: "silk",
     weapons: ["獵人短弓", "裂牙獵弓", "蒼風穿雲弓", "龍脈星弓", "虹界破曉神弓"],
     weaponIcons: ["🏹", "🎯", "🌪️", "🌠", "🌈"],
-    armors: ["斥候皮甲", "荒野獵裝", "蒼風遊俠甲", "龍脈追獵衣", "虹界森羅獵裝"],
+    armors: [
+      "斥候皮甲",
+      "荒野獵裝",
+      "蒼風遊俠甲",
+      "龍脈追獵衣",
+      "虹界森羅獵裝",
+    ],
     armorIcons: ["🥋", "🌿", "🍃", "🐉", "🦚"],
   },
   priest: {
     material: "cloth",
     secondary: "dust",
-    weapons: ["木製聖杖", "祝福權杖", "熾天使聖杖", "神諭救世權杖", "虹光創世聖杖"],
+    weapons: [
+      "木製聖杖",
+      "祝福權杖",
+      "熾天使聖杖",
+      "神諭救世權杖",
+      "虹光創世聖杖",
+    ],
     weaponIcons: ["🪄", "☀️", "🪽", "🕊️", "🌈"],
-    armors: ["修士白袍", "祝福祭衣", "熾天使聖衣", "神諭救世聖袍", "虹光神恩聖袍"],
+    armors: [
+      "修士白袍",
+      "祝福祭衣",
+      "熾天使聖衣",
+      "神諭救世聖袍",
+      "虹光神恩聖袍",
+    ],
     armorIcons: ["🥻", "🙏", "🪽", "🌟", "🪷"],
   },
   berserker: {
     material: "bone",
     secondary: "fang",
-    weapons: ["粗鐵戰斧", "血牙巨斧", "煉獄狂戰斧", "滅世龍王斧", "虹滅終焉巨斧"],
+    weapons: [
+      "粗鐵戰斧",
+      "血牙巨斧",
+      "煉獄狂戰斧",
+      "滅世龍王斧",
+      "虹滅終焉巨斧",
+    ],
     weaponIcons: ["🪓", "🦷", "🔥", "🐲", "🌈"],
-    armors: ["獸皮戰甲", "血骨狂鎧", "煉獄霸者甲", "滅世龍王鎧", "虹滅不朽戰鎧"],
+    armors: [
+      "獸皮戰甲",
+      "血骨狂鎧",
+      "煉獄霸者甲",
+      "滅世龍王鎧",
+      "虹滅不朽戰鎧",
+    ],
     armorIcons: ["🥋", "🦴", "🔥", "🐉", "🌋"],
   },
 };
@@ -864,11 +924,16 @@ const MONSTERS = MONSTER_DATA.map(([n, i, drop, type, tier]) => ({
 
 function dialogueEffectHint(effect) {
   const parts = [];
-  if (effect.shield) parts.push(`獲得 ${Math.round(effect.shield * 100)}% 最大生命護盾`);
-  if (effect.heal) parts.push(`恢復 ${Math.round(effect.heal * 100)}% 最大生命`);
-  if (effect.resource) parts.push(`恢復 ${Math.round(effect.resource * 100)}% 職業資源`);
-  if (effect.firstStrike) parts.push(`先制削減 Boss ${Math.round(effect.firstStrike * 100)}% 生命`);
-  if (effect.selfDamage) parts.push(`承受 ${Math.round(effect.selfDamage * 100)}% 最大生命代價`);
+  if (effect.shield)
+    parts.push(`獲得 ${Math.round(effect.shield * 100)}% 最大生命護盾`);
+  if (effect.heal)
+    parts.push(`恢復 ${Math.round(effect.heal * 100)}% 最大生命`);
+  if (effect.resource)
+    parts.push(`恢復 ${Math.round(effect.resource * 100)}% 職業資源`);
+  if (effect.firstStrike)
+    parts.push(`先制削減 Boss ${Math.round(effect.firstStrike * 100)}% 生命`);
+  if (effect.selfDamage)
+    parts.push(`承受 ${Math.round(effect.selfDamage * 100)}% 最大生命代價`);
   if (effect.power)
     parts.push(
       `接下來 ${effect.powerHits || 2} 次攻擊提高 ${Math.round((effect.power - 1) * 100)}%`,
@@ -878,8 +943,11 @@ function dialogueEffectHint(effect) {
   if (effect.enemyAtk && effect.enemyAtk > 1)
     parts.push(`Boss 攻擊提高 ${Math.round((effect.enemyAtk - 1) * 100)}%`);
   if (effect.enemyDef)
-    parts.push(`Boss 防禦${effect.enemyDef < 0 ? "降低" : "提高"} ${Math.abs(effect.enemyDef)}`);
-  if (effect.enemyShield) parts.push(`Boss 獲得 ${Math.round(effect.enemyShield * 100)}% 生命護盾`);
+    parts.push(
+      `Boss 防禦${effect.enemyDef < 0 ? "降低" : "提高"} ${Math.abs(effect.enemyDef)}`,
+    );
+  if (effect.enemyShield)
+    parts.push(`Boss 獲得 ${Math.round(effect.enemyShield * 100)}% 生命護盾`);
   return parts.join("，");
 }
 
@@ -1797,7 +1865,9 @@ const WORLD_BOSSES = [
     ),
   },
 ];
-const BOSS_DIALOGUES = Object.fromEntries(WORLD_BOSSES.map((boss) => [boss.n, boss.dialogue]));
+const BOSS_DIALOGUES = Object.fromEntries(
+  WORLD_BOSSES.map((boss) => [boss.n, boss.dialogue]),
+);
 const BOSS_ARENA_COLORS = {
   "ancient-tree": ["#72f5a95c", "#28774758", "#08291f", "#163b28"],
   "bone-king": ["#d4b7ff58", "#69449c55", "#1d1233", "#2b1742"],
@@ -1970,12 +2040,19 @@ const GEAR_VALUE_LABELS = {
   poisonResist: "抗毒機率",
   damageReduce: "傷害減免",
 };
-const GEAR_PERCENT_VALUES = new Set(["crit", "lifesteal", "poisonResist", "damageReduce"]);
+const GEAR_PERCENT_VALUES = new Set([
+  "crit",
+  "lifesteal",
+  "poisonResist",
+  "damageReduce",
+]);
 
 function enhancedGearValue(g, key, level = 0) {
   const base = g[key] || 0;
   if (!base) return 0;
-  if (["crit", "speed", "lifesteal", "poisonResist", "damageReduce"].includes(key))
+  if (
+    ["crit", "speed", "lifesteal", "poisonResist", "damageReduce"].includes(key)
+  )
     return base + level;
   return Math.round(base * (1 + level * 0.14));
 }
@@ -2018,7 +2095,8 @@ function save(force = false) {
       previous = localStorage.getItem(SAVE_KEY);
     if (previous && previous !== next) {
       try {
-        if (JSON.parse(previous)?.started) localStorage.setItem(BACKUP_SAVE_KEY, previous);
+        if (JSON.parse(previous)?.started)
+          localStorage.setItem(BACKUP_SAVE_KEY, previous);
       } catch {}
     }
     localStorage.setItem(SAVE_KEY, next);
@@ -2048,7 +2126,8 @@ function migrateGearId(id, classId) {
 
 function load() {
   try {
-    let raw = localStorage.getItem(SAVE_KEY) || localStorage.getItem(BACKUP_SAVE_KEY),
+    let raw =
+        localStorage.getItem(SAVE_KEY) || localStorage.getItem(BACKUP_SAVE_KEY),
       v = null;
     try {
       v = raw ? JSON.parse(raw) : null;
@@ -2080,7 +2159,8 @@ function load() {
     for (const entry of S.logs) {
       if (typeof entry?.msg !== "string") continue;
       for (const monster of MONSTERS) {
-        if (entry.msg.includes(`「${monster.n}」出現！`)) discoverMonster(monster);
+        if (entry.msg.includes(`「${monster.n}」出現！`))
+          discoverMonster(monster);
       }
     }
     if (S.enemy) discoverMonster(S.enemy);
@@ -2114,15 +2194,23 @@ function load() {
       toast("已修復未完成的終焉戰進度，請重新挑戰最終 Boss");
     }
     if (!DIFF[S.difficulty]) S.difficulty = "normal";
-    S.cooldowns = Array.isArray(S.cooldowns) ? S.cooldowns.slice(0, 3) : [0, 0, 0];
+    S.cooldowns = Array.isArray(S.cooldowns)
+      ? S.cooldowns.slice(0, 3)
+      : [0, 0, 0];
     while (S.cooldowns.length < 3) S.cooldowns.push(0);
     S.cooldowns = S.cooldowns.map((value) =>
       Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0,
     );
-    S.gear.forEach((item) => (item.level = clamp(Math.floor(item.level || 0), 0, 9)));
+    S.gear.forEach(
+      (item) => (item.level = clamp(Math.floor(item.level || 0), 0, 9)),
+    );
     for (const key of ["poison", "burn", "bleed"])
       if (S.debuffs[key])
-        S.debuffTurns[key] = clamp(S.debuffTurns[key] || STATUS_TURNS, 1, STATUS_TURNS);
+        S.debuffTurns[key] = clamp(
+          S.debuffTurns[key] || STATUS_TURNS,
+          1,
+          STATUS_TURNS,
+        );
     if (S.enemy) {
       S.enemy.effects = S.enemy.effects || {};
       S.enemy.effectTurns = S.enemy.effectTurns || {};
@@ -2209,8 +2297,12 @@ function startGame(id) {
     S.level = 99;
     S.gold = 999999;
     S.xpNext = 999999;
-    S.materials = Object.fromEntries(Object.keys(MATERIALS).map((key) => [key, 999]));
-    S.potions = Object.fromEntries(Object.keys(POTIONS).map((key) => [key, 99]));
+    S.materials = Object.fromEntries(
+      Object.keys(MATERIALS).map((key) => [key, 999]),
+    );
+    S.potions = Object.fromEntries(
+      Object.keys(POTIONS).map((key) => [key, 99]),
+    );
   }
   closeModal("startModal");
   log(`你以「${c.name}」開始了冒險。`, true);
@@ -2281,12 +2373,17 @@ function createEnemy(elite = false) {
     actualElite = elite && !worldBoss,
     m = worldBoss ? bossForFloor(S.floor) : pick(monsterPoolForFloor(S.floor)),
     d = DIFF[S.difficulty],
-    growth = 1 + 0.025 * (encounterFloor - 1) + 0.00004 * (encounterFloor - 1) ** 2,
-    attackGrowth = 1 + 0.018 * (encounterFloor - 1) + 0.000015 * (encounterFloor - 1) ** 2,
+    growth =
+      1 + 0.025 * (encounterFloor - 1) + 0.00004 * (encounterFloor - 1) ** 2,
+    attackGrowth =
+      1 + 0.018 * (encounterFloor - 1) + 0.000015 * (encounterFloor - 1) ** 2,
     statusScale = 1 + encounterFloor / 120,
     eliteM = actualElite ? 1.38 : 1;
   const maxHp = Math.round(43 * growth * m.hp * d.hp * eliteM),
-    atk = Math.max(3, Math.round(7 * attackGrowth * m.atk * d.atk * (actualElite ? 1.16 : 1)));
+    atk = Math.max(
+      3,
+      Math.round(7 * attackGrowth * m.atk * d.atk * (actualElite ? 1.16 : 1)),
+    );
   if (actualElite) S.nextEliteAt = S.floor + 3 + Math.floor(Math.random() * 3);
   const enemyTemplate = {
     ...m,
@@ -2303,7 +2400,9 @@ function createEnemy(elite = false) {
     shield: 0,
     phase: 1,
     signature: worldBoss ? BOSS_SIGNATURES[Math.floor(S.floor / 50) - 1] : null,
-    signatureEffect: worldBoss ? BOSS_SPECIAL_EFFECTS[Math.floor(S.floor / 50) - 1] : null,
+    signatureEffect: worldBoss
+      ? BOSS_SPECIAL_EFFECTS[Math.floor(S.floor / 50) - 1]
+      : null,
     effectTurns: {},
     effects: {
       burn: 0,
@@ -2340,7 +2439,13 @@ function createEnemy(elite = false) {
 
 function updateArenaTheme() {
   const arena = $("#arena"),
-    themes = ["zone-forest", "zone-cavern", "zone-wasteland", "zone-volcano", "zone-abyss"],
+    themes = [
+      "zone-forest",
+      "zone-cavern",
+      "zone-wasteland",
+      "zone-volcano",
+      "zone-abyss",
+    ],
     zoneIndex = Math.floor(Math.max(0, S.floor - 1) / 50) % themes.length;
   arena.classList.remove(...themes);
   arena.classList.add(themes[zoneIndex]);
@@ -2351,13 +2456,22 @@ function bossEffectSummary(effect) {
     st = stats(),
     c = baseClass(),
     e = S.enemy;
-  if (effect.shield) parts.push(`你獲得 ${Math.round(st.maxHp * effect.shield)} 點護盾`);
-  if (effect.heal) parts.push(`恢復 ${Math.round(st.maxHp * effect.heal)} 點生命`);
-  if (effect.resource) parts.push(`恢復 ${Math.round(c.maxRes * effect.resource)} 點${c.resource}`);
+  if (effect.shield)
+    parts.push(`你獲得 ${Math.round(st.maxHp * effect.shield)} 點護盾`);
+  if (effect.heal)
+    parts.push(`恢復 ${Math.round(st.maxHp * effect.heal)} 點生命`);
+  if (effect.resource)
+    parts.push(
+      `恢復 ${Math.round(c.maxRes * effect.resource)} 點${c.resource}`,
+    );
   if (effect.firstStrike)
-    parts.push(`先制造成 ${Math.max(1, Math.round(e.maxHp * effect.firstStrike))} 點傷害`);
+    parts.push(
+      `先制造成 ${Math.max(1, Math.round(e.maxHp * effect.firstStrike))} 點傷害`,
+    );
   if (effect.selfDamage)
-    parts.push(`你承受 ${Math.max(1, Math.round(st.maxHp * effect.selfDamage))} 點代價`);
+    parts.push(
+      `你承受 ${Math.max(1, Math.round(st.maxHp * effect.selfDamage))} 點代價`,
+    );
   if (effect.power)
     parts.push(
       `接下來 ${effect.powerHits || 2} 次攻擊傷害提高 ${Math.round((effect.power - 1) * 100)}%`,
@@ -2367,7 +2481,9 @@ function bossEffectSummary(effect) {
   if (effect.enemyAtk && effect.enemyAtk > 1)
     parts.push(`Boss 攻擊提高 ${Math.round((effect.enemyAtk - 1) * 100)}%`);
   if (effect.enemyDef)
-    parts.push(`Boss 防禦${effect.enemyDef < 0 ? "降低" : "提高"} ${Math.abs(effect.enemyDef)}`);
+    parts.push(
+      `Boss 防禦${effect.enemyDef < 0 ? "降低" : "提高"} ${Math.abs(effect.enemyDef)}`,
+    );
   if (effect.enemyShield)
     parts.push(`Boss 獲得 ${Math.round(e.maxHp * effect.enemyShield)} 點護盾`);
   return parts.join("；");
@@ -2379,12 +2495,20 @@ function applyBossDialogueEffect(effect) {
     e = S.enemy;
   if (!e) return;
   if (effect.shield) S.shield += Math.round(st.maxHp * effect.shield);
-  if (effect.heal) S.hp = Math.min(st.maxHp, S.hp + Math.round(st.maxHp * effect.heal));
-  if (effect.resource) S.res = Math.min(c.maxRes, S.res + Math.round(c.maxRes * effect.resource));
+  if (effect.heal)
+    S.hp = Math.min(st.maxHp, S.hp + Math.round(st.maxHp * effect.heal));
+  if (effect.resource)
+    S.res = Math.min(c.maxRes, S.res + Math.round(c.maxRes * effect.resource));
   if (effect.firstStrike)
-    e.hp = Math.max(1, e.hp - Math.max(1, Math.round(e.maxHp * effect.firstStrike)));
+    e.hp = Math.max(
+      1,
+      e.hp - Math.max(1, Math.round(e.maxHp * effect.firstStrike)),
+    );
   if (effect.selfDamage)
-    S.hp = Math.max(1, S.hp - Math.max(1, Math.round(st.maxHp * effect.selfDamage)));
+    S.hp = Math.max(
+      1,
+      S.hp - Math.max(1, Math.round(st.maxHp * effect.selfDamage)),
+    );
   if (effect.power)
     S.buffs.power = {
       mult: effect.power,
@@ -2472,7 +2596,13 @@ function rollIntent() {
   const e = S.enemy,
     r = Math.random(),
     attackCut =
-      e.type === "swift" ? 0.74 : e.type === "heavy" ? 0.35 : e.type === "tank" ? 0.4 : 0.58,
+      e.type === "swift"
+        ? 0.74
+        : e.type === "heavy"
+          ? 0.35
+          : e.type === "tank"
+            ? 0.4
+            : 0.58,
     heavyCut = e.type === "tank" ? 0.6 : e.type === "heavy" ? 0.9 : 0.8;
   if (e.worldBoss && e.turns > 0 && e.turns % 4 === 3) {
     e.intent = {
@@ -2519,10 +2649,12 @@ function intentText() {
 function intentTooltip() {
   const x = S.enemy?.intent;
   if (!x) return "";
-  if (x.type === "guard") return `防禦：敵人這回合不攻擊，並獲得 ${x.value} 點護盾。`;
+  if (x.type === "guard")
+    return `防禦：敵人這回合不攻擊，並獲得 ${x.value} 點護盾。`;
   if (x.type === "signature")
     return `Boss 專屬招式「${x.name}」：下次行動造成約 ${Math.round(S.enemy.atk * x.mult)} 基礎傷害。${signatureEffectHint(S.enemy)}。可用破勢斬中斷；防禦、減傷、護盾與閃避都有效。`;
-  if (x.type === "heavy") return "蓄力重擊：造成約 1.55 倍傷害，可以用護盾、治療或閃避應對。";
+  if (x.type === "heavy")
+    return "蓄力重擊：造成約 1.55 倍傷害，可以用護盾、治療或閃避應對。";
   return "普通攻擊：依敵人攻擊力計算傷害，再扣除你的防禦與護盾。";
 }
 
@@ -2550,9 +2682,11 @@ function enemyNoteText(e) {
   const mechanics = e.worldBoss
     ? `<span class="status-tip boss-mechanic" tabindex="0" data-tooltip="${escapeHtml(bossTip)}">👑 ${e.phase === 2 ? "第二階段" : "第一階段"} · 招式 ${(e.turns % 4) + 1}/4 ⓘ</span>`
     : "";
-  const status = [e.poison ? "中毒" : "", e.burn ? "燃燒" : "", e.bleed ? "流血" : ""].filter(
-    Boolean,
-  );
+  const status = [
+    e.poison ? "中毒" : "",
+    e.burn ? "燃燒" : "",
+    e.bleed ? "流血" : "",
+  ].filter(Boolean);
   return (
     defense +
     trait +
@@ -2596,12 +2730,22 @@ async function performSkill(key) {
     skill = key === "basic" ? null : c.skills[+key];
   if (key !== "basic" && !skill) return;
   if (skill && (S.res < skill.c || S.cooldowns[+key] > 0)) {
-    toast(S.cooldowns[+key] > 0 ? `技能還需等待 ${S.cooldowns[+key]} 回合` : "職業資源不足");
+    toast(
+      S.cooldowns[+key] > 0
+        ? `技能還需等待 ${S.cooldowns[+key]} 回合`
+        : "職業資源不足",
+    );
     return;
   }
   busy = true;
   render();
-  battleFX(key === "basic" ? "slash" : ["mage", "priest"].includes(S.classId) ? "magic" : "slash");
+  battleFX(
+    key === "basic"
+      ? "slash"
+      : ["mage", "priest"].includes(S.classId)
+        ? "magic"
+        : "slash",
+  );
   let total = 0;
   if (!skill) {
     S.res = Math.min(c.maxRes, S.res + c.gain);
@@ -2643,7 +2787,8 @@ async function performSkill(key) {
         mult: skill.buff,
         hits: 2,
       };
-    if (skill.self) S.hp = Math.max(1, S.hp - Math.round(stats().maxHp * skill.self));
+    if (skill.self)
+      S.hp = Math.max(1, S.hp - Math.round(stats().maxHp * skill.self));
     if (skill.leech && total)
       S.hp = Math.min(stats().maxHp, S.hp + Math.round(total * skill.leech));
     log(
@@ -2751,7 +2896,13 @@ async function dealDamage(skill) {
     weak = S.debuffs.weak ? 0.8 : 1,
     combo = 1 + (S.combo || 0) * 0.04;
   let raw = Math.round(
-    st.atk * skill.d * power * weak * combo * (crit ? 1.65 : 1) * (0.93 + Math.random() * 0.14),
+    st.atk *
+      skill.d *
+      power *
+      weak *
+      combo *
+      (crit ? 1.65 : 1) *
+      (0.93 + Math.random() * 0.14),
   );
   if (!skill.pierce) {
     raw = Math.max(1, raw - S.enemy.def);
@@ -2807,20 +2958,29 @@ function tickEnemyStatus(type) {
   e.effects[type] = Math.max(0, amount - 1);
   e.effectTurns[type] = Math.max(0, (e.effectTurns[type] || STATUS_TURNS) - 1);
   if (!e.effectTurns[type]) e.effects[type] = 0;
-  floatText(`${type === "burn" ? "燃燒" : "中毒"} -${amount}`, "damage", 64, 38);
+  floatText(
+    `${type === "burn" ? "燃燒" : "中毒"} -${amount}`,
+    "damage",
+    64,
+    38,
+  );
   checkBossPhase();
 }
 
 function checkBossPhase() {
   const e = S.enemy;
-  if (!e?.worldBoss || e.phase === 2 || e.hp <= 0 || e.hp / e.maxHp > 0.5) return;
+  if (!e?.worldBoss || e.phase === 2 || e.hp <= 0 || e.hp / e.maxHp > 0.5)
+    return;
   e.phase = 2;
   e.atk = Math.round(e.atk * 1.15);
   if (e.intent?.type === "signature") e.intent.mult = 1.85;
   $("#arena").classList.add("boss-awakened");
   battleFX("awakening");
   announce("第二階段 · 王座覺醒", "攻擊提升 15% · 注意下一步意圖");
-  log(`${e.n} 進入第二階段！攻擊提高 15%，專屬招式更強；仍可破勢中斷與防禦。`, true);
+  log(
+    `${e.n} 進入第二階段！攻擊提高 15%，專屬招式更強；仍可破勢中斷與防禦。`,
+    true,
+  );
 }
 async function enemyTurn() {
   const e = S.enemy;
@@ -2850,9 +3010,16 @@ async function enemyTurn() {
     const st = stats();
     let raw = Math.max(
       1,
-      Math.round((Math.round(e.atk * e.intent.mult) - st.def) * (1 - st.damageReduce / 100)),
+      Math.round(
+        (Math.round(e.atk * e.intent.mult) - st.def) *
+          (1 - st.damageReduce / 100),
+      ),
     );
-    const dodge = clamp((st.speed * 0.55 + (S.buffs.evade || 0)) / 100, 0, 0.45);
+    const dodge = clamp(
+      (st.speed * 0.55 + (S.buffs.evade || 0)) / 100,
+      0,
+      0.45,
+    );
     if (chance(dodge)) {
       floatText("閃避", "block", 30, 52);
       log("你閃開了攻擊！");
@@ -2870,17 +3037,23 @@ async function enemyTurn() {
       if (damage > 0) {
         const signatureEffect =
           e.intent.type === "signature"
-            ? e.signatureEffect || BOSS_SPECIAL_EFFECTS[Math.floor(S.floor / 50) - 1]
+            ? e.signatureEffect ||
+              BOSS_SPECIAL_EFFECTS[Math.floor(S.floor / 50) - 1]
             : null;
-        if (e.poison && signatureEffect !== "poison") applyEnemyDebuff("poison", e.poison);
-        if (e.burn && signatureEffect !== "burn") applyEnemyDebuff("burn", e.burn);
-        if (e.bleed && signatureEffect !== "bleed") applyEnemyDebuff("bleed", e.bleed);
+        if (e.poison && signatureEffect !== "poison")
+          applyEnemyDebuff("poison", e.poison);
+        if (e.burn && signatureEffect !== "burn")
+          applyEnemyDebuff("burn", e.burn);
+        if (e.bleed && signatureEffect !== "bleed")
+          applyEnemyDebuff("bleed", e.bleed);
         if (e.intent.type === "signature") applyBossSpecial(e);
       }
       if (damage > 0 && e.doomAfter && e.turns >= e.doomAfter) {
         const doomRaw = Math.max(
             1,
-            Math.round(stats().maxHp * e.doomPercent * (1 - st.damageReduce / 100)),
+            Math.round(
+              stats().maxHp * e.doomPercent * (1 - st.damageReduce / 100),
+            ),
           ),
           doomBlock = Math.min(S.shield, doomRaw),
           doomDamage = doomRaw - doomBlock;
@@ -2906,7 +3079,10 @@ async function enemyTurn() {
       const n = S.debuffs[type];
       S.hp -= n;
       S.debuffs[type] = Math.max(0, n - 1);
-      S.debuffTurns[type] = Math.max(0, (S.debuffTurns[type] || STATUS_TURNS) - 1);
+      S.debuffTurns[type] = Math.max(
+        0,
+        (S.debuffTurns[type] || STATUS_TURNS) - 1,
+      );
       if (!S.debuffTurns[type]) S.debuffs[type] = 0;
       S.combo = 0;
       log(`${label}造成 ${n} 點持續傷害。`);
@@ -2929,18 +3105,27 @@ async function enemyTurn() {
 }
 
 function signatureEffectHint(enemy) {
-  const effect = enemy.signatureEffect || BOSS_SPECIAL_EFFECTS[Math.floor(S.floor / 50) - 1];
+  const effect =
+    enemy.signatureEffect || BOSS_SPECIAL_EFFECTS[Math.floor(S.floor / 50) - 1];
   return SIGNATURE_EFFECT_HINTS[effect] || "只造成直接傷害";
 }
 
 function applyBossSpecial(enemy) {
-  const effect = enemy.signatureEffect || BOSS_SPECIAL_EFFECTS[Math.floor(S.floor / 50) - 1];
+  const effect =
+    enemy.signatureEffect || BOSS_SPECIAL_EFFECTS[Math.floor(S.floor / 50) - 1];
   if (effect === "barrier") enemy.shield += Math.round(enemy.maxHp * 0.05);
   else if (effect === "weak") S.debuffs.weak = Math.max(S.debuffs.weak || 0, 3);
-  else if (effect === "drain") S.res = Math.max(0, S.res - Math.ceil(baseClass().maxRes * 0.1));
+  else if (effect === "drain")
+    S.res = Math.max(0, S.res - Math.ceil(baseClass().maxRes * 0.1));
   else if (["burn", "poison", "bleed"].includes(effect))
-    applyEnemyDebuff(effect, enemy[effect] || Math.max(2, Math.round(3 + S.floor / 120)));
-  log(`「${enemy.intent.name}」追加效果：${signatureEffectHint(enemy)}。`, true);
+    applyEnemyDebuff(
+      effect,
+      enemy[effect] || Math.max(2, Math.round(3 + S.floor / 120)),
+    );
+  log(
+    `「${enemy.intent.name}」追加效果：${signatureEffectHint(enemy)}。`,
+    true,
+  );
 }
 async function victory() {
   const e = S.enemy;
@@ -2954,7 +3139,9 @@ async function victory() {
   S.xp += xp;
   S.kills++;
   S.highestFloor = Math.max(S.highestFloor, S.floor);
-  const dropN = (e.worldBoss ? 10 : e.boss ? 4 : e.elite ? 2 : 1) + Math.floor(Math.random() * 2);
+  const dropN =
+    (e.worldBoss ? 10 : e.boss ? 4 : e.elite ? 2 : 1) +
+    Math.floor(Math.random() * 2);
   const rewards = {};
   const grantMaterial = (id, amount) => {
     if (!id || !MATERIALS[id] || amount <= 0) return;
@@ -2964,9 +3151,13 @@ async function victory() {
   grantMaterial(e.drop, dropN);
   if (e.worldBoss) {
     grantMaterial(e.bonusDrop, 3 + Math.floor(S.floor / 200));
-    grantMaterial("crown", 1 + (S.floor >= 500 ? 1 : 0) + (S.floor === MAX_FLOOR ? 1 : 0));
+    grantMaterial(
+      "crown",
+      1 + (S.floor >= 500 ? 1 : 0) + (S.floor === MAX_FLOOR ? 1 : 0),
+    );
   }
-  if (e.elite || e.boss || chance(0.16)) grantMaterial("stone", e.worldBoss ? 8 : e.boss ? 3 : 1);
+  if (e.elite || e.boss || chance(0.16))
+    grantMaterial("stone", e.worldBoss ? 8 : e.boss ? 3 : 1);
   let potionDrop = "";
   if (chance(e.worldBoss ? 0.85 : 0.18)) {
     const potionId = chance(0.5) ? "red" : "blue";
@@ -2976,7 +3167,10 @@ async function victory() {
   const materialText = Object.entries(rewards)
     .map(([id, amount]) => `${MATERIALS[id].n}×${amount}`)
     .join("、");
-  log(`討伐成功：獲得 ${gold} 金幣、${xp} EXP、${materialText}${potionDrop}。`, true);
+  log(
+    `討伐成功：獲得 ${gold} 金幣、${xp} EXP、${materialText}${potionDrop}。`,
+    true,
+  );
   battleFX("victory");
   S.lastVictory = {
     gold,
@@ -3160,9 +3354,15 @@ function scheduleNextEventFloor(fromFloor) {
 function event() {
   S.floor++;
   S.nextEventAt = scheduleNextEventFloor(S.floor);
-  const types = ["fountain", "gamble", "caravan", "altar", "forge", "meteor", "treasure"].filter(
-      (type) => type !== S.lastEventType,
-    ),
+  const types = [
+      "fountain",
+      "gamble",
+      "caravan",
+      "altar",
+      "forge",
+      "meteor",
+      "treasure",
+    ].filter((type) => type !== S.lastEventType),
     type = pick(types);
   S.lastEventType = type;
   S.pendingEvent = {
@@ -3192,8 +3392,12 @@ function resumePendingEvent() {
 
 function eventMaterialPool() {
   const chapter = Math.min(19, Math.floor(Math.max(0, S.floor - 1) / 50)),
-    drops = MONSTERS.filter((monster) => monster.tier <= chapter).map((monster) => monster.drop);
-  return [...new Set(drops)].filter((id) => MATERIALS[id] && !["crown", "stone"].includes(id));
+    drops = MONSTERS.filter((monster) => monster.tier <= chapter).map(
+      (monster) => monster.drop,
+    );
+  return [...new Set(drops)].filter(
+    (id) => MATERIALS[id] && !["crown", "stone"].includes(id),
+  );
 }
 
 function eventFountain() {
@@ -3237,13 +3441,17 @@ function eventGambleChest() {
             S.gold += gold;
             addMaterial(mat, amount);
             addMaterial("stone", 2);
-            finishEvent(`幸運大獎！獲得 ${gold} 金幣、${MATERIALS[mat].n}×${amount}與強化石×2。`);
+            finishEvent(
+              `幸運大獎！獲得 ${gold} 金幣、${MATERIALS[mat].n}×${amount}與強化石×2。`,
+            );
           } else {
             const damage = Math.max(1, Math.round(stats().maxHp * 0.15)),
               lost = Math.min(S.gold, Math.round(S.gold * 0.12));
             S.hp = Math.max(1, S.hp - damage);
             S.gold -= lost;
-            finishEvent(`箱內噴出詛咒煙霧！受到 ${damage} 傷害並遺失 ${lost} 金幣。`);
+            finishEvent(
+              `箱內噴出詛咒煙霧！受到 ${damage} 傷害並遺失 ${lost} 金幣。`,
+            );
           }
         },
       },
@@ -3272,7 +3480,9 @@ function eventCaravan() {
         addMaterial(mat, 5);
         S.potions.red = (S.potions.red || 0) + 1;
         S.potions.blue = (S.potions.blue || 0) + 1;
-        finishEvent(`護送成功，獲得 ${MATERIALS[mat].n}×5、生命藥水與資源藥水。`);
+        finishEvent(
+          `護送成功，獲得 ${MATERIALS[mat].n}×5、生命藥水與資源藥水。`,
+        );
       },
     },
     {
@@ -3280,7 +3490,10 @@ function eventCaravan() {
       hint: "免費恢復 25% 生命與資源",
       run: () => {
         S.hp = Math.min(stats().maxHp, S.hp + Math.round(stats().maxHp * 0.25));
-        S.res = Math.min(baseClass().maxRes, S.res + Math.round(baseClass().maxRes * 0.25));
+        S.res = Math.min(
+          baseClass().maxRes,
+          S.res + Math.round(baseClass().maxRes * 0.25),
+        );
         finishEvent("商隊分享安全路線，你也完成了短暫休整。");
       },
     },
@@ -3289,55 +3502,68 @@ function eventCaravan() {
 
 function eventAltar() {
   const sacrifice = Math.max(1, Math.round(stats().maxHp * 0.18));
-  openEvent("🗿", "低語祭壇", "古老祭壇願意以力量交換生命，也可以替你淨化傷勢。", [
-    {
-      label: "獻上生命換取力量",
-      hint: `失去 ${sacrifice} HP，永久攻擊＋1並獲得強化石`,
-      run: () => {
-        S.hp = Math.max(1, S.hp - sacrifice);
-        S.baseAtk += 1;
-        addMaterial("stone", 2);
-        finishEvent("祭壇吞下鮮血，你感到武器變得更加銳利。");
+  openEvent(
+    "🗿",
+    "低語祭壇",
+    "古老祭壇願意以力量交換生命，也可以替你淨化傷勢。",
+    [
+      {
+        label: "獻上生命換取力量",
+        hint: `失去 ${sacrifice} HP，永久攻擊＋1並獲得強化石`,
+        run: () => {
+          S.hp = Math.max(1, S.hp - sacrifice);
+          S.baseAtk += 1;
+          addMaterial("stone", 2);
+          finishEvent("祭壇吞下鮮血，你感到武器變得更加銳利。");
+        },
       },
-    },
-    {
-      label: "請求淨化",
-      hint: "解除全部異常並恢復 20% 生命",
-      run: () => {
-        S.debuffs = {};
-        S.hp = Math.min(stats().maxHp, S.hp + Math.round(stats().maxHp * 0.2));
-        finishEvent("陰冷低語消失，纏繞身體的異常狀態被清除。");
+      {
+        label: "請求淨化",
+        hint: "解除全部異常並恢復 20% 生命",
+        run: () => {
+          S.debuffs = {};
+          S.hp = Math.min(
+            stats().maxHp,
+            S.hp + Math.round(stats().maxHp * 0.2),
+          );
+          finishEvent("陰冷低語消失，纏繞身體的異常狀態被清除。");
+        },
       },
-    },
-  ]);
+    ],
+  );
 }
 
 function eventForge() {
   const cost = 55 + Math.floor(S.floor * 0.5),
     mat = pick(eventMaterialPool());
-  openEvent("🔥", "失落鍛造爐", "爐火仍在燃燒。投入金幣可以鍛出強化石，也能直接搜索附近殘料。", [
-    {
-      label: "重新點燃爐心",
-      hint: `花費 ${cost} 金幣，獲得強化石×4`,
-      run: () => {
-        if (S.gold < cost) {
-          toast("金幣不足，無法啟動鍛造爐");
-          return;
-        }
-        S.gold -= cost;
-        addMaterial("stone", 4);
-        finishEvent("鍛造爐重新轟鳴，四顆完整的強化石落入手中。");
+  openEvent(
+    "🔥",
+    "失落鍛造爐",
+    "爐火仍在燃燒。投入金幣可以鍛出強化石，也能直接搜索附近殘料。",
+    [
+      {
+        label: "重新點燃爐心",
+        hint: `花費 ${cost} 金幣，獲得強化石×4`,
+        run: () => {
+          if (S.gold < cost) {
+            toast("金幣不足，無法啟動鍛造爐");
+            return;
+          }
+          S.gold -= cost;
+          addMaterial("stone", 4);
+          finishEvent("鍛造爐重新轟鳴，四顆完整的強化石落入手中。");
+        },
       },
-    },
-    {
-      label: "搜索冷卻殘料",
-      hint: `免費獲得隨機素材`,
-      run: () => {
-        addMaterial(mat, 3);
-        finishEvent(`你從灰燼中找到 ${MATERIALS[mat].n}×3。`);
+      {
+        label: "搜索冷卻殘料",
+        hint: `免費獲得隨機素材`,
+        run: () => {
+          addMaterial(mat, 3);
+          finishEvent(`你從灰燼中找到 ${MATERIALS[mat].n}×3。`);
+        },
       },
-    },
-  ]);
+    ],
+  );
 }
 
 function eventMeteor() {
@@ -3347,27 +3573,32 @@ function eventMeteor() {
       : S.floor >= 400
         ? pick(["crystal", "ember", "shadow", "spirit"])
         : pick(eventMaterialPool());
-  openEvent("☄️", "深境流星", `一顆流星墜落附近，核心散發著${MATERIALS[mat].n}的氣息。`, [
-    {
-      label: "徒手取出核心",
-      hint: "受到 10% 最大生命傷害，獲得大量稀有素材",
-      run: () => {
-        const damage = Math.max(1, Math.round(stats().maxHp * 0.1));
-        S.hp = Math.max(1, S.hp - damage);
-        addMaterial(mat, 6);
-        finishEvent(`你承受灼傷並取出 ${MATERIALS[mat].n}×6。`);
+  openEvent(
+    "☄️",
+    "深境流星",
+    `一顆流星墜落附近，核心散發著${MATERIALS[mat].n}的氣息。`,
+    [
+      {
+        label: "徒手取出核心",
+        hint: "受到 10% 最大生命傷害，獲得大量稀有素材",
+        run: () => {
+          const damage = Math.max(1, Math.round(stats().maxHp * 0.1));
+          S.hp = Math.max(1, S.hp - damage);
+          addMaterial(mat, 6);
+          finishEvent(`你承受灼傷並取出 ${MATERIALS[mat].n}×6。`);
+        },
       },
-    },
-    {
-      label: "等待核心冷卻",
-      hint: "安全獲得少量素材並回滿資源",
-      run: () => {
-        addMaterial(mat, 2);
-        S.res = baseClass().maxRes;
-        finishEvent(`耐心帶來 ${MATERIALS[mat].n}×2，職業資源也完全恢復。`);
+      {
+        label: "等待核心冷卻",
+        hint: "安全獲得少量素材並回滿資源",
+        run: () => {
+          addMaterial(mat, 2);
+          S.res = baseClass().maxRes;
+          finishEvent(`耐心帶來 ${MATERIALS[mat].n}×2，職業資源也完全恢復。`);
+        },
       },
-    },
-  ]);
+    ],
+  );
 }
 
 function finishEvent(msg) {
@@ -3438,7 +3669,8 @@ function canPay(cost) {
 }
 
 function pay(cost) {
-  for (const [k, v] of Object.entries(cost)) k === "gold" ? (S.gold -= v) : (S.materials[k] -= v);
+  for (const [k, v] of Object.entries(cost))
+    k === "gold" ? (S.gold -= v) : (S.materials[k] -= v);
 }
 
 function enhanceCost(level) {
@@ -3510,7 +3742,8 @@ function potionUseful(id) {
   if (!p) return false;
   if (p.heal && S.hp < stats().maxHp) return true;
   if (p.resource && S.res < baseClass().maxRes) return true;
-  if (p.cleanse === "all") return ["poison", "burn", "bleed", "weak"].some((x) => S.debuffs[x] > 0);
+  if (p.cleanse === "all")
+    return ["poison", "burn", "bleed", "weak"].some((x) => S.debuffs[x] > 0);
   if (p.cleanse) return S.debuffs[p.cleanse] > 0;
   return false;
 }
@@ -3520,9 +3753,13 @@ function consumePotion(id) {
     beforeHp = S.hp,
     beforeRes = S.res;
   S.potions[id]--;
-  if (p.heal) S.hp = Math.min(stats().maxHp, S.hp + Math.round(stats().maxHp * p.heal));
+  if (p.heal)
+    S.hp = Math.min(stats().maxHp, S.hp + Math.round(stats().maxHp * p.heal));
   if (p.resource)
-    S.res = Math.min(baseClass().maxRes, S.res + Math.round(baseClass().maxRes * p.resource));
+    S.res = Math.min(
+      baseClass().maxRes,
+      S.res + Math.round(baseClass().maxRes * p.resource),
+    );
   if (p.cleanse === "all") {
     for (const type of ["poison", "burn", "bleed", "weak"]) {
       delete S.debuffs[type];
@@ -3562,7 +3799,9 @@ function openBattlePotionMode() {
   selectedBattlePotions = [];
   renderBattleControlMode();
   renderPotionMode();
-  $("#potionModePanel").querySelector("[data-select-potion]:not(:disabled)")?.focus();
+  $("#potionModePanel")
+    .querySelector("[data-select-potion]:not(:disabled)")
+    ?.focus();
 }
 
 function closeBattlePotionMode() {
@@ -3647,7 +3886,12 @@ function showExplore() {
     "boss-awakened",
     "in-combat",
   );
-  for (const property of ["--boss-glow", "--boss-mid", "--boss-top", "--boss-bottom"])
+  for (const property of [
+    "--boss-glow",
+    "--boss-mid",
+    "--boss-top",
+    "--boss-bottom",
+  ])
     arena.style.removeProperty(property);
   updateArenaTheme();
   $("#weatherText").textContent = "探索狀態";
@@ -3685,8 +3929,8 @@ function showBattle() {
   const theme = BOSS_DIALOGUES[e.n]?.theme,
     palette = theme && BOSS_ARENA_COLORS[theme];
   if (e.worldBoss && palette) {
-    ["--boss-glow", "--boss-mid", "--boss-top", "--boss-bottom"].forEach((property, index) =>
-      arena.style.setProperty(property, palette[index]),
+    ["--boss-glow", "--boss-mid", "--boss-top", "--boss-bottom"].forEach(
+      (property, index) => arena.style.setProperty(property, palette[index]),
     );
   }
   $("#weatherText").textContent = e.worldBoss
@@ -3736,8 +3980,12 @@ function render() {
   $("#defText").textContent = st.def;
   $("#critText").textContent = `${st.crit}%`;
   $("#speedText").textContent = st.speed;
-  const chapterIndex = Math.min(ZONES.length - 1, Math.floor(Math.max(0, S.floor - 1) / 50));
-  $("#zoneText").textContent = `第 ${chapterIndex + 1} 章 · ${ZONES[chapterIndex]}`;
+  const chapterIndex = Math.min(
+    ZONES.length - 1,
+    Math.floor(Math.max(0, S.floor - 1) / 50),
+  );
+  $("#zoneText").textContent =
+    `第 ${chapterIndex + 1} 章 · ${ZONES[chapterIndex]}`;
   $("#arena").classList.toggle("low-hp", S.hp / st.maxHp < 0.28);
   const filled = Math.ceil((S.res / c.maxRes) * 5);
   $("#resourcePips").innerHTML = Array.from(
@@ -3747,7 +3995,9 @@ function render() {
     (_, i) => `<i class="${i < filled ? "full" : ""}"></i>`,
   ).join("");
   $("#comboBadge").classList.toggle("active", S.combo > 0);
-  $("#comboBadge").textContent = S.combo ? `連擊 ×${S.combo} · +${S.combo * 4}%` : "連擊未啟動";
+  $("#comboBadge").textContent = S.combo
+    ? `連擊 ×${S.combo} · +${S.combo * 4}%`
+    : "連擊未啟動";
   $("#codexBtn").disabled = false;
   $("#fleeBtn").disabled = busy || potionMode;
   $("#openPotionMode").disabled = busy;
@@ -3770,7 +4020,8 @@ function renderRoutes() {
     explore = $("[data-route=explore]"),
     remain = Math.max(0, S.nextEliteAt - S.floor);
   explore.disabled = busy || !!S.pendingEvent || !!S.completed;
-  rest.disabled = busy || !!S.pendingEvent || S.completed || S.floor - S.lastRest < 3;
+  rest.disabled =
+    busy || !!S.pendingEvent || S.completed || S.floor - S.lastRest < 3;
   elite.disabled = busy || !!S.pendingEvent || !!S.completed || remain > 0;
   const small = elite.querySelector?.("small"),
     desc = elite.querySelector?.("p");
@@ -3833,8 +4084,18 @@ function renderTactics() {
 }
 
 function renderPotionMode() {
-  const priority = ["red", "blue", "antidote", "cooling", "bandage", "restore", "holy", "full"];
-  $("#potionSelectionCount").textContent = `已選 ${selectedBattlePotions.length} / 3`;
+  const priority = [
+    "red",
+    "blue",
+    "antidote",
+    "cooling",
+    "bandage",
+    "restore",
+    "holy",
+    "full",
+  ];
+  $("#potionSelectionCount").textContent =
+    `已選 ${selectedBattlePotions.length} / 3`;
   $("#potionSelectionGrid").innerHTML = priority
     .map((id) => {
       const p = POTIONS[id],
@@ -3893,7 +4154,10 @@ function renderEnemy() {
       tip: "中毒：敵人行動前扣除目前數值的生命，數值每回合減少 1，最多 3 回合。再次施加只刷新，不疊傷。",
     });
   $("#enemyEffects").innerHTML = effects
-    .map((x) => `<span class="status-tip" tabindex="0" data-tooltip="${x.tip}">${x.label}</span>`)
+    .map(
+      (x) =>
+        `<span class="status-tip" tabindex="0" data-tooltip="${x.tip}">${x.label}</span>`,
+    )
     .join("");
   $("#enemyNote").innerHTML = enemyNoteText(e);
 }
@@ -3912,8 +4176,11 @@ function renderEquipment() {
       "rarity-prismatic",
     );
     if (g) element.classList.add(`rarity-${g.r}`);
-    element.querySelector("small").textContent = g ? `${slotLabel} · ${RARITY[g.r]}` : slotLabel;
-    $(`#${slot}Icon`).textContent = g?.i || (slot === "weapon" ? baseClass().icon : "🧥");
+    element.querySelector("small").textContent = g
+      ? `${slotLabel} · ${RARITY[g.r]}`
+      : slotLabel;
+    $(`#${slot}Icon`).textContent =
+      g?.i || (slot === "weapon" ? baseClass().icon : "🧥");
     $(`#${slot}Name`).textContent = g
       ? `${g.n}${
           inst.level
@@ -4076,7 +4343,9 @@ function gearEffect(g, level = 0) {
   ]) {
     const value = enhancedGearValue(g, key, level);
     if (!value) continue;
-    parts.push(`${GEAR_VALUE_LABELS[key]}＋${value}${GEAR_PERCENT_VALUES.has(key) ? "%" : ""}`);
+    parts.push(
+      `${GEAR_VALUE_LABELS[key]}＋${value}${GEAR_PERCENT_VALUES.has(key) ? "%" : ""}`,
+    );
   }
   return parts.join("、");
 }
@@ -4102,7 +4371,8 @@ function renderShop() {
     Object.entries(GEAR)
       .filter(([, g]) => g.slot === slot && g.classes.includes(S.classId))
       .map(([id, g]) => {
-        const locked = S.classId !== "god" && S.highestFloor < (g.unlockFloor || 0);
+        const locked =
+          S.classId !== "god" && S.highestFloor < (g.unlockFloor || 0);
         return `<div class="shop-row rarity-${g.r} ${locked ? "gear-locked" : ""}"><span>${g.i}</span><div class="shop-copy"><b>${g.n} <em class="rarity-tag ${g.r}">${RARITY[g.r]}</em></b><span class="effect-line">${gearEffect(g)}</span><small>${g.d}<br>${locked ? `<span class="unlock-line">🔒 第 ${g.unlockFloor} 層解鎖</span><br>` : ""}<span class="cost-line">需要：${costText(g.cost)}</span></small></div><button data-buy="${id}" ${locked || !canPay(g.cost) || S.enemy ? "disabled" : ""}>${locked ? "未解鎖" : "製作"}</button></div>`;
       })
       .join("");
@@ -4162,7 +4432,8 @@ function openItem(kind, id) {
     const p = POTIONS[id];
     name = p.n;
     icon = p.i;
-    desc = p.d + (S.enemy ? " 戰鬥中請從戰鬥畫面的「使用藥水」按鈕開啟選單。" : "");
+    desc =
+      p.d + (S.enemy ? " 戰鬥中請從戰鬥畫面的「使用藥水」按鈕開啟選單。" : "");
     primary = {
       label: S.enemy ? "請從戰鬥介面使用" : "使用",
       run: () => usePotion(id),
@@ -4193,7 +4464,16 @@ function openItem(kind, id) {
     }`;
     icon = g.i;
     desc = g.d;
-    statsHtml = ["atk", "hp", "def", "crit", "speed", "lifesteal", "poisonResist", "damageReduce"]
+    statsHtml = [
+      "atk",
+      "hp",
+      "def",
+      "crit",
+      "speed",
+      "lifesteal",
+      "poisonResist",
+      "damageReduce",
+    ]
       .map((key) => {
         const value = enhancedGearValue(g, key, inst.level);
         if (!value) return "";
@@ -4208,7 +4488,11 @@ function openItem(kind, id) {
   $("#itemIcon").textContent = icon;
   $("#itemTitle").textContent = name;
   $("#itemRarity").textContent =
-    kind === "gear" ? RARITY[GEAR[gearByUid(+id).id].r] : kind === "material" ? "素材" : "消耗品";
+    kind === "gear"
+      ? RARITY[GEAR[gearByUid(+id).id].r]
+      : kind === "material"
+        ? "素材"
+        : "消耗品";
   $("#itemDescription").textContent = desc;
   $("#itemStats").innerHTML = statsHtml;
   const box = $("#itemActions");
@@ -4263,13 +4547,16 @@ function escapeHtml(value) {
 // 圖鑑只讀取遭遇紀錄，沒有戰鬥、獎勵或指定刷怪入口。
 function normalizeDiscoveredMonsters(value) {
   const validNames = new Set(MONSTERS.map((monster) => monster.n));
-  return [...new Set(Array.isArray(value) ? value : [])].filter((name) => validNames.has(name));
+  return [...new Set(Array.isArray(value) ? value : [])].filter((name) =>
+    validNames.has(name),
+  );
 }
 
 function discoverMonster(monster) {
   if (!monster || !MONSTERS.some((entry) => entry.n === monster.n)) return;
   if (!Array.isArray(S.discoveredMonsters)) S.discoveredMonsters = [];
-  if (!S.discoveredMonsters.includes(monster.n)) S.discoveredMonsters.push(monster.n);
+  if (!S.discoveredMonsters.includes(monster.n))
+    S.discoveredMonsters.push(monster.n);
 }
 
 function isMonsterDiscovered(monster) {
@@ -4280,7 +4567,9 @@ function materialSourceText(id) {
   if (id === "crown") return "王冠碎片：每 50 層大型 Boss 固定掉落。";
   if (id === "stone")
     return "強化石：菁英／Boss 固定掉落、小兵有 16% 機率掉落；鍛造爐與賭博箱也可取得。";
-  const sources = MONSTERS.filter((monster) => monster.drop === id && isMonsterDiscovered(monster));
+  const sources = MONSTERS.filter(
+    (monster) => monster.drop === id && isMonsterDiscovered(monster),
+  );
   const names = sources.map((monster) => monster.n).join("、");
   return `${MATERIALS[id].n}：${names || "尚未發現來源魔物，探索遭遇後會更新圖鑑"}。點擊可查看來源圖鑑。`;
 }
@@ -4301,7 +4590,9 @@ function openCodex(material = "all") {
 
 function renderCodex() {
   const filter = $("#codexMaterial").value || "all";
-  const list = MONSTERS.filter((monster) => filter === "all" || monster.drop === filter).sort(
+  const list = MONSTERS.filter(
+    (monster) => filter === "all" || monster.drop === filter,
+  ).sort(
     (a, b) => Number(isMonsterDiscovered(b)) - Number(isMonsterDiscovered(a)),
   );
   $("#codexProgress").textContent =
@@ -4320,7 +4611,10 @@ function renderCodex() {
 }
 
 function motionEnabled() {
-  return preferences.effects && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return (
+    preferences.effects &&
+    !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
 }
 
 function applyPreferences() {
@@ -4338,7 +4632,8 @@ function playTone(type) {
     const AudioCtor = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtor) return;
     audioContext = audioContext || new AudioCtor();
-    if (audioContext.state === "suspended") audioContext.resume().catch(() => {});
+    if (audioContext.state === "suspended")
+      audioContext.resume().catch(() => {});
     const oscillator = audioContext.createOscillator(),
       gain = audioContext.createGain(),
       now = audioContext.currentTime,
@@ -4390,7 +4685,9 @@ function battleFX(type) {
   }
   layer.append(effect);
   // Limit transient DOM even during very fast God-mode play.
-  const effects = [...layer.children].filter((node) => node.classList.contains("battle-fx"));
+  const effects = [...layer.children].filter((node) =>
+    node.classList.contains("battle-fx"),
+  );
   while (effects.length > 3) effects.shift().remove();
   setTimeout(() => effect.remove(), 1300);
 }
@@ -4433,7 +4730,9 @@ let currentTooltipTarget = null;
 const modalReturnFocus = new Map();
 
 function usesTouchTooltip() {
-  return window.matchMedia("(hover: none), (pointer: coarse), (max-width: 740px)").matches;
+  return window.matchMedia(
+    "(hover: none), (pointer: coarse), (max-width: 740px)",
+  ).matches;
 }
 
 function positionGlobalTooltip(target, tooltip, mobile) {
@@ -4507,7 +4806,9 @@ function positionGlobalTooltip(target, tooltip, mobile) {
             y: centerY,
           },
         ];
-  let chosen = candidates.find((p) => p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY);
+  let chosen = candidates.find(
+    (p) => p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY,
+  );
   if (!chosen) {
     const sideSpace = {
         right: viewLeft + viewWidth - rect.right,
@@ -4578,7 +4879,9 @@ function openModal(id) {
   modal.setAttribute("aria-modal", "true");
   modal.classList.add("open");
   document.body.classList.add("modal-active");
-  requestAnimationFrame(() => modal.querySelector("button:not(:disabled), input, select")?.focus());
+  requestAnimationFrame(() =>
+    modal.querySelector("button:not(:disabled), input, select")?.focus(),
+  );
 }
 
 function closeModal(id) {
@@ -4637,7 +4940,8 @@ document.addEventListener("click", (e) => {
   const up = e.target.closest("[data-enhance]");
   if (up) enhance(+up.dataset.enhance);
   const sl = e.target.closest("[data-equip-slot]");
-  if (sl && S.equipped[sl.dataset.equipSlot]) openItem("gear", S.equipped[sl.dataset.equipSlot]);
+  if (sl && S.equipped[sl.dataset.equipSlot])
+    openItem("gear", S.equipped[sl.dataset.equipSlot]);
   const c = e.target.closest("[data-close]");
   if (c) closeModal(c.dataset.close);
   const tab = e.target.closest("[data-tab]");
@@ -4653,7 +4957,9 @@ document.addEventListener("click", (e) => {
   }
   const sf = e.target.closest("[data-shop-filter]");
   if (sf) {
-    $$("[data-shop-filter]").forEach((x) => x.classList.toggle("active", x === sf));
+    $$("[data-shop-filter]").forEach((x) =>
+      x.classList.toggle("active", x === sf),
+    );
     renderShop();
   }
 });
@@ -4663,34 +4969,60 @@ document.addEventListener("pointerover", (e) => {
 });
 document.addEventListener("pointerout", (e) => {
   const target = e.target.closest("[data-tooltip]");
-  if (target && !target.contains(e.relatedTarget) && !usesTouchTooltip()) hideGlobalTooltip();
+  if (target && !target.contains(e.relatedTarget) && !usesTouchTooltip())
+    hideGlobalTooltip();
 });
 document.addEventListener("focusin", (e) => {
   const target = e.target.closest("[data-tooltip]");
   if (target && !usesTouchTooltip()) showGlobalTooltip(target);
 });
 document.addEventListener("focusout", (e) => {
-  if (e.target.closest("[data-tooltip]") && !usesTouchTooltip()) hideGlobalTooltip();
+  if (e.target.closest("[data-tooltip]") && !usesTouchTooltip())
+    hideGlobalTooltip();
 });
 
 function refreshTooltipPosition() {
   if (currentTooltipTarget?.isConnected === false) hideGlobalTooltip();
   else if (currentTooltipTarget) showGlobalTooltip(currentTooltipTarget);
 }
-window.addEventListener("resize", refreshTooltipPosition, {
+let tooltipPositionFrame = 0;
+function scheduleTooltipPosition() {
+  if (!currentTooltipTarget || tooltipPositionFrame) return;
+  tooltipPositionFrame = requestAnimationFrame(() => {
+    tooltipPositionFrame = 0;
+    refreshTooltipPosition();
+  });
+}
+
+// 遊戲館的雙指縮放發生在外層視窗；直接開遊戲也使用相同保護。
+let zoomViewport = window.visualViewport;
+try {
+  zoomViewport = window.parent?.visualViewport || zoomViewport;
+} catch (_) {
+  // 外部網站嵌入時，改用遊戲自己的 viewport。
+}
+function syncZoomEffects() {
+  const zoomed = (zoomViewport?.scale || 1) > 1.01;
+  if (document.body.classList.contains("viewport-zoomed") === zoomed) return;
+  document.body.classList.toggle("viewport-zoomed", zoomed);
+  if (zoomed) hideGlobalTooltip();
+}
+syncZoomEffects();
+zoomViewport?.addEventListener("resize", syncZoomEffects, { passive: true });
+window.addEventListener("resize", scheduleTooltipPosition, {
   passive: true,
 });
-window.addEventListener("scroll", refreshTooltipPosition, {
+window.addEventListener("scroll", scheduleTooltipPosition, {
   passive: true,
   capture: true,
 });
-window.addEventListener("orientationchange", refreshTooltipPosition, {
+window.addEventListener("orientationchange", scheduleTooltipPosition, {
   passive: true,
 });
-window.visualViewport?.addEventListener("resize", refreshTooltipPosition, {
+window.visualViewport?.addEventListener("resize", scheduleTooltipPosition, {
   passive: true,
 });
-window.visualViewport?.addEventListener("scroll", refreshTooltipPosition, {
+window.visualViewport?.addEventListener("scroll", scheduleTooltipPosition, {
   passive: true,
 });
 window.addEventListener("pagehide", save);
@@ -4698,7 +5030,10 @@ document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden") save();
 });
 window.addEventListener("error", (e) => {
-  reportRuntimeError("遊戲發生錯誤，已保留目前存檔；重新整理後仍可繼續。", e.error || e.message);
+  reportRuntimeError(
+    "遊戲發生錯誤，已保留目前存檔；重新整理後仍可繼續。",
+    e.error || e.message,
+  );
 });
 window.addEventListener("unhandledrejection", (e) => {
   reportRuntimeError("遊戲操作未完成，請再試一次。", e.reason);
@@ -4726,7 +5061,9 @@ function validateGameBuild() {
     missing = requiredIds.filter((id) => !$("#" + id)),
     playableClasses = Object.keys(CLASS_GEAR_BLUEPRINTS),
     invalidGear = playableClasses.filter(
-      (classId) => Object.values(GEAR).filter((g) => g.classes[0] === classId).length !== 10,
+      (classId) =>
+        Object.values(GEAR).filter((g) => g.classes[0] === classId).length !==
+        10,
     ),
     invalidBosses = WORLD_BOSSES.filter(
       (boss, index) =>
@@ -4736,10 +5073,12 @@ function validateGameBuild() {
     ),
     invalidMonsters = MONSTERS.filter((monster) => !MATERIALS[monster.drop]);
   if (missing.length) throw new Error(`缺少介面元件：${missing.join(", ")}`);
-  if (Object.keys(GEAR).length !== 60 || invalidGear.length) throw new Error("裝備資料不完整");
+  if (Object.keys(GEAR).length !== 60 || invalidGear.length)
+    throw new Error("裝備資料不完整");
   if (WORLD_BOSSES.length !== 20 || invalidBosses.length)
     throw new Error("1000 層 Boss 或對話資料不完整");
-  if (MONSTERS.length < 60 || invalidMonsters.length) throw new Error("魔物或素材資料不完整");
+  if (MONSTERS.length < 60 || invalidMonsters.length)
+    throw new Error("魔物或素材資料不完整");
   console.info(
     `[深境冒險] v${APP_VERSION} 啟動完成 · ${MONSTERS.length} 種魔物 · ${WORLD_BOSSES.length} 隻大型 Boss · ${Object.keys(GEAR).length} 件裝備`,
   );
@@ -4763,7 +5102,9 @@ $("#difficultyButtons").onclick = (e) => {
   const b = e.target.closest("[data-difficulty]");
   if (b) {
     difficulty = b.dataset.difficulty;
-    $$("[data-difficulty]").forEach((x) => x.classList.toggle("active", x === b));
+    $$("[data-difficulty]").forEach((x) =>
+      x.classList.toggle("active", x === b),
+    );
   }
 };
 $("#continueBtn").onclick = continueGame;
@@ -4845,7 +5186,10 @@ try {
   if (localStorage.getItem(SAVE_KEY) || localStorage.getItem(BACKUP_SAVE_KEY))
     $("#continueBtn").classList.remove("hidden");
 } catch (error) {
-  reportRuntimeError("瀏覽器封鎖了存檔讀取，遊戲仍可遊玩但可能無法保存進度。", error);
+  reportRuntimeError(
+    "瀏覽器封鎖了存檔讀取，遊戲仍可遊玩但可能無法保存進度。",
+    error,
+  );
 }
 applyPreferences();
 render();
@@ -4863,8 +5207,12 @@ document.addEventListener("keydown", (event) => {
   }
   if (event.key !== "Tab") return;
   const focusable = [
-      ...dialog.querySelectorAll("button:not(:disabled), input, select, [tabindex='0']"),
-    ].filter((node) => !node.closest(".hidden") && node.getClientRects().length),
+      ...dialog.querySelectorAll(
+        "button:not(:disabled), input, select, [tabindex='0']",
+      ),
+    ].filter(
+      (node) => !node.closest(".hidden") && node.getClientRects().length,
+    ),
     first = focusable[0],
     last = focusable.at(-1);
   if (!first) {

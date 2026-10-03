@@ -17,7 +17,8 @@
 
 html {
   background: var(--bg);
-  font-family: Inter, "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+  font-family:
+    Inter, "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
   color: var(--text);
 }
 
@@ -993,7 +994,14 @@ button {
 .upgrade-row.rarity-prismatic,
 .equip-slot.rarity-prismatic {
   border-color: #7ef7e5cc;
-  background: linear-gradient(110deg, #40245b, #123d58, #174c3c, #594116, #40245b);
+  background: linear-gradient(
+    110deg,
+    #40245b,
+    #123d58,
+    #174c3c,
+    #594116,
+    #40245b
+  );
   background-size: 260% 260%;
   box-shadow:
     inset 0 0 24px #8bf8e323,
@@ -1073,7 +1081,13 @@ button {
 .rarity-tag.prismatic {
   color: #b8fff3;
   border-color: #8effe9;
-  background: linear-gradient(90deg, #a96cff38, #40d8ff32, #68eea936, #ffce5f34);
+  background: linear-gradient(
+    90deg,
+    #a96cff38,
+    #40d8ff32,
+    #68eea936,
+    #ffce5f34
+  );
   text-shadow: 0 0 9px #7ef7e5cc;
 }
 
@@ -1884,7 +1898,12 @@ button {
       var(--boss-mid, #b3213a45) 23%,
       transparent 48%
     ),
-    linear-gradient(155deg, var(--boss-top, #3b0713), #160613 46%, var(--boss-bottom, #391600));
+    linear-gradient(
+      155deg,
+      var(--boss-top, #3b0713),
+      #160613 46%,
+      var(--boss-bottom, #391600)
+    );
   box-shadow:
     inset 0 0 110px #ff244a55,
     0 0 45px #ff7b2838;
@@ -1914,7 +1933,8 @@ button {
 
 .arena.world-boss-battle .enemy-sprite {
   font-size: 124px;
-  filter: drop-shadow(0 0 18px #fff0a3) drop-shadow(0 0 38px #ff3a47) drop-shadow(0 24px 30px #000);
+  filter: drop-shadow(0 0 18px #fff0a3) drop-shadow(0 0 38px #ff3a47)
+    drop-shadow(0 24px 30px #000);
 }
 
 .arena.world-boss-battle .enemy-card {
@@ -2966,7 +2986,8 @@ button:focus-visible {
   padding: 24px 18px;
   border: 1px dashed #ffbf6252;
   border-radius: 15px;
-  background: radial-gradient(circle at 50% 20%, #5d3d1730, transparent 48%), #071522;
+  background:
+    radial-gradient(circle at 50% 20%, #5d3d1730, transparent 48%), #071522;
   text-align: center;
 }
 
@@ -3373,8 +3394,9 @@ body,
 
 @media (max-width: 740px) {
   .game-shell {
-    padding: max(7px, env(safe-area-inset-top)) max(7px, env(safe-area-inset-right))
-      max(9px, env(safe-area-inset-bottom)) max(7px, env(safe-area-inset-left));
+    padding: max(7px, env(safe-area-inset-top))
+      max(7px, env(safe-area-inset-right)) max(9px, env(safe-area-inset-bottom))
+      max(7px, env(safe-area-inset-left));
   }
 
   .topbar {
@@ -3477,8 +3499,9 @@ body,
   }
 
   .modal {
-    padding: max(9px, env(safe-area-inset-top)) max(9px, env(safe-area-inset-right))
-      max(9px, env(safe-area-inset-bottom)) max(9px, env(safe-area-inset-left));
+    padding: max(9px, env(safe-area-inset-top))
+      max(9px, env(safe-area-inset-right)) max(9px, env(safe-area-inset-bottom))
+      max(9px, env(safe-area-inset-left));
   }
 
   .modal-card {
@@ -3613,7 +3636,13 @@ body:after {
   bottom: 0;
   left: 10%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, #5cecf3, #a47cff, transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #5cecf3,
+    #a47cff,
+    transparent
+  );
   box-shadow: 0 0 15px #56ddec;
   animation: headerLine 5s ease-in-out infinite;
 }
@@ -3652,7 +3681,9 @@ body:after {
   animation: arenaMist 18s linear infinite;
 }
 
-.arena.zone-forest:not(.elite-battle):not(.boss-battle):not(.world-boss-battle) {
+.arena.zone-forest:not(.elite-battle):not(.boss-battle):not(
+    .world-boss-battle
+  ) {
   --zone-glow: #41f0ae38;
   border-color: #5ce7b347;
   background:
@@ -3661,7 +3692,9 @@ body:after {
     linear-gradient(180deg, #0a2c32, #071c22 66%, #123627);
 }
 
-.arena.zone-cavern:not(.elite-battle):not(.boss-battle):not(.world-boss-battle) {
+.arena.zone-cavern:not(.elite-battle):not(.boss-battle):not(
+    .world-boss-battle
+  ) {
   --zone-glow: #8d73ff38;
   border-color: #a092ff42;
   background:
@@ -3670,7 +3703,9 @@ body:after {
     linear-gradient(180deg, #17183c, #0b1027 64%, #20204b);
 }
 
-.arena.zone-wasteland:not(.elite-battle):not(.boss-battle):not(.world-boss-battle) {
+.arena.zone-wasteland:not(.elite-battle):not(.boss-battle):not(
+    .world-boss-battle
+  ) {
   --zone-glow: #6ec8e83b;
   border-color: #7fc3db3c;
   background:
@@ -3679,7 +3714,9 @@ body:after {
     linear-gradient(180deg, #182b38, #0a1824 66%, #263542);
 }
 
-.arena.zone-volcano:not(.elite-battle):not(.boss-battle):not(.world-boss-battle) {
+.arena.zone-volcano:not(.elite-battle):not(.boss-battle):not(
+    .world-boss-battle
+  ) {
   --zone-glow: #ff5c313d;
   border-color: #ff855047;
   background:
@@ -3725,7 +3762,12 @@ body:after {
   overflow: hidden;
   touch-action: pan-y;
   background:
-    radial-gradient(circle at 50% 38%, var(--dialogue-glow, #ff873d38), transparent 34%), #02050ce8;
+    radial-gradient(
+      circle at 50% 38%,
+      var(--dialogue-glow, #ff873d38),
+      transparent 34%
+    ),
+    #02050ce8;
   opacity: 0;
   transition: opacity 0.28s ease;
 }
@@ -3958,7 +4000,11 @@ body:after {
   border: 1px solid #ffae5888;
   border-color: color-mix(in srgb, var(--dialogue-main) 55%, transparent);
   border-radius: 28px;
-  background: radial-gradient(circle at 42% 35%, var(--dialogue-soft), #080d18 70%);
+  background: radial-gradient(
+    circle at 42% 35%,
+    var(--dialogue-soft),
+    #080d18 70%
+  );
   box-shadow:
     inset 0 0 30px var(--dialogue-soft),
     0 0 24px var(--dialogue-glow);
@@ -4142,7 +4188,12 @@ body:after {
   border: 1px solid #ffae58b8;
   border-color: color-mix(in srgb, var(--dialogue-main) 72%, transparent);
   border-radius: 13px;
-  background: linear-gradient(90deg, var(--dialogue-soft), #1b4568, var(--dialogue-soft));
+  background: linear-gradient(
+    90deg,
+    var(--dialogue-soft),
+    #1b4568,
+    var(--dialogue-soft)
+  );
   background-size: 200% 100%;
   color: #fff;
   font-size: 13px;
@@ -4278,8 +4329,9 @@ body:after {
 
   .boss-dialogue-modal {
     align-items: center;
-    padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
-      max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    padding: max(8px, env(safe-area-inset-top))
+      max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom))
+      max(8px, env(safe-area-inset-left));
   }
 
   .boss-dialogue-card {
@@ -4901,4 +4953,72 @@ body.modal-active {
     padding: 6px 10px;
     font-size: 12px;
   }
+}
+
+/* 手機縮放修正：避免巨大濾鏡圖層與面板背景每幀重繪。 */
+@media (hover: none), (pointer: coarse), (max-width: 980px) {
+  .aurora {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 600px;
+    background:
+      radial-gradient(ellipse at 15% 15%, #166cc529, transparent 65%),
+      radial-gradient(ellipse at 85% 45%, #734dcc22, transparent 60%);
+    filter: none;
+    animation: none;
+  }
+
+  body:before {
+    position: absolute;
+    animation: none;
+  }
+
+  body:after {
+    display: none;
+  }
+
+  .glass {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    animation: none;
+    background-size: 100% 100%;
+  }
+
+  .modal,
+  .potion-mode-backdrop {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .arena:before,
+  .arena:after,
+  .arena.world-boss-battle:before,
+  .arena.world-boss-battle:after {
+    animation: none;
+  }
+}
+
+/* 放大閱讀時暫停裝飾，不改動回合、存檔或戰鬥數值。 */
+body.viewport-zoomed .glass,
+body.viewport-zoomed .modal,
+body.viewport-zoomed .potion-mode-backdrop {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.viewport-zoomed .aurora,
+body.viewport-zoomed:before,
+body.viewport-zoomed:after,
+body.viewport-zoomed .glass,
+body.viewport-zoomed .arena:before,
+body.viewport-zoomed .arena:after,
+body.viewport-zoomed .enemy-sprite,
+body.viewport-zoomed .enemy-shadow,
+body.viewport-zoomed .ambient i {
+  animation-play-state: paused !important;
+}
+
+body.viewport-zoomed .enemy-sprite,
+body.viewport-zoomed .boss-dialogue-portrait {
+  filter: none;
 }

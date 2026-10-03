@@ -8,9 +8,9 @@
     />
     <meta name="theme-color" content="#080b22" />
     <title>蒼穹決戰：星界牌陣 1.2</title>
-    <link rel="stylesheet" href="style.css?v=1.2" />
-    <link rel="stylesheet" href="responsive.css?v=1.2" />
-    <link rel="stylesheet" href="spectacle.css?v=1.2" />
+    <link rel="stylesheet" href="style.css?v=1.2-mobile-r7" />
+    <link rel="stylesheet" href="responsive.css?v=1.2-mobile-r7" />
+    <link rel="stylesheet" href="spectacle.css?v=1.2-mobile-r7" />
     <link rel="stylesheet" href="../../shared/portal.css?v=1.2" />
     <script src="../../shared/portal.js?v=1.2"></script>
     <link rel="stylesheet" href="../../shared/fonts.css?v=1.2" />
@@ -24,7 +24,9 @@
     <main id="app">
       <section id="startScreen" class="screen active home-screen">
         <div class="home-copy">
-          <span class="eyebrow">XIANXIA × ARCANE CARD BATTLE · VERSION 1.2</span>
+          <span class="eyebrow"
+            >XIANXIA × ARCANE CARD BATTLE · VERSION 1.2</span
+          >
           <h1>
             蒼穹決戰<br />
             <em>星界牌陣</em>
@@ -33,7 +35,9 @@
             踏入劍與魔法交織的修仙界。選擇六位契約者、配置支援術式，以不同手牌、行動力與星能規則挑戰六大反派。
           </p>
           <div class="home-actions">
-            <button class="btn primary huge" id="startBtn">進入牌陣 <span>→</span></button>
+            <button class="btn primary huge" id="startBtn">
+              進入牌陣 <span>→</span>
+            </button>
             <button class="btn ghost" id="rulesBtn">玩法說明</button>
           </div>
           <div class="home-guide glass">
@@ -82,7 +86,9 @@
           <div>
             <span class="eyebrow">CONTRACT 01</span>
             <h2>選擇你的契約者</h2>
-            <p>每名角色的生命、攻防、初始星能、行動點、抽牌數、出牌上限與雙天賦皆不相同。</p>
+            <p>
+              每名角色的生命、攻防、初始星能、行動點、抽牌數、出牌上限與雙天賦皆不相同。
+            </p>
           </div>
           <button class="btn ghost" data-back="startScreen">返回首頁</button>
         </header>
@@ -107,7 +113,9 @@
             </span>
             <span tabindex="0">
               <b>支援容量</b>
-              <small>必須自行選滿的支援術式數量，會作為額外卡牌加入牌組。</small>
+              <small
+                >必須自行選滿的支援術式數量，會作為額外卡牌加入牌組。</small
+              >
             </span>
           </div>
         </details>
@@ -117,7 +125,9 @@
             <small>目前選擇</small>
             <strong id="selectedFighterName">尚未選擇</strong>
           </div>
-          <button class="btn primary" id="toSupportBtn" disabled>構築支援術式 →</button>
+          <button class="btn primary" id="toSupportBtn" disabled>
+            構築支援術式 →
+          </button>
         </div>
       </section>
       <section id="supportScreen" class="screen selection-screen">
@@ -125,19 +135,35 @@
           <div>
             <span class="eyebrow">CONTRACT 02</span>
             <h2>自行構築支援術式</h2>
-            <p>本頁不會預先替你選擇。請親自選滿角色容量；每張牌旁會標示最推薦的職業。</p>
+            <p>
+              本頁不會預先替你選擇。請親自選滿角色容量；每張牌旁會標示最推薦的職業。
+            </p>
           </div>
           <button class="btn ghost" data-back="selectScreen">返回選角</button>
         </header>
         <div class="support-toolbar">
           <div class="filter-tabs" aria-label="技能篩選">
-            <button class="selected" data-support-filter="all" aria-pressed="true">全部技能</button>
-            <button data-support-filter="recommended" aria-pressed="false">★ 職業推薦</button>
-            <button data-support-filter="selected" aria-pressed="false">已裝備</button>
+            <button
+              class="selected"
+              data-support-filter="all"
+              aria-pressed="true"
+            >
+              全部技能
+            </button>
+            <button data-support-filter="recommended" aria-pressed="false">
+              ★ 職業推薦
+            </button>
+            <button data-support-filter="selected" aria-pressed="false">
+              已裝備
+            </button>
           </div>
           <button class="btn ghost compact" id="clearSupportsBtn">清空</button>
         </div>
-        <div id="supportGrid" class="support-grid scroll-region" aria-label="支援技能清單"></div>
+        <div
+          id="supportGrid"
+          class="support-grid scroll-region"
+          aria-label="支援技能清單"
+        ></div>
         <div class="dock glass support-dock">
           <div class="loadout-summary">
             <div>
@@ -151,24 +177,37 @@
               <small>選滿容量即可繼續 · 點已選技能可卸下</small>
               <strong id="selectedSupportSummary">尚未選擇</strong>
             </div>
-            <button class="btn primary" id="toChallengeBtn" disabled>下一步 →</button>
+            <button class="btn primary" id="toChallengeBtn" disabled>
+              下一步 →
+            </button>
           </div>
         </div>
       </section>
-      <section id="challengeScreen" class="screen selection-screen challenge-screen">
+      <section
+        id="challengeScreen"
+        class="screen selection-screen challenge-screen"
+      >
         <header class="topbar">
           <div>
             <span class="eyebrow">CONTRACT 03</span>
             <h2>決定本次討伐</h2>
-            <p>最後再選擇戰鬥難度與反派。反派擁有各自的異常能力、招式循環和專屬場景。</p>
+            <p>
+              最後再選擇戰鬥難度與反派。反派擁有各自的異常能力、招式循環和專屬場景。
+            </p>
           </div>
-          <button class="btn ghost" data-back="supportScreen">返回支援牌</button>
+          <button class="btn ghost" data-back="supportScreen">
+            返回支援牌
+          </button>
         </header>
         <div class="challenge-content scroll-region">
           <div class="mode-section">
             <h3>本次玩法</h3>
             <div class="mode-grid">
-              <button class="mode-card selected" data-mode="duel" aria-pressed="true">
+              <button
+                class="mode-card selected"
+                data-mode="duel"
+                aria-pressed="true"
+              >
                 <b>單場討伐</b>
                 <small>自由挑選反派，一場決勝。</small>
               </button>
@@ -217,7 +256,9 @@
           </div>
           <div>
             <button class="btn ghost" id="randomBossBtn">隨機反派</button>
-            <button class="btn primary" id="battleBtn" disabled>進入牌陣 →</button>
+            <button class="btn primary" id="battleBtn" disabled>
+              進入牌陣 →
+            </button>
           </div>
         </div>
       </section>
@@ -245,7 +286,14 @@
             >
               特效：華麗
             </button>
-            <button class="icon-btn" id="quitBtn" title="返回首頁" aria-label="返回首頁">×</button>
+            <button
+              class="icon-btn"
+              id="quitBtn"
+              title="返回首頁"
+              aria-label="返回首頁"
+            >
+              ×
+            </button>
           </div>
         </header>
         <div class="battle-field">
@@ -312,6 +360,14 @@
               <span>牌庫 <b id="deckCount">0</b> </span>
               <span>棄牌 <b id="discardCount">0</b> </span>
             </div>
+            <button
+              class="log-toggle"
+              id="logToggle"
+              aria-expanded="false"
+              aria-controls="logPanel"
+            >
+              戰鬥紀錄
+            </button>
           </div>
           <article class="unit enemy-unit">
             <div class="unit-art">
@@ -374,9 +430,6 @@
             <strong id="cutinName"> </strong>
           </div>
         </div>
-        <button class="log-toggle" id="logToggle" aria-expanded="false" aria-controls="logPanel">
-          戰鬥紀錄
-        </button>
         <aside class="battle-log glass" id="logPanel" aria-label="戰鬥紀錄">
           <div class="log-head">
             <strong>戰鬥紀錄 <small>最新行動在上方</small> </strong>
@@ -402,7 +455,9 @@
             <small>戰後獎勵</small>
             <strong id="rewardSummary">請選擇一項獎勵</strong>
           </div>
-          <button class="btn primary" id="nextTrialBtn" disabled>繼續試煉 →</button>
+          <button class="btn primary" id="nextTrialBtn" disabled>
+            繼續試煉 →
+          </button>
         </div>
       </section>
       <section id="resultScreen" class="screen result-screen">
@@ -438,7 +493,8 @@
           </p>
         </div>
         <p class="rules-lead">
-          這是一款單人卡牌回合制 Boss 戰。流程是「選角色 → 自選支援牌 → 選玩法、難度與反派 →
+          這是一款單人卡牌回合制 Boss 戰。流程是「選角色 → 自選支援牌 →
+          選玩法、難度與反派 →
           戰鬥」。也能挑戰三連戰試煉，在連續戰鬥中構築更強的牌組。
         </p>
         <div class="rule-grid">
@@ -521,7 +577,9 @@
         aria-modal="true"
         aria-labelledby="cardDetailName"
       >
-        <button class="modal-x" id="closeCardDetail" aria-label="關閉卡牌說明">×</button>
+        <button class="modal-x" id="closeCardDetail" aria-label="關閉卡牌說明">
+          ×
+        </button>
         <span class="eyebrow">CARD GUIDE</span>
         <h2 id="cardDetailName"></h2>
         <div id="cardDetailBody"></div>
@@ -529,7 +587,7 @@
       </div>
     </div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="spectacle.js?v=1.2"></script>
-    <script src="game.js?v=1.2"></script>
+    <script src="spectacle.js?v=1.2-mobile-r7"></script>
+    <script src="game.js?v=1.2-mobile-r7"></script>
   </body>
 </html>

@@ -18,7 +18,8 @@ const Spectacle = (() => {
     mode = "full",
     hitIndex = 0,
     visualEnd = 0,
-    seed = Date.now() >>> 0;
+    seed = Date.now() >>> 0,
+    pixelRatio = 0;
   try {
     mode = localStorage.getItem("astral-fx-mode") || "full";
   } catch (_) {
@@ -38,25 +39,78 @@ const Spectacle = (() => {
     return t;
   }
   function size() {
-    const r = screen.getBoundingClientRect();
-    width = r.width;
-    height = r.height;
+    const nextWidth = canvas.clientWidth;
+    const nextHeight = canvas.clientHeight;
+    if (!nextWidth || !nextHeight) return;
     const dpr = Math.min(devicePixelRatio || 1, 2);
+    if (nextWidth === width && nextHeight === height && dpr === pixelRatio)
+      return;
+    width = nextWidth;
+    height = nextHeight;
+    pixelRatio = dpr;
     canvas.width = Math.round(width * dpr);
     canvas.height = Math.round(height * dpr);
     ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
+    positionNumbers();
   }
   function point(side) {
-    const r = screen.querySelector(`.${side}-unit .unit-art`).getBoundingClientRect(),
-      s = screen.getBoundingClientRect();
-    return { x: r.left - s.left + r.width * 0.5, y: r.top - s.top + r.height * 0.4 };
+    const img = screen.querySelector(`.${side}-unit .unit-art img`);
+    const rect = img.getBoundingClientRect();
+    const origin = canvas.getBoundingClientRect();
+    const style = getComputedStyle(img);
+    let drawnWidth = rect.width;
+    let drawnHeight = rect.height;
+    let left = rect.left;
+    let top = rect.top;
+
+    // contain 留下的空白不是角色；特效要依實際畫出的圖片定位。
+    if (
+      style.objectFit === "contain" &&
+      img.naturalWidth &&
+      img.naturalHeight
+    ) {
+      const fit = Math.min(
+        rect.width / img.naturalWidth,
+        rect.height / img.naturalHeight,
+      );
+      drawnWidth = img.naturalWidth * fit;
+      drawnHeight = img.naturalHeight * fit;
+      const position = style.objectPosition.split(" ");
+      const fraction = (value) => {
+        if (value === "left" || value === "top") return 0;
+        if (value === "right" || value === "bottom") return 1;
+        return value?.endsWith("%") ? parseFloat(value) / 100 : 0.5;
+      };
+      left += (rect.width - drawnWidth) * fraction(position[0]);
+      top += (rect.height - drawnHeight) * fraction(position[1]);
+    }
+
+    return {
+      x:
+        ((left - origin.left + drawnWidth * 0.5) / (origin.width || 1)) * width,
+      y:
+        ((top - origin.top + drawnHeight * 0.42) / (origin.height || 1)) *
+        height,
+    };
+  }
+  function positionNumber(node, positions) {
+    const p = positions?.[node.dataset.fxSide] || point(node.dataset.fxSide);
+    node.style.left = `${p.x + Number(node.dataset.offsetX)}px`;
+    node.style.top = `${p.y + Number(node.dataset.offsetY)}px`;
+  }
+  function positionNumbers(positions) {
+    labels
+      .querySelectorAll(".fx-number")
+      .forEach((node) => positionNumber(node, positions));
   }
   function updateMode() {
     const soft = calm();
     screen.classList.toggle("soft-effects", soft);
     toggle.textContent = `特效：${soft ? "柔和" : "華麗"}`;
     toggle.setAttribute("aria-pressed", String(!soft));
-    toggle.title = reduced.matches ? "系統已啟用減少動態效果" : "切換華麗／柔和特效";
+    toggle.title = reduced.matches
+      ? "系統已啟用減少動態效果"
+      : "切換華麗／柔和特效";
   }
   toggle.onclick = () => {
     mode = mode === "full" ? "soft" : "full";
@@ -85,13 +139,20 @@ const Spectacle = (() => {
     ctx?.clearRect(0, 0, width, height);
     hitIndex = 0;
     visualEnd = 0;
-    screen.querySelectorAll(".unit-art").forEach((n) => n.classList.remove("hit", "cast", "heal"));
+    screen
+      .querySelectorAll(".unit-art")
+      .forEach((n) => n.classList.remove("hit", "cast", "heal"));
   }
   function start() {
     reset();
     size();
     updateMode();
-    announce("界域開啟", "你的回合", "觀察敵方意圖，安排本回合出牌。", "#94d9ef");
+    announce(
+      "界域開啟",
+      "你的回合",
+      "觀察敵方意圖，安排本回合出牌。",
+      "#94d9ef",
+    );
   }
   function announce(kind, name, outcome, color, enemy = false) {
     caption.classList.toggle("enemy", enemy);
@@ -116,18 +177,16 @@ const Spectacle = (() => {
       start: performance.now() + delay,
       duration: type === "arrow" ? 620 : 780,
       power,
-      from: point(side === "enemy" ? "player" : "enemy"),
-      to: point(side),
       rnd: Array.from({ length: 22 }, () => random()),
     });
     if (!frame) frame = requestAnimationFrame(draw);
   }
   function number(side, value, kind = "damage", note = "", delay = 0) {
-    const p = point(side),
-      n = document.createElement("div");
+    const n = document.createElement("div");
     n.className = `fx-number ${kind}`;
-    n.style.left = `${p.x + ((hitIndex % 3) - 1) * 13}px`;
-    n.style.top = `${p.y + 18 - (hitIndex % 3) * 18}px`;
+    n.dataset.fxSide = side;
+    n.dataset.offsetX = String(((hitIndex % 3) - 1) * 13);
+    n.dataset.offsetY = String(18 - (hitIndex % 3) * 18);
     n.textContent = value;
     if (note) {
       const s = document.createElement("small");
@@ -136,6 +195,7 @@ const Spectacle = (() => {
     }
     later(() => {
       labels.append(n);
+      positionNumber(n);
       later(() => n.remove(), calm() ? 600 : 900);
     }, delay);
   }
@@ -144,8 +204,16 @@ const Spectacle = (() => {
     const delay = (hitIndex++ % 6) * 85;
     number(
       side,
-      type === "heal" ? `+${value}` : typeof value === "number" ? `−${Math.ceil(value)}` : value,
-      type === "heal" ? "heal" : String(value).startsWith("盾") ? "shield" : "damage",
+      type === "heal"
+        ? `+${value}`
+        : typeof value === "number"
+          ? `−${Math.ceil(value)}`
+          : value,
+      type === "heal"
+        ? "heal"
+        : String(value).startsWith("盾")
+          ? "shield"
+          : "damage",
       "",
       delay,
     );
@@ -177,7 +245,8 @@ const Spectacle = (() => {
     if (item.damage)
       for (let i = 0; i < Math.min(item.hits || 1, 6); i++)
         queue(projectile, target, color, i * 110, item.ultimate ? 1.65 : 1);
-    if (item.block || item.counter || item.ward) queue("shield", side, "#88cce9");
+    if (item.block || item.counter || item.ward)
+      queue("shield", side, "#88cce9");
     if (item.heal || item.regen || item.cleanse) queue("heal", side, "#91e6b5");
     if (item.summon) queue("summon", side, "#a0f0c6");
     if (!item.damage && !item.block && !item.heal) queue("spell", side, color);
@@ -200,7 +269,10 @@ const Spectacle = (() => {
   }
   function outcome(before, actor, side, item, damage) {
     const parts = [];
-    if (damage) parts.push(`傷害 ${Math.ceil(damage)}${item.hits ? ` · ${item.hits} 連擊` : ""}`);
+    if (damage)
+      parts.push(
+        `傷害 ${Math.ceil(damage)}${item.hits ? ` · ${item.hits} 連擊` : ""}`,
+      );
     const heal = actor.hp - before.hp,
       shield = actor.block - before.block,
       energy = actor.energy - before.energy;
@@ -214,7 +286,8 @@ const Spectacle = (() => {
     }
     if (energy > 0) parts.push(`星能 +${Math.floor(energy)}`);
     if (item.draw) parts.push(`抽牌 ${item.draw}`);
-    document.getElementById("combatOutcome").textContent = parts.join("　") || "術式已生效";
+    document.getElementById("combatOutcome").textContent =
+      parts.join("　") || "術式已生效";
   }
   function ring(x, y, r, color, alpha = 1, line = 2) {
     ctx.strokeStyle = color;
@@ -259,9 +332,14 @@ const Spectacle = (() => {
   function draw(now) {
     ctx.clearRect(0, 0, width, height);
     events = events.filter((e) => now - e.start < e.duration);
+    const positions = { player: point("player"), enemy: point("enemy") };
+    positionNumbers(positions);
     for (const e of events) {
       const t = (now - e.start) / e.duration;
       if (t < 0) continue;
+      // 延遲、轉向或版面調整之後，依然跟著角色當下的位置。
+      e.from = positions[e.side === "enemy" ? "player" : "enemy"];
+      e.to = positions[e.side];
       const { x, y } = e.to;
       const fade = Math.sin(Math.PI * t),
         r = (width < 721 ? 43 : 70) * e.power;
@@ -302,7 +380,14 @@ const Spectacle = (() => {
         ctx.stroke();
         if (travel === 1) sparks(e, t, 0, 0);
       } else if (e.type === "spell" || e.type === "summon") {
-        sigil(x, y, r * (0.5 + t * 0.8), e.color, t * 2, e.type === "summon" ? 8 : 6);
+        sigil(
+          x,
+          y,
+          r * (0.5 + t * 0.8),
+          e.color,
+          t * 2,
+          e.type === "summon" ? 8 : 6,
+        );
         sparks(e, t, x, y);
         if (e.type === "spell" && Math.abs(e.from.x - x) > 10) {
           ctx.globalAlpha = fade * 0.3;
@@ -335,12 +420,25 @@ const Spectacle = (() => {
         ring(x, y, r * t, e.color, fade, e.type === "nova" ? 5 : 2);
         ring(x, y, r * t * 0.65, e.color, fade * 0.6);
         sparks(e, t, x, y);
-        if (e.type === "nova" || e.type === "shock") sigil(x, y, r * t * 1.5, e.color, t, 8);
+        if (e.type === "nova" || e.type === "shock")
+          sigil(x, y, r * t * 1.5, e.color, t, 8);
       }
       ctx.restore();
     }
     frame = events.length ? requestAnimationFrame(draw) : 0;
   }
-  const finishDelay = () => Math.max(650, Math.ceil(visualEnd - performance.now()));
-  return { start, reset, pop, absorb, attack, outcome, announce, queue, calm, finishDelay };
+  const finishDelay = () =>
+    Math.max(650, Math.ceil(visualEnd - performance.now()));
+  return {
+    start,
+    reset,
+    pop,
+    absorb,
+    attack,
+    outcome,
+    announce,
+    queue,
+    calm,
+    finishDelay,
+  };
 })();

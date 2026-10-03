@@ -1695,3 +1695,406 @@ body.setup-mode #app {
     transition: none !important;
   }
 }
+
+/* 手機直向戰場：角色佔滿戰鬥區，資訊接在角色下方。 */
+@media (max-width: 720px) and (orientation: portrait) {
+  #battleScreen.active {
+    animation: none;
+  }
+
+  #battleScreen .battle-field {
+    grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr);
+    padding-top: 54px;
+    gap: 4px;
+  }
+
+  #battleScreen .unit {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    align-items: stretch;
+    gap: 0;
+    min-width: 0;
+  }
+
+  #battleScreen .unit-art {
+    order: 0;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    margin: 0 !important;
+    filter: none;
+    overflow: hidden;
+    border-radius: 12px 12px 0 0;
+  }
+
+  #battleScreen .unit-art img {
+    display: block;
+    object-fit: cover;
+    object-position: center 28%;
+    mask-image: linear-gradient(to bottom, #000 82%, #0009 100%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 82%, #0009 100%);
+  }
+
+  #battleScreen .unit-panel {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 7px;
+    border-radius: 0 0 12px 12px;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  #battleScreen .unit-name small {
+    max-width: 100%;
+    font-size: 0.53rem;
+  }
+
+  #battleScreen .unit-name h3 {
+    font-size: 0.95rem;
+  }
+
+  #battleScreen .vital .meter-label,
+  #battleScreen .vital .meter-label b {
+    font-size: 0.54rem;
+  }
+
+  #battleScreen .vital {
+    grid-template-columns: 18px minmax(0, 1fr);
+  }
+
+  #battleScreen .vital-icon {
+    display: grid;
+  }
+
+  #battleScreen .center-info {
+    justify-content: center;
+    gap: 8px;
+  }
+
+  #battleScreen .enemy-intent {
+    width: 64px;
+    min-width: 0;
+    max-width: none;
+    padding: 6px 3px;
+  }
+
+  #battleScreen .enemy-intent strong {
+    white-space: normal;
+    overflow: visible;
+    font-size: 0.59rem;
+    line-height: 1.45;
+  }
+
+  #battleScreen .enemy-intent span {
+    font-size: 0.56rem;
+    line-height: 1.55;
+  }
+
+  #battleScreen .combat-caption {
+    top: calc(var(--battle-header) + 8px);
+    width: calc(100% - 20px);
+    min-height: 43px;
+    padding: 4px 8px;
+  }
+
+  #battleScreen .combat-caption strong {
+    font-size: 0.7rem;
+    line-height: 1.15;
+  }
+
+  #battleScreen .log-toggle {
+    left: 50%;
+    right: auto;
+    bottom: calc(var(--battle-console) + 9px);
+    transform: translateX(-50%);
+    width: 54px;
+    min-height: 28px;
+    padding: 4px 2px;
+  }
+}
+
+/* 小螢幕隱藏圖示時，文字欄也要一併改成單欄。 */
+@media (max-width: 380px) and (orientation: portrait) {
+  #battleScreen .vital {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #battleScreen .vital-icon {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) and (orientation: portrait) {
+  #battleScreen .battle-field {
+    grid-template-columns: minmax(0, 1fr) 60px minmax(0, 1fr);
+    gap: 3px;
+  }
+
+  #battleScreen .enemy-intent,
+  #battleScreen .log-toggle {
+    width: 60px;
+  }
+
+  #battleScreen .unit-panel {
+    padding: 5px;
+  }
+
+  #battleScreen .vital .meter-label,
+  #battleScreen .vital .meter-label b {
+    font-size: 0.49rem;
+  }
+}
+
+/* 避免內部卡牌與意圖文字把 Grid 撐出可用寬高。 */
+#battleScreen.active {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+#battleScreen .battle-field {
+  min-width: 0;
+  grid-template-rows: minmax(0, 1fr);
+}
+
+#battleScreen .center-info {
+  min-height: 0;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  #battleScreen.active {
+    animation: none;
+  }
+
+  #battleScreen .battle-top {
+    padding: 4px 8px;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  #battleScreen .battle-top .round {
+    font-size: 0.58rem;
+  }
+
+  #battleScreen .battle-top .round b {
+    font-size: 1rem;
+  }
+
+  #battleScreen .round small {
+    font-size: 0.53rem;
+    margin-top: 0;
+  }
+
+  #battleScreen .battle-location strong {
+    font-size: 0.8rem;
+  }
+
+  #battleScreen .battle-actions {
+    justify-self: end;
+  }
+
+  #battleScreen .unit-art {
+    width: 52%;
+    filter: none;
+  }
+
+  #battleScreen .player-unit .unit-art {
+    margin: 0 0 0 auto !important;
+  }
+
+  #battleScreen .enemy-unit .unit-art {
+    margin: 0 auto 0 0 !important;
+  }
+
+  #battleScreen .unit-panel {
+    width: min(180px, 22vw);
+    padding: 5px;
+    border-radius: 10px;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  #battleScreen .unit-name small,
+  #battleScreen .unit-name .status,
+  #battleScreen .effects {
+    display: none;
+  }
+
+  #battleScreen .unit-name h3 {
+    font-size: 0.8rem;
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  #battleScreen .vital-stack {
+    margin-top: 3px;
+    gap: 2px;
+  }
+
+  #battleScreen .vital {
+    grid-template-columns: 17px minmax(0, 1fr);
+    gap: 3px;
+    padding: 3px;
+  }
+
+  #battleScreen .vital-icon {
+    display: grid;
+    width: 17px;
+    height: 17px;
+    font-size: 0.5rem;
+  }
+
+  #battleScreen .vital .meter-label,
+  #battleScreen .vital .meter-label b {
+    margin: 0 0 1px;
+    font-size: 0.49rem;
+    line-height: 1.3;
+  }
+
+  #battleScreen .vital .meter {
+    height: 4px;
+    margin-top: 1px;
+  }
+
+  #battleScreen .enemy-intent {
+    min-width: 0;
+    padding: 4px;
+  }
+
+  #battleScreen .enemy-intent strong,
+  #battleScreen .enemy-intent span {
+    font-size: 0.58rem;
+    line-height: 1.3;
+  }
+
+  #battleScreen .deck-count {
+    font-size: 0.49rem;
+    gap: 3px;
+  }
+
+  #battleScreen .deck-count span {
+    padding: 3px;
+  }
+
+  #battleScreen .log-toggle {
+    left: 50%;
+    right: auto;
+    bottom: calc(var(--battle-console) + 5px);
+    transform: translateX(-50%);
+    min-height: 25px;
+    padding: 4px 6px;
+  }
+}
+
+/* 紀錄入口接在牌庫資訊後面，避免遮住血條或數字。 */
+#battleScreen .center-info #logToggle {
+  right: 0;
+  bottom: 8px;
+}
+
+@media (max-width: 720px) and (orientation: portrait),
+  (orientation: landscape) and (max-height: 500px) {
+  #battleScreen .center-info #logToggle {
+    position: static;
+    inset: auto;
+    transform: none;
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 4px 2px;
+  }
+
+  #battleScreen .center-info {
+    gap: 5px;
+  }
+}
+
+@media (max-width: 720px) and (max-height: 620px) and (orientation: portrait),
+  (orientation: landscape) and (max-height: 500px) {
+  #battleScreen .center-info .versus {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) and (max-height: 620px) and (orientation: portrait),
+  (orientation: landscape) and (max-height: 500px) {
+  #battleScreen .center-info {
+    gap: 3px;
+    padding-block: 3px;
+  }
+
+  #battleScreen .center-info .encounter-info,
+  #battleScreen .center-info .deck-count {
+    flex: none;
+  }
+
+  #battleScreen .center-info .encounter-info {
+    max-width: 100%;
+    padding: 2px;
+    font-size: 0.45rem;
+    line-height: 1.25;
+  }
+
+  #battleScreen .center-info .enemy-intent {
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: none;
+    overscroll-behavior: contain;
+  }
+
+  #battleScreen .center-info .deck-count {
+    flex-direction: row;
+    width: 100%;
+    gap: 2px;
+  }
+
+  #battleScreen .center-info .deck-count span {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: 2px;
+    font-size: 0.43rem;
+  }
+
+  #battleScreen .center-info #logToggle {
+    min-height: 24px;
+    font-size: 0.48rem;
+    padding: 3px 2px;
+  }
+}
+
+/* 橫向中央改成寬幅意圖欄，讓招式與附加效果能完整閱讀。 */
+@media (orientation: landscape) and (max-height: 500px) {
+  #battleScreen .battle-field {
+    grid-template-columns: minmax(0, 1fr) 140px minmax(0, 1fr);
+  }
+
+  #battleScreen .center-info .enemy-intent {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 2px;
+    width: 100%;
+    padding: 3px;
+  }
+
+  #battleScreen .enemy-intent small {
+    font-size: 0.45rem;
+    line-height: 1.15;
+  }
+
+  #battleScreen .enemy-intent strong {
+    margin: 0;
+    font-size: 0.55rem;
+    line-height: 1.15;
+  }
+
+  #battleScreen .enemy-intent span {
+    grid-column: 1 / -1;
+    font-size: 0.54rem;
+    line-height: 1.15;
+  }
+}
