@@ -13,23 +13,27 @@
     />
     <title>黑川茜的藍色收藏館｜AKANE BLUE ARCHIVE 1.2</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="shared/fonts.css?v=1.2-bluehour-20261003-r3" />
+    <link rel="stylesheet" href="shared/fonts.css?v=1.2-bluehour-20261003-r6" />
     <link
       rel="stylesheet"
-      href="shared/japanese.css?v=1.2-bluehour-20261003-r3"
+      href="shared/japanese.css?v=1.2-bluehour-20261003-r6"
     />
-    <link rel="stylesheet" href="styles.css?v=1.2-bluehour-20261003-r3" />
-    <link rel="stylesheet" href="ambience.css?v=1.2-bluehour-20261003-r3" />
-    <link rel="stylesheet" href="archive.css?v=1.2-bluehour-20261003-r3" />
-    <script src="main.js?v=1.2-bluehour-20261003-r3" defer></script>
-    <script src="ambience.js?v=1.2-bluehour-20261003-r3" defer></script>
-    <link rel="stylesheet" href="seasons.css?v=1.2-bluehour-20261003-r3" />
-    <script src="gallery-data.js?v=1.2-bluehour-20261003-r3" defer></script>
-    <script src="archive.js?v=1.2-bluehour-20261003-r3" defer></script>
-    <link rel="stylesheet" href="polish.css?v=1.2-bluehour-20261003-r3" />
-    <link rel="stylesheet" href="edition.css?v=1.2-bluehour-20261003-r3" />
-    <meta name="akane-edition" content="20261003-bluehour-r3" />
-    <script src="polish.js?v=1.2-bluehour-20261003-r3" defer></script>
+    <link rel="stylesheet" href="styles.css?v=1.2-bluehour-20261003-r6" />
+    <link rel="stylesheet" href="ambience.css?v=1.2-bluehour-20261003-r6" />
+    <link rel="stylesheet" href="archive.css?v=1.2-bluehour-20261003-r6" />
+    <script src="main.js?v=1.2-bluehour-20261003-r6" defer></script>
+    <script src="ambience.js?v=1.2-bluehour-20261003-r6" defer></script>
+    <link rel="stylesheet" href="seasons.css?v=1.2-bluehour-20261003-r6" />
+    <script src="gallery-data.js?v=1.2-bluehour-20261003-r6" defer></script>
+    <script src="archive.js?v=1.2-bluehour-20261003-r6" defer></script>
+    <link rel="stylesheet" href="polish.css?v=1.2-bluehour-20261003-r6" />
+    <link rel="stylesheet" href="edition.css?v=1.2-bluehour-20261003-r6" />
+    <link rel="stylesheet" href="zone-effects.css?v=1.2-bluehour-20261003-r6" />
+    <script src="zone-effects.js?v=1.2-bluehour-20261003-r6" defer></script>
+    <link rel="stylesheet" href="explore.css?v=1.2-bluehour-20261003-r6" />
+    <script src="explore.js?v=1.2-bluehour-20261003-r6" defer></script>
+    <meta name="akane-edition" content="20261003-bluehour-r6" />
+    <script src="polish.js?v=1.2-bluehour-20261003-r6" defer></script>
   </head>
   <body class="stage-on">
     <a class="skip-link" href="#main-content">跳到主要內容</a>
@@ -42,7 +46,7 @@
       <div class="stage-beam beam-two"></div>
       <canvas id="star-field"></canvas>
       <div class="pointer-glow"></div>
-      <div class="edge-film">
+      <div class="edge-film" data-edge-zone="home">
         <video
           data-loop-video
           data-video-zone="home"
@@ -50,6 +54,86 @@
           data-mp4="assets/motion/blush.mp4"
           data-webm="assets/motion/blush.webm"
           poster="assets/motion/blush-poster.webp"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="none"
+          tabindex="-1"
+        ></video>
+      </div>
+      <div class="edge-film" data-edge-zone="akane" hidden>
+        <video
+          data-loop-video
+          data-video-zone="akane"
+          data-clip="mirror"
+          data-mp4="assets/motion/mirror.mp4"
+          data-webm="assets/motion/mirror.webm"
+          poster="assets/motion/mirror-poster.webp"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="none"
+          tabindex="-1"
+        ></video>
+      </div>
+      <div class="edge-film" data-edge-zone="games" hidden>
+        <video
+          data-loop-video
+          data-video-zone="games"
+          data-clip="eyes"
+          data-mp4="assets/motion/eyes.mp4"
+          data-webm="assets/motion/eyes.webm"
+          poster="assets/motion/eyes-poster.webp"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="none"
+          tabindex="-1"
+        ></video>
+      </div>
+      <div class="edge-film game-companion" data-edge-zone="games" hidden>
+        <video
+          data-loop-video
+          data-video-zone="games"
+          data-clip="pout"
+          data-mp4="assets/motion/pout.mp4"
+          data-webm="assets/motion/pout.webm"
+          poster="assets/motion/pout-poster.webp"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="none"
+          tabindex="-1"
+        ></video>
+      </div>
+      <div class="edge-film edge-left" data-edge-zone="home" hidden>
+        <video
+          data-loop-video
+          data-video-zone="home"
+          data-clip="glasses"
+          data-mp4="assets/motion/glasses.mp4"
+          data-webm="assets/motion/glasses.webm"
+          poster="assets/motion/glasses-poster.webp"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="none"
+          tabindex="-1"
+        ></video>
+      </div>
+      <div class="edge-film edge-left" data-edge-zone="akane" hidden>
+        <video
+          data-loop-video
+          data-video-zone="akane"
+          data-clip="gleam"
+          data-mp4="assets/motion/gleam.mp4"
+          data-webm="assets/motion/gleam.webm"
+          poster="assets/motion/gleam-poster.webp"
           autoplay
           muted
           loop
@@ -388,12 +472,8 @@
                 黑川茜專區 <em>Her many shades of blue.</em>
               </h2>
             </div>
-            <div class="character-quick-links">
-              <a class="text-link" href="#design-room">造型資料室 ↓</a
-              ><a class="text-link" href="#gallery">三季圖庫 ↓</a>
-            </div>
           </div>
-          <div class="profile-grid">
+          <div class="profile-grid" id="profile">
             <figure class="profile-portrait">
               <span class="image-corner">OFFICIAL / PROFILE</span
               ><img
@@ -468,6 +548,155 @@
               </p>
             </article>
           </div>
+
+          <nav
+            class="archive-compass"
+            id="archive-compass"
+            aria-label="黑川茜專區閱讀路線"
+          >
+            <div class="compass-intro">
+              <span class="compass-orbit" aria-hidden="true">✧</span>
+              <div>
+                <p class="eyebrow">A LITTLE PATH THROUGH BLUE</p>
+                <h3>想看哪一面的茜？</h3>
+                <p>挑一個喜歡的角落，慢慢走近她。</p>
+              </div>
+            </div>
+            <div class="compass-links">
+              <a href="#profile">人物檔案 <span>初次認識</span></a
+              ><a href="#actor-room">表情觀察 <span>眨眼與笑容</span></a
+              ><a href="#little-facts">小小知識 <span>多認識一點</span></a
+              ><a href="#design-room">造型資料 <span>表情與色彩</span></a
+              ><a href="#traits">演員筆記 <span>喜歡她的理由</span></a
+              ><a href="#story-notes">成長脈絡 <span>展開劇情筆記</span></a
+              ><a href="#season-1">第一季 <span>走進她的故事</span></a
+              ><a href="#season-2">第二季 <span>舞台上的光</span></a
+              ><a href="#season-3">第三季 <span>鏡頭外的日常</span></a
+              ><a href="#special-room">特別收藏 <span>和服與魔女</span></a
+              ><a href="#chibi-room">小茜遊樂室 <span>星光與小問答</span></a
+              ><a href="#sources">資料來源 <span>從官方看見她</span></a>
+            </div>
+          </nav>
+          <section
+            class="actor-room"
+            id="actor-room"
+            aria-labelledby="actor-room-title"
+          >
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">LITTLE DISCOVERIES / MEET HER AGAIN</p>
+                <h2 id="actor-room-title">今天，想看哪一面的茜？</h2>
+              </div>
+              <p>不只有舞台上的光。<br />也收藏她眨眼、微笑與專注的片刻。</p>
+            </div>
+            <div class="actor-room-layout">
+              <figure class="actor-room-art">
+                <img
+                  id="actor-room-image"
+                  src="assets/akane/s2-ep16-1.webp"
+                  alt="第16話黑川茜眨眼並比出手勢"
+                  width="1200"
+                  height="675"
+                  loading="lazy"
+                />
+                <figcaption id="actor-room-caption">
+                  第二季 · 總第16話 / A LITTLE WINK
+                </figcaption>
+              </figure>
+              <div class="actor-room-copy">
+                <div
+                  class="actor-room-choices"
+                  role="group"
+                  aria-label="選擇茜的不同面貌"
+                >
+                  <button data-actor-note="wink" aria-pressed="true">
+                    俏皮一下 ✧
+                  </button>
+                  <button data-actor-note="smile" aria-pressed="false">
+                    日常的笑容 ♡
+                  </button>
+                  <button data-actor-note="stage" aria-pressed="false">
+                    走上舞台 ✦
+                  </button>
+                </div>
+                <div class="actor-room-note" aria-live="polite">
+                  <p class="eyebrow" id="actor-room-label">
+                    01 / A LITTLE WINK
+                  </p>
+                  <h3 id="actor-room-subtitle">認真之外，也有一點俏皮。</h3>
+                  <p id="actor-room-description">
+                    眨一下眼睛、比一個小手勢，平常認真的茜，也有輕快的表情。可以留意同一張臉如何隨眉毛、嘴角與目光，展現不同的感覺。
+                  </p>
+                </div>
+                <div class="actor-room-actions">
+                  <button id="actor-room-gallery" class="soft-button">
+                    去本季圖庫看看 ↗
+                  </button>
+                  <a
+                    id="actor-room-source"
+                    class="source-link"
+                    href="https://ichigoproduction.com/Season2/story/16.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >官方劇照來源 ↗</a
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="little-facts" id="little-facts">
+              <details>
+                <summary>
+                  <span>01</span> Lalalai 是什麼？ <b aria-hidden="true">＋</b>
+                </summary>
+                <p>
+                  「ララライ」是茜所屬的劇團。她的身分是演員，因此看她的故事時，可以從排練、角色準備與舞台演出來認識她。
+                </p>
+                <a
+                  class="source-link"
+                  href="https://ichigoproduction.com/Season1/chara/akane.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >第一季角色設定 ↗</a
+                >
+              </details>
+              <details>
+                <summary>
+                  <span>02</span> 藍髮之外，還有哪些造型？
+                  <b aria-hidden="true">＋</b>
+                </summary>
+                <p>
+                  第二季的《東京
+                  Blade》舞台中，茜飾演「鞘姬」。淺色長髮、服裝與演出神情和私服時不同；這些是角色造型的變化，演出者仍然是茜。
+                </p>
+                <a
+                  class="source-link"
+                  href="https://ichigoproduction.com/Season2/chara/akane.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >官方舞台與私服立繪 ↗</a
+                >
+              </details>
+              <details>
+                <summary>
+                  <span>03</span> 兒時的憧憬，是誰？
+                  <b aria-hidden="true">＋</b>
+                </summary>
+                <p>
+                  第18話的官方故事提到，她因為憧憬有馬佳奈而走進演技的世界，之後持續努力。認識兩人的舞台競爭，也可以回頭看看這段起點。
+                </p>
+                <a
+                  class="source-link"
+                  href="https://ichigoproduction.com/Season2/story/18.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >第18話故事介紹 ↗</a
+                >
+              </details>
+            </div>
+            <p class="actor-room-footnote">
+              表情短句為本館觀賞筆記；設定資料依上方官方來源整理。劇照可能包含劇情。
+            </p>
+          </section>
           <section
             class="design-room"
             id="design-room"
@@ -543,7 +772,7 @@
               </div>
             </div>
           </section>
-          <div class="section-heading feature-heading">
+          <div class="section-heading feature-heading" id="traits">
             <div>
               <p class="eyebrow">THREE WAYS TO SEE HER</p>
               <h2>喜歡茜，可以從這裡開始。</h2>
@@ -594,7 +823,7 @@
               >
             </article>
           </div>
-          <details class="story-notes">
+          <details class="story-notes" id="story-notes">
             <summary>
               <span
                 ><small>STORY NOTES / 可選閱讀</small
@@ -664,22 +893,22 @@
               <p class="eyebrow">THREE SEASONS / HER STORY IN FRAMES</p>
               <h2>每一季，都有不同的茜。</h2>
             </div>
-            <p>29 張不同的官方劇照與立繪。<br />先選一季，再按話數慢慢收藏。</p>
+            <p>30 張不同的官方劇照與立繪。<br />先選一季，再按話數慢慢收藏。</p>
           </div>
           <div class="season-picker" role="group" aria-label="選擇動畫季數">
             <button data-season="1" aria-pressed="true">
               <span>SEASON 01</span><strong>第一季</strong
-              ><small>相遇・節目・星光 <b data-season-count="1">7 張</b></small>
+              ><small>相遇・節目・星光 <b data-season-count="1">8 張</b></small>
             </button>
             <button data-season="2" aria-pressed="false">
               <span>SEASON 02</span><strong>第二季</strong
               ><small
-                >排練・憧憬・舞台 <b data-season-count="2">15 張</b></small
+                >排練・憧憬・舞台 <b data-season-count="2">16 張</b></small
               >
             </button>
             <button data-season="3" aria-pressed="false">
               <span>SEASON 03</span><strong>第三季</strong
-              ><small>日常・演出・心緒 <b data-season-count="3">7 張</b></small>
+              ><small>日常・演出・心緒 <b data-season-count="3">6 張</b></small>
             </button>
           </div>
           <div class="season-heading">
@@ -707,7 +936,7 @@
           <div class="gallery-toolbar">
             <div class="gallery-filters" role="group" aria-label="本季圖庫篩選">
               <button data-gallery-filter="all" aria-pressed="true">
-                本季全部 <span id="season-total">7</span>
+                本季全部 <span id="season-total">8</span>
               </button>
               <button data-gallery-filter="still" aria-pressed="false">
                 動畫劇照
@@ -715,10 +944,16 @@
               <button data-gallery-filter="visual" aria-pressed="false">
                 角色立繪
               </button>
+              <button data-gallery-filter="group" aria-pressed="false">
+                合照與小劇場
+              </button>
               <button data-gallery-filter="saved" aria-pressed="false">
                 本季收藏 <span id="season-favorite-count">0</span>
               </button>
             </div>
+            <button id="random-gallery-image" class="soft-button">
+              抽一張本季圖片 ✧
+            </button>
             <span class="gallery-hint"
               >全館收藏 <b id="favorite-count">0</b> 張 · 存在這台瀏覽器</span
             >
@@ -745,12 +980,344 @@
             </section>
           </div>
           <section
+            id="special-room"
+            class="special-room"
+            aria-labelledby="special-room-title"
+          >
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">BEYOND THE EPISODES / SPECIAL COLLECTION</p>
+                <h2 id="special-room-title">換一種造型，也一樣喜歡。</h2>
+              </div>
+              <p>和服、魔女與小小的她。<br />官方特別插畫，另外慢慢收藏。</p>
+            </div>
+            <div class="special-art-grid">
+              <article class="special-art-card">
+                <button
+                  data-special-art="newyear"
+                  class="special-art-image"
+                  aria-label="放大黑川茜2025新年和服插畫"
+                >
+                  <img
+                    src="assets/akane/newyear-2025.webp"
+                    alt="官方2025新年插畫：穿藍色和服、配花飾的黑川茜"
+                    width="1200"
+                    height="852"
+                    loading="lazy"
+                  />
+                </button>
+                <div class="special-art-copy">
+                  <p class="eyebrow">2025.01 / NEW YEAR</p>
+                  <h3>把新的喜歡，繫成花。</h3>
+                  <p>
+                    藍色和服、花飾和明亮的笑容，在新年的光裡遇見不同造型的茜。
+                  </p>
+                  <button data-special-art="newyear" class="text-link">
+                    放大欣賞 ↗
+                  </button>
+                </div>
+              </article>
+              <article class="special-art-card">
+                <button
+                  data-special-art="halloween"
+                  class="special-art-image"
+                  aria-label="放大黑川茜2025萬聖節魔女插畫"
+                >
+                  <img
+                    src="assets/akane/halloween-2025.webp"
+                    alt="官方2025萬聖節插畫：戴魔女帽、拿著魔法書的黑川茜"
+                    width="1300"
+                    height="905"
+                    loading="lazy"
+                  />
+                </button>
+                <div class="special-art-copy">
+                  <p class="eyebrow">2025.10 / HALLOWEEN</p>
+                  <h3>星星、魔法，還有一個眨眼。</h3>
+                  <p>
+                    藍紫色的魔女造型，讓帽飾、星光與魔法書一起成為畫面的主角。
+                  </p>
+                  <button data-special-art="halloween" class="text-link">
+                    放大欣賞 ↗
+                  </button>
+                </div>
+              </article>
+            </div>
+            <section
+              class="chibi-playroom"
+              id="chibi-room"
+              aria-labelledby="chibi-room-title"
+              data-chibi-light="blue"
+            >
+              <div class="playroom-heading">
+                <div>
+                  <p class="eyebrow">TINY AKANE / A LITTLE PLAYGROUND</p>
+                  <h3 id="chibi-room-title">小小的茜，也有一整片星空。</h3>
+                </div>
+                <a class="text-link" href="#archive-compass">換個角落 ↑</a>
+              </div>
+              <div class="chibi-postcard">
+                <div class="chibi-stage">
+                  <span class="chibi-orbit orbit-a" aria-hidden="true"></span
+                  ><span class="chibi-orbit orbit-b" aria-hidden="true"></span>
+                  <button
+                    id="chibi-change"
+                    class="chibi-image-button"
+                    aria-label="切換下一款Q版黑川茜造型"
+                  >
+                    <img
+                      id="chibi-image"
+                      src="assets/akane/chibi-uniform.webp"
+                      alt="官方Q版黑川茜：長藍髮、白襯衫與格紋裙"
+                      width="1081"
+                      height="1081"
+                      loading="lazy"
+                    />
+                    <span class="chibi-tap">點一下，換個小茜 ↻</span>
+                  </button>
+                  <div
+                    class="chibi-look-picker"
+                    role="group"
+                    aria-label="小茜造型選擇"
+                  >
+                    <button data-chibi-look="uniform" aria-pressed="true">
+                      襯衫小茜</button
+                    ><button data-chibi-look="daily" aria-pressed="false">
+                      日常小茜</button
+                    ><button data-chibi-look="kimono" aria-pressed="false">
+                      和服小茜</button
+                    ><button data-chibi-look="orchestra" aria-pressed="false">
+                      音符小茜
+                    </button>
+                  </div>
+                  <p id="chibi-art-caption">官方角色插畫 · 白襯衫與格紋裙</p>
+                  <a
+                    id="chibi-source"
+                    class="source-link"
+                    href="https://ichigoproduction.com/Season3/news/index00310000.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >這款造型的官方來源 ↗</a
+                  >
+                </div>
+                <div class="chibi-copy">
+                  <p class="eyebrow">STAY FOR A LITTLE JOY</p>
+                  <h3>挑一個玩法，留一點好心情。</h3>
+                  <p id="chibi-note" role="status" aria-live="polite">
+                    小小的身影，也有很認真的眼神。點點小茜，或選一款喜歡的造型。
+                  </p>
+                  <div
+                    class="chibi-light-picker"
+                    role="group"
+                    aria-label="選擇小茜背景光"
+                  >
+                    <span>今天的光</span
+                    ><button data-chibi-light="blue" aria-pressed="true">
+                      晨藍</button
+                    ><button data-chibi-light="rose" aria-pressed="false">
+                      花霞</button
+                    ><button data-chibi-light="night" aria-pressed="false">
+                      星夜
+                    </button>
+                  </div>
+                  <div
+                    class="chibi-mode-picker"
+                    role="group"
+                    aria-label="選擇小茜互動玩法"
+                  >
+                    <button data-chibi-mode="gift" aria-pressed="true">
+                      留一顆星 ✦</button
+                    ><button
+                      data-chibi-mode="constellation"
+                      aria-pressed="false"
+                    >
+                      星光連線 ✧</button
+                    ><button data-chibi-mode="quiz" aria-pressed="false">
+                      小茜小問答 ♡
+                    </button>
+                  </div>
+                  <div class="chibi-activity" data-chibi-panel="gift">
+                    <p>把一顆星留在這裡，也收下一句小小的鼓勵。</p>
+                    <button id="chibi-star" class="soft-button">
+                      送她一顆星 ✦
+                    </button>
+                    <p
+                      id="chibi-star-note"
+                      class="chibi-star-note"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      今天也收藏一點好心情。
+                    </p>
+                    <p class="chibi-pocket">
+                      這裡已留下 <b id="chibi-star-count">0</b> 顆星 ·
+                      記在這台瀏覽器
+                    </p>
+                  </div>
+                  <div
+                    class="chibi-activity"
+                    data-chibi-panel="constellation"
+                    hidden
+                  >
+                    <p>
+                      跟著亮起的星慢慢點，把六顆星連成一束光。沒有倒數，可以慢慢玩。
+                    </p>
+                    <div
+                      id="constellation-board"
+                      class="constellation-board"
+                      aria-label="星光連線遊戲"
+                    >
+                      <svg
+                        id="constellation-lines"
+                        viewBox="0 0 100 100"
+                        preserveAspectRatio="none"
+                        aria-hidden="true"
+                      ></svg
+                      ><button
+                        data-constellation-star="0"
+                        aria-label="左上星光"
+                      >
+                        ✦</button
+                      ><button
+                        data-constellation-star="1"
+                        aria-label="上方星光"
+                      >
+                        ✦</button
+                      ><button
+                        data-constellation-star="2"
+                        aria-label="右上星光"
+                      >
+                        ✦</button
+                      ><button
+                        data-constellation-star="3"
+                        aria-label="右下星光"
+                      >
+                        ✦</button
+                      ><button
+                        data-constellation-star="4"
+                        aria-label="下方星光"
+                      >
+                        ✦</button
+                      ><button
+                        data-constellation-star="5"
+                        aria-label="左下星光"
+                      >
+                        ✦
+                      </button>
+                    </div>
+                    <div class="activity-footer">
+                      <p
+                        id="constellation-status"
+                        role="status"
+                        aria-live="polite"
+                      >
+                        先點最亮的那顆星。
+                      </p>
+                      <button id="constellation-reset" class="text-link">
+                        換一片星空 ↻
+                      </button>
+                    </div>
+                  </div>
+                  <div class="chibi-activity" data-chibi-panel="quiz" hidden>
+                    <p class="quiz-progress" id="chibi-quiz-progress">
+                      小茜小問答 · 1 / 5
+                    </p>
+                    <h4 id="chibi-quiz-question"></h4>
+                    <div
+                      id="chibi-quiz-answers"
+                      class="chibi-quiz-answers"
+                    ></div>
+                    <p
+                      id="chibi-quiz-feedback"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      選一個答案，看看你認識茜多少。
+                    </p>
+                    <div class="activity-footer">
+                      <a
+                        id="chibi-quiz-source"
+                        class="source-link"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >角色資料來源 ↗</a
+                      ><button id="chibi-quiz-next" class="text-link" hidden>
+                        下一題 →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <details class="archive-bookmark" id="archive-bookmark" hidden>
+                <summary>✧ <span id="bookmark-current">逛逛茜</span></summary>
+                <nav aria-label="段落書籤">
+                  <p>下一束光，想看哪裡？</p>
+                  <div>
+                    <a href="#profile">人物檔案</a
+                    ><a href="#actor-room">表情觀察</a
+                    ><a href="#little-facts">小小知識</a
+                    ><a href="#design-room">造型資料</a
+                    ><a href="#traits">演員筆記</a
+                    ><a href="#story-notes">成長脈絡</a
+                    ><a href="#season-1">第一季圖庫</a
+                    ><a href="#season-2">第二季圖庫</a
+                    ><a href="#season-3">第三季圖庫</a
+                    ><a href="#special-room">特別收藏</a
+                    ><a href="#chibi-room">小茜互動</a
+                    ><a href="#sources">資料來源</a>
+                  </div>
+                </nav>
+              </details>
+            </section>
+            <p class="actor-room-footnote">
+              節慶插畫依公布時間排列，不歸入任何一話。Q版包含官方插畫與授權周邊示意圖；原圖標記完整保留，短句為本館創作。
+            </p>
+          </section>
+          <section
             class="archive-sources"
             id="sources"
             aria-labelledby="sources-title"
           >
             <p class="eyebrow">CREDITS &amp; READING</p>
             <h2 id="sources-title">從官方資料，走近黑川茜。</h2>
+            <details class="motion-source-list">
+              <summary>本次新增的五段側邊動畫來源 ↗</summary>
+              <p>
+                使用者整理的動畫片段，角色已逐段查看；不以網站標籤推定動畫集數。
+              </p>
+              <div>
+                <a
+                  href="https://tenor.com/view/akane-kurokawa-eyeglasses-smiling-cute-happy-gif-6193637197066666481"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >首頁左側 · 雨天眼鏡 ↗</a
+                >
+                <a
+                  href="https://tenor.com/view/akane-kurokawa-oshi-no-ko-anime-cute-gif-5712112872224726602"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >茜專區右側 · 鏡前神情 ↗</a
+                >
+                <a
+                  href="https://tenor.com/view/akane-kurokawa-akane-kurokawa-akane-oshi-no-ko-onk-gif-9644514201318076668"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >茜專區左側 · 專注片刻 ↗</a
+                >
+                <a
+                  href="https://tenor.com/view/akane-kurokawa-oshi-no-ko-anime-cute-onk-gif-10217848732734966453"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >遊戲區右側 · 輕快手勢 ↗</a
+                >
+                <a
+                  href="https://tenor.com/view/akane-kurokawa-kurokawa-akane-oshi-no-ko-onk-oshi-no-ko-season-2-gif-1605584530475729261"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >遊戲區左側 · 鼓起臉頰 ↗</a
+                >
+              </div>
+            </details>
             <p>
               角色資料與分季圖庫整理自動畫官網；首頁伸手劇照來自 Anime
               Corner，夕光入口與造型資料頁由收藏者提供；無聲循環片段取自 Tenor
@@ -793,7 +1360,7 @@
               ><a href="#blue-hour">首頁動態片段與來源 ↗</a>
             </div>
             <p class="source-inline">
-              側邊背景動態：<a
+              三個專區的側邊動態各自不同，遊戲區另有柔邊小動畫。動態來源：<a
                 href="https://tenor.com/view/%E9%BB%92%E5%B7%9D%E3%81%82%E3%81%8B%E3%81%AD-kurokawa-akane-oshi-no-ko-blush-blushing-gif-14233494808018365348"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -856,7 +1423,6 @@
                   height="600"
                 />
                 <span class="card-number">01</span>
-                <span class="card-version">v1.2</span>
                 <div class="cover-caption" aria-hidden="true">
                   <span>INTO THE DEPTHS</span><small>每一步，都走向未知</small>
                 </div>
@@ -889,7 +1455,6 @@
                   height="600"
                 />
                 <span class="card-number">02</span>
-                <span class="card-version">v1.2</span>
                 <div class="cover-caption" aria-hidden="true">
                   <span>WRITTEN IN THE STARS</span
                   ><small>以星光，寫下你的戰術</small>
@@ -922,7 +1487,6 @@
                   height="600"
                 />
                 <span class="card-number">03</span>
-                <span class="card-version">v1.2</span>
                 <div class="cover-caption" aria-hidden="true">
                   <span>A BILLION POSSIBILITIES</span
                   ><small>財富之外，人生還有什麼？</small>
@@ -965,7 +1529,7 @@
         <span>✦ AKANE BLUE ARCHIVE</span>
         <p>二次元守護者的收藏館 · 非官方粉絲主題</p>
         <a href="#sources">來源與圖片權利</a
-        ><small>網站與三款遊戲 1.2 · 夕光動態收藏版 2026.10.03</small>
+        ><small>網站與三款遊戲 1.2 · 雙側星光收藏版 2026.10.03</small>
       </footer>
     </div>
     <dialog
@@ -1039,6 +1603,57 @@
         />
       </div>
     </dialog>
+    <dialog
+      id="special-viewer"
+      class="special-viewer"
+      aria-labelledby="special-viewer-title"
+    >
+      <button class="dialog-close" id="close-special" aria-label="關閉特別插畫">
+        ×
+      </button>
+      <img
+        id="special-viewer-image"
+        src="assets/akane/newyear-2025.webp"
+        alt="黑川茜新年和服官方插畫"
+        width="1200"
+        height="852"
+      />
+      <div class="special-viewer-info">
+        <p class="eyebrow" id="special-viewer-date">2025.01 / NEW YEAR</p>
+        <h2 id="special-viewer-title">新年和服的茜</h2>
+        <div class="special-viewer-actions">
+          <button
+            id="special-previous"
+            class="soft-button"
+            aria-label="上一張特別插畫"
+          >
+            ←</button
+          ><span id="special-viewer-counter">1 / 2</span
+          ><button
+            id="special-next"
+            class="soft-button"
+            aria-label="下一張特別插畫"
+          >
+            →</button
+          ><a
+            id="special-viewer-source"
+            class="source-link"
+            href="https://ichigoproduction.com/Season2/news/index01340000.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            >官方原頁 ↗</a
+          >
+        </div>
+      </div>
+    </dialog>
+    <button
+      id="ambient-motion-toggle"
+      class="ambient-motion-toggle"
+      aria-pressed="true"
+      aria-label="切換所有背景與收藏動畫"
+    >
+      動態 <span>開</span>
+    </button>
     <section id="player" class="player" hidden aria-label="遊戲視窗">
       <header class="player-bar">
         <button id="return-lounge" class="return-button">

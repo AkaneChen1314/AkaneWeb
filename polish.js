@@ -85,7 +85,16 @@
   }
 
   function updateMotion() {
+    const zone = document.body.dataset.zoneView || "home";
+    document.querySelectorAll("[data-edge-zone]").forEach((layer) => {
+      layer.hidden = layer.dataset.edgeZone !== zone;
+    });
     clips.forEach(updateClip);
+    const ambientButton = document.getElementById("ambient-motion-toggle");
+    ambientButton.setAttribute("aria-pressed", String(motionEnabled));
+    ambientButton.querySelector("span").textContent = motionEnabled
+      ? "開"
+      : "關";
     motionButton.setAttribute("aria-pressed", String(motionEnabled));
     motionButton.firstChild.textContent = motionEnabled
       ? "暫停動態 "
@@ -133,6 +142,11 @@
     observer.observe(video);
   });
   motionButton.addEventListener("click", () => chooseMotion(!motionEnabled));
+  document
+    .getElementById("ambient-motion-toggle")
+    .addEventListener("click", () => {
+      chooseMotion(!motionEnabled);
+    });
   document.querySelectorAll("[data-play-clip]").forEach((button) => {
     button.addEventListener("click", () => {
       chooseMotion(true);

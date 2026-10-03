@@ -58,7 +58,7 @@
   const status = document.getElementById("gallery-status");
 
   // 固定的文字與網址來自本檔，沒有把外部輸入放入 HTML。
-  galleryItems.forEach((item, index) => {
+  galleryItems.forEach((item) => {
     const card = document.createElement("article");
     card.className = `gallery-card gallery-${item.type}`;
     card.dataset.imageId = item.id;
@@ -70,9 +70,8 @@
         data-open-image="${item.id}"
         aria-label="放大：${item.title}"
       >
-        <span class="gallery-number">${String(index + 1).padStart(2, "0")}</span>
         <img
-          src="assets/akane/${item.id}.webp"
+          src="assets/akane/${item.id}.webp?v=1.2-r6"
           alt="${item.title}，黑川茜官方${item.type === "visual" ? "立繪" : "劇照"}"
           width="${item.width}"
           height="${item.height}"
@@ -108,6 +107,7 @@
         (currentEpisode === "all" || item.episode === Number(currentEpisode)) &&
         (currentFilter === "all" ||
           item.type === currentFilter ||
+          (currentFilter === "group" && item.group === true) ||
           (currentFilter === "saved" && favorites.has(item.id))),
     );
   }
@@ -153,6 +153,8 @@
   }
   function updateGallery(message = "") {
     const shown = filteredImages();
+    document.getElementById("random-gallery-image").disabled =
+      shown.length === 0;
     gallery.querySelectorAll(".gallery-card").forEach((card) => {
       card.hidden = !shown.some((item) => item.id === card.dataset.imageId);
     });
@@ -325,6 +327,21 @@
     .addEventListener("change", (event) => {
       currentEpisode = event.target.value;
       updateGallery();
+    });
+  // 隨機只從目前季數、話數與篩選的可見圖片中挑選，避免連續重複。
+  let lastDrawnId = null;
+  document
+    .getElementById("random-gallery-image")
+    .addEventListener("click", () => {
+      const shown = filteredImages();
+      const candidates =
+        shown.length > 1
+          ? shown.filter((item) => item.id !== lastDrawnId)
+          : shown;
+      if (!candidates.length) return;
+      const item = candidates[Math.floor(Math.random() * candidates.length)];
+      lastDrawnId = item.id;
+      document.querySelector(`[data-open-image="${item.id}"]`).click();
     });
   chooseSeason(1);
 })();

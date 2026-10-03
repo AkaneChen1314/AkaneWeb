@@ -168,14 +168,36 @@ function returnToLounge() {
 // hash 讓瀏覽器的「上一頁」也能回到遊戲館。
 function showZone() {
   const hash = location.hash.slice(1);
-  const zone = ["akane", "gallery", "sources", "design-room"].includes(hash)
-    ? "akane"
-    : hash === "games"
-      ? "games"
-      : hash === "main-content"
-        ? selectedZone
-        : "home";
-  const sectionHashes = ["gallery", "sources", "design-room", "blue-hour"];
+  const seasonMatch = /^season-([123])$/.exec(hash);
+  const characterSections = [
+    "akane",
+    "profile",
+    "archive-compass",
+    "gallery",
+    "sources",
+    "design-room",
+    "actor-room",
+    "little-facts",
+    "traits",
+    "story-notes",
+    "special-room",
+    "chibi-room",
+  ];
+  const zone =
+    characterSections.includes(hash) || seasonMatch
+      ? "akane"
+      : hash === "games"
+        ? "games"
+        : hash === "main-content"
+          ? selectedZone
+          : "home";
+  const sectionHashes = [
+    ...characterSections.filter((id) => id !== "akane"),
+    "blue-hour",
+    "season-1",
+    "season-2",
+    "season-3",
+  ];
   const changed = selectedZone !== zone;
   selectedZone = zone;
   document.body.dataset.zoneView = zone;
@@ -191,7 +213,15 @@ function showZone() {
   if (changed || sectionHashes.includes(hash)) {
     requestAnimationFrame(() => {
       if (sectionHashes.includes(hash)) {
-        document.getElementById(hash).scrollIntoView({ behavior: "instant" });
+        if (seasonMatch) {
+          document.querySelector('[data-gallery-filter="all"]').click();
+          document
+            .querySelector(`button[data-season="${seasonMatch[1]}"]`)
+            .click();
+        }
+        if (hash === "story-notes") document.getElementById(hash).open = true;
+        const target = document.getElementById(seasonMatch ? "gallery" : hash);
+        target?.scrollIntoView({ behavior: "instant" });
       } else {
         window.scrollTo({ top: 0, behavior: "instant" });
       }
