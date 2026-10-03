@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
+    />
+    <meta name="theme-color" content="#080b22" />
+    <title>蒼穹決戰：星界牌陣 1.2</title>
+    <link rel="stylesheet" href="style.css?v=1.2" />
+    <link rel="stylesheet" href="responsive.css?v=1.2" />
+    <link rel="stylesheet" href="spectacle.css?v=1.2" />
+    <link rel="stylesheet" href="../../shared/portal.css?v=1.2" />
+    <script src="../../shared/portal.js?v=1.2"></script>
+    <link rel="stylesheet" href="../../shared/fonts.css?v=1.2" />
+  </head>
+  <body>
+    <div class="ambient">
+      <i> </i>
+      <i> </i>
+      <i> </i>
+    </div>
+    <main id="app">
+      <section id="startScreen" class="screen active home-screen">
+        <div class="home-copy">
+          <span class="eyebrow">XIANXIA × ARCANE CARD BATTLE · VERSION 1.2</span>
+          <h1>
+            蒼穹決戰<br />
+            <em>星界牌陣</em>
+          </h1>
+          <p>
+            踏入劍與魔法交織的修仙界。選擇六位契約者、配置支援術式，以不同手牌、行動力與星能規則挑戰六大反派。
+          </p>
+          <div class="home-actions">
+            <button class="btn primary huge" id="startBtn">進入牌陣 <span>→</span></button>
+            <button class="btn ghost" id="rulesBtn">玩法說明</button>
+          </div>
+          <div class="home-guide glass">
+            <span>
+              <b>01</b>
+              <i>選擇角色</i>
+              <small>每位角色的手牌、行動力和初始星能都不同</small>
+            </span>
+            <span>
+              <b>02</b>
+              <i>自選支援牌</i>
+              <small>推薦只供參考，不會自動替你裝備</small>
+            </span>
+            <span>
+              <b>03</b>
+              <i>決定挑戰</i>
+              <small>下一頁再選難度與六名反派之一</small>
+            </span>
+            <span>
+              <b>04</b>
+              <i>回合出牌</i>
+              <small>觀察敵方意圖，在上限內安排卡牌順序</small>
+            </span>
+          </div>
+          <div class="feature-row">
+            <span>✦ 六種職業</span>
+            <span>✦ 角色專屬牌組</span>
+            <span>✦ 六大反派</span>
+            <span>✦ 完全離線</span>
+          </div>
+        </div>
+        <div class="home-art">
+          <div class="moon"></div>
+          <div class="poster poster-back">
+            <img src="assets/lunar.webp" alt="月璃" />
+          </div>
+          <div class="poster poster-front">
+            <img src="assets/azure.webp" alt="蒼凜" />
+            <b>AZURE<br />OBSERVER</b>
+          </div>
+          <div class="floating-card">✦<small>STARFALL</small></div>
+        </div>
+      </section>
+      <section id="selectScreen" class="screen selection-screen">
+        <header class="topbar">
+          <div>
+            <span class="eyebrow">CONTRACT 01</span>
+            <h2>選擇你的契約者</h2>
+            <p>每名角色的生命、攻防、初始星能、行動點、抽牌數、出牌上限與雙天賦皆不相同。</p>
+          </div>
+          <button class="btn ghost" data-back="startScreen">返回首頁</button>
+        </header>
+        <details class="stat-help">
+          <summary>選角數值怎麼看？</summary>
+          <div class="stat-guide glass">
+            <span tabindex="0">
+              <b>行動力</b>
+              <small>每回合可花費的點數；卡牌右上角會顯示消耗。</small>
+            </span>
+            <span tabindex="0">
+              <b>每回合手牌</b>
+              <small>新回合會補牌到這個數量，不代表整場只有這些牌。</small>
+            </span>
+            <span tabindex="0">
+              <b>出牌上限</b>
+              <small>該回合最多能用幾張牌，0 費卡也會計算。</small>
+            </span>
+            <span tabindex="0">
+              <b>初始星能</b>
+              <small>開戰時擁有的能量；終結牌通常需要 75～85 星能。</small>
+            </span>
+            <span tabindex="0">
+              <b>支援容量</b>
+              <small>必須自行選滿的支援術式數量，會作為額外卡牌加入牌組。</small>
+            </span>
+          </div>
+        </details>
+        <div id="fighterGrid" class="fighter-grid"></div>
+        <div class="dock glass">
+          <div>
+            <small>目前選擇</small>
+            <strong id="selectedFighterName">尚未選擇</strong>
+          </div>
+          <button class="btn primary" id="toSupportBtn" disabled>構築支援術式 →</button>
+        </div>
+      </section>
+      <section id="supportScreen" class="screen selection-screen">
+        <header class="topbar">
+          <div>
+            <span class="eyebrow">CONTRACT 02</span>
+            <h2>自行構築支援術式</h2>
+            <p>本頁不會預先替你選擇。請親自選滿角色容量；每張牌旁會標示最推薦的職業。</p>
+          </div>
+          <button class="btn ghost" data-back="selectScreen">返回選角</button>
+        </header>
+        <div class="support-toolbar">
+          <div class="filter-tabs" aria-label="技能篩選">
+            <button class="selected" data-support-filter="all" aria-pressed="true">全部技能</button>
+            <button data-support-filter="recommended" aria-pressed="false">★ 職業推薦</button>
+            <button data-support-filter="selected" aria-pressed="false">已裝備</button>
+          </div>
+          <button class="btn ghost compact" id="clearSupportsBtn">清空</button>
+        </div>
+        <div id="supportGrid" class="support-grid scroll-region" aria-label="支援技能清單"></div>
+        <div class="dock glass support-dock">
+          <div class="loadout-summary">
+            <div>
+              <small>術式容量</small>
+              <b id="supportSlotText">已選 0 / 3</b>
+            </div>
+            <div id="selectedSkillChips" class="selected-skill-chips"></div>
+          </div>
+          <div class="dock-actions">
+            <div>
+              <small>選滿容量即可繼續 · 點已選技能可卸下</small>
+              <strong id="selectedSupportSummary">尚未選擇</strong>
+            </div>
+            <button class="btn primary" id="toChallengeBtn" disabled>下一步 →</button>
+          </div>
+        </div>
+      </section>
+      <section id="challengeScreen" class="screen selection-screen challenge-screen">
+        <header class="topbar">
+          <div>
+            <span class="eyebrow">CONTRACT 03</span>
+            <h2>決定本次討伐</h2>
+            <p>最後再選擇戰鬥難度與反派。反派擁有各自的異常能力、招式循環和專屬場景。</p>
+          </div>
+          <button class="btn ghost" data-back="supportScreen">返回支援牌</button>
+        </header>
+        <div class="challenge-content scroll-region">
+          <div class="mode-section">
+            <h3>本次玩法</h3>
+            <div class="mode-grid">
+              <button class="mode-card selected" data-mode="duel" aria-pressed="true">
+                <b>單場討伐</b>
+                <small>自由挑選反派，一場決勝。</small>
+              </button>
+              <button class="mode-card" data-mode="trial" aria-pressed="false">
+                <b>三連戰試煉 <em>NEW</em> </b>
+                <small>生命延續 · 隨機場地 · 戰後三選一獎勵</small>
+              </button>
+            </div>
+          </div>
+          <div class="difficulty-section">
+            <div class="difficulty-heading">
+              <span class="eyebrow">BATTLE LEVEL</span>
+              <h3>選擇戰鬥難度</h3>
+            </div>
+            <div id="difficultyGrid" class="difficulty-grid">
+              <button class="difficulty-card" data-difficulty="easy">
+                <span>悠閒</span>
+                <b>簡單</b>
+                <small>敵人生命與傷害降低，適合熟悉牌組。</small>
+              </button>
+              <button class="difficulty-card selected" data-difficulty="normal">
+                <span>標準</span>
+                <b>普通</b>
+                <small>推薦難度，攻防與資源壓力較均衡。</small>
+              </button>
+              <button class="difficulty-card" data-difficulty="hard">
+                <span>深淵</span>
+                <b>困難</b>
+                <small>敵人更強且生命更多，需要精準出牌。</small>
+              </button>
+            </div>
+          </div>
+          <div class="villain-section">
+            <div class="difficulty-heading">
+              <span class="eyebrow">WANTED REALM</span>
+              <h3>選擇挑戰反派</h3>
+              <p>六名反派擁有不同牌路、異常能力與戰鬥背景。</p>
+            </div>
+            <div id="villainGrid" class="villain-grid"></div>
+          </div>
+        </div>
+        <div class="dock glass">
+          <div>
+            <small>本次討伐</small>
+            <strong id="selectedBossName">尚未選擇反派</strong>
+          </div>
+          <div>
+            <button class="btn ghost" id="randomBossBtn">隨機反派</button>
+            <button class="btn primary" id="battleBtn" disabled>進入牌陣 →</button>
+          </div>
+        </div>
+      </section>
+      <section id="battleScreen" class="screen battle-screen">
+        <div class="battle-bg"></div>
+        <div class="battle-vignette"></div>
+        <header class="battle-top glass">
+          <div class="battle-context">
+            <span class="eyebrow">ASTRAL RIFT</span>
+            <div class="battle-location">
+              <strong id="battleTitle">第七觀測界域</strong>
+              <span id="difficultyChip" class="difficulty-chip">普通</span>
+            </div>
+          </div>
+          <div class="round">
+            ROUND <b id="roundNum">1</b>
+            <small id="turnLabel">你的回合</small>
+          </div>
+          <div class="battle-actions">
+            <button
+              id="effectsToggle"
+              class="effects-toggle"
+              title="切換華麗／柔和特效"
+              aria-pressed="true"
+            >
+              特效：華麗
+            </button>
+            <button class="icon-btn" id="quitBtn" title="返回首頁" aria-label="返回首頁">×</button>
+          </div>
+        </header>
+        <div class="battle-field">
+          <article class="unit player-unit">
+            <div class="unit-art">
+              <img id="playerPortrait" alt="玩家角色" />
+              <div class="aura"></div>
+              <div class="damage-pop"></div>
+            </div>
+            <div class="unit-panel glass">
+              <div class="unit-name">
+                <div>
+                  <small id="playerTitle"> </small>
+                  <h3 id="playerName"></h3>
+                </div>
+                <span id="playerStatus" class="status">正常</span>
+              </div>
+              <div class="vital-stack">
+                <div class="vital hp-vital">
+                  <span class="vital-icon">♥</span>
+                  <div>
+                    <div class="meter-label">
+                      <span>生命 HP</span>
+                      <b id="playerHpText"> </b>
+                    </div>
+                    <div class="meter hp">
+                      <i id="playerHpBar"> </i>
+                    </div>
+                  </div>
+                </div>
+                <div class="vital energy-vital">
+                  <span class="vital-icon">✦</span>
+                  <div>
+                    <div class="meter-label">
+                      <span>星能 EN</span>
+                      <b id="playerEnergyText"> </b>
+                    </div>
+                    <div class="meter energy">
+                      <i id="playerEnergyBar"> </i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="effects">
+                <small>目前狀態</small>
+                <div class="buff-row" id="playerBuffs"></div>
+              </div>
+            </div>
+          </article>
+          <div class="center-info">
+            <button
+              id="encounterInfo"
+              class="encounter-info"
+              aria-label="查看試煉場地與路線說明"
+              hidden
+            ></button>
+            <div class="enemy-intent glass">
+              <small>敵方意圖</small>
+              <strong id="intentName">蓄勢</strong>
+              <span id="intentValue">？</span>
+            </div>
+            <div class="versus">V<span>S</span></div>
+            <div class="deck-count">
+              <span>牌庫 <b id="deckCount">0</b> </span>
+              <span>棄牌 <b id="discardCount">0</b> </span>
+            </div>
+          </div>
+          <article class="unit enemy-unit">
+            <div class="unit-art">
+              <img id="enemyPortrait" src="assets/enemy.webp" alt="獄骸" />
+              <div class="aura"></div>
+              <div class="damage-pop"></div>
+            </div>
+            <div class="unit-panel glass">
+              <div class="unit-name">
+                <div>
+                  <small id="enemyTitle">天災級異相</small>
+                  <h3 id="enemyName">獄骸</h3>
+                </div>
+                <span id="enemyStatus" class="status danger">侵蝕</span>
+              </div>
+              <div class="vital-stack single">
+                <div class="vital hp-vital">
+                  <span class="vital-icon">♥</span>
+                  <div>
+                    <div class="meter-label">
+                      <span>生命 HP</span>
+                      <b id="enemyHpText"> </b>
+                    </div>
+                    <div class="meter hp enemy-hp">
+                      <i id="enemyHpBar"> </i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="effects">
+                <small>目前狀態</small>
+                <div class="buff-row" id="enemyBuffs"></div>
+              </div>
+            </div>
+          </article>
+        </div>
+        <div class="card-console">
+          <div class="turn-tools glass">
+            <div class="ap-orb">
+              <b id="apValue">3</b>
+              <span>行動點</span>
+            </div>
+            <div class="turn-rule" id="turnRule">本回合 0 / 4 張</div>
+            <div id="supportMini" class="support-mini"></div>
+            <button class="btn end-turn" id="endTurnBtn">結束回合</button>
+          </div>
+          <div id="hand" class="hand"></div>
+        </div>
+        <div class="combat-caption" id="combatCaption" aria-live="polite">
+          <small id="combatKind"> </small>
+          <strong id="combatName"> </strong>
+          <span id="combatOutcome"> </span>
+        </div>
+        <canvas id="battleFX" aria-hidden="true"> </canvas>
+        <div id="battleFXLabels" aria-hidden="true"></div>
+        <div id="ultimateCutin" aria-hidden="true">
+          <img id="cutinPortrait" alt="" />
+          <div>
+            <small>星界終式</small>
+            <strong id="cutinName"> </strong>
+          </div>
+        </div>
+        <button class="log-toggle" id="logToggle" aria-expanded="false" aria-controls="logPanel">
+          戰鬥紀錄
+        </button>
+        <aside class="battle-log glass" id="logPanel" aria-label="戰鬥紀錄">
+          <div class="log-head">
+            <strong>戰鬥紀錄 <small>最新行動在上方</small> </strong>
+            <button id="closeLog" aria-label="關閉戰鬥紀錄">×</button>
+          </div>
+          <div id="battleLog" tabindex="0"></div>
+        </aside>
+      </section>
+      <section id="rewardScreen" class="screen selection-screen reward-screen">
+        <header class="topbar">
+          <div>
+            <span class="eyebrow">TRIAL REWARD</span>
+            <h2 id="rewardTitle">第一關突破</h2>
+            <p>三選一；選擇後按下繼續，生命與已取得的秘寶將帶入下一戰。</p>
+          </div>
+        </header>
+        <div class="reward-content scroll-region">
+          <div id="trialProgress" class="trial-progress glass"></div>
+          <div id="rewardGrid" class="reward-grid"></div>
+        </div>
+        <div class="dock glass">
+          <div>
+            <small>戰後獎勵</small>
+            <strong id="rewardSummary">請選擇一項獎勵</strong>
+          </div>
+          <button class="btn primary" id="nextTrialBtn" disabled>繼續試煉 →</button>
+        </div>
+      </section>
+      <section id="resultScreen" class="screen result-screen">
+        <div class="result-art">
+          <img id="resultPortrait" alt="結果角色" />
+        </div>
+        <div class="result-card glass">
+          <span class="eyebrow">BATTLE RESULT</span>
+          <div id="resultRank" class="rank">S</div>
+          <h1 id="resultTitle">界域淨化完成</h1>
+          <p id="resultText"></p>
+          <div id="resultStats" class="result-stats"></div>
+          <div class="home-actions">
+            <button class="btn primary" id="againBtn">再次挑戰</button>
+            <button class="btn ghost" id="homeBtn">返回首頁</button>
+          </div>
+        </div>
+      </section>
+    </main>
+    <div class="modal" id="rulesModal" aria-hidden="true">
+      <div class="modal-card rules-book glass">
+        <button class="modal-x" id="closeRules">×</button>
+        <span class="eyebrow">COMPLETE GUIDE</span>
+        <h2>星界牌陣完整玩法</h2>
+        <div class="trial-guide">
+          <h3>新增：三連戰試煉</h3>
+          <p>
+            在挑戰頁切換「三連戰試煉」。選定反派作為首關，再隨機挑出兩名不同反派。三戰生命與星能會延續，異常效果在新戰清除；每關都有不同的場地規則。前兩次勝利後可從三項獎勵選一項，包含回復、永久秘寶和新卡。失敗即結束本次試煉。
+          </p>
+          <p>
+            卡牌右下的 ⓘ 可查看完整說明。技能、角色與反派皆支援 Tab 焦點及
+            Enter／空白鍵選取；已裝備技能可從底列直接卸下。
+          </p>
+        </div>
+        <p class="rules-lead">
+          這是一款單人卡牌回合制 Boss 戰。流程是「選角色 → 自選支援牌 → 選玩法、難度與反派 →
+          戰鬥」。也能挑戰三連戰試煉，在連續戰鬥中構築更強的牌組。
+        </p>
+        <div class="rule-grid">
+          <div>
+            <b>01</b>
+            <h3>角色規則不同</h3>
+            <p>
+              行動力是每回合能花的點數；每回合手牌是補牌目標；出牌上限則限制該回合最多使用幾張牌。
+            </p>
+          </div>
+          <div>
+            <b>02</b>
+            <h3>支援牌由你選</h3>
+            <p>
+              每位角色需自行選滿 2～3
+              張。推薦職業只代表效果較容易配合，不會自動裝備，也不限制其他職業使用。
+            </p>
+          </div>
+          <div>
+            <b>03</b>
+            <h3>卡牌消耗</h3>
+            <p>
+              卡牌右上角圓圈是行動力消耗。金色終結牌還會消耗星能；星能可透過攻擊、術法或戰術牌補充。
+            </p>
+          </div>
+          <div>
+            <b>04</b>
+            <h3>觀察敵方意圖</h3>
+            <p>
+              畫面中央會提前顯示反派下一步。遇到重擊可先疊護盾，遇到防禦則可施加灼燒、中毒或破綻。
+            </p>
+          </div>
+          <div>
+            <b>05</b>
+            <h3>狀態效果</h3>
+            <p>
+              灼燒、中毒和流血會造成持續傷害；破綻提高受到的傷害；弱化降低造成的傷害；封鎖可讓敵人跳過行動。
+            </p>
+          </div>
+          <div>
+            <b>06</b>
+            <h3>牌庫循環</h3>
+            <p>
+              手牌最多 9
+              張。結束回合後，未使用的手牌會進入棄牌堆；牌庫抽完時，棄牌會重新洗入牌庫。標示「使用後移除」的牌在本戰不會重新抽到。
+            </p>
+          </div>
+          <div>
+            <b>07</b>
+            <h3>盾擊與反擊</h3>
+            <p>
+              盾擊會消耗目前部分護盾，轉為額外基礎傷害，先防禦再盾擊可以提高輸出。反擊在敵人攻擊命中時觸發，即使護盾吸收全部傷害也會反擊。
+            </p>
+          </div>
+        </div>
+        <div class="rules-glossary">
+          <span>
+            <b>生命 HP</b>
+            <small>歸零即戰敗；低於 50% 時背景開始轉紅。</small>
+          </span>
+          <span>
+            <b>星能 EN</b>
+            <small>最高 100；主要用來施放角色終結牌。</small>
+          </span>
+          <span>
+            <b>行動力 AP</b>
+            <small>每回合重置；不同角色基礎值為 3～5。</small>
+          </span>
+          <span>
+            <b>出牌上限</b>
+            <small>與行動力分開計算；即使還有 AP，達上限也必須結束回合。</small>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="modal" id="cardDetailModal" aria-hidden="true">
+      <div
+        class="modal-card glass card-detail"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cardDetailName"
+      >
+        <button class="modal-x" id="closeCardDetail" aria-label="關閉卡牌說明">×</button>
+        <span class="eyebrow">CARD GUIDE</span>
+        <h2 id="cardDetailName"></h2>
+        <div id="cardDetailBody"></div>
+        <button class="btn primary" id="playDetailCard">使用這張牌</button>
+      </div>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="spectacle.js?v=1.2"></script>
+    <script src="game.js?v=1.2"></script>
+  </body>
+</html>

@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#07111f" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>深境冒險 1.2｜職業戰鬥 RPG</title>
+    <link rel="stylesheet" href="./style.css?v=1.2-codex" />
+    <link rel="stylesheet" href="../../shared/portal.css?v=1.2" />
+    <script src="../../shared/portal.js?v=1.2"></script>
+    <link rel="stylesheet" href="../../shared/fonts.css?v=1.2" />
+  </head>
+  <body>
+    <div class="aurora"></div>
+    <main class="game-shell">
+      <header class="topbar glass">
+        <div class="brand">
+          <span class="brand-mark">⚜</span>
+          <div>
+            <h1>深境冒險</h1>
+            <small>ABYSSAL ADVENTURE · v1.2</small>
+          </div>
+        </div>
+        <div class="run-meta">
+          <span class="meta-chip">層數 <b id="floorText">0 / 1000</b> </span>
+          <span class="meta-chip">金幣 <b id="goldText">0</b> </span>
+          <span class="meta-chip">討伐 <b id="killText">0</b> </span>
+        </div>
+        <div class="header-actions">
+          <button class="utility-btn" id="codexBtn" aria-label="開啟怪物圖鑑">圖鑑</button>
+          <button class="utility-btn" id="settingsBtn" aria-label="開啟演出設定">⚙ 演出設定</button>
+          <button class="icon-btn" id="helpBtn" aria-label="玩法說明">?</button>
+          <button class="icon-btn" id="resetBtn">↻</button>
+        </div>
+      </header>
+      <section class="layout">
+        <aside class="hero-panel glass">
+          <div class="hero-card">
+            <div class="portrait-wrap">
+              <div class="portrait" id="playerPortrait">⚔️</div>
+              <span class="level-badge">Lv.<b id="levelText">1</b> </span>
+            </div>
+            <div>
+              <p class="eyebrow" id="classText">騎士</p>
+              <h2>冒險者</h2>
+            </div>
+          </div>
+          <div class="effects player-status" id="playerEffects"></div>
+          <div class="meter-block">
+            <div class="meter-label">
+              <span>生命 HP</span>
+              <b id="hpLabel">100 / 100</b>
+            </div>
+            <div class="meter hp">
+              <i id="hpBar"> </i>
+            </div>
+          </div>
+          <div class="meter-block">
+            <div class="meter-label">
+              <span id="resourceName">體力 SP</span>
+              <b id="resourceLabel">50 / 50</b>
+            </div>
+            <div class="meter energy">
+              <i id="resourceBar"> </i>
+            </div>
+          </div>
+          <div class="meter-block">
+            <div class="meter-label">
+              <span>經驗 EXP</span>
+              <b id="xpLabel">0 / 100</b>
+            </div>
+            <div class="meter xp">
+              <i id="xpBar"> </i>
+            </div>
+            <small class="xp-away" id="xpAway">距離升級還差 100 EXP</small>
+          </div>
+          <div class="stats-grid">
+            <div>
+              <small>攻擊</small>
+              <b id="atkText">12</b>
+            </div>
+            <div>
+              <small>防禦</small>
+              <b id="defText">3</b>
+            </div>
+            <div>
+              <small>暴擊</small>
+              <b id="critText">8%</b>
+            </div>
+            <div>
+              <small>速度</small>
+              <b id="speedText">8</b>
+            </div>
+          </div>
+          <div class="equipment">
+            <p class="section-label">目前裝備</p>
+            <button class="equip-slot" data-equip-slot="weapon">
+              <span id="weaponIcon">🗡️</span>
+              <div>
+                <small>武器</small>
+                <b id="weaponName">新手武器</b>
+              </div>
+            </button>
+            <button class="equip-slot" data-equip-slot="armor">
+              <span id="armorIcon">🧥</span>
+              <div>
+                <small>盔甲</small>
+                <b id="armorName">旅人布衣</b>
+              </div>
+            </button>
+          </div>
+        </aside>
+        <section class="battle-column">
+          <div class="arena glass" id="arena">
+            <div class="zone-line">
+              <span id="zoneText">翠葉森林</span>
+              <span id="weatherText">探索狀態</span>
+            </div>
+            <div class="ambient">
+              <i> </i>
+              <i> </i>
+              <i> </i>
+              <i> </i>
+              <i> </i>
+            </div>
+            <div class="enemy-intent hidden" id="enemyIntent">
+              <span id="intentIcon">⚔️</span>
+              <div>
+                <small>敵人下一步</small>
+                <b id="intentText">普通攻擊</b>
+                <em id="intentAdvice">推薦：防禦架勢</em>
+              </div>
+            </div>
+            <div class="enemy-wrap" id="enemyWrap">
+              <div class="enemy-shadow"></div>
+              <div class="enemy-sprite" id="enemySprite">🐺</div>
+            </div>
+            <div class="enemy-card hidden" id="enemyCard">
+              <div class="enemy-title">
+                <div>
+                  <small id="enemyRank">普通魔物</small>
+                  <h2 id="enemyName">森林狼</h2>
+                </div>
+                <span id="enemyLevel">Lv.1</span>
+              </div>
+              <div class="meter hp enemy-hp">
+                <i id="enemyHpBar"> </i>
+              </div>
+              <div class="enemy-hp-label">
+                <span id="enemyHpLabel">35 / 35</span>
+                <div id="enemyEffects"></div>
+              </div>
+              <div class="enemy-note" id="enemyNote"></div>
+            </div>
+            <div class="scene-copy" id="sceneCopy">
+              <p class="eyebrow">冒險準備完成</p>
+              <h2>前方的道路被迷霧籠罩</h2>
+              <p>選擇探索後將遇到魔物、寶箱或特殊事件。</p>
+            </div>
+            <div class="float-layer" id="floatLayer"></div>
+          </div>
+          <div class="turn-strip glass">
+            <div>
+              <small id="turnKicker">探索階段</small>
+              <b id="turnText">選擇下一步</b>
+            </div>
+            <div class="energy-pips" id="resourcePips"></div>
+            <span class="combo-badge" id="comboBadge">連擊未啟動</span>
+            <button class="end-turn hidden" id="fleeBtn">嘗試逃跑</button>
+          </div>
+          <div class="skill-bar hidden" id="skillBar">
+            <button class="skill-command basic" data-skill="basic">
+              <em class="command-key">1</em>
+              <span>⚔️</span>
+              <div>
+                <small>不消耗資源</small>
+                <b>普通攻擊</b>
+                <p>穩定造成傷害並恢復少量職業資源</p>
+              </div>
+            </button>
+            <div id="classSkills" class="class-skills"></div>
+          </div>
+          <section class="tactic-panel hidden" id="tacticPanel">
+            <div class="battle-section-heading">
+              <div>
+                <small>TACTICAL ACTIONS</small>
+                <b>共通戰術</b>
+              </div>
+              <p>破勢可中斷敵人的蓄力或防禦，請依照敵人意圖選擇戰術。</p>
+            </div>
+            <div class="tactic-bar" id="tacticBar"></div>
+          </section>
+          <button class="open-potion-mode hidden" id="openPotionMode">
+            <span>🧪</span>
+            <div>
+              <b>使用藥水</b>
+              <small>一次可選 1～3 種，整批只消耗 1 回合</small>
+            </div>
+          </button>
+          <div class="potion-mode-backdrop hidden" id="potionModeBackdrop"></div>
+          <section
+            class="potion-mode-panel hidden"
+            id="potionModePanel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="potionModeTitle"
+          >
+            <div class="potion-mode-heading">
+              <div>
+                <small>BATTLE POTIONS</small>
+                <b id="potionModeTitle">選擇本回合藥水</b>
+              </div>
+              <span id="potionSelectionCount">已選 0 / 3</span>
+            </div>
+            <p class="potion-mode-note">
+              同一種藥水每回合最多使用 1 瓶；確認後，選擇的 1～3 瓶合計只消耗 1 回合。
+            </p>
+            <div class="potion-selection-grid" id="potionSelectionGrid"></div>
+            <div class="potion-mode-actions">
+              <button id="cancelPotionMode">取消</button>
+              <button class="primary" id="confirmPotions">確認使用</button>
+            </div>
+          </section>
+          <div class="explore-actions" id="exploreActions">
+            <button class="route-card" data-route="explore">
+              <span>🧭</span>
+              <div>
+                <small>主要冒險</small>
+                <b>繼續探索</b>
+                <p>前進一區並觸發遭遇</p>
+              </div>
+            </button>
+            <button class="route-card risk-route" data-route="elite">
+              <span>💀</span>
+              <div>
+                <small>高風險</small>
+                <b>菁英小兵挑戰</b>
+                <p>不是 Boss，但會掉落更多素材</p>
+              </div>
+            </button>
+            <button class="route-card rest-route" data-route="rest">
+              <span>🏕️</span>
+              <div>
+                <small>每 3 區可用</small>
+                <b>休息營地</b>
+                <p>恢復生命與職業資源</p>
+              </div>
+            </button>
+          </div>
+        </section>
+        <aside class="inventory-panel glass">
+          <div class="tabs">
+            <button class="tab active" data-tab="bag">背包 <span id="bagCount">0</span></button>
+            <button class="tab" data-tab="shop">商店</button>
+            <button class="tab" data-tab="upgrade">強化</button>
+            <button class="tab" data-tab="log">戰報</button>
+          </div>
+          <div class="tab-page active" id="bagPage">
+            <div class="filters">
+              <button class="filter active" data-filter="all">全部</button>
+              <button class="filter" data-filter="potion">藥品</button>
+              <button class="filter" data-filter="weapon">武器</button>
+              <button class="filter" data-filter="armor">盔甲</button>
+              <button class="filter" data-filter="material">素材</button>
+            </div>
+            <div class="inventory-list" id="inventoryList"></div>
+          </div>
+          <div class="tab-page" id="shopPage">
+            <div class="panel-heading">
+              <b>冒險商店</b>
+              <small>製作裝備，或購買回復與異常解除藥水</small>
+            </div>
+            <div class="filters shop-filters" id="shopFilters">
+              <button class="filter shop-filter active" data-shop-filter="all">全部</button>
+              <button class="filter shop-filter" data-shop-filter="potion">藥水</button>
+              <button class="filter shop-filter" data-shop-filter="weapon">武器</button>
+              <button class="filter shop-filter" data-shop-filter="armor">盔甲</button>
+            </div>
+            <div class="inventory-list" id="shopList"></div>
+          </div>
+          <div class="tab-page" id="upgradePage">
+            <div class="panel-heading">
+              <b>裝備強化</b>
+              <small>最高可強化至＋9</small>
+            </div>
+            <div class="inventory-list" id="upgradeList"></div>
+          </div>
+          <div class="tab-page combat-log" id="logPage"></div>
+        </aside>
+      </section>
+    </main>
+    <div class="modal open" id="startModal">
+      <div class="modal-card start-card">
+        <div class="modal-brand">⚜</div>
+        <p class="eyebrow">ABYSSAL ADVENTURE</p>
+        <h2>選擇冒險職業</h2>
+        <p class="muted">六種正常職業與一種密碼限定測試職業，擁有不同資源、技能與戰鬥節奏。</p>
+        <button class="intro-open" id="introBtn">📖 這個遊戲在玩什麼？</button>
+        <div class="difficulty" id="difficultyButtons">
+          <button data-difficulty="easy">休閒<small>適合體驗</small></button>
+          <button class="active" data-difficulty="normal">普通<small>推薦難度</small></button>
+          <button data-difficulty="hard">困難<small>高風險高報酬</small></button>
+        </div>
+        <div class="class-grid six" id="classGrid"></div>
+        <button class="continue-btn hidden" id="continueBtn">繼續上次冒險</button>
+      </div>
+    </div>
+    <div class="modal" id="itemModal">
+      <div class="modal-card">
+        <button class="modal-close" data-close="itemModal">×</button>
+        <div class="detail-icon" id="itemIcon">🧪</div>
+        <p class="rarity" id="itemRarity">普通</p>
+        <h2 id="itemTitle">道具</h2>
+        <p class="muted" id="itemDescription"></p>
+        <div class="detail-stats" id="itemStats"></div>
+        <div class="modal-actions" id="itemActions"></div>
+      </div>
+    </div>
+    <div
+      class="modal boss-dialogue-modal"
+      id="bossDialogueModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="bossDialogueName"
+    >
+      <div class="boss-dialogue-card" id="bossDialogueCard">
+        <div class="boss-dialogue-rift" aria-hidden="true"></div>
+        <div class="boss-dialogue-header">
+          <div class="boss-dialogue-portrait">
+            <span id="bossDialogueSprite">🌳</span>
+          </div>
+          <div class="boss-dialogue-identity">
+            <p class="eyebrow" id="bossDialogueRank">第 50 層 · 深境首領</p>
+            <small id="bossDialogueChapter">古森的審判</small>
+            <h2 id="bossDialogueName">巨木守護者</h2>
+          </div>
+        </div>
+        <blockquote id="bossDialogueQuote">「旅人，根脈記得每一道傷痕。」</blockquote>
+        <p class="boss-dialogue-prompt" id="bossDialoguePrompt">你要如何回應？</p>
+        <div class="boss-dialogue-options" id="bossDialogueOptions"></div>
+        <div class="boss-dialogue-reaction hidden" id="bossDialogueReaction" aria-live="polite">
+          <b>Boss 的回應</b>
+          <p id="bossDialogueReply"></p>
+          <small id="bossDialogueResult"> </small>
+        </div>
+        <button class="boss-dialogue-continue hidden" id="bossDialogueContinue">
+          ⚔️ 拔出武器，開始決戰
+        </button>
+      </div>
+    </div>
+    <div class="modal" id="eventModal">
+      <div class="modal-card">
+        <div class="event-icon" id="eventIcon">✨</div>
+        <p class="eyebrow" id="eventKicker">特殊事件</p>
+        <h2 id="eventTitle">事件</h2>
+        <p class="muted" id="eventDescription"></p>
+        <div class="event-options" id="eventOptions"></div>
+      </div>
+    </div>
+    <div class="modal" id="introModal">
+      <div class="modal-card intro-card">
+        <button class="modal-close" data-close="introModal">×</button>
+        <p class="eyebrow">遊戲說明</p>
+        <h2>深入未知深境，打造最強冒險者</h2>
+        <p class="muted">
+          《深境冒險》是一款共 1000 層的單人職業養成
+          RPG。你將選擇一種職業，擊敗大量不同小兵取得素材、製作與強化裝備，並在每 50
+          層迎戰一隻完全不同的大型 Boss；擊敗第 1000 層的無名王即算破關。
+        </p>
+        <div class="intro-grid">
+          <div>
+            <span>⚔️</span>
+            <b>職業戰鬥</b>
+            <small>普通攻擊、三種專屬技能與四種共通戰術；也能用一回合搭配 1～3 種藥水。</small>
+          </div>
+          <div>
+            <span>🧭</span>
+            <b>深層探索</b>
+            <small>共有 1000 層；特殊事件每次觸發後會間隔 5～10 層，不會連續出現。</small>
+          </div>
+          <div>
+            <span>🧰</span>
+            <b>素材合成</b>
+            <small>不同怪物掉落不同素材，用來製作職業武器與盔甲。</small>
+          </div>
+          <div>
+            <span>💎</span>
+            <b>裝備強化</b>
+            <small>裝備最高可強化至＋9，攻擊、生命、防禦、暴擊、速度與特殊效果都會成長。</small>
+          </div>
+          <div>
+            <span>☠️</span>
+            <b>怪物機制</b>
+            <small>注意防禦、異常狀態與限時擊殺詛咒，戰鬥前先閱讀情報。</small>
+          </div>
+          <div>
+            <span>👑</span>
+            <b>首領挑戰</b>
+            <small>沒有每 5 層小 Boss；只有每 50 層的大型 Boss 才有專屬對話與選項。</small>
+          </div>
+        </div>
+        <button class="primary wide" data-close="introModal">開始選擇職業</button>
+      </div>
+    </div>
+    <div class="modal" id="helpModal">
+      <div class="modal-card help-card">
+        <button class="modal-close" data-close="helpModal">×</button>
+        <p class="eyebrow">冒險指南</p>
+        <h2>戰鬥方式</h2>
+        <ul>
+          <li>普通攻擊不消耗資源，還能恢復少量體力、魔力或其他職業能量。</li>
+          <li>除了三個職業技能，還有猛力重擊、破勢斬、防禦架勢與集中蓄力。</li>
+          <li>看到敵人準備蓄力重擊或防禦時，可用破勢斬中斷；持續攻擊且不受傷能累積連擊傷害。</li>
+          <li>電腦可用數字鍵 1～4施放基本／職業技能，Q～R 使用共通戰術。</li>
+          <li>三個職業技能固定顯示，消耗資源並有不同效果；請根據敵人下一步行動決定攻防。</li>
+          <li>
+            戰鬥中按「使用藥水」會切換至藥水選單；每回合可選 1～3 種藥水，同種類最多 1
+            瓶，整批只消耗 1 回合。
+          </li>
+          <li>每 50 層才會遇到一隻大型 Boss，共 20 隻；其他戰鬥都是普通或可選擇挑戰的菁英小兵。</li>
+          <li>
+            大型 Boss 開戰前會進入專屬對話。三個回答各有不同回話與開場效果，選項會先標示風險與收益。
+          </li>
+          <li>
+            Boss 低於 50% 生命進入第二階段，攻擊提升 15%；每 4
+            次行動準備專屬招式。破勢斬可中斷，防禦及護盾仍有效。
+          </li>
+          <li>首領情報以精簡提示顯示，滑鼠移入或手機點擊可看完整說明，不會用大型視窗遮住戰鬥。</li>
+          <li>中毒、燃燒、流血最多持續 3 次敵方行動，重複命中刷新時間、不無限疊加。</li>
+          <li>特殊事件至少相隔 5～10 層，包含泉水、賭博寶箱、商隊、祭壇、鍛造爐、流星與補給箱。</li>
+          <li>敵人情報會標示防禦與特殊機制；中毒、燃燒與流血會持續扣血。</li>
+          <li>
+            滑鼠移到狀態圖示或敵人意圖上即可查看說明；手機點一下後，說明會優先顯示在項目右側或左側。
+          </li>
+          <li>部分敵人具有限時擊殺詛咒，倒數結束後每次攻擊會追加傷害。</li>
+          <li>怪物只會掉落生命或資源藥水；解除異常的藥水只能在商店購買。</li>
+          <li>每種魔物掉落自己的素材，商店裝備需要金幣與指定素材。</li>
+          <li>
+            每個職業都有普通、稀有、史詩、傳說與彩耀五階武器及盔甲；高階裝備附帶吸血、抗毒或減傷。
+          </li>
+          <li>武器與盔甲可使用強化石提升至＋9，所有裝備屬性都會成長；失敗不降級也不損壞。</li>
+        </ul>
+        <button class="primary wide" data-close="helpModal">知道了</button>
+      </div>
+    </div>
+    <div class="modal" id="codexModal" role="dialog" aria-modal="true" aria-labelledby="codexTitle">
+      <div class="modal-card codex-card">
+        <button class="modal-close" data-close="codexModal" aria-label="關閉圖鑑">×</button>
+        <p class="eyebrow">FIELD GUIDE</p>
+        <h2 id="codexTitle">怪物圖鑑</h2>
+        <p class="muted">
+          只有實際遭遇過的魔物會解鎖名字、特性與掉落素材。這裡只能查看介紹，不能發起戰鬥。
+        </p>
+        <p id="codexProgress" class="codex-progress" role="status">已發現 0 種魔物</p>
+        <select id="codexMaterial" aria-label="篩選素材">
+          <option value="all">全部魔物</option>
+        </select>
+        <div class="codex-list" id="codexList"></div>
+      </div>
+    </div>
+    <div
+      class="modal"
+      id="settingsModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settingsTitle"
+    >
+      <div class="modal-card">
+        <button class="modal-close" data-close="settingsModal" aria-label="關閉設定">×</button>
+        <h2 id="settingsTitle">演出設定</h2>
+        <label class="setting-row">
+          <span>戰鬥柔光與動態</span>
+          <input type="checkbox" id="effectsToggle" checked />
+        </label>
+        <label class="setting-row">
+          <span>輕量音效（預設關閉）</span>
+          <input type="checkbox" id="soundToggle" />
+        </label>
+        <p class="muted">系統設定減少動態時會停用動畫。Boss 情報與招式說明仍會保留。</p>
+        <button class="primary wide" data-close="settingsModal">返回遊戲</button>
+      </div>
+    </div>
+    <div class="modal" id="godModal">
+      <div class="modal-card god-card">
+        <button class="modal-close" data-close="godModal">×</button>
+        <div class="god-symbol">👁️</div>
+        <p class="eyebrow">TEST CLASS</p>
+        <h2>上帝模式</h2>
+        <p class="muted">這是測試與爽玩用職業。請輸入六位數啟用密碼。</p>
+        <input
+          id="godPassword"
+          class="god-password"
+          type="password"
+          inputmode="numeric"
+          maxlength="6"
+          autocomplete="off"
+          placeholder="輸入密碼"
+        />
+        <p class="god-error" id="godError"></p>
+        <button class="primary wide" id="godUnlockBtn">解鎖上帝模式</button>
+      </div>
+    </div>
+    <div class="toast-stack" id="toastStack"></div>
+    <div class="global-tooltip" id="globalTooltip" role="tooltip"></div>
+    <script src="./game.js?v=1.2-codex"></script>
+  </body>
+</html>
