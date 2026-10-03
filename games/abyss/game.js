@@ -3376,6 +3376,10 @@ function event() {
 }
 
 function resumePendingEvent() {
+  if (S.pendingEvent?.type === "result") {
+    showEventResult();
+    return;
+  }
   const handlers = {
     fountain: eventFountain,
     gamble: eventGambleChest,
@@ -3447,10 +3451,11 @@ function eventGambleChest() {
           } else {
             const damage = Math.max(1, Math.round(stats().maxHp * 0.15)),
               lost = Math.min(S.gold, Math.round(S.gold * 0.12));
+            const actualDamage = Math.min(S.hp - 1, damage);
             S.hp = Math.max(1, S.hp - damage);
             S.gold -= lost;
             finishEvent(
-              `箱內噴出詛咒煙霧！受到 ${damage} 傷害並遺失 ${lost} 金幣。`,
+              `箱內噴出詛咒煙霧！受到 ${actualDamage} 傷害並遺失 ${lost} 金幣。`,
             );
           }
         },
@@ -3601,11 +3606,84 @@ function eventMeteor() {
   );
 }
 
+// 選項執行前記下數值，結果卡顯示「實際」增減（含回復上限）。
+let eventBefore = null;
+function eventResources() {
+  return {
+    gold: S.gold,
+    hp: S.hp,
+    res: S.res,
+    atk: S.baseAtk,
+    materials: { ...S.materials },
+    potions: { ...S.potions },
+    debuffs: { ...S.debuffs },
+  };
+}
+function eventChanges(before) {
+  if (!before) return [];
+  const changes = [];
+  const add = (label, oldValue, newValue) => {
+    const delta = newValue - oldValue;
+    if (delta) changes.push({ label, delta });
+  };
+  for (const [key, label] of Object.entries({
+    gold: "金幣",
+    hp: "生命 HP",
+    res: baseClass().resource,
+    atk: "永久攻擊",
+  }))
+    add(label, before[key], eventResources()[key]);
+  for (const [key, value] of Object.entries(S.materials))
+    add(MATERIALS[key]?.n || key, before.materials[key] || 0, value);
+  for (const [key, value] of Object.entries(S.potions))
+    add(POTIONS[key]?.n || key, before.potions[key] || 0, value);
+  for (const key of Object.keys(before.debuffs))
+    if (before.debuffs[key] && !S.debuffs[key])
+      changes.push({
+        label: `${{ poison: "中毒", burn: "燃燒", bleed: "流血", weak: "虛弱" }[key] || key}已解除`,
+        delta: null,
+      });
+  return changes;
+}
 function finishEvent(msg) {
-  S.pendingEvent = null;
-  closeModal("eventModal");
+  // 結果本身也存檔，重開只會再顯示結果，不會重新扣款或領獎。
+  if (S.pendingEvent?.type === "result") return;
+  S.pendingEvent = {
+    type: "result",
+    title: $("#eventTitle").textContent,
+    icon: $("#eventIcon").textContent,
+    message: msg,
+    changes: eventChanges(eventBefore),
+  };
+  eventBefore = null;
   log(msg, true);
   showExplore();
+  render();
+  save();
+  showEventResult();
+}
+function showEventResult() {
+  const result = S.pendingEvent;
+  if (result?.type !== "result") return;
+  openEvent(result.icon, `${result.title} · 結果`, result.message, [
+    { label: "看完了，繼續探索", primary: true, run: acknowledgeEventResult },
+  ]);
+  $("#eventKicker").textContent = "本次事件已結算";
+  $("#eventResult").innerHTML = result.changes.length
+    ? result.changes
+        .map(
+          ({ label, delta }) =>
+            `<div class="event-change ${delta < 0 ? "loss" : "gain"}"><span>${escapeHtml(label)}</span><b>${delta === null ? "✓" : `${delta > 0 ? "+" : "−"}${Math.abs(delta)}`}</b></div>`,
+        )
+        .join("")
+    : '<p class="muted">持有金幣、生命、資源與物品沒有變化。</p>';
+  $("#eventResult").classList.remove("hidden");
+  $("#eventDismiss").classList.remove("hidden");
+}
+function acknowledgeEventResult() {
+  if (S.pendingEvent?.type !== "result") return;
+  S.pendingEvent = null;
+  closeModal("eventModal");
   render();
   save();
 }
@@ -4892,6 +4970,10 @@ function closeModal(id) {
 }
 
 function openEvent(i, t, d, opts) {
+  $("#eventKicker").textContent = "特殊事件";
+  $("#eventResult").innerHTML = "";
+  $("#eventResult").classList.add("hidden");
+  $("#eventDismiss").classList.add("hidden");
   $("#eventIcon").textContent = i;
   $("#eventTitle").textContent = t;
   $("#eventDescription").textContent = d;
@@ -4903,8 +4985,13 @@ function openEvent(i, t, d, opts) {
       () => {
         if (x.disabled) return;
         x.disabled = true;
+        eventBefore = eventResources();
         o.run();
-        if ($("#eventModal").classList.contains("open")) x.disabled = false;
+        if (
+          [...b.children].includes(x) &&
+          $("#eventModal").classList.contains("open")
+        )
+          x.disabled = false;
       },
       o.primary ? "primary" : "",
     );
@@ -4914,6 +5001,11 @@ function openEvent(i, t, d, opts) {
   openModal("eventModal");
 }
 document.addEventListener("click", (e) => {
+  const close = e.target.closest("[data-close]");
+  if (close) {
+    closeModal(close.dataset.close);
+    return;
+  }
   const tooltipTarget = e.target.closest("[data-tooltip]");
   if (tooltipTarget && usesTouchTooltip()) {
     if (currentTooltipTarget === tooltipTarget) hideGlobalTooltip();
@@ -4942,8 +5034,6 @@ document.addEventListener("click", (e) => {
   const sl = e.target.closest("[data-equip-slot]");
   if (sl && S.equipped[sl.dataset.equipSlot])
     openItem("gear", S.equipped[sl.dataset.equipSlot]);
-  const c = e.target.closest("[data-close]");
-  if (c) closeModal(c.dataset.close);
   const tab = e.target.closest("[data-tab]");
   if (tab) {
     $$("[data-tab]").forEach((x) => x.classList.toggle("active", x === tab));
@@ -5114,6 +5204,7 @@ $("#potionModeBackdrop").onclick = closeBattlePotionMode;
 $("#cancelPotionMode").onclick = closeBattlePotionMode;
 $("#confirmPotions").onclick = confirmBattlePotions;
 $("#bossDialogueContinue").onclick = beginBossBattle;
+$("#eventDismiss").onclick = acknowledgeEventResult;
 $("#introBtn").onclick = () => openModal("introModal");
 $("#helpBtn").onclick = () => openModal("helpModal");
 $("#codexBtn").onclick = () => openCodex();
@@ -5199,6 +5290,11 @@ document.addEventListener("keydown", (event) => {
     dialog = modal || (potionMode ? $("#potionModePanel") : null);
   if (!dialog) return;
   if (event.key === "Escape") {
+    if (dialog.id === "eventModal" && S.pendingEvent?.type === "result") {
+      event.preventDefault();
+      acknowledgeEventResult();
+      return;
+    }
     const close = dialog.querySelector("[data-close]");
     if (close) {
       event.preventDefault();

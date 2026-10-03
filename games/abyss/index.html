@@ -14,10 +14,10 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <title>深境冒險 1.2｜職業戰鬥 RPG</title>
-    <link rel="stylesheet" href="./style.css?v=1.2-mobile-r7" />
-    <link rel="stylesheet" href="../../shared/portal.css?v=1.2" />
-    <script src="../../shared/portal.js?v=1.2"></script>
-    <link rel="stylesheet" href="../../shared/fonts.css?v=1.2" />
+    <link rel="stylesheet" href="./style.css?v=1.2-blueworld-r8" />
+    <link rel="stylesheet" href="../../shared/portal.css?v=1.2-blueworld-r8" />
+    <script src="../../shared/portal.js?v=1.2-blueworld-r8"></script>
+    <link rel="stylesheet" href="../../shared/fonts.css?v=1.2-blueworld-r8" />
   </head>
   <body>
     <div class="aurora"></div>
@@ -397,10 +397,22 @@
     </div>
     <div class="modal" id="eventModal">
       <div class="modal-card">
+        <button
+          class="modal-close hidden"
+          id="eventDismiss"
+          aria-label="關閉已結算的事件結果"
+        >
+          ×
+        </button>
         <div class="event-icon" id="eventIcon">✨</div>
         <p class="eyebrow" id="eventKicker">特殊事件</p>
         <h2 id="eventTitle">事件</h2>
         <p class="muted" id="eventDescription"></p>
+        <div
+          class="event-result hidden"
+          id="eventResult"
+          aria-live="polite"
+        ></div>
         <div class="event-options" id="eventOptions"></div>
       </div>
     </div>
@@ -604,6 +616,6 @@
     </div>
     <div class="toast-stack" id="toastStack"></div>
     <div class="global-tooltip" id="globalTooltip" role="tooltip"></div>
-    <script src="./game.js?v=1.2-mobile-r7"></script>
+    <script src="./game.js?v=1.2-blueworld-r8"></script>
   </body>
 </html>

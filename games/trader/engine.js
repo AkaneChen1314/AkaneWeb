@@ -1,7 +1,9 @@
 /* Pure game simulation. All securities and prices are fictional. No network calls. */
 (function (root) {
   "use strict";
-  const codec = root.pako || (typeof require === "function" ? require("./vendor/pako.js") : null);
+  const codec =
+    root.pako ||
+    (typeof require === "function" ? require("./vendor/pako.js") : null);
   const INITIAL = 10000000000;
   const ASSETS = [
     {
@@ -274,7 +276,11 @@
   const ACHIEVEMENTS = [
     { id: "first", name: "第一次買進", description: "把第一筆錢放進股票。" },
     { id: "leverage", name: "百倍勇氣", description: "使用 100 倍槓桿。" },
-    { id: "allin", name: "梭哈人生", description: "單筆投入超過可用現金的 90%。" },
+    {
+      id: "allin",
+      name: "梭哈人生",
+      description: "單筆投入超過可用現金的 90%。",
+    },
     { id: "liquidated", name: "一鍵歸零", description: "第一次被強制平倉。" },
     { id: "loan", name: "未來的錢", description: "為了翻本而借款。" },
     { id: "half", name: "腰斬紀念", description: "身家跌破 50 億。" },
@@ -289,8 +295,16 @@
       tag: "FOMO / 害怕錯過",
       body: "匿名老師展示了一張漂亮的獲利截圖：「只有最後 20 個名額。」截圖是真的，還是剛用軟體做的？",
       choices: [
-        { label: "買 VIP 消息", detail: "支付 0.5 億，得到一條未經證實的提示。", action: "vip" },
-        { label: "不付錢，繼續觀察", detail: "守住這筆費用，市場仍會往下走。", action: "ignore" },
+        {
+          label: "買 VIP 消息",
+          detail: "支付 0.5 億，得到一條未經證實的提示。",
+          action: "vip",
+        },
+        {
+          label: "不付錢，繼續觀察",
+          detail: "守住這筆費用，市場仍會往下走。",
+          action: "ignore",
+        },
       ],
     },
     8: {
@@ -298,7 +312,11 @@
       tag: "PAPER PROFITS / 紙上富貴",
       body: "剛開香檳，公司突然宣布財報需要「重新確認」。平台保證明天恢復正常。",
       choices: [
-        { label: "相信平台", detail: "繼續持有，承擔隔日風險。", action: "ignore" },
+        {
+          label: "相信平台",
+          detail: "繼續持有，承擔隔日風險。",
+          action: "ignore",
+        },
         {
           label: "先收回一半部位",
           detail: "依目前報價平倉一半，扣除平倉費。",
@@ -362,7 +380,11 @@
       tag: "COUNTERPARTY / 對手方違約",
       body: "虛構銀行用你的存款填補窟窿。即使你一直沒有下單，也躲不過這場刻意安排的劇情。",
       choices: [
-        { label: "接受 65% 現金損失", detail: "保留 35% 現金，繼續交易。", action: "haircut" },
+        {
+          label: "接受 65% 現金損失",
+          detail: "保留 35% 現金，繼續交易。",
+          action: "haircut",
+        },
         {
           label: "花 0.5 億提告",
           detail: "仍減記 65%，訴訟無法在遊戲內收回款項。",
@@ -392,7 +414,11 @@
       tag: "EXCHANGE COLLAPSE / 平台倒閉",
       body: "「資產都很安全」的公告發出後，客服也下線了。帳戶現金將再損失 90%。",
       choices: [
-        { label: "接受剩餘款項", detail: "現金只剩 10%；所有持倉被折價清算。", action: "exchange" },
+        {
+          label: "接受剩餘款項",
+          detail: "現金只剩 10%；所有持倉被折價清算。",
+          action: "exchange",
+        },
         {
           label: "再付 0.1 億給資產追回師",
           detail: "多付一筆費用，追回結果仍相同。",
@@ -410,7 +436,11 @@
           detail: "拿到 0.05 億預支薪資；生活費降至原來 15%。",
           action: "work",
         },
-        { label: "再盯一次盤", detail: "沒有收入，也沒有改善生活費。", action: "ignore" },
+        {
+          label: "再盯一次盤",
+          detail: "沒有收入，也沒有改善生活費。",
+          action: "ignore",
+        },
       ],
     },
     55: {
@@ -660,7 +690,11 @@
     tag: "翻本誘惑",
     body: "直播主拍著胸口：「一半的人中獎，不玩就是你膽小。」這是遊戲裡的虛構賭箱，花 0.5 億，可能拿回 0.8 億，也可能完全沒有。",
     choices: [
-      { label: "開一箱試運氣", detail: "50% 拿回 0.8 億，50% 全部損失。", action: "box" },
+      {
+        label: "開一箱試運氣",
+        detail: "50% 拿回 0.8 億，50% 全部損失。",
+        action: "box",
+      },
       { label: "把直播關掉", detail: "不花錢，壓力 −5。", action: "calm" },
     ],
   };
@@ -704,7 +738,11 @@
         detail: "健康 +22、壓力 −25，不會恢復已失去的部件。",
         action: "recoverhealth",
       },
-      { label: "等翻本再說", detail: "健康 −18、壓力 +20。", action: "overworkhard" },
+      {
+        label: "等翻本再說",
+        detail: "健康 −18、壓力 +20。",
+        action: "overworkhard",
+      },
     ],
   };
   ACHIEVEMENTS.push(
@@ -738,7 +776,8 @@
       version: 5,
       playerName: "百億新手",
       named: false,
-      fictionId: "SIM-" + (seed >>> 0).toString(16).padStart(8, "0").toUpperCase(),
+      fictionId:
+        "SIM-" + (seed >>> 0).toString(16).padStart(8, "0").toUpperCase(),
       reputation: 100,
       social: [],
       lastSupportDay: 0,
@@ -807,8 +846,16 @@
         });
       }
       const ratio = a.price / p;
-      for (const b of bars) for (const k of ["open", "close", "high", "low"]) b[k] *= ratio;
-      bars.push({ day: 1, open: a.price, close: a.price, high: a.price, low: a.price, volume: 0 });
+      for (const b of bars)
+        for (const k of ["open", "close", "high", "low"]) b[k] *= ratio;
+      bars.push({
+        day: 1,
+        open: a.price,
+        close: a.price,
+        high: a.price,
+        low: a.price,
+        volume: 0,
+      });
       s.markets[a.id] = {
         price: a.price,
         change: 0,
@@ -817,11 +864,19 @@
       };
     }
     news(s, "你繼承了 100 億。群組裡所有人都說：這次一定會賺。", "開場");
-    log(s, practice ? "練習帳戶：正式百億資金完全不受影響。" : "百億已到帳。你的人生，現在開盤。");
+    log(
+      s,
+      practice
+        ? "練習帳戶：正式百億資金完全不受影響。"
+        : "百億已到帳。你的人生，現在開盤。",
+    );
     return s;
   }
   function value(s, p, price = s.markets[p.asset].price) {
-    return Math.max(0, p.margin * (1 + p.leverage * p.sign * (price / p.entry - 1)) - p.funding);
+    return Math.max(
+      0,
+      p.margin * (1 + p.leverage * p.sign * (price / p.entry - 1)) - p.funding,
+    );
   }
   function equity(s) {
     return s.cash + positionTotal(s) - s.debt;
@@ -856,7 +911,8 @@
   }
   function record(list, s, price) {
     const last = list[list.length - 1];
-    if (last && last.day === s.day && last.minute === s.minute) last.price = price;
+    if (last && last.day === s.day && last.minute === s.minute)
+      last.price = price;
     else list.push({ day: s.day, minute: s.minute, price });
   }
   function orderFee(amount, leverage, product) {
@@ -865,7 +921,10 @@
   function ready(s) {
     return !s.ended && !s.pending && !s.job && !s.gamble;
   }
-  function open(s, { asset, amount, leverage = 1, product = "spot", direction = "long" }) {
+  function open(
+    s,
+    { asset, amount, leverage = 1, product = "spot", direction = "long" },
+  ) {
     if (!ready(s)) return { ok: false, message: "請先處理跳出的劇情。" };
     const a = ASSETS.find((x) => x.id === asset);
     if (
@@ -880,13 +939,17 @@
     if (product === "spot") {
       leverage = 1;
       if (direction === "short")
-        return { ok: false, message: "普通買股只能猜會漲；猜跌請切換放大模式。" };
+        return {
+          ok: false,
+          message: "普通買股只能猜會漲；猜跌請切換放大模式。",
+        };
     }
     const before = equity(s),
       fee = orderFee(amount, leverage, product);
     if (amount + fee > s.cash + 0.00001)
       return { ok: false, message: "錢不夠：投入金額還要加一點平台費。" };
-    if (s.positions.length >= 24) return { ok: false, message: "你已經買了 24 筆，先賣掉一些吧。" };
+    if (s.positions.length >= 24)
+      return { ok: false, message: "你已經買了 24 筆，先賣掉一些吧。" };
     if (amount >= s.cash * 0.9) unlock(s, "allin");
     s.cash = Math.max(0, s.cash - amount - fee);
     s.fees += fee;
@@ -915,13 +978,17 @@
     return { ok: true, message: "買好了！盤中價格持續變動，你隨時可以賣掉。" };
   }
   function close(s, id, multiplier = 1, internal = false) {
-    if (!internal && !ready(s)) return { ok: false, message: "先處理劇情，再拿回錢。" };
+    if (!internal && !ready(s))
+      return { ok: false, message: "先處理劇情，再拿回錢。" };
     const index = s.positions.findIndex((x) => x.id === id);
     if (index < 0) return { ok: false, message: "這筆已經不在了。" };
     const before = equity(s),
       p = s.positions[index],
       v = value(s, p) * multiplier,
-      fee = Math.min(v, p.margin * p.leverage * (p.product === "spot" ? 0.0015 : 0.0008));
+      fee = Math.min(
+        v,
+        p.margin * p.leverage * (p.product === "spot" ? 0.0015 : 0.0008),
+      );
     s.cash += v - fee;
     s.fees += fee;
     s.positions.splice(index, 1);
@@ -939,28 +1006,51 @@
       ids = s.positions.map((p) => p.id);
     for (const id of ids) close(s, id, multiplier, true);
     if (!internal) track(s, before);
-    return { ok: true, message: ids.length ? "全部賣掉了。" : "還沒有買任何東西。" };
+    return {
+      ok: true,
+      message: ids.length ? "全部賣掉了。" : "還沒有買任何東西。",
+    };
   }
   function loanLimit(s, type = "bank") {
     if (s.loans.length >= 16) return 0;
     const t = LOAN_TYPES[type];
     if (!t) return 0;
-    const owed = s.loans.filter((l) => l.type === type).reduce((n, l) => n + l.balance, 0);
+    const owed = s.loans
+      .filter((l) => l.type === type)
+      .reduce((n, l) => n + l.balance, 0);
     return Math.max(
       0,
       Math.min(
         t.cap - owed,
-        Math.max(0, equity(s)) * (type === "bank" ? 0.3 : type === "online" ? 0.4 : 0.6) +
+        Math.max(0, equity(s)) *
+          (type === "bank" ? 0.3 : type === "online" ? 0.4 : 0.6) +
           (type === "shark" ? 5e8 : 5e7),
       ),
     );
   }
-  function borrow(s, amount, type = "bank", internal = false, agreement = null) {
+  // 初始借款表單與實際入帳共用同一套檢查，不會提前修改遊戲狀態。
+  function validateBorrow(s, amount, type = "bank", internal = false) {
     if (!internal && !ready(s)) return { ok: false, message: "請先處理劇情。" };
+    if (!LOAN_TYPES[type]) return { ok: false, message: "請選擇借款類型。" };
+    if (s.loans.length >= 16)
+      return { ok: false, message: "最多同時 16 張借條，先還一張。" };
+    if (!Number.isFinite(amount) || amount < 10000)
+      return { ok: false, message: "請輸入有效金額，至少 0.0001 億（1 萬）。" };
+    const limit = loanLimit(s, type);
+    if (amount > limit + 0.01)
+      return { ok: false, limit, message: "超過目前借款上限，請調低金額。" };
+    return { ok: true, limit };
+  }
+  function borrow(
+    s,
+    amount,
+    type = "bank",
+    internal = false,
+    agreement = null,
+  ) {
+    const validation = validateBorrow(s, amount, type, internal);
+    if (!validation.ok) return validation;
     const t = LOAN_TYPES[type];
-    if (!t || !Number.isFinite(amount) || amount < 10000 || amount > loanLimit(s, type) + 0.01)
-      return { ok: false, message: "這家不肯借你那麼多；調低金額試試。" };
-    if (s.loans.length >= 16) return { ok: false, message: "最多同時 16 張借條，先還一張。" };
     if (
       !internal &&
       type !== "bank" &&
@@ -1015,11 +1105,18 @@
     if (!Number.isFinite(amount) || amount <= 0) return 0;
     let target = id ? s.loans.find((l) => l.id === id) : null;
     if (id && !target) return 0;
-    const paid = Math.min(s.cash, s.debt, target ? target.balance : Infinity, amount);
+    const paid = Math.min(
+      s.cash,
+      s.debt,
+      target ? target.balance : Infinity,
+      amount,
+    );
     s.cash -= paid;
     s.debt -= paid;
     let left = paid;
-    for (const l of target ? [target] : [...s.loans].sort((a, b) => a.due - b.due)) {
+    for (const l of target
+      ? [target]
+      : [...s.loans].sort((a, b) => a.due - b.due)) {
       const part = Math.min(l.balance, left);
       l.balance -= part;
       left -= part;
@@ -1036,14 +1133,16 @@
     track(s, before);
     return {
       ok: paid > 0,
-      message: paid > 0 ? "還款成功，後續利息變少了。" : "沒有欠款，或沒有足夠現金。",
+      message:
+        paid > 0 ? "還款成功，後續利息變少了。" : "沒有欠款，或沒有足夠現金。",
     };
   }
   function sellOrgan(s, id, internal = false, forced = false) {
     if (s.ended || (!internal && (s.pending || s.job || s.gamble)))
       return { ok: false, message: "請先處理目前劇情。" };
     const o = ORGANS.find((x) => x.id === id);
-    if (!o || !organAvailable(s, o)) return { ok: false, message: "這個身體部件已經失去了。" };
+    if (!o || !organAvailable(s, o))
+      return { ok: false, message: "這個身體部件已經失去了。" };
     const before = equity(s);
     s.organs.push(id);
     s.organRecords.push({
@@ -1061,7 +1160,10 @@
     if (s.organs.includes("kidney_left") && s.organs.includes("kidney_right"))
       s.healthCap = Math.min(s.healthCap, 22);
     health(s, -o.damage, 22);
-    if (id === "liver_whole" || (s.organs.includes("lung") && s.organs.includes("lung_right")))
+    if (
+      id === "liver_whole" ||
+      (s.organs.includes("lung") && s.organs.includes("lung_right"))
+    )
       health(s, -120, 0);
     s.organRecords.at(-1).healthAfter = s.health;
     s.organRecords.at(-1).cap = s.healthCap;
@@ -1077,12 +1179,18 @@
       track(s, before);
       checkEnd(s);
     }
-    return { ok: true, message: `拿到錢，失去${o.name}。這筆代價無法休息恢復。`, ended: s.ended };
+    return {
+      ok: true,
+      message: `拿到錢，失去${o.name}。這筆代價無法休息恢復。`,
+      ended: s.ended,
+    };
   }
   function mystery(s) {
     if (!ready(s)) return { ok: false, message: "先處理劇情。" };
-    if (s.cash < 1e8) return { ok: false, message: "神秘股票要 1 億；現在不夠。" };
-    if (s.lastMysteryDay === s.day) return { ok: false, message: "今天抽過了，明天再來。" };
+    if (s.cash < 1e8)
+      return { ok: false, message: "神秘股票要 1 億；現在不夠。" };
+    if (s.lastMysteryDay === s.day)
+      return { ok: false, message: "今天抽過了，明天再來。" };
     const before = equity(s);
     s.cash -= 1e8;
     s.mysteryCount++;
@@ -1103,7 +1211,9 @@
     checkEnd(s);
     return {
       ok: true,
-      message: win ? "抽到 0.8 億獲利！你開始相信朋友了。" : "上市延期。這次你又成了接盤的人。",
+      message: win
+        ? "抽到 0.8 億獲利！你開始相信朋友了。"
+        : "上市延期。這次你又成了接盤的人。",
     };
   }
   function shuffle(s, list) {
@@ -1122,7 +1232,10 @@
       return {
         prompt: `商品 ${cost} 元，客人給 ${paid} 元。要找多少？`,
         answer: String(answer),
-        options: shuffle(s, [...new Set(values)]).map((v) => ({ id: String(v), label: v + " 元" })),
+        options: shuffle(s, [...new Set(values)]).map((v) => ({
+          id: String(v),
+          label: v + " 元",
+        })),
       };
     }
     if (id === "warehouse") {
@@ -1152,7 +1265,8 @@
   }
   function work(s, id = "cashier") {
     if (!ready(s)) return { ok: false, message: "先完成目前的任務或劇情。" };
-    if (s.lastWorkDay === s.day) return { ok: false, message: "今天的工已經打完了。" };
+    if (s.lastWorkDay === s.day)
+      return { ok: false, message: "今天的工已經打完了。" };
     const job = JOBS.find((j) => j.id === id);
     if (!job) return { ok: false, message: "沒有這份工作。" };
     s.job = { id, day: s.day, done: 0, mistakes: 0, task: jobTask(s, id) };
@@ -1165,12 +1279,16 @@
       return { ok: false, message: "請選擇畫面上的答案。" };
     if (String(input) !== j.task.answer) {
       j.mistakes++;
-      return { ok: false, message: "選錯了，看看提示再試。每次失誤會扣 5% 薪水，最多扣 40%。" };
+      return {
+        ok: false,
+        message: "選錯了，看看提示再試。每次失誤會扣 5% 薪水，最多扣 40%。",
+      };
     }
     if (j.id === "cafe" && j.task.step < 2) {
       j.task.step++;
       j.task.answer = j.task.sequence[j.task.step];
-      const labels = j.task.step === 1 ? ["拿鐵", "美式", "奶茶"] : ["熱飲", "冰飲"];
+      const labels =
+        j.task.step === 1 ? ["拿鐵", "美式", "奶茶"] : ["熱飲", "冰飲"];
       j.task.options = labels.map((label) => ({ id: label, label }));
       return { ok: true, message: "這一步好了，繼續照訂單出餐。" };
     }
@@ -1182,7 +1300,9 @@
     }
     const before = equity(s),
       pay = Math.round(
-        job.pay * (1 - Math.min(0.4, j.mistakes * 0.05)) * (s.reputation < 35 ? 0.85 : 1),
+        job.pay *
+          (1 - Math.min(0.4, j.mistakes * 0.05)) *
+          (s.reputation < 35 ? 0.85 : 1),
       ),
       damage =
         job.damage +
@@ -1221,7 +1341,14 @@
     for (const a of ASSETS) {
       const m = s.markets[a.id],
         b = m.bars[m.bars.length - 1],
-        phase = s.day < 9 ? 0.0005 : s.day < 18 ? -0.0006 : s.day < 32 ? -0.002 : -0.004;
+        phase =
+          s.day < 9
+            ? 0.0005
+            : s.day < 18
+              ? -0.0006
+              : s.day < 32
+                ? -0.002
+                : -0.004;
       const move = phase * (54 / 288) + (random(s) - 0.5) * a.vol * 0.117;
       m.price = Math.max(0.00001, m.price * (1 + move));
       b.close = m.price;
@@ -1236,11 +1363,19 @@
     track(s, before);
     if (s.minute === 1440 && !internal) {
       const r = rollover(s);
-      return { ...r, delta: equity(s) - before, wiped: wiped + (r.wiped || 0), rolled: true };
+      return {
+        ...r,
+        delta: equity(s) - before,
+        wiped: wiped + (r.wiped || 0),
+        rolled: true,
+      };
     }
     if (!internal) {
       checkEnd(s);
-      const gain = s.positions.reduce((n, p) => n + Math.max(0, value(s, p) - p.margin), 0);
+      const gain = s.positions.reduce(
+        (n, p) => n + Math.max(0, value(s, p) - p.margin),
+        0,
+      );
       if (
         !s.pending &&
         !s.ended &&
@@ -1253,7 +1388,11 @@
     }
     return { ok: true, wiped, delta: equity(s) - before };
   }
-  ACHIEVEMENTS.push({ id: "worker", name: "真正做完才算", description: "完成一次互動打工。" });
+  ACHIEVEMENTS.push({
+    id: "worker",
+    name: "真正做完才算",
+    description: "完成一次互動打工。",
+  });
   function finish(s, type, reason) {
     s.ended = true;
     s.pending = null;
@@ -1317,25 +1456,43 @@
           s.liquidations++;
           wiped++;
           unlock(s, "liquidated");
-          log(s, `${a.name} ${p.leverage} 倍爆倉：這筆投入的錢全部歸零。`, "danger");
+          log(
+            s,
+            `${a.name} ${p.leverage} 倍爆倉：這筆投入的錢全部歸零。`,
+            "danger",
+          );
           continue;
         }
         if (!intraday && p.product === "option" && s.day >= p.expiry) {
           const result = Math.max(
             0,
-            p.margin * p.leverage * p.sign * (m.price / p.entry - 1) - p.funding,
+            p.margin * p.leverage * p.sign * (m.price / p.entry - 1) -
+              p.funding,
           );
           s.cash += result;
           s.positions = s.positions.filter((x) => x.id !== p.id);
-          log(s, `${a.name} 三日賭局到期，收回 ${(result / 1e8).toFixed(3)} 億。`, "danger");
+          log(
+            s,
+            `${a.name} 三日賭局到期，收回 ${(result / 1e8).toFixed(3)} 億。`,
+            "danger",
+          );
           continue;
         }
       }
-      if (!intraday && s.day >= 20 && s.day % 10 === 0 && p.product === "spot") {
+      if (
+        !intraday &&
+        s.day >= 20 &&
+        s.day % 10 === 0 &&
+        p.product === "spot"
+      ) {
         s.positions = s.positions.filter((x) => x.id !== p.id);
         const residue = value(s, p) * 0.04;
         s.cash += residue;
-        log(s, `${a.name} 公司違約，只退回 ${(residue / 1e8).toFixed(3)} 億。`, "danger");
+        log(
+          s,
+          `${a.name} 公司違約，只退回 ${(residue / 1e8).toFixed(3)} 億。`,
+          "danger",
+        );
       }
     }
     return wiped;
@@ -1354,7 +1511,9 @@
     if (!ready(s))
       return {
         ok: false,
-        message: s.pending ? "先做完這個選擇，時間才會繼續。" : "這段人生已結束。",
+        message: s.pending
+          ? "先做完這個選擇，時間才會繼續。"
+          : "這段人生已結束。",
       };
     if (s.day === 60 && !s.practice) {
       s.minute = 1440;
@@ -1374,10 +1533,17 @@
         o = m.price;
       let movement = s.practice
         ? 0.1
-        : (s.day < 9 ? 0.008 : s.day < 18 ? -0.022 : s.day < 32 ? -0.065 : -0.13) +
+        : (s.day < 9
+            ? 0.008
+            : s.day < 18
+              ? -0.022
+              : s.day < 32
+                ? -0.065
+                : -0.13) +
           (random(s) - 0.5) * a.vol * 1.8;
       if (!s.practice && s.day % 7 === 0) movement += 0.07 + random(s) * 0.1;
-      if (!s.practice && [14, 23, 36, 44, 53].includes(s.day)) movement -= 0.2 + random(s) * 0.2;
+      if (!s.practice && [14, 23, 36, 44, 53].includes(s.day))
+        movement -= 0.2 + random(s) * 0.2;
       movement = Math.max(-0.72, Math.min(0.32, movement));
       m.price = Math.max(0.00001, o * (1 + movement));
       m.change = (m.price / o - 1) * 100;
@@ -1393,7 +1559,8 @@
     }
     let wiped = settlePositions(s);
     if (!s.practice) {
-      const living = Math.min(2e9, 8e6 * Math.pow(1.13, s.day - 1)) * s.expenseFactor,
+      const living =
+          Math.min(2e9, 8e6 * Math.pow(1.13, s.day - 1)) * s.expenseFactor,
         fee = interest(s);
       spend(s, living + fee);
       s.totalLiving += living;
@@ -1413,7 +1580,9 @@
           0.55 +
           s.stress * 0.016 +
           (s.day > 35 ? 0.6 : 0) +
-          (s.organs.includes("kidney_left") && s.organs.includes("kidney_right") ? 3 : 0) +
+          (s.organs.includes("kidney_left") && s.organs.includes("kidney_right")
+            ? 3
+            : 0) +
           (s.organs.includes("liver") ? 1.2 : 0) +
           (s.organs.includes("skin") ? 0.5 : 0) +
           (s.organs.includes("pancreas") ? 1 : 0)
@@ -1449,11 +1618,17 @@
     s.history.push(equity(s));
     if (!s.practice) {
       if (s.health <= 0)
-        finish(s, "death", "健康歸零。長期透支與壓力觸發猝死結局；這是刻意誇張的遊戲判定。");
+        finish(
+          s,
+          "death",
+          "健康歸零。長期透支與壓力觸發猝死結局；這是刻意誇張的遊戲判定。",
+        );
       else {
         checkEnd(s);
         if (!s.pending) {
-          const due = [...s.loans].sort((a, b) => a.due - b.due).find((l) => l.due <= s.day);
+          const due = [...s.loans]
+            .sort((a, b) => a.due - b.due)
+            .find((l) => l.due <= s.day);
           if (due) beginCollection(s, due);
           else if (EVENTS[s.day]) s.pending = { type: "event", day: s.day };
           else if (
@@ -1461,14 +1636,18 @@
             s.day >= s.nextGlitchDay &&
             (s.daily > 0 ||
               s.day % 7 === 0 ||
-              (s.organs.some((id) => id.startsWith("cornea")) && random(s) < 0.25))
+              (s.organs.some((id) => id.startsWith("cornea")) &&
+                random(s) < 0.25))
           ) {
             s.pending = {
               type: "glitch",
               shownProfit: Math.max(
                 0,
                 s.daily,
-                s.positions.reduce((n, p) => n + Math.max(0, value(s, p) - p.margin), 0),
+                s.positions.reduce(
+                  (n, p) => n + Math.max(0, value(s, p) - p.margin),
+                  0,
+                ),
               ),
             };
           }
@@ -1506,37 +1685,62 @@
       b.low = Math.min(b.low, m.price * 0.95);
       b.high = Math.max(b.high, m.price * 1.05);
       m.change = (m.price / b.open - 1) * 100;
-      m.series.push({ day: s.day, minute: s.minute, price: m.price, kind: "故障恢復" });
+      m.series.push({
+        day: s.day,
+        minute: s.minute,
+        price: m.price,
+        kind: "故障恢復",
+      });
     }
     const wiped = settlePositions(s, true);
     health(s, -4, 22);
-    news(s, "404 消失了，獲利也消失了。假斷線期間，虛構行情已經狠狠反轉。", "心態爆炸");
-    log(s, "遊戲內假斷線：重新連線後，價格朝持倉不利的方向大幅變動。", "danger");
+    news(
+      s,
+      "404 消失了，獲利也消失了。假斷線期間，虛構行情已經狠狠反轉。",
+      "心態爆炸",
+    );
+    log(
+      s,
+      "遊戲內假斷線：重新連線後，價格朝持倉不利的方向大幅變動。",
+      "danger",
+    );
     track(s, before);
     checkEnd(s);
-    return { ok: true, message: "連回來了。可是錢回不來了。", wiped, ended: s.ended };
+    return {
+      ok: true,
+      message: "連回來了。可是錢回不來了。",
+      wiped,
+      ended: s.ended,
+    };
   }
   function choose(s, index) {
     if (!Number.isInteger(index) || index < 0 || !s.pending)
       return { ok: false, message: "沒有這個選項。" };
     const pending = s.pending,
       before = equity(s);
-    if (pending.type === "glitch") return { ok: false, message: "請按重新連線。" };
+    if (pending.type === "glitch")
+      return { ok: false, message: "請按重新連線。" };
     if (pending.type === "survival") {
       if (index > 2) return { ok: false, message: "沒有這個選項。" };
       if (index === 0) {
         s.pending = null;
-        finish(s, "beggar", "你停止翻本，接受街頭乞丐結局。你的帳戶歸零了，生活仍可以重新開始。");
+        finish(
+          s,
+          "beggar",
+          "你停止翻本，接受街頭乞丐結局。你的帳戶歸零了，生活仍可以重新開始。",
+        );
       }
       if (index === 1) {
         const limit = loanLimit(s, "shark");
-        if (limit < 10000) return { ok: false, message: "連高利貸也不願意再借。請選另一條路。" };
+        if (limit < 10000)
+          return { ok: false, message: "連高利貸也不願意再借。請選另一條路。" };
         s.pending = null;
         borrow(s, Math.min(5e8, limit), "shark", true);
       }
       if (index === 2) {
         const o = ORGANS.find(
-          (x) => x.id !== "core" && x.id !== "liver_whole" && organAvailable(s, x),
+          (x) =>
+            x.id !== "core" && x.id !== "liver_whole" && organAvailable(s, x),
         );
         if (!o) return { ok: false, message: "沒有可交易的剩餘部件。" };
         s.pending = null;
@@ -1549,7 +1753,8 @@
       if ((pending.turn || 0) < 3)
         return { ok: false, message: "先回覆催收對話，再決定如何處理。" };
       if (index === 0) {
-        if (s.cash + 1e-5 < l.balance) return { ok: false, message: "現金不夠全額還款。" };
+        if (s.cash + 1e-5 < l.balance)
+          return { ok: false, message: "現金不夠全額還款。" };
         s.pending = null;
         repay(s, l.balance, l.id);
         health(s, 0, -12);
@@ -1567,7 +1772,8 @@
       }
       if (index === 2) {
         const o = ORGANS.find(
-          (x) => x.id !== "core" && x.id !== "liver_whole" && organAvailable(s, x),
+          (x) =>
+            x.id !== "core" && x.id !== "liver_whole" && organAvailable(s, x),
         );
         if (!o) return { ok: false, message: "沒有可交易的部件。" };
         s.pending = null;
@@ -1591,7 +1797,11 @@
         l.due = s.day + 3;
         health(s, 5, -18);
         s.reputation = Math.min(100, s.reputation + 8);
-        post(s, "小夏", `${s.playerName}，我陪你把訊息留下來。你不用一個人承受。`);
+        post(
+          s,
+          "小夏",
+          `${s.playerName}，我陪你把訊息留下來。你不用一個人承受。`,
+        );
         log(s, "選擇虛構求助支線：本輪免受催收侵害，延期三日，欠款仍需處理。");
       }
     } else if (pending.type === "event") {
@@ -1610,7 +1820,10 @@
             const half = value(s, p) / 2,
               fee = Math.min(
                 half,
-                (p.margin * p.leverage * (p.product === "spot" ? 0.0015 : 0.0008)) / 2,
+                (p.margin *
+                  p.leverage *
+                  (p.product === "spot" ? 0.0015 : 0.0008)) /
+                  2,
               );
             s.cash += half - fee;
             s.fees += fee;
@@ -1695,10 +1908,15 @@
     } else return { ok: false, message: "未知劇情。" };
     track(s, before);
     checkEnd(s);
-    return { ok: true, message: "這個選擇，已經寫進你的人生。", ended: s.ended };
+    return {
+      ok: true,
+      message: "這個選擇，已經寫進你的人生。",
+      ended: s.ended,
+    };
   }
   function setName(s, name) {
-    if (typeof name !== "string") return { ok: false, message: "請填角色名字。" };
+    if (typeof name !== "string")
+      return { ok: false, message: "請填角色名字。" };
     name = name.trim().replace(/[\u0000-\u001f\u007f]/g, "");
     if (!name || Array.from(name).length > 16)
       return { ok: false, message: "角色名請用 1 至 16 個字。" };
@@ -1712,7 +1930,10 @@
     return l.rate ?? LOAN_TYPES[l.type].rate;
   }
   function organAvailable(s, o) {
-    return !s.organs.includes(o.id) && !(o.id === "liver" && s.organs.includes("liver_whole"));
+    return (
+      !s.organs.includes(o.id) &&
+      !(o.id === "liver" && s.organs.includes("liver_whole"))
+    );
   }
   function organFatal(s, o) {
     return (
@@ -1729,11 +1950,16 @@
   }
   function support(s) {
     if (!ready(s)) return { ok: false, message: "先完成目前的事情。" };
-    if (s.lastSupportDay === s.day) return { ok: false, message: "今天已經聊過了。" };
+    if (s.lastSupportDay === s.day)
+      return { ok: false, message: "今天已經聊過了。" };
     s.lastSupportDay = s.day;
     s.reputation = Math.min(100, s.reputation + 6);
     health(s, 0, -10);
-    post(s, "阿城", `${s.playerName}，我看到那些傳言了。不管帳戶剩多少，你還是我朋友。`);
+    post(
+      s,
+      "阿城",
+      `${s.playerName}，我看到那些傳言了。不管帳戶剩多少，你還是我朋友。`,
+    );
     return { ok: true, message: "和朋友聊過了：名譽 +6、壓力 −10。" };
   }
   function beginCollection(s, l) {
@@ -1802,7 +2028,11 @@
   }
   function collectorReply(s, key) {
     const scene = collectionScene(s);
-    if (!scene || !["answer", "promise", "question"].includes(key) || (s.pending.turn || 0) >= 3)
+    if (
+      !scene ||
+      !["answer", "promise", "question"].includes(key) ||
+      (s.pending.turn || 0) >= 3
+    )
       return { ok: false, message: "沒有這段可回覆的對話。" };
     const p = s.pending,
       i = p.turn || 0;
@@ -1857,7 +2087,8 @@
     if (l.type === "shark") {
       if (l.stage >= 3) {
         const o = ORGANS.find(
-          (x) => x.id !== "core" && x.id !== "liver_whole" && organAvailable(s, x),
+          (x) =>
+            x.id !== "core" && x.id !== "liver_whole" && organAvailable(s, x),
         );
         if (o) {
           sellOrgan(s, o.id, true, true);
@@ -1873,7 +2104,11 @@
             `虛構強行抵債：${o.name}被拿走，只抵 ${(credit / 1e8).toFixed(3)} 億，沒有現金入帳。`,
             "danger",
           );
-          post(s, "催收通知", `${s.playerName}，抵債收據已生成。剩餘欠款沒有消失。`);
+          post(
+            s,
+            "催收通知",
+            `${s.playerName}，抵債收據已生成。剩餘欠款沒有消失。`,
+          );
           unlock(s, "seized");
         } else health(s, -30, 20);
       } else if (l.stage === 2) {
@@ -1888,19 +2123,22 @@
       id: "dice",
       name: "深夜骰盅",
       icon: "🎲",
-      description: "猜小（3–10）或大（11–18），親手搖骰。中獎總返還 1.9 倍；劇情莊家偏向自己。",
+      description:
+        "猜小（3–10）或大（11–18），親手搖骰。中獎總返還 1.9 倍；劇情莊家偏向自己。",
     },
     {
       id: "cards",
       name: "最後一張 21 點",
       icon: "🃏",
-      description: "選擇要牌或停牌，超過 21 全輸。莊家平手也贏；勝局總返還 1.8 倍，後期可能作弊。",
+      description:
+        "選擇要牌或停牌，超過 21 全輸。莊家平手也贏；勝局總返還 1.8 倍，後期可能作弊。",
     },
     {
       id: "mines",
       name: "翻本地雷九宮格",
       icon: "💣",
-      description: "翻開安全格增加返還倍數，隨時收手。踩雷整筆歸零；晚期地雷會變多。",
+      description:
+        "翻開安全格增加返還倍數，隨時收手。踩雷整筆歸零；晚期地雷會變多。",
     },
   ];
   function card(s) {
@@ -1908,7 +2146,15 @@
     return {
       rank,
       label:
-        rank === 1 ? "A" : rank === 11 ? "J" : rank === 12 ? "Q" : rank === 13 ? "K" : String(rank),
+        rank === 1
+          ? "A"
+          : rank === 11
+            ? "J"
+            : rank === 12
+              ? "Q"
+              : rank === 13
+                ? "K"
+                : String(rank),
     };
   }
   function handScore(cards) {
@@ -1930,7 +2176,8 @@
       s.casinoDay = s.day;
       s.casinoToday = 0;
     }
-    if (s.casinoToday >= 12) return { ok: false, message: "今天已玩 12 局，這家暗莊暫時關門。" };
+    if (s.casinoToday >= 12)
+      return { ok: false, message: "今天已玩 12 局，這家暗莊暫時關門。" };
     const before = equity(s);
     s.cash -= stake;
     s.casinoToday++;
@@ -1975,18 +2222,26 @@
     );
     track(s, before);
     checkEnd(s);
-    return { ok: true, completed: true, payout, net: payout - g.stake, message: reason };
+    return {
+      ok: true,
+      completed: true,
+      payout,
+      net: payout - g.stake,
+      message: reason,
+    };
   }
   function gambleAction(s, key, index) {
     const g = s.gamble;
     if (!g || s.ended) return { ok: false, message: "目前沒有賭局。" };
-    if (key === "forfeit") return settleGamble(s, 0, "放棄本局，本金留在賭桌。");
+    if (key === "forfeit")
+      return settleGamble(s, 0, "放棄本局，本金留在賭桌。");
     if (g.id === "dice") {
       if (["big", "small"].includes(key)) {
         g.guess = key;
         return { ok: true };
       }
-      if (key !== "roll" || !g.guess) return { ok: false, message: "先選大小，再搖骰。" };
+      if (key !== "roll" || !g.guess)
+        return { ok: false, message: "先選大小，再搖骰。" };
       const win = random(s) < (s.day < 15 ? 0.43 : s.day < 35 ? 0.28 : 0.12);
       let sum;
       do {
@@ -2004,10 +2259,12 @@
       );
     }
     if (g.id === "cards") {
-      if (!["hit", "stand"].includes(key)) return { ok: false, message: "請選要牌或停牌。" };
+      if (!["hit", "stand"].includes(key))
+        return { ok: false, message: "請選要牌或停牌。" };
       if (key === "hit") {
         g.player.push(card(s));
-        if (handScore(g.player) > 21) return settleGamble(s, 0, "你超過 21 點，爆牌了。");
+        if (handScore(g.player) > 21)
+          return settleGamble(s, 0, "你超過 21 點，爆牌了。");
         return { ok: true };
       }
       if (s.day >= 25 && random(s) < 0.75)
@@ -2015,7 +2272,9 @@
           { rank: 1, label: "A" },
           { rank: 13, label: "K" },
         ];
-      else while (handScore(g.dealer) < 17 && g.dealer.length < 10) g.dealer.push(card(s));
+      else
+        while (handScore(g.dealer) < 17 && g.dealer.length < 10)
+          g.dealer.push(card(s));
       const p = handScore(g.player),
         d = handScore(g.dealer),
         win = d > 21 || p > d;
@@ -2027,7 +2286,8 @@
     }
     if (g.id === "mines") {
       if (key === "cashout") {
-        if (!g.revealed.length) return { ok: false, message: "至少翻開一格，或選擇放棄本局。" };
+        if (!g.revealed.length)
+          return { ok: false, message: "至少翻開一格，或選擇放棄本局。" };
         return settleGamble(
           s,
           g.stake * mineMultiplier(g.revealed.length),
@@ -2060,8 +2320,16 @@
   }
   ACHIEVEMENTS.push(
     { id: "casino", name: "換一張桌子輸", description: "進入一個互動賭局。" },
-    { id: "exposed", name: "帳單外的代價", description: "遇到虛構朋友圈抹黑。" },
-    { id: "seized", name: "不是你簽的合約", description: "遇到強行部件抵債劇情。" },
+    {
+      id: "exposed",
+      name: "帳單外的代價",
+      description: "遇到虛構朋友圈抹黑。",
+    },
+    {
+      id: "seized",
+      name: "不是你簽的合約",
+      description: "遇到強行部件抵債劇情。",
+    },
   );
   function validate(s) {
     if (
@@ -2132,7 +2400,9 @@
       typeof s.fictionId !== "string" ||
       !s.fictionId.startsWith("SIM-") ||
       !Array.isArray(s.social) ||
-      !s.social.every((x) => typeof x.who === "string" && typeof x.text === "string") ||
+      !s.social.every(
+        (x) => typeof x.who === "string" && typeof x.text === "string",
+      ) ||
       !Array.isArray(s.contracts) ||
       s.reputation < 0 ||
       s.reputation > 100 ||
@@ -2159,14 +2429,21 @@
           (g.bombs.length < 3 ||
             g.bombs.length > 5 ||
             new Set(g.bombs).size !== g.bombs.length ||
-            ![...g.bombs, ...g.revealed].every((n) => Number.isInteger(n) && n >= 0 && n <= 8))) ||
+            ![...g.bombs, ...g.revealed].every(
+              (n) => Number.isInteger(n) && n >= 0 && n <= 8,
+            ))) ||
         ![...g.player, ...g.dealer].every(
           (c) => Number.isInteger(c.rank) && c.rank >= 1 && c.rank <= 13,
         )
       )
         return false;
     }
-    if (!Number.isInteger(s.minute) || s.minute < 0 || s.minute > 1440 || !validTape(s.equityTape))
+    if (
+      !Number.isInteger(s.minute) ||
+      s.minute < 0 ||
+      s.minute > 1440 ||
+      !validTape(s.equityTape)
+    )
       return false;
     if (s.job) {
       const j = JOBS.find((x) => x.id === s.job.id);
@@ -2182,7 +2459,9 @@
         s.job.mistakes < 0 ||
         !s.job.task ||
         !Array.isArray(s.job.task.options) ||
-        !s.job.task.options.every((o) => typeof o.id === "string" && typeof o.label === "string") ||
+        !s.job.task.options.every(
+          (o) => typeof o.id === "string" && typeof o.label === "string",
+        ) ||
         !s.job.task.options.some((o) => o.id === s.job.task.answer) ||
         (j.id === "cafe" &&
           (!Array.isArray(s.job.task.sequence) ||
@@ -2195,7 +2474,8 @@
         return false;
     }
     if (s.pending) {
-      if (!["event", "debt", "glitch", "survival"].includes(s.pending.type)) return false;
+      if (!["event", "debt", "glitch", "survival"].includes(s.pending.type))
+        return false;
       if (s.pending.type === "event" && !EVENTS[s.pending.day]) return false;
       if (
         s.pending.type === "debt" &&
@@ -2218,7 +2498,9 @@
         !Array.isArray(m.bars) ||
         m.bars.length < 2 ||
         !m.bars.every((b) =>
-          ["open", "close", "high", "low", "volume"].every((k) => Number.isFinite(b[k])),
+          ["open", "close", "high", "low", "volume"].every((k) =>
+            Number.isFinite(b[k]),
+          ),
         )
       )
         return false;
@@ -2230,7 +2512,9 @@
           ["spot", "margin", "option"].includes(p.product) &&
           [1, 2, 5, 10, 25, 50, 100].includes(p.leverage) &&
           [1, -1].includes(p.sign) &&
-          ["margin", "entry", "funding", "day", "id"].every((k) => Number.isFinite(p[k])) &&
+          ["margin", "entry", "funding", "day", "id"].every((k) =>
+            Number.isFinite(p[k]),
+          ) &&
           p.margin > 0 &&
           p.entry > 0,
       ) &&
@@ -2299,14 +2583,19 @@
       s.organs = s.organs.map((id) =>
         id === "kidney" ? "kidney_left" : id === "eye" ? "cornea_left" : id,
       );
-      s.equityTape = s.history.map((price, i) => ({ day: i + 1, minute: 540, price }));
+      s.equityTape = s.history.map((price, i) => ({
+        day: i + 1,
+        minute: 540,
+        price,
+      }));
       for (const m of Object.values(s.markets)) {
         const n = m.bars.length;
         m.bars.forEach((b, i) => (b.day = s.day - n + i + 1));
         m.series = m.bars
           .filter((b) => b.day >= 1)
           .map((b) => ({ day: b.day, minute: 540, price: b.close }));
-        if (!m.series.length) m.series = [{ day: s.day, minute: 540, price: m.price }];
+        if (!m.series.length)
+          m.series = [{ day: s.day, minute: 540, price: m.price }];
       }
       s.archiveNotice = "2.0 舊檔沒有盤中資料；保留當時仍存在的日線。";
     }
@@ -2331,7 +2620,9 @@
       if (!s.markets[a.id]) {
         s.markets[a.id] = fresh.markets[a.id];
         s.markets[a.id].bars.at(-1).day = s.day;
-        s.markets[a.id].series = [{ day: s.day, minute: s.minute, price: a.price }];
+        s.markets[a.id].series = [
+          { day: s.day, minute: s.minute, price: a.price },
+        ];
       }
     for (const l of s.loans) {
       l.stage = Math.min(4, l.extensions || 0);
@@ -2350,7 +2641,9 @@
       minute: null,
       cash: null,
     }));
-    s.archiveNotice = (s.archiveNotice || "") + " 新增商品從升級當天開始記錄，沒有補造先前行情。";
+    s.archiveNotice =
+      (s.archiveNotice || "") +
+      " 新增商品從升級當天開始記錄，沒有補造先前行情。";
     return s;
   }
   // Archives use compressed per-day Float32 snapshots. Trading still uses full precision.
@@ -2376,7 +2669,8 @@
   function decodeBytes(text) {
     const padding = text.charCodeAt(0) - 0x3400,
       bitCount = (text.length - 1) * 15 - padding;
-    if (padding < 0 || padding > 14 || bitCount < 0 || bitCount % 8) throw Error("無效壓縮編碼");
+    if (padding < 0 || padding > 14 || bitCount < 0 || bitCount % 8)
+      throw Error("無效壓縮編碼");
     const bytes = new Uint8Array(bitCount / 8);
     let buffer = 0,
       bits = 0,
@@ -2411,7 +2705,13 @@
       days: [...groups].map(([day, points]) => {
         const last = points.at(-1),
           signature =
-            points.length + ":" + last.minute + ":" + last.price + ":" + (last.kind || "");
+            points.length +
+            ":" +
+            last.minute +
+            ":" +
+            last.price +
+            ":" +
+            (last.kind || "");
         const prior = cache.get(day);
         if (prior?.signature === signature) return prior.chunk;
         const bytes = new Uint8Array(points.length * 6),
@@ -2443,16 +2743,29 @@
     if (Array.isArray(tape))
       return tape.map((p) =>
         Array.isArray(p)
-          ? { day: p[0], minute: p[1], price: p[2], ...(p[3] ? { kind: p[3] } : {}) }
+          ? {
+              day: p[0],
+              minute: p[1],
+              price: p[2],
+              ...(p[3] ? { kind: p[3] } : {}),
+            }
           : p,
       );
-    if (tape?.format !== "day-f32-xor15-zlib" || !Array.isArray(tape.days) || tape.days.length > 60)
+    if (
+      tape?.format !== "day-f32-xor15-zlib" ||
+      !Array.isArray(tape.days) ||
+      tape.days.length > 60
+    )
       throw Error("無效行情紀錄");
     return tape.days.flatMap(([day, data, kinds]) => {
       const zipped = decodeBytes(data),
         bytes = codec.inflate(zipped);
       if (bytes.length % 6 || bytes.length > 18000) throw Error("無效行情區塊");
-      const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength),
+      const view = new DataView(
+          bytes.buffer,
+          bytes.byteOffset,
+          bytes.byteLength,
+        ),
         labels = new Map(kinds),
         points = [];
       const scalar = new DataView(new ArrayBuffer(4)),
@@ -2460,7 +2773,8 @@
       let previous = 0;
       for (let i = 0; i < n; i++) {
         let delta = 0;
-        for (let plane = 0; plane < 4; plane++) delta |= bytes[plane * n + i] << (plane * 8);
+        for (let plane = 0; plane < 4; plane++)
+          delta |= bytes[plane * n + i] << (plane * 8);
         previous = (delta ^ previous) >>> 0;
         scalar.setUint32(0, previous, true);
         points.push({
@@ -2478,7 +2792,10 @@
       ...s,
       equityTape: encodeTape(s.equityTape),
       markets: Object.fromEntries(
-        Object.entries(s.markets).map(([id, m]) => [id, { ...m, series: encodeTape(m.series) }]),
+        Object.entries(s.markets).map(([id, m]) => [
+          id,
+          { ...m, series: encodeTape(m.series) },
+        ]),
       ),
     };
   }
@@ -2520,6 +2837,7 @@
     close,
     closeAll,
     borrow,
+    validateBorrow,
     loanLimit,
     interest,
     repay,

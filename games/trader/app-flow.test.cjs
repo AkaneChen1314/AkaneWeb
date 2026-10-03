@@ -20,7 +20,9 @@ function env(storage = new Map(), width = 1440) {
       this.dataset = {};
       for (const [k, v] of Object.entries(attrs))
         if (k.startsWith("data-"))
-          this.dataset[k.slice(5).replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = v;
+          this.dataset[
+            k.slice(5).replace(/-([a-z])/g, (_, c) => c.toUpperCase())
+          ] = v;
       this._text = "";
     }
     get id() {
@@ -39,7 +41,9 @@ function env(storage = new Map(), width = 1440) {
       let e = this;
       return {
         add(...a) {
-          e.className = [...new Set(e.className.split(/\s+/).filter(Boolean).concat(a))].join(" ");
+          e.className = [
+            ...new Set(e.className.split(/\s+/).filter(Boolean).concat(a)),
+          ].join(" ");
         },
         remove(...a) {
           e.className = e.className
@@ -77,7 +81,9 @@ function env(storage = new Map(), width = 1440) {
     }
     remove() {
       if (this.parentElement)
-        this.parentElement.children = this.parentElement.children.filter((x) => x !== this);
+        this.parentElement.children = this.parentElement.children.filter(
+          (x) => x !== this,
+        );
     }
     setAttribute(k, v) {
       this.attrs[k] = String(v);
@@ -90,9 +96,14 @@ function env(storage = new Map(), width = 1440) {
     }
     matches(sel) {
       if (sel.startsWith("#")) return this.id === sel.slice(1);
-      if (sel.startsWith(".")) return this.className.split(/\s+/).includes(sel.slice(1));
+      if (sel.startsWith("."))
+        return this.className.split(/\s+/).includes(sel.slice(1));
       const m = sel.match(/^\[([^=\]]+)(?:=["']?([^"'\]]+)["']?)?\]$/);
-      if (m) return m[1] in this.attrs && (m[2] === undefined || this.attrs[m[1]] === m[2]);
+      if (m)
+        return (
+          m[1] in this.attrs &&
+          (m[2] === undefined || this.attrs[m[1]] === m[2])
+        );
       return this.tagName.toLowerCase() === sel.toLowerCase();
     }
     querySelectorAll(sel) {
@@ -122,7 +133,10 @@ function env(storage = new Map(), width = 1440) {
         left: 50,
         top: 350,
         width: 300,
-        height: this.hidden || (width <= 760 && this.closest(".lenders-panel")) ? 0 : 45,
+        height:
+          this.hidden || (width <= 760 && this.closest(".lenders-panel"))
+            ? 0
+            : 45,
         bottom: 395,
         right: 350,
       };
@@ -195,7 +209,9 @@ function env(storage = new Map(), width = 1440) {
         this.stopped = true;
       },
     };
-    for (const l of docListeners.filter((x) => x.type === "click" && x.capture)) {
+    for (const l of docListeners.filter(
+      (x) => x.type === "click" && x.capture,
+    )) {
       l.fn(e);
       if (e.stopped) return;
     }
@@ -204,7 +220,9 @@ function env(storage = new Map(), width = 1440) {
       if (l.once) el.listeners = el.listeners.filter((x) => x !== l);
       if (e.stopped) return;
     }
-    for (const l of docListeners.filter((x) => x.type === "click" && !x.capture)) {
+    for (const l of docListeners.filter(
+      (x) => x.type === "click" && !x.capture,
+    )) {
       l.fn(e);
       if (e.stopped) return;
     }
@@ -253,7 +271,8 @@ function env(storage = new Map(), width = 1440) {
     storage,
     tasks,
     tools,
-    state: () => tools.find((t) => t.name === "read_simulated_account").execute({}),
+    state: () =>
+      tools.find((t) => t.name === "read_simulated_account").execute({}),
     engine: window.BillionEngine,
   };
 }
@@ -309,18 +328,51 @@ assert.equal(a.state().day, 2);
 const persisted = a.storage.get("billion-to-zero-v2"),
   b = env(a.storage);
 assert.equal(b.state().day, 2);
-assert.equal(b.storage.get("billion-to-zero-v2"), persisted, "Reload changed formal state");
+assert.equal(
+  b.storage.get("billion-to-zero-v2"),
+  persisted,
+  "Reload changed formal state",
+);
 b.click("#loan-button");
+b.click('[data-loan-type="online"]');
+for (const type of ["bank", "online", "shark"]) {
+  b.click(`[data-loan-type="${type}"]`);
+  b.doc.getElementById("loan-amount").value = "100000";
+  b.click('[data-action="borrow"]');
+  assert(
+    b.doc.getElementById("loan-amount"),
+    "Over-limit amount left input screen",
+  );
+  assert(
+    !b.doc.querySelector('[data-action="sign-contract"]'),
+    "Over-limit amount opened contract",
+  );
+  assert(b.doc.getElementById("loan-error").textContent.includes("超過"));
+  assert.equal(b.state().debt, 0);
+  for (const value of ["", "-1", "0.00001", "Infinity"]) {
+    b.doc.getElementById("loan-amount").value = value;
+    b.click('[data-action="borrow"]');
+    assert(b.doc.getElementById("loan-amount"));
+    assert.equal(b.state().debt, 0);
+  }
+}
 b.click('[data-loan-type="online"]');
 b.click('[data-action="borrow"]');
 signContract(b);
 assert.equal(b.state().debt, 1e8);
-assert.equal(JSON.parse(b.storage.get("billion-to-zero-v2")).loans[0].type, "online");
+assert.equal(
+  JSON.parse(b.storage.get("billion-to-zero-v2")).loans[0].type,
+  "online",
+);
 const snapshot = b.storage.get("billion-to-zero-v2");
 b.click("#help-button");
 startLesson(b);
 finishTutorial(b);
-assert.equal(b.storage.get("billion-to-zero-v2"), snapshot, "Tutorial replay mutated current life");
+assert.equal(
+  b.storage.get("billion-to-zero-v2"),
+  snapshot,
+  "Tutorial replay mutated current life",
+);
 const E = b.engine,
   g = E.create(44);
 E.open(g, { asset: "sky", amount: 1e8, product: "spot" });
@@ -340,7 +392,11 @@ c.click("#reconnect-button");
 assert(c.state().equity < before);
 assert.equal(JSON.parse(map.get("billion-to-zero-v2")).glitches, 1);
 c.click("#reconnect-button");
-assert.equal(JSON.parse(map.get("billion-to-zero-v2")).glitches, 1, "404 settled twice");
+assert.equal(
+  JSON.parse(map.get("billion-to-zero-v2")).glitches,
+  1,
+  "404 settled twice",
+);
 c.click("#organ-button");
 c.click('[data-organ="core"]');
 c.click('[data-confirm-organ="core"]');
@@ -364,7 +420,10 @@ mobile.click("#tutorial-loan-shortcut");
 mobile.click('[data-action="finish-lesson"]');
 assert(!mobile.state().practice);
 mobile.click("#tutorial-loan-shortcut");
-assert(mobile.doc.querySelector('[data-loan-type="shark"]'), "Mobile borrowing unavailable");
+assert(
+  mobile.doc.querySelector('[data-loan-type="shark"]'),
+  "Mobile borrowing unavailable",
+);
 console.log(
   "PASS: app/controllers initialize, ordered optional finger tutorial, practice isolation, buy/advance/sell flow, persisted reload, online-loan selection, tutorial replay isolation, restored fake 404, one-time reconnection and organ death UI.",
 );
@@ -390,7 +449,11 @@ live.click("#market-pause");
 previous = live.storage.get("billion-to-zero-v2");
 const pausedLoop = [...live.tasks].find(([, x]) => x.fn.name === "liveLoop");
 pausedLoop[1].fn();
-assert.equal(live.storage.get("billion-to-zero-v2"), previous, "Pause still advanced the market");
+assert.equal(
+  live.storage.get("billion-to-zero-v2"),
+  previous,
+  "Pause still advanced the market",
+);
 live.click("#market-pause");
 live.click("#work-button");
 live.click('[data-job="cafe"]');
@@ -428,7 +491,10 @@ terror.debt = 2e10;
 E.setName(terror, "門外測試員");
 const terrorMap = new Map([
   ["billion-to-zero-v2", JSON.stringify(terror)],
-  ["billion-to-zero-preferences-v2", JSON.stringify({ tutorialDone: true, horror: true })],
+  [
+    "billion-to-zero-preferences-v2",
+    JSON.stringify({ tutorialDone: true, horror: true }),
+  ],
 ]);
 const dark = env(terrorMap, 320);
 assert(dark.doc.body.classList.contains("dread-3"));
@@ -446,11 +512,21 @@ const archiveMap = new Map([
 ]);
 const timeline = env(archiveMap);
 timeline.click("#chart-prev");
-assert.equal(timeline.doc.getElementById("chart-day-label").textContent, "第 1 天");
+assert.equal(
+  timeline.doc.getElementById("chart-day-label").textContent,
+  "第 1 天",
+);
 timeline.click('[data-period="all"]');
-assert(timeline.doc.getElementById("chart-story").textContent.includes("第 1 至 2 天"));
+assert(
+  timeline.doc
+    .getElementById("chart-story")
+    .textContent.includes("第 1 至 2 天"),
+);
 timeline.click("#chart-live");
-assert.equal(timeline.doc.getElementById("chart-day-label").textContent, "第 2 天");
+assert.equal(
+  timeline.doc.getElementById("chart-day-label").textContent,
+  "第 2 天",
+);
 console.log(
   "PASS: live timer/P&L, pointer and keyboard timestamp tooltip, pause, mobile work selection/reload/completion/locks, cornea blur and aid, scary atmosphere/settings, and historical chart navigation.",
 );
@@ -500,11 +576,17 @@ assert(
   !dialogue.doc.querySelector('[data-choice="1"]'),
   "Collector decision appears before dialogue",
 );
-assert(dialogue.doc.querySelector(".chat-current").textContent.includes("夜星"));
+assert(
+  dialogue.doc.querySelector(".chat-current").textContent.includes("夜星"),
+);
 dialogue.click('[data-debt-reply="question"]');
 assert.equal(dialogue.state().pending.turn, 1);
 dialogue = env(debtMap, 390);
-assert.equal(dialogue.state().pending.turn, 1, "Reload restarted collector interaction");
+assert.equal(
+  dialogue.state().pending.turn,
+  1,
+  "Reload restarted collector interaction",
+);
 dialogue.click('[data-debt-reply="promise"]');
 dialogue.click('[data-debt-reply="answer"]');
 assert(dialogue.doc.querySelector('[data-choice="4"]'));
@@ -512,7 +594,9 @@ dialogue.click('[data-choice="1"]');
 assert.equal(dialogue.state().reputation, 72);
 assert(dialogue.doc.querySelector(".aftermath-grid"));
 dialogue.click('[data-action="open-phone"]');
-assert(dialogue.doc.querySelector(".social-feed").textContent.includes("不實抹黑"));
+assert(
+  dialogue.doc.querySelector(".social-feed").textContent.includes("不實抹黑"),
+);
 dialogue.click('[data-action="friend-support"]');
 assert.equal(dialogue.state().reputation, 78);
 dialogue.click('[data-action="dismiss"]');
@@ -552,7 +636,10 @@ assert.equal(gambler.doc.querySelectorAll("[data-mine-index]").length, 9);
 gambler.click('[data-gamble-action="forfeit"]');
 assert(gambler.doc.querySelector(".result-board"));
 gambler.click('[data-action="dismiss"]');
-assert.equal(JSON.parse(casinoMap.get("billion-to-zero-v2")).gambleStats.rounds, 3);
+assert.equal(
+  JSON.parse(casinoMap.get("billion-to-zero-v2")).gambleStats.rounds,
+  3,
+);
 gambler.doc.getElementById("asset-search").value = "機械";
 gambler.fire("#asset-search", "input");
 assert.equal(gambler.doc.querySelectorAll("[data-asset]").length, 1);
@@ -592,14 +679,25 @@ assert(skipping.doc.querySelector('[data-body-part="lung"]'));
 assert(skipping.doc.querySelector('[data-body-part="lung_right"]'));
 assert.equal(skipping.doc.querySelectorAll(".body-item").length, 18);
 skipping.click('[data-body-part="lung"]');
-assert(skipping.doc.getElementById("modal-content").textContent.includes("左肺"));
+assert(
+  skipping.doc.getElementById("modal-content").textContent.includes("左肺"),
+);
 skipping.click('[data-organ="lung"]');
 skipping.click('[data-confirm-organ="lung"]');
 skipping.click("#body-button");
 skipping.click('[data-body-part="lung"]');
-assert(skipping.doc.getElementById("modal-content").textContent.includes("已賣出"));
-assert(skipping.doc.getElementById("modal-content").textContent.includes("第 1 天 00:00"));
-assert(!skipping.doc.querySelector('[data-organ="lung"]'), "Lost part can still be sold");
+assert(
+  skipping.doc.getElementById("modal-content").textContent.includes("已賣出"),
+);
+assert(
+  skipping.doc
+    .getElementById("modal-content")
+    .textContent.includes("第 1 天 00:00"),
+);
+assert(
+  !skipping.doc.querySelector('[data-organ="lung"]'),
+  "Lost part can still be sold",
+);
 skipping.click('[data-action="back-body"]');
 skipping.click('[data-body-zone="chest"]');
 assert.equal(skipping.doc.querySelectorAll(".body-item").length, 3);
@@ -621,15 +719,29 @@ const fullEnv = env(
 );
 clockTick(fullEnv);
 assert.equal(JSON.parse(fullEnv.storage.get("billion-to-zero-v2")).minute, 815);
-assert(!fullEnv.doc.getElementById("market-clock").textContent.includes("已收盤"));
+assert(
+  !fullEnv.doc.getElementById("market-clock").textContent.includes("已收盤"),
+);
 fullEnv.click("#phone-button");
-const pausedMinute = JSON.parse(fullEnv.storage.get("billion-to-zero-v2")).minute;
+const pausedMinute = JSON.parse(
+  fullEnv.storage.get("billion-to-zero-v2"),
+).minute;
 clockTick(fullEnv);
-assert.equal(JSON.parse(fullEnv.storage.get("billion-to-zero-v2")).minute, pausedMinute);
-assert(fullEnv.doc.getElementById("market-clock").textContent.includes("閱讀視窗暫停"));
+assert.equal(
+  JSON.parse(fullEnv.storage.get("billion-to-zero-v2")).minute,
+  pausedMinute,
+);
+assert(
+  fullEnv.doc
+    .getElementById("market-clock")
+    .textContent.includes("閱讀視窗暫停"),
+);
 fullEnv.click('[data-action="dismiss"]');
 clockTick(fullEnv);
-assert.equal(JSON.parse(fullEnv.storage.get("billion-to-zero-v2")).minute, pausedMinute + 5);
+assert.equal(
+  JSON.parse(fullEnv.storage.get("billion-to-zero-v2")).minute,
+  pausedMinute + 5,
+);
 const midnightState = E.create(238);
 E.setName(midnightState, "午夜玩家");
 midnightState.minute = 1435;

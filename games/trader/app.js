@@ -7,7 +7,14 @@
   const esc = (x) =>
     String(x).replace(
       /[&<>"']/g,
-      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[c],
     );
   const ICONS = {
       sky: "💎",
@@ -60,7 +67,9 @@
     interactionSince = 0;
   try {
     prefs = { ...prefs, ...JSON.parse(localStorage.getItem(PREF) || "{}") };
-    const raw = E.migrate(E.unpack(JSON.parse(localStorage.getItem(SAVE) || "null")));
+    const raw = E.migrate(
+      E.unpack(JSON.parse(localStorage.getItem(SAVE) || "null")),
+    );
     if (E.validate(raw)) {
       s = raw;
       loaded = true;
@@ -77,7 +86,10 @@
   function price(v) {
     return v < 1
       ? v.toFixed(5)
-      : v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      : v.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
   }
   function signed(v, d = 2) {
     return (v >= 0 ? "+" : "") + v.toFixed(d);
@@ -95,7 +107,8 @@
   function save() {
     try {
       localStorage.setItem(PREF, JSON.stringify(prefs));
-      if (unlocked && !lesson && !s.practice) localStorage.setItem(SAVE, JSON.stringify(E.pack(s)));
+      if (unlocked && !lesson && !s.practice)
+        localStorage.setItem(SAVE, JSON.stringify(E.pack(s)));
       storageOK = true;
     } catch {
       storageOK = false;
@@ -135,13 +148,24 @@
     clearTimeout(feedbackTimer);
     const win = delta > 0;
     $("feedback").className = "feedback " + (win ? "win" : "lose");
-    $("feedback-icon").textContent = win ? "🤑" : special === "organ" ? "💔" : "💸";
+    $("feedback-icon").textContent = win
+      ? "🤑"
+      : special === "organ"
+        ? "💔"
+        : "💸";
     $("feedback-title").textContent =
-      special === "organ" ? "錢拿到了。身體呢？" : win ? "這次居然賺了！" : "不是吧，又沒了。";
+      special === "organ"
+        ? "錢拿到了。身體呢？"
+        : win
+          ? "這次居然賺了！"
+          : "不是吧，又沒了。";
     $("feedback-amount").textContent =
-      special === "organ" ? "無法撤銷的代價" : (delta >= 0 ? "+" : "−") + money(Math.abs(delta));
+      special === "organ"
+        ? "無法撤銷的代價"
+        : (delta >= 0 ? "+" : "−") + money(Math.abs(delta));
     $("feedback-caption").textContent =
-      caption || (win ? "你是不是又想加碼了？" : "你開始想著：下一次就能翻回來。");
+      caption ||
+      (win ? "你是不是又想加碼了？" : "你開始想著：下一次就能翻回來。");
     $("feedback-confetti").innerHTML =
       win && prefs.effects
         ? Array.from(
@@ -225,8 +249,12 @@
   function render() {
     const eq = E.equity(s),
       r = rank();
-    $("chapter").textContent = lesson ? "練習帳戶 · 不影響正式的 100 億" : r.chapter;
-    $("hero-title").textContent = lesson ? "跟著手指，親手玩一輪。" : s.playerName + "，" + r.title;
+    $("chapter").textContent = lesson
+      ? "練習帳戶 · 不影響正式的 100 億"
+      : r.chapter;
+    $("hero-title").textContent = lesson
+      ? "跟著手指，親手玩一輪。"
+      : s.playerName + "，" + r.title;
     $("hero-line").textContent = lesson
       ? "這次的練習會先讓你賺到錢，學會買進、等一天，再賣掉。"
       : r.detail;
@@ -236,7 +264,8 @@
     $("equity").innerHTML = (eq / 1e8).toFixed(2) + " <small>億</small>";
     $("equity").className = eq < 0 ? "negative" : "";
     $("cash").textContent = money(s.cash);
-    $("daily").textContent = (s.daily >= 0 ? "+" : "−") + money(Math.abs(s.daily));
+    $("daily").textContent =
+      (s.daily >= 0 ? "+" : "−") + money(Math.abs(s.daily));
     $("daily").className = s.daily === 0 ? "" : color(s.daily);
     $("daily-caption").textContent =
       s.day === 1
@@ -287,7 +316,10 @@
     renderPortfolio();
     renderNews();
     document.body.classList.toggle("reduced-effects", !prefs.effects);
-    document.body.classList.toggle("dead-world", s.ended && s.endType === "death");
+    document.body.classList.toggle(
+      "dead-world",
+      s.ended && s.endType === "death",
+    );
     $("sound-button").textContent = "♪ 音效" + (prefs.sound ? "開" : "關");
     $("motion-button").textContent = "特效" + (prefs.effects ? "開" : "關");
     $("motion-button").setAttribute("aria-pressed", String(prefs.effects));
@@ -300,7 +332,13 @@
         : s.reputation < 75
           ? "虛構朋友圈開始出現抹黑訊息。"
           : "朋友還在，別讓借條替你說話。";
-    const lock = s.ended || !!s.pending || !!s.job || !!s.gamble || busy || (!unlocked && !lesson);
+    const lock =
+      s.ended ||
+      !!s.pending ||
+      !!s.job ||
+      !!s.gamble ||
+      busy ||
+      (!unlocked && !lesson);
     for (const id of [
       "next-button",
       "skip-button",
@@ -352,7 +390,10 @@
           .map(
             (l) =>
               /* HTML */ `<div class="loan-row">
-                <div><b>${E.LOAN_TYPES[l.type].name}</b><span>${money(l.balance)}</span></div>
+                <div>
+                  <b>${E.LOAN_TYPES[l.type].name}</b
+                  ><span>${money(l.balance)}</span>
+                </div>
                 <small class="${l.due <= s.day + 1 ? "danger" : ""}"
                   >第 ${l.due} 天到期 · 每日息
                   ${(E.loanRate(l) * 100).toFixed(0)}%${l.extensions ? " · 已延期 " + l.extensions + " 次" : ""}${l.stage ? " · 催收階段 " + l.stage : ""}</small
@@ -371,7 +412,11 @@
       sector = "all";
       $("sector-select").innerHTML =
         '<option value="all">所有題材</option>' +
-        [...new Set(E.ASSETS.filter((a) => a.kind === filter).map((a) => a.sector))]
+        [
+          ...new Set(
+            E.ASSETS.filter((a) => a.kind === filter).map((a) => a.sector),
+          ),
+        ]
           .map((x) => `<option value="${esc(x)}">${esc(x)}</option>`)
           .join("");
       $("sector-select").value = "all";
@@ -381,9 +426,12 @@
         a.kind === filter &&
         (sector === "all" || a.sector === sector) &&
         (!assetSearch ||
-          (a.name + a.code + a.sector).toLowerCase().includes(assetSearch.toLowerCase())),
+          (a.name + a.code + a.sector)
+            .toLowerCase()
+            .includes(assetSearch.toLowerCase())),
     );
-    $("asset-count").textContent = assets.length + " 種商品 · 全館 " + E.ASSETS.length + " 種";
+    $("asset-count").textContent =
+      assets.length + " 種商品 · 全館 " + E.ASSETS.length + " 種";
     $("assets").innerHTML = assets.length
       ? assets
           .map(
@@ -394,7 +442,9 @@
       : '<p class="asset-empty">沒有找到。試試別的名字或題材。</p>';
     document
       .querySelectorAll("[data-filter]")
-      .forEach((b) => b.classList.toggle("active", b.dataset.filter === filter));
+      .forEach((b) =>
+        b.classList.toggle("active", b.dataset.filter === filter),
+      );
   }
   function renderMarket() {
     const a = E.ASSETS.find((x) => x.id === selected),
@@ -429,7 +479,9 @@
   }
   function clock(minute) {
     return (
-      String(Math.floor(minute / 60)).padStart(2, "0") + ":" + String(minute % 60).padStart(2, "0")
+      String(Math.floor(minute / 60)).padStart(2, "0") +
+      ":" +
+      String(minute % 60).padStart(2, "0")
     );
   }
   function renderAtmosphere() {
@@ -437,7 +489,9 @@
       due = s.loans.some((l) => l.due <= s.day + 1 && l.balance > s.cash),
       eyeLoss = s.organs.filter((id) => id.startsWith("cornea")).length;
     const collector =
-      s.pending?.type === "debt" ? s.loans.find((l) => l.id === s.pending.loanId) : null;
+      s.pending?.type === "debt"
+        ? s.loans.find((l) => l.id === s.pending.loanId)
+        : null;
     let dread =
       s.health < 18 ||
       (s.ended && s.endType === "death") ||
@@ -449,9 +503,16 @@
             ? 1
             : 0;
     if (!prefs.horror || lesson) dread = 0;
-    for (let i = 1; i <= 3; i++) document.body.classList.toggle("dread-" + i, dread === i);
-    document.body.classList.toggle("vision-one", eyeLoss === 1 && !prefs.visionAssist && !lesson);
-    document.body.classList.toggle("vision-two", eyeLoss === 2 && !prefs.visionAssist && !lesson);
+    for (let i = 1; i <= 3; i++)
+      document.body.classList.toggle("dread-" + i, dread === i);
+    document.body.classList.toggle(
+      "vision-one",
+      eyeLoss === 1 && !prefs.visionAssist && !lesson,
+    );
+    document.body.classList.toggle(
+      "vision-two",
+      eyeLoss === 2 && !prefs.visionAssist && !lesson,
+    );
     $("dread-banner").hidden = !dread;
     $("dread-banner").textContent =
       dread === 3
@@ -462,7 +523,9 @@
             ? "☎ 未接來電又增加了。你的身體和帳戶，都在透支。"
             : "◌ 夜越來越深。房間裡只剩報價的光。";
     $("vision-assist").hidden = !eyeLoss;
-    $("vision-assist").textContent = prefs.visionAssist ? "關閉視野輔助" : "啟用視野輔助";
+    $("vision-assist").textContent = prefs.visionAssist
+      ? "關閉視野輔助"
+      : "啟用視野輔助";
     $("vision-assist").setAttribute("aria-pressed", String(prefs.visionAssist));
   }
   function renderChart() {
@@ -472,13 +535,19 @@
     chartPoints = all.filter(
       (p) =>
         chartPeriod === "all" ||
-        (chartPeriod === "five" && p.day <= day && p.day >= Math.max(1, day - 4)) ||
+        (chartPeriod === "five" &&
+          p.day <= day &&
+          p.day >= Math.max(1, day - 4)) ||
         (chartPeriod === "day" && p.day === day),
     );
     const noData = !chartPoints.length;
     if (noData)
       chartPoints = [
-        { day, minute: 0, price: wealth ? s.history[day - 1] || 0 : s.markets[selected].price },
+        {
+          day,
+          minute: 0,
+          price: wealth ? s.history[day - 1] || 0 : s.markets[selected].price,
+        },
       ];
     const values = chartPoints.map((p) => p.price),
       w = Math.max(240, $("chart").clientWidth || 500),
@@ -495,9 +564,15 @@
       Y = (v) => 20 + ((max - v) / (max - min)) * ph,
       X = (i) => pad + (i / Math.max(1, values.length - 1)) * pw;
     const points = values
-        .map((v, i) => (i ? "L" : "M") + X(i).toFixed(2) + " " + Y(v).toFixed(2))
+        .map(
+          (v, i) => (i ? "L" : "M") + X(i).toFixed(2) + " " + Y(v).toFixed(2),
+        )
         .join(" "),
-      stroke = wealth ? "#ffda69" : values.at(-1) >= values[0] ? "#68e9ac" : "#ff7890";
+      stroke = wealth
+        ? "#ffda69"
+        : values.at(-1) >= values[0]
+          ? "#68e9ac"
+          : "#ff7890";
     let out = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" aria-hidden="true"><defs><linearGradient id="shade" x1="0" x2="0" y1="0" y2="1"><stop stop-color="${stroke}" stop-opacity=".22"/><stop offset="1" stop-color="${stroke}" stop-opacity="0"/></linearGradient></defs>`;
     for (let i = 0; i < 4; i++) {
       const val = max - ((max - min) * i) / 3,
@@ -514,12 +589,16 @@
     if (chartHover !== null) {
       const n = Math.max(
           0,
-          Math.min(values.length - 1, Math.round(chartHover * (values.length - 1))),
+          Math.min(
+            values.length - 1,
+            Math.round(chartHover * (values.length - 1)),
+          ),
         ),
         p = chartPoints[n];
       out += `<path d="M${X(n)} 14V180" stroke="#ffda69" stroke-dasharray="4 3"/><circle cx="${X(n)}" cy="${Y(p.price)}" r="5" fill="#ffda69"/>`;
       tip = /* HTML */ `<div class="chart-tooltip" role="status">
-        第 ${p.day} 天 · ${clock(p.minute)}${p.kind ? " · " + esc(p.kind) : ""}<b
+        第 ${p.day} 天 ·
+        ${clock(p.minute)}${p.kind ? " · " + esc(p.kind) : ""}<b
           >${wealth ? "身家 " + money(p.price) : price(p.price) + " 元"}</b
         >
       </div>`;
@@ -537,7 +616,9 @@
           : "線往上：價格變貴。線往下：價格變便宜。";
     $("market-clock").textContent =
       `${s.ended ? "■" : prefs.marketPaused ? "Ⅱ" : "●"} 第 ${s.day} 天 ${clock(s.minute)} · ${clockReason()}`;
-    $("market-pause").textContent = prefs.marketPaused ? "▶ 繼續行情" : "⏸ 暫停行情";
+    $("market-pause").textContent = prefs.marketPaused
+      ? "▶ 繼續行情"
+      : "⏸ 暫停行情";
     $("chart-day").max = s.day;
     $("chart-day").value = day;
     $("chart-day-label").textContent = "第 " + day + " 天";
@@ -548,10 +629,14 @@
       "滑鼠移入、手指按住，或左右鍵查看。盤中會改變真正損益；背景頁面與劇情期間暫停。";
     document
       .querySelectorAll("[data-chart]")
-      .forEach((b) => b.classList.toggle("active", b.dataset.chart === chartMode));
+      .forEach((b) =>
+        b.classList.toggle("active", b.dataset.chart === chartMode),
+      );
     document
       .querySelectorAll("[data-period]")
-      .forEach((b) => b.classList.toggle("active", b.dataset.period === chartPeriod));
+      .forEach((b) =>
+        b.classList.toggle("active", b.dataset.period === chartPeriod),
+      );
     if (noData) {
       $("chart").innerHTML =
         '<div class="chart-empty">這個日期尚無紀錄<br><small>新增商品從升級當天開始記錄，沒有補造行情。</small></div>';
@@ -597,10 +682,16 @@
     const def = E.JOBS.find((x) => x.id === j.id);
     modal(
       "work",
-      /* HTML */ `<div class="modal-kicker">第 ${s.day} 天 · ${def.icon} ${def.name}</div>
+      /* HTML */ `<div class="modal-kicker">
+          第 ${s.day} 天 · ${def.icon} ${def.name}
+        </div>
         <h2>完成 ${j.done} / ${def.rounds} 筆</h2>
-        <div class="job-progress"><i style="width:${(j.done / def.rounds) * 100}%"></i></div>
-        <p>${def.description}${s.reputation < 35 ? " 名譽受到謠言影響，這班薪水只剩 85%。" : ""}</p>
+        <div class="job-progress">
+          <i style="width:${(j.done / def.rounds) * 100}%"></i>
+        </div>
+        <p>
+          ${def.description}${s.reputation < 35 ? " 名譽受到謠言影響，這班薪水只剩 85%。" : ""}
+        </p>
         <div class="job-order">
           <span
             >${j.id === "cafe" ? "客人的完整訂單" : j.id === "warehouse" ? "請按相同名稱的出口" : "先算一下，不用急"}</span
@@ -611,13 +702,16 @@
           ${j.task.options.map((o) => `<button data-job-answer="${esc(o.id)}">${esc(o.label)}</button>`).join("")}
         </div>
         <p class="job-message" role="status">
-          ${esc(message || "完成全部任務，才會拿到薪水。")}<br />目前失誤 ${j.mistakes} 次 ·
-          預計薪水
+          ${esc(message || "完成全部任務，才會拿到薪水。")}<br />目前失誤
+          ${j.mistakes} 次 · 預計薪水
           ${money(def.pay * (1 - Math.min(0.4, j.mistakes * 0.05)) * (s.reputation < 35 ? 0.85 : 1))}
         </p>
         <div class="modal-actions">
-          <button class="ghost" data-action="pause-work">暫時休息（保留任務）</button
-          ><button class="ghost" data-action="quit-work">放棄這班（不領薪）</button>
+          <button class="ghost" data-action="pause-work">
+            暫時休息（保留任務）</button
+          ><button class="ghost" data-action="quit-work">
+            放棄這班（不領薪）
+          </button>
         </div>`,
     );
   }
@@ -635,7 +729,9 @@
             ><small>溫和模式保留靜態色彩提示，減少動畫。</small></button
           ><button data-setting="horror">
             <b>恐怖氣氛：${prefs.horror ? "開" : "關"}</b
-            ><small>欠款與健康惡化會讓背景逐漸變暗、變紅，沒有頻閃。</small></button
+            ><small
+              >欠款與健康惡化會讓背景逐漸變暗、變紅，沒有頻閃。</small
+            ></button
           ><button data-setting="visionAssist">
             <b>視野輔助：${prefs.visionAssist ? "開" : "關"}</b
             ><small>角膜失去後可看清行情；不恢復部件、健康或金錢。</small>
@@ -651,13 +747,25 @@
     for (const a of E.ASSETS)
       for (const p of s.markets[a.id].series)
         rows.push(
-          [a.code, a.name, p.day, clock(p.minute), p.price.toFixed(8), p.kind || "盤中報價"].join(
-            ",",
-          ),
+          [
+            a.code,
+            a.name,
+            p.day,
+            clock(p.minute),
+            p.price.toFixed(8),
+            p.kind || "盤中報價",
+          ].join(","),
         );
     for (const p of s.equityTape)
       rows.push(
-        ["NET", "我的身家", p.day, clock(p.minute), p.price.toFixed(4), "身家快照"].join(","),
+        [
+          "NET",
+          "我的身家",
+          p.day,
+          clock(p.minute),
+          p.price.toFixed(4),
+          "身家快照",
+        ].join(","),
       );
     download(
       "百億人生1.2_完整行情_第" + s.day + "天.csv",
@@ -679,8 +787,11 @@
       "name",
       /* HTML */ `<div class="modal-kicker">百億人生 1.2 · 先創造角色</div>
         <h2>這張借條，要寫誰的名字？</h2>
-        <p>給這段人生一個暱稱。故事、催收員、朋友與戰報都會用這個名字稱呼你。</p>
-        <label class="name-label" for="character-name">角色名字（1 至 16 字，不必是真名）</label
+        <p>
+          給這段人生一個暱稱。故事、催收員、朋友與戰報都會用這個名字稱呼你。
+        </p>
+        <label class="name-label" for="character-name"
+          >角色名字（1 至 16 字，不必是真名）</label
         ><input
           class="name-input"
           id="character-name"
@@ -693,7 +804,9 @@
           證件、聯絡人、訊息都由遊戲生成。整個故事離線演出，只存在你的瀏覽器。
         </div>
         <div class="modal-actions">
-          <button class="primary" data-action="choose-name">用這個名字，走進百億人生</button>
+          <button class="primary" data-action="choose-name">
+            用這個名字，走進百億人生
+          </button>
         </div>`,
     );
   }
@@ -734,8 +847,11 @@
           </div>
         </div>
         <div class="contract-bill">
-          <span>借 ${money(c.amount)}</span><b>真正入帳 ${money(c.amount * (1 - t.fee))}</b
-          ><small>每日劇情利息 ${t.rate * 100}% · 第 ${s.day + t.days} 天到期</small>
+          <span>借 ${money(c.amount)}</span
+          ><b>真正入帳 ${money(c.amount * (1 - t.fee))}</b
+          ><small
+            >每日劇情利息 ${t.rate * 100}% · 第 ${s.day + t.days} 天到期</small
+          >
         </div>
         <div class="choices">
           <button data-contract-ack="id">
@@ -750,7 +866,8 @@
         </div>
         <div class="signature-preview">簽名：<b>${esc(s.playerName)}</b></div>
         <div class="modal-actions">
-          <button class="ghost" data-action="cancel-contract">反悔，不借了</button
+          <button class="ghost" data-action="cancel-contract">
+            反悔，不借了</button
           ><button
             class="primary"
             data-action="sign-contract"
@@ -781,7 +898,10 @@
     const l = scene.loan,
       p = s.pending,
       turn = p.turn || 0,
-      o = E.ORGANS.find((x) => x.id !== "core" && x.id !== "liver_whole" && E.organAvailable(s, x)),
+      o = E.ORGANS.find(
+        (x) =>
+          x.id !== "core" && x.id !== "liver_whole" && E.organAvailable(s, x),
+      ),
       danger = l.type !== "bank";
     const transcript = (p.transcript || [])
       .map(
@@ -805,20 +925,31 @@
               ${esc(E.collectionPenalty(s, l))}<br />「求助」可避免本輪侵害，借條仍需處理。
             </div>
             <div class="choices">
-              <button data-choice="0" ${s.cash + 1e-5 < l.balance ? "disabled" : ""}>
+              <button
+                data-choice="0"
+                ${s.cash + 1e-5 < l.balance ? "disabled" : ""}
+              >
                 <b>全額還清這張借條</b
-                ><small>付 ${money(l.balance)}，壓力 −12，本輪沒有催收侵害。</small></button
+                ><small
+                  >付 ${money(l.balance)}，壓力 −12，本輪沒有催收侵害。</small
+                ></button
               ><button data-choice="1">
                 <b>延期三天，又說最後一次</b
-                ><small>欠款 +20%、健康 −4、壓力 +12；加上本輪未付後果。</small></button
+                ><small
+                  >欠款 +20%、健康 −4、壓力 +12；加上本輪未付後果。</small
+                ></button
               ><button data-choice="2" ${!o ? "disabled" : ""}>
-                <b>${o ? "自願交出" + o.name + "，先還一筆" : "沒有可用的部件"}</b
+                <b
+                  >${o ? "自願交出" + o.name + "，先還一筆" : "沒有可用的部件"}</b
                 ><small
                   >${o ? "健康 −" + o.damage + "，取得 " + money(o.price) + " 優先還款。" + (E.organFatal(s, o) ? "這會死亡。" : "代價不可逆；尚未還完再延兩天。") : "請選其他分支。"}</small
                 ></button
               ><button data-choice="3">
                 <b>掛斷，躲回螢幕裡</b
-                ><small>欠款 +30%、健康 −8、壓力 +20；加上本輪未付後果，兩天後再來。</small></button
+                ><small
+                  >欠款 +30%、健康 −8、壓力
+                  +20；加上本輪未付後果，兩天後再來。</small
+                ></button
               ><button data-choice="4">
                 <b>留存訊息，找朋友與援助站協商</b
                 ><small
@@ -841,10 +972,19 @@
       /* HTML */ `<div class="modal-kicker">催收後 · 房間又安靜了一點</div>
         <h2>${esc(s.playerName)}，這次付出了什麼？</h2>
         <div class="aftermath-grid">
-          <div><small>健康變化</small><b class="${color(h)}">${signed(h, 1)}</b></div>
-          <div><small>名譽變化</small><b class="${color(rep)}">${signed(rep, 0)}</b></div>
-          <div><small>現金變化</small><b>${money(s.cash - before.cash)}</b></div>
-          <div><small>目前總欠款</small><b class="negative">${money(s.debt)}</b></div>
+          <div>
+            <small>健康變化</small><b class="${color(h)}">${signed(h, 1)}</b>
+          </div>
+          <div>
+            <small>名譽變化</small
+            ><b class="${color(rep)}">${signed(rep, 0)}</b>
+          </div>
+          <div>
+            <small>現金變化</small><b>${money(s.cash - before.cash)}</b>
+          </div>
+          <div>
+            <small>目前總欠款</small><b class="negative">${money(s.debt)}</b>
+          </div>
         </div>
         ${lost.length ? '<div class="collection-warning">失去：' + lost.map((id) => esc(E.ORGANS.find((o) => o.id === id).name)).join("、") + "。不顯示身體傷害畫面；部件和上限已永久改變。</div>" : ""}
         <p>
@@ -935,15 +1075,18 @@
             step="0.01"
             value="${esc(casinoStake)}"
             inputmode="decimal"
+            aria-describedby="loan-error loan-receipt"
           /><span>億</span>
         </div>
         <div class="casino-record">
           <span>玩過 ${s.gambleStats.rounds} 局</span
-          ><span class="${color(s.gambleStats.net)}">累計 ${money(s.gambleStats.net)}</span>
+          ><span class="${color(s.gambleStats.net)}"
+            >累計 ${money(s.gambleStats.net)}</span
+          >
         </div>
         <div class="modal-box">
-          純遊戲幣，沒有充值或兌現。早期偶爾贏，後期莊家更偏向自己；每遊戲日最多 12
-          局。下注後本金立即扣掉，任務與行情暫停，完成或放棄才能再交易。
+          純遊戲幣，沒有充值或兌現。早期偶爾贏，後期莊家更偏向自己；每遊戲日最多
+          12 局。下注後本金立即扣掉，任務與行情暫停，完成或放棄才能再交易。
         </div>
         <div class="modal-actions">
           <button class="ghost" data-action="dismiss">今晚先不去</button
@@ -976,9 +1119,15 @@
           ${g.guess ? "你猜 " + (g.guess === "big" ? "大" : "小") + "。現在親手搖骰。" : "先猜大小，再搖骰。"}
         </p>
         <div class="gamble-choice">
-          <button data-gamble-action="small" class="${g.guess === "small" ? "active" : ""}">
+          <button
+            data-gamble-action="small"
+            class="${g.guess === "small" ? "active" : ""}"
+          >
             小 · 3 至 10</button
-          ><button data-gamble-action="big" class="${g.guess === "big" ? "active" : ""}">
+          ><button
+            data-gamble-action="big"
+            class="${g.guess === "big" ? "active" : ""}"
+          >
             大 · 11 至 18
           </button>
         </div>`;
@@ -986,9 +1135,13 @@
     } else if (g.id === "cards") {
       board = /* HTML */ `<div class="hand-label">莊家 · 一張暗牌</div>
         <div class="card-hand">${playingCards(g.dealer, true)}</div>
-        <div class="hand-label">${esc(s.playerName)} · ${E.handScore(g.player)} 點</div>
+        <div class="hand-label">
+          ${esc(s.playerName)} · ${E.handScore(g.player)} 點
+        </div>
         <div class="card-hand">${playingCards(g.player)}</div>
-        <p class="table-prompt">不要超過 21。停牌後莊家會攤牌，平手也是莊家贏。</p>`;
+        <p class="table-prompt">
+          不要超過 21。停牌後莊家會攤牌，平手也是莊家贏。
+        </p>`;
       actions =
         '<button class="primary" data-gamble-action="hit">再要一張</button><button class="ghost" data-gamble-action="stand">停牌，攤牌</button>';
     } else {
@@ -1007,13 +1160,18 @@
     modal(
       "gamble",
       /* HTML */ `<div class="gamble-table">
-        <div class="modal-kicker">第 ${s.day} 天 · ${E.CASINO.find((x) => x.id === g.id).name}</div>
+        <div class="modal-kicker">
+          第 ${s.day} 天 · ${E.CASINO.find((x) => x.id === g.id).name}
+        </div>
         <h2>本金 ${money(g.stake)}，已放上賭桌。</h2>
         ${board}
         <div class="modal-actions">${actions}</div>
         <div class="table-exit">
-          <button class="ghost" data-action="pause-gamble">保留本局，先休息</button
-          ><button class="ghost" data-gamble-action="forfeit">放棄本局 · 本金全輸</button>
+          <button class="ghost" data-action="pause-gamble">
+            保留本局，先休息</button
+          ><button class="ghost" data-gamble-action="forfeit">
+            放棄本局 · 本金全輸
+          </button>
         </div>
       </div>`,
     );
@@ -1058,11 +1216,15 @@
         <p>${esc(g.reason)}</p>
         <div class="gamble-receipt">
           <span>投入 ${money(g.stake)}</span><span>拿回 ${money(g.payout)}</span
-          ><b class="${color(g.net)}">這局 ${g.net >= 0 ? "+" : "−"}${money(Math.abs(g.net))}</b>
+          ><b class="${color(g.net)}"
+            >這局 ${g.net >= 0 ? "+" : "−"}${money(Math.abs(g.net))}</b
+          >
         </div>
         <div class="modal-actions">
           <button class="ghost" data-action="dismiss">離開賭桌</button
-          ><button class="primary" data-action="casino-again">再看一局（尚未下注）</button>
+          ><button class="primary" data-action="casino-again">
+            再看一局（尚未下注）
+          </button>
         </div>`,
     );
   }
@@ -1084,7 +1246,8 @@
       b.classList.toggle("active", b.dataset.direction === direction);
       b.setAttribute("aria-pressed", String(b.dataset.direction === direction));
     });
-    document.querySelector('[data-direction="short"]').disabled = product === "spot";
+    document.querySelector('[data-direction="short"]').disabled =
+      product === "spot";
     $("leverage-zone").hidden = product === "spot";
     $("leverage-label").textContent = l + " 倍";
     $("order-preview").innerHTML =
@@ -1099,7 +1262,12 @@
       ? "這段人生已結束"
       : `買進 · 猜會${direction === "long" ? "漲" : "跌"}${product !== "spot" ? " · " + l + " 倍" : ""}`;
     $("trade-button").disabled =
-      s.ended || !!s.pending || !!s.job || !!s.gamble || busy || (!unlocked && !lesson);
+      s.ended ||
+      !!s.pending ||
+      !!s.job ||
+      !!s.gamble ||
+      busy ||
+      (!unlocked && !lesson);
   }
   function renderPortfolio() {
     document
@@ -1133,7 +1301,8 @@
                   >
                 </div>
                 <div class="position-details">
-                  <span>原本拿出 ${money(p.margin)}<br />現在還值 ${money(v)}</span
+                  <span
+                    >原本拿出 ${money(p.margin)}<br />現在還值 ${money(v)}</span
                   ><button
                     data-close="${p.id}"
                     ${s.pending || s.job || s.gamble || busy ? "disabled" : ""}
@@ -1158,7 +1327,8 @@
           .map(
             (l) =>
               /* HTML */ `<div class="ledger-row">
-                <span class="${l.type === "danger" ? "negative" : ""}">${esc(l.text)}</span
+                <span class="${l.type === "danger" ? "negative" : ""}"
+                  >${esc(l.text)}</span
                 ><small>第 ${l.day} 天</small>
               </div>`,
           )
@@ -1195,7 +1365,11 @@
     renderChart();
   }
   function dismiss(force = false) {
-    if (!force && ["event", "debt", "survival", "gamble", "name"].includes(modalType)) return;
+    if (
+      !force &&
+      ["event", "debt", "survival", "gamble", "name"].includes(modalType)
+    )
+      return;
     $("modal").close();
     modalType = "";
     renderChart();
@@ -1251,14 +1425,19 @@
         );
       if (s.ended) ending();
       else if (s.pending) pendingScreen();
-      else toast(rest ? "休息結束，健康恢復了一些。" : "第 " + s.day + " 天結算完成。");
+      else
+        toast(
+          rest ? "休息結束，健康恢復了一些。" : "第 " + s.day + " 天結算完成。",
+        );
     }
     if (lesson) lessonAction("advance");
   }
   function welcome() {
     modal(
       "welcome",
-      /* HTML */ `<div class="modal-kicker">百億人生 1.2 · 你的 24 小時人生</div>
+      /* HTML */ `<div class="modal-kicker">
+          百億人生 1.2 · 你的 24 小時人生
+        </div>
         <h2>錢會動，人生也會動。</h2>
         <p>
           你有 100 億，最多 60 天。每 1 秒走 5
@@ -1287,8 +1466,11 @@
           404、催收、部件交易與死亡都是虛構演出。練習帳戶不會扣正式資金。
         </div>
         <div class="modal-actions">
-          <button class="ghost" data-action="skip-lesson">跳過說明，直接玩</button
-          ><button class="primary" data-action="start-lesson">跟著手指，練習 10 步</button>
+          <button class="ghost" data-action="skip-lesson">
+            跳過說明，直接玩</button
+          ><button class="primary" data-action="start-lesson">
+            跟著手指，練習 10 步
+          </button>
         </div>`,
     );
   }
@@ -1440,9 +1622,11 @@
       vh = window.innerHeight;
     $("spotlight").style.cssText =
       `left:${Math.max(2, r.left - 5)}px;top:${r.top - 5}px;width:${r.width + 10}px;height:${r.height + 10}px;`;
-    $("guide-hand").style.left = Math.max(10, Math.min(vw - 50, r.left + r.width * 0.65)) + "px";
+    $("guide-hand").style.left =
+      Math.max(10, Math.min(vw - 50, r.left + r.width * 0.65)) + "px";
     const below = r.bottom + 42 < vh - 100;
-    $("guide-hand").style.top = (below ? r.bottom + 2 : Math.max(5, r.top - 45)) + "px";
+    $("guide-hand").style.top =
+      (below ? r.bottom + 2 : Math.max(5, r.top - 45)) + "px";
     $("guide-hand").style.rotate = below ? "0deg" : "180deg";
     const coach = $("coach-card"),
       aboveSpace = Math.max(0, r.top - 18),
@@ -1450,13 +1634,16 @@
       putAbove = aboveSpace >= belowSpace;
     coach.style.top = putAbove ? "14px" : "auto";
     coach.style.bottom = putAbove ? "auto" : "110px";
-    coach.style.maxHeight = Math.max(120, (putAbove ? aboveSpace : belowSpace) - 18) + "px";
+    coach.style.maxHeight =
+      Math.max(120, (putAbove ? aboveSpace : belowSpace) - 18) + "px";
   }
   function lessonIntro(kind) {
     const work = kind === "work";
     modal(
       "lesson-intro",
-      /* HTML */ `<div class="modal-kicker">${work ? "打工教室" : "賭桌教室"} · 說明不扣錢</div>
+      /* HTML */ `<div class="modal-kicker">
+          ${work ? "打工教室" : "賭桌教室"} · 說明不扣錢
+        </div>
         <h2>${work ? "用你的雙手領薪水。" : "先懂規則，再決定上不上桌。"}</h2>
         <div class="intro-cards">
           ${(work ? E.JOBS : E.CASINO)
@@ -1475,7 +1662,9 @@
         </div>
         <div class="modal-actions">
           <button class="ghost" data-action="skip-lesson">跳過剩餘說明</button
-          ><button class="primary" data-action="lesson-next">我懂了，下一步</button>
+          ><button class="primary" data-action="lesson-next">
+            我懂了，下一步
+          </button>
         </div>`,
     );
   }
@@ -1490,7 +1679,8 @@
               ([id, t]) =>
                 /* HTML */ `<div class="loan-type">
                   <b>${t.name}</b><small>先扣 ${t.fee * 100}%</small
-                  ><small>每日息 ${t.rate * 100}%</small><small>${t.days} 日催收</small>
+                  ><small>每日息 ${t.rate * 100}%</small
+                  ><small>${t.days} 日催收</small>
                 </div>`,
             )
             .join("")}
@@ -1504,7 +1694,11 @@
           練習已完成：你會挑股票、決定金額、買進、等一天、看獲利與賣掉了。正式開始會回到原本的百億人生，不扣練習金額。
         </div>
         <div class="modal-actions">
-          <button id="lesson-finish" class="primary" data-action="finish-lesson">
+          <button
+            id="lesson-finish"
+            class="primary"
+            data-action="finish-lesson"
+          >
             👆 我看懂了，進入正式人生
           </button>
         </div>`,
@@ -1556,8 +1750,9 @@
             .join("")}
         </div>
         <div class="loan-terms">
-          最多肯借你 <b>${money(max)}</b>。入帳先扣 <b>${t.fee * 100}%</b>，每日息
-          <b>${t.rate * 100}%</b>，第 <b>${s.day + t.days} 天</b>會找你催收。
+          最多肯借你 <b>${money(max)}</b>。入帳先扣
+          <b>${t.fee * 100}%</b>，每日息 <b>${t.rate * 100}%</b>，第
+          <b>${s.day + t.days} 天</b>會找你催收。
         </div>
         <div class="amount-field">
           <label class="sr-only" for="loan-amount">借款金額，單位億</label
@@ -1570,11 +1765,16 @@
             inputmode="decimal"
           /><span>億</span>
         </div>
+        <p id="loan-error" class="loan-error" role="alert" hidden></p>
         <div id="loan-receipt" class="modal-box" style="margin-top:15px"></div>
         ${s.loans.length ? '<div class="modal-box" style="margin-top:12px"><strong>你現在的借條</strong><br>' + s.loans.map((l) => E.LOAN_TYPES[l.type].name + "：" + money(l.balance) + "，第 " + l.due + " 天到期").join("<br>") + "</div>" : ""}
         <div class="modal-actions">
           <button class="ghost" data-action="dismiss">先不借</button
-          ><button class="primary" data-action="borrow" ${max < 10000 ? "disabled" : ""}>
+          ><button
+            class="primary"
+            data-action="borrow"
+            ${max < 10000 ? "disabled" : ""}
+          >
             接受這張借條</button
           >${s.debt > 0 ? '<button class="ghost" data-action="open-repay">先還一筆</button>' : ""}
         </div>`,
@@ -1582,9 +1782,22 @@
     loanReceipt();
     $("loan-amount").addEventListener("input", loanReceipt);
   }
+  function showLoanError(validation) {
+    const field = $("loan-amount"),
+      error = $("loan-error");
+    field.setAttribute("aria-invalid", String(!validation.ok));
+    error.hidden = validation.ok;
+    error.textContent = validation.ok
+      ? ""
+      : validation.message +
+        (validation.limit !== undefined
+          ? ` 目前最多可借 ${money(validation.limit)}。`
+          : "");
+  }
   function loanReceipt() {
     const amt = Number($("loan-amount").value) * 1e8,
       t = E.LOAN_TYPES[loanType];
+    showLoanError(E.validateBorrow(s, amt, loanType));
     $("loan-receipt").innerHTML =
       Number.isFinite(amt) && amt > 0
         ? `真正拿到 <strong>${money(amt * (1 - t.fee))}</strong>，欠款增加 <strong>${money(amt)}</strong>。<br>明天利息 ${money(amt * t.rate)}。這些是誇張的遊戲利率。`
@@ -1595,7 +1808,10 @@
       "repay",
       /* HTML */ `<div class="modal-kicker">至少還一點，別讓利息繼續吃你</div>
         <h2>現在欠 ${money(s.debt)}</h2>
-        <p>口袋可用 ${money(s.cash)}。會優先還快到期的借條；未付的生活費債務也算在總欠款裡。</p>
+        <p>
+          口袋可用
+          ${money(s.cash)}。會優先還快到期的借條；未付的生活費債務也算在總欠款裡。
+        </p>
         <div class="amount-field">
           <label class="sr-only" for="repay-amount">還款金額，單位億</label
           ><input
@@ -1642,11 +1858,15 @@
         : "隨整體失去";
   }
   function bodyModal(zone = "all") {
-    const parts = E.ORGANS.filter((o) => zone === "all" || bodyZone(o.id) === zone),
+    const parts = E.ORGANS.filter(
+        (o) => zone === "all" || bodyZone(o.id) === zone,
+      ),
       remaining = E.ORGANS.filter((o) => E.organAvailable(s, o)).length;
     modal(
       "body",
-      /* HTML */ `<div class="modal-kicker">${esc(s.playerName)}的身體圖鑑 · 點部件查看</div>
+      /* HTML */ `<div class="modal-kicker">
+          ${esc(s.playerName)}的身體圖鑑 · 點部件查看
+        </div>
         <h2>身體不能重新買進。</h2>
         <div class="body-vitals">
           <span>❤️ 健康 <b>${Math.ceil(s.health)} / ${s.healthCap}</b></span
@@ -1687,7 +1907,9 @@
             <div class="body-zone-links">
               ${Object.entries(BODY_ZONES)
                 .filter(([k]) => k !== "all")
-                .map(([k, v]) => `<button data-body-zone="${k}">${v} ›</button>`)
+                .map(
+                  ([k, v]) => `<button data-body-zone="${k}">${v} ›</button>`,
+                )
                 .join("")}
             </div>
           </div>
@@ -1709,7 +1931,9 @@
           左右腎、左右肺、左右角膜分開記錄。肝臟碎片與剩餘肝臟有連動；部件、金額和傷害皆為虛構遊戲規則。
         </p>
         <div class="modal-actions">
-          <button class="primary" data-action="dismiss">關閉檢查，回到人生</button>
+          <button class="primary" data-action="dismiss">
+            關閉檢查，回到人生
+          </button>
         </div>`,
     );
   }
@@ -1721,7 +1945,8 @@
       locked = s.ended || !!s.pending || !!s.job || !!s.gamble || busy,
       partCap =
         r?.cap ??
-        (id.startsWith("kidney") && s.organs.some((x) => x.startsWith("kidney") && x !== id)
+        (id.startsWith("kidney") &&
+        s.organs.some((x) => x.startsWith("kidney") && x !== id)
           ? 22
           : Math.min(s.healthCap, o.cap));
     modal(
@@ -1779,21 +2004,26 @@
   }
   function confirmOrgan(id) {
     const o = E.ORGANS.find((x) => x.id === id),
-      bothKidneys = id.startsWith("kidney") && s.organs.some((x) => x.startsWith("kidney"));
+      bothKidneys =
+        id.startsWith("kidney") && s.organs.some((x) => x.startsWith("kidney"));
     modal(
       "organ-confirm",
       /* HTML */ `<div class="modal-kicker">黑市合約 · 確認不可逆代價</div>
-        <h2>${E.organFatal(s, o) ? "這次會直接死亡。" : "失去" + o.name + "，能救回什麼？"}</h2>
+        <h2>
+          ${E.organFatal(s, o) ? "這次會直接死亡。" : "失去" + o.name + "，能救回什麼？"}
+        </h2>
         <p>
           取得 ${money(o.price)}。健康扣 ${o.damage}，永久健康上限最多
-          ${bothKidneys ? 22 : Math.min(s.healthCap, o.cap)}。${esc(o.note)} 目前健康
-          ${Math.ceil(s.health)}，<strong
+          ${bothKidneys ? 22 : Math.min(s.healthCap, o.cap)}。${esc(o.note)}
+          目前健康 ${Math.ceil(s.health)}，<strong
             >${E.organFatal(s, o) ? "這筆交易會觸發死亡結局。" : "之後的每一天都更難撐。"}</strong
           >
         </p>
         <div class="modal-actions">
           <button class="ghost" data-action="back-organs">反悔，回去</button
-          ><button class="primary" data-confirm-organ="${id}">簽下虛構合約</button>
+          ><button class="primary" data-confirm-organ="${id}">
+            簽下虛構合約
+          </button>
         </div>`,
     );
   }
@@ -1819,7 +2049,8 @@
       collectionModal();
     } else {
       const organ = E.ORGANS.find(
-        (x) => x.id !== "core" && x.id !== "liver_whole" && E.organAvailable(s, x),
+        (x) =>
+          x.id !== "core" && x.id !== "liver_whole" && E.organAvailable(s, x),
       );
       modal(
         "survival",
@@ -1829,12 +2060,20 @@
           <div class="choices">
             <button data-choice="0">
               <b>接受結局，停止翻本</b
-              ><small>進入街頭乞丐結局。帳戶歸零，人生仍可以重新開始。</small></button
-            ><button data-choice="1" ${E.loanLimit(s, "shark") < 10000 ? "disabled" : ""}>
+              ><small
+                >進入街頭乞丐結局。帳戶歸零，人生仍可以重新開始。</small
+              ></button
+            ><button
+              data-choice="1"
+              ${E.loanLimit(s, "shark") < 10000 ? "disabled" : ""}
+            >
               <b>再簽一張地下借條</b
-              ><small>借最多 5 億，先扣 15%，每日息 10%，三天後催收。</small></button
+              ><small
+                >借最多 5 億，先扣 15%，每日息 10%，三天後催收。</small
+              ></button
             ><button data-choice="2" ${!organ ? "disabled" : ""}>
-              <b>${organ ? "交出" + organ.name + "，繼續撐" : "可交易的部件已用完"}</b
+              <b
+                >${organ ? "交出" + organ.name + "，繼續撐" : "可交易的部件已用完"}</b
               ><small
                 >${organ ? "換取 " + money(organ.price) + "。健康 −" + organ.damage + "，永久上限 " + organ.cap + "。" + (s.health <= organ.damage ? "這會觸發死亡結局。" : "代價不可逆。") : "你已沒有這種退路。"}</small
               >
@@ -1850,7 +2089,9 @@
     stopEffects();
     $("glitch-text").textContent =
       s.pending && s.pending.shownProfit > 0
-        ? "你剛才賺了 " + money(s.pending.shownProfit) + "。想收回來的時候，平台剛好壞掉。"
+        ? "你剛才賺了 " +
+          money(s.pending.shownProfit) +
+          "。想收回來的時候，平台剛好壞掉。"
         : "平台正在維修。你想跑，卻暫時沒有賣出按鈕。";
     render();
   }
@@ -1861,7 +2102,10 @@
     busy = false;
     $("glitch-screen").hidden = true;
     render();
-    feedback(E.equity(s) - before, "假斷線恢復了。可是價格已經朝你不希望的方向走了。");
+    feedback(
+      E.equity(s) - before,
+      "假斷線恢復了。可是價格已經朝你不希望的方向走了。",
+    );
     toast(r.message, true);
     if (s.ended) ending();
     else if (s.pending) pendingScreen();
@@ -1883,9 +2127,11 @@
       /* HTML */ `<div class="modal-kicker">不必會炒股，先懂這六件事</div>
         <h2>用遊戲的方式看帳戶。</h2>
         <div class="modal-box">
-          <strong>1. 挑一張卡</strong>：卡片下方顯示今天漲跌。選中的卡會有黃色邊框。<br /><strong
+          <strong>1. 挑一張卡</strong
+          >：卡片下方顯示今天漲跌。選中的卡會有黃色邊框。<br /><strong
             >2. 決定方向</strong
-          >：猜漲盼價格上升；猜跌盼價格下降，猜跌要開放大模式。<br /><strong>3. 決定金額</strong
+          >：猜漲盼價格上升；猜跌盼價格下降，猜跌要開放大模式。<br /><strong
+            >3. 決定金額</strong
           >：輸入 1 = 1 億；普通買股先練，全部梭哈會預留平台費。<br /><strong
             >4. 買進，看盤中漲跌</strong
           >：買進移動資金後，全天 24 小時，每 1 秒推進 5
@@ -1896,17 +2142,19 @@
           >：看健康、壓力與到期日，事件出現時必須先選擇。
         </div>
         <div class="modal-box">
-          <strong>7. 打工</strong>：收銀找零、包裹分區、咖啡出單，完成所有操作才發薪。<br /><strong
+          <strong>7. 打工</strong
+          >：收銀找零、包裹分區、咖啡出單，完成所有操作才發薪。<br /><strong
             >8. 賭桌</strong
           >：骰子先猜大小再搖；21
           點選要牌或停牌；九宮格點安全格後可收手。莊家偏向自己，越玩風險越高。<br /><strong
             >9. 身體</strong
-          >：點角色或「檢查我的身體」，選部位查看狀態與失去紀錄。<br /><strong>10. 暫停</strong
+          >：點角色或「檢查我的身體」，選部位查看狀態與失去紀錄。<br /><strong
+            >10. 暫停</strong
           >：說明、事件、工作、賭局、背景頁面會暫停；狀態列會告訴你怎麼恢復。
         </div>
         <p>
-          身家 = 口袋現金 + 你買的東西現在還值多少 − 欠款。彩色代表剛賺到；紅屏代表虧了。404
-          是遊戲內假斷線，不是真實錯誤。
+          身家 = 口袋現金 + 你買的東西現在還值多少 −
+          欠款。彩色代表剛賺到；紅屏代表虧了。404 是遊戲內假斷線，不是真實錯誤。
         </p>
         <div class="modal-box">
           普通買股：跟著價格漲跌。放大模式：例如 100 倍，約 1%
@@ -1914,7 +2162,9 @@
         </div>
         <div class="modal-actions">
           <button class="ghost" data-action="dismiss">我明白了</button
-          ><button class="primary" data-action="start-lesson">再跟著手指練一輪</button>
+          ><button class="primary" data-action="start-lesson">
+            再跟著手指練一輪
+          </button>
         </div>`,
     );
   }
@@ -1932,16 +2182,19 @@
           每過一天，健康會下降；壓力越高、日子越後面，耗損越快。爆倉、借高利貸和催收會讓壓力上升。
         </p>
         <div class="modal-box">
-          <strong>休息一天</strong>：通常健康 +14；失去肺或骨髓時 +9。壓力 −25，支付 500
-          萬遊戲費用。市場與利息仍然結算；當天其他損耗也會先扣，所以不是淨增加 14。<br /><strong
-            >打工補錢</strong
+          <strong>休息一天</strong>：通常健康 +14；失去肺或骨髓時 +9。壓力
+          −25，支付 500
+          萬遊戲費用。市場與利息仍然結算；當天其他損耗也會先扣，所以不是淨增加
+          14。<br /><strong>打工補錢</strong
           >：收銀、包裹分揀、咖啡出單，親手完成所有任務才領薪水；一天一班。離開頁面後任務仍保存，回來可續做。<br /><strong
             >身體合約</strong
           >：一個部件只能失去一次，永久健康上限下降。生存核心會直接讓你走到死亡結局。<br /><strong
             >健康歸零</strong
           >：停止交易，進入猝死結局。
         </div>
-        <p>這些健康、傷害、部件、價格是虛構遊戲規則，不是醫學描述、建議或實際器官交易資訊。</p>
+        <p>
+          這些健康、傷害、部件、價格是虛構遊戲規則，不是醫學描述、建議或實際器官交易資訊。
+        </p>
         <div class="modal-actions">
           <button class="primary" data-action="dismiss">好，先留意身體</button>
         </div>`,
@@ -1975,7 +2228,9 @@
       .reverse()
       .map((l) => "第 " + l.day + " 天：" + l.text)
       .join("\n")}\n`;
-    const blob = new Blob(["\uFEFF" + text], { type: "text/plain;charset=utf-8" }),
+    const blob = new Blob(["\uFEFF" + text], {
+        type: "text/plain;charset=utf-8",
+      }),
       url = URL.createObjectURL(blob),
       a = document.createElement("a");
     a.href = url;
@@ -1989,7 +2244,9 @@
       "reset",
       /* HTML */ `<div class="modal-kicker">新的人生，舊的誘惑</div>
         <h2>重開後，再從 100 億開始。</h2>
-        <p>目前進度會被取代。可以先匯出戰報，再重新跟著手指完成練習。不同人生的虛構波動會改變。</p>
+        <p>
+          目前進度會被取代。可以先匯出戰報，再重新跟著手指完成練習。不同人生的虛構波動會改變。
+        </p>
         <div class="modal-actions">
           <button class="ghost" data-action="dismiss">先留著這一局</button
           ><button class="ghost" data-action="report">匯出戰報</button
@@ -2034,7 +2291,8 @@
   function setProduct(p) {
     product = p;
     if (p === "spot") direction = "long";
-    if (p === "option" && Number($("leverage").value) === 0) $("leverage").value = 3;
+    if (p === "option" && Number($("leverage").value) === 0)
+      $("leverage").value = 3;
     renderOrder();
   }
   function trade() {
@@ -2049,7 +2307,13 @@
       return;
     }
     const perform = () => {
-      const r = E.open(s, { asset: selected, amount: amt, leverage: l, product, direction });
+      const r = E.open(s, {
+        asset: selected,
+        amount: amt,
+        leverage: l,
+        product,
+        direction,
+      });
       after(r);
       if (r.ok) lessonAction("buy");
     };
@@ -2059,7 +2323,8 @@
         /* HTML */ `<div class="modal-kicker">${l} 倍 · 把輸贏一起放大</div>
           <h2>這 ${money(amt)}，可能一天就沒了。</h2>
           <p>
-            只要約 ${100 / l}% 反向波動，就可能把投入全吃掉。即使收盤方向猜對，中途也能先被清算。
+            只要約 ${100 / l}%
+            反向波動，就可能把投入全吃掉。即使收盤方向猜對，中途也能先被清算。
           </p>
           <div class="modal-actions">
             <button class="ghost" data-action="dismiss">調低一點</button
@@ -2085,7 +2350,12 @@
       if (!b) return;
       if (b.dataset.action === "skip-lesson") return;
       if ($("modal").open) {
-        if (["finish-lesson", "skip-lesson", "lesson-next"].includes(b.dataset.action)) return;
+        if (
+          ["finish-lesson", "skip-lesson", "lesson-next"].includes(
+            b.dataset.action,
+          )
+        )
+          return;
         event.preventDefault();
         event.stopImmediatePropagation();
         return;
@@ -2129,9 +2399,9 @@
     }
     if (b.dataset.percent) {
       const max = s.cash / (1 + E.orderFee(1, leverage(), product));
-      $("amount").value = (Math.floor((max * Number(b.dataset.percent)) / 10000) / 10000).toFixed(
-        4,
-      );
+      $("amount").value = (
+        Math.floor((max * Number(b.dataset.percent)) / 10000) / 10000
+      ).toFixed(4);
       renderOrder();
     }
     if (b.dataset.chart) {
@@ -2174,7 +2444,10 @@
       };
       document
         .querySelector(selectors[b.dataset.jump])
-        .scrollIntoView({ block: "start", behavior: prefs.effects ? "smooth" : "instant" });
+        .scrollIntoView({
+          block: "start",
+          behavior: prefs.effects ? "smooth" : "instant",
+        });
     }
     if (b.dataset.tab) {
       tab = b.dataset.tab;
@@ -2226,7 +2499,9 @@
     }
     if (b.dataset.contractAck && contractDraft) {
       contractDraft[b.dataset.contractAck === "id" ? "idAck" : "contactsAck"] =
-        !contractDraft[b.dataset.contractAck === "id" ? "idAck" : "contactsAck"];
+        !contractDraft[
+          b.dataset.contractAck === "id" ? "idAck" : "contactsAck"
+        ];
       contractModal();
     }
     if (b.dataset.debtReply) {
@@ -2246,7 +2521,9 @@
       const r = E.gambleAction(
         s,
         b.dataset.gambleAction,
-        b.dataset.mineIndex === undefined ? undefined : Number(b.dataset.mineIndex),
+        b.dataset.mineIndex === undefined
+          ? undefined
+          : Number(b.dataset.mineIndex),
       );
       if (r.ok) {
         render();
@@ -2326,8 +2603,19 @@
     }
     if (a === "borrow") {
       const amt = Number($("loan-amount").value) * 1e8;
+      const validation = E.validateBorrow(s, amt, loanType);
+      showLoanError(validation);
+      if (!validation.ok) {
+        $("loan-amount").focus();
+        return;
+      }
       if (loanType !== "bank") {
-        contractDraft = { amount: amt, type: loanType, idAck: false, contactsAck: false };
+        contractDraft = {
+          amount: amt,
+          type: loanType,
+          idAck: false,
+          contactsAck: false,
+        };
         contractModal();
       } else {
         const r = E.borrow(s, amt, loanType);
@@ -2379,7 +2667,8 @@
       /* HTML */ `<div class="modal-kicker">把剩下的錢放回口袋</div>
         <h2>全部賣掉？</h2>
         <p>
-          你買的東西現在共值 ${money(E.positionTotal(s))}。賣掉會扣一點平台費，剩下的錢收回現金。
+          你買的東西現在共值
+          ${money(E.positionTotal(s))}。賣掉會扣一點平台費，剩下的錢收回現金。
         </p>
         <div class="modal-actions">
           <button class="ghost" data-action="dismiss">再等等</button
@@ -2402,12 +2691,15 @@
     direction = "long";
     $("leverage").value = 6;
     $("amount").value = (
-      Math.floor((s.cash * 0.1) / (1 + E.orderFee(1, 100, "margin")) / 10000) / 10000
+      Math.floor((s.cash * 0.1) / (1 + E.orderFee(1, 100, "margin")) / 10000) /
+      10000
     ).toFixed(4);
     renderAssets();
     renderMarket();
     renderOrder();
-    document.querySelector(".order-panel").scrollIntoView({ block: "center", behavior: "smooth" });
+    document
+      .querySelector(".order-panel")
+      .scrollIntoView({ block: "center", behavior: "smooth" });
     toast("只設定了 100 倍，還沒買。你還能反悔。");
   });
   $("temptation-mystery").addEventListener("click", () => {
@@ -2415,7 +2707,9 @@
       "mystery",
       /* HTML */ `<div class="modal-kicker">朋友說：上市一定十倍</div>
         <h2>拿 1 億，信一次朋友？</h2>
-        <p>前期偶爾有獲利，大部分拿不回多少；後期甚至一毛都沒了。每天只能玩一次。</p>
+        <p>
+          前期偶爾有獲利，大部分拿不回多少；後期甚至一毛都沒了。每天只能玩一次。
+        </p>
         <div class="modal-actions">
           <button class="ghost" data-action="dismiss">今天先不信</button
           ><button id="confirm-mystery" class="primary">花 1 億，開獎</button>
@@ -2440,14 +2734,27 @@
   $("motion-button").addEventListener("click", () => {
     prefs.effects = !prefs.effects;
     render();
-    toast(prefs.effects ? "彩色與紅屏特效已開啟。" : "已改用溫和、無動畫的色彩提示。");
+    toast(
+      prefs.effects
+        ? "彩色與紅屏特效已開啟。"
+        : "已改用溫和、無動畫的色彩提示。",
+    );
   });
   $("reconnect-button").addEventListener("click", reconnect);
   $("skip-glitch-button").addEventListener("click", reconnect);
   $("modal").addEventListener("cancel", (event) => {
-    if (lesson || ["event", "debt", "survival", "welcome", "name", "gamble"].includes(modalType)) {
+    if (
+      lesson ||
+      ["event", "debt", "survival", "welcome", "name", "gamble"].includes(
+        modalType,
+      )
+    ) {
       event.preventDefault();
-      toast(lesson ? "可按「跳過說明」直接開始，或繼續跟著手指。" : "請先做出選擇。");
+      toast(
+        lesson
+          ? "可按「跳過說明」直接開始，或繼續跟著手指。"
+          : "請先做出選擇。",
+      );
     } else {
       modalType = "";
       renderChart();
@@ -2460,7 +2767,9 @@
       !$("modal").open &&
       !busy &&
       !lesson &&
-      !["INPUT", "BUTTON", "TEXTAREA", "SELECT", "A"].includes(document.activeElement.tagName)
+      !["INPUT", "BUTTON", "TEXTAREA", "SELECT", "A"].includes(
+        document.activeElement.tagName,
+      )
     ) {
       event.preventDefault();
       advance();
@@ -2496,14 +2805,20 @@
   if (context && typeof context.registerTool === "function") {
     const reg = (t) => {
       try {
-        Promise.resolve(context.registerTool(t, { signal: life.signal })).catch(() => {});
+        Promise.resolve(context.registerTool(t, { signal: life.signal })).catch(
+          () => {},
+        );
       } catch {}
     };
     reg({
       name: "read_simulated_account",
       description:
         "Read the fictional character, game day, money, debt, health, stress, body parts and pending scene.",
-      inputSchema: { type: "object", properties: {}, additionalProperties: false },
+      inputSchema: {
+        type: "object",
+        properties: {},
+        additionalProperties: false,
+      },
       annotations: { readOnlyHint: true, untrustedContentHint: false },
       execute: () => ({
         playerName: s.playerName,
@@ -2525,7 +2840,11 @@
       name: "advance_simulated_trading_day",
       description:
         "Advance one fictional game day; requires finished or skipped onboarding and no open scene.",
-      inputSchema: { type: "object", properties: {}, additionalProperties: false },
+      inputSchema: {
+        type: "object",
+        properties: {},
+        additionalProperties: false,
+      },
       annotations: { readOnlyHint: false, untrustedContentHint: false },
       execute: (input) => {
         if (
@@ -2542,7 +2861,8 @@
         )
           return {
             ok: false,
-            message: "Finish or skip onboarding, or complete the current scene.",
+            message:
+              "Finish or skip onboarding, or complete the current scene.",
           };
         advance();
         return { ok: true, day: s.day, pending: s.pending, ended: s.ended };
@@ -2585,7 +2905,8 @@
         Math.min(
           1,
           (chartHover === null ? 1 : chartHover) +
-            (event.key === "ArrowLeft" ? -1 : 1) / Math.max(1, chartPoints.length - 1),
+            (event.key === "ArrowLeft" ? -1 : 1) /
+              Math.max(1, chartPoints.length - 1),
         ),
       );
       renderChart();

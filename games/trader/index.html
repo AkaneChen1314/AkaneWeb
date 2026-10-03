@@ -13,13 +13,13 @@
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ffdc66'/%3E%3Cpath d='M6 9l7 5 5-2 8 12M20 24h6v-6' stroke='%230b1020' stroke-width='3' fill='none'/%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=1.2-blueworld-r8" />
     <script src="vendor/pako.js" defer></script>
-    <script src="engine.js" defer></script>
-    <script src="app.js" defer></script>
-    <link rel="stylesheet" href="../../shared/portal.css?v=1.2" />
-    <script src="../../shared/portal.js?v=1.2"></script>
-    <link rel="stylesheet" href="../../shared/fonts.css?v=1.2" />
+    <script src="engine.js?v=1.2-blueworld-r8" defer></script>
+    <script src="app.js?v=1.2-blueworld-r8" defer></script>
+    <link rel="stylesheet" href="../../shared/portal.css?v=1.2-blueworld-r8" />
+    <script src="../../shared/portal.js?v=1.2-blueworld-r8"></script>
+    <link rel="stylesheet" href="../../shared/fonts.css?v=1.2-blueworld-r8" />
   </head>
   <body>
     <div class="game-shell">
@@ -31,8 +31,14 @@
         <div class="header-actions">
           <span class="fiction-badge">虛構・黑色幽默</span>
           <button id="sound-button" class="ghost">♪ 音效關</button>
-          <button id="motion-button" class="ghost" aria-pressed="true">特效開</button>
-          <button id="settings-button" class="ghost" aria-label="音效、恐怖氣氛與視野設定">
+          <button id="motion-button" class="ghost" aria-pressed="true">
+            特效開
+          </button>
+          <button
+            id="settings-button"
+            class="ghost"
+            aria-label="音效、恐怖氣氛與視野設定"
+          >
             ⚙ 設定
           </button>
           <button id="help-button" class="ghost">怎麼玩？</button>
@@ -47,7 +53,9 @@
           <div class="hero-copy">
             <span class="eyebrow" id="chapter">CHAPTER 01 · 有錢真好</span>
             <h1 id="hero-title">再拚一次，<em>應該就會贏吧？</em></h1>
-            <p id="hero-line">你繼承了 100 億。市場裡的人，突然都變成你的朋友。</p>
+            <p id="hero-line">
+              你繼承了 100 億。市場裡的人，突然都變成你的朋友。
+            </p>
           </div>
           <div class="day-card">
             <span>這是你人生的</span>
@@ -103,7 +111,13 @@
                 <button id="health-help" class="tiny-button">看懂身體</button>
               </div>
               <div class="character-stage">
-                <button id="avatar" class="avatar" aria-label="點開角色，檢查我的身體">🧑‍💼</button>
+                <button
+                  id="avatar"
+                  class="avatar"
+                  aria-label="點開角色，檢查我的身體"
+                >
+                  🧑‍💼
+                </button>
                 <div>
                   <b id="character-rank">百億大戶</b>
                   <p id="character-line">睡得好，覺得自己很會投資。</p>
@@ -133,7 +147,9 @@
                 🧬 檢查我的身體 <span>部位圖鑑 ›</span>
               </button>
               <details class="body-inventory">
-                <summary>身體清單 <span id="organ-summary">腎 2 / 2 · 角膜 2 / 2</span></summary>
+                <summary>
+                  身體清單 <span id="organ-summary">腎 2 / 2 · 角膜 2 / 2</span>
+                </summary>
                 <div class="body-parts" id="body-parts"></div>
                 <p class="body-caption" id="body-caption">兩顆腎，各自保留。</p>
               </details>
@@ -145,7 +161,9 @@
                 </button>
                 <button id="casino-button" class="ghost">🎰 深夜遊戲館</button>
               </div>
-              <p class="life-footnote">身體、部件與金額皆是荒誕遊戲數值，非醫學或現實交易資訊。</p>
+              <p class="life-footnote">
+                身體、部件與金額皆是荒誕遊戲數值，非醫學或現實交易資訊。
+              </p>
             </section>
             <section class="panel lenders-panel">
               <div class="panel-title">
@@ -154,7 +172,9 @@
               </div>
               <div id="loans"></div>
               <div class="lender-actions">
-                <button id="loan-button" class="purple-button">借錢再拚一次</button>
+                <button id="loan-button" class="purple-button">
+                  借錢再拚一次
+                </button>
                 <button id="repay-button" class="ghost">主動還款</button>
               </div>
             </section>
@@ -173,7 +193,11 @@
               </div>
               <div class="asset-discovery">
                 <label class="sr-only" for="asset-search">搜尋虛構商品</label>
-                <input id="asset-search" type="search" placeholder="找股票、幣、黃金、火星地契…" />
+                <input
+                  id="asset-search"
+                  type="search"
+                  placeholder="找股票、幣、黃金、火星地契…"
+                />
                 <label class="sr-only" for="sector-select">商品題材</label>
                 <select id="sector-select">
                   <option value="all">所有題材</option>
@@ -207,11 +231,15 @@
                   <button data-period="five">近 5 天</button>
                   <button data-period="all">全部紀錄</button>
                 </div>
-                <button id="market-pause" class="tiny-button">⏸ 暫停行情</button>
+                <button id="market-pause" class="tiny-button">
+                  ⏸ 暫停行情
+                </button>
               </div>
               <div class="market-clock">
                 <span id="market-clock">● 第 1 天 00:00 · 全天行情</span>
-                <button id="vision-assist" class="tiny-button" hidden>啟用視野輔助</button>
+                <button id="vision-assist" class="tiny-button" hidden>
+                  啟用視野輔助
+                </button>
               </div>
               <div
                 id="chart"
@@ -223,7 +251,14 @@
                 <button id="chart-prev" aria-label="回看前一天">‹</button>
                 <label for="chart-day"
                   >回看 <b id="chart-day-label">第 1 天</b>
-                  <input id="chart-day" type="range" min="1" max="1" value="1" step="1" />
+                  <input
+                    id="chart-day"
+                    type="range"
+                    min="1"
+                    max="1"
+                    value="1"
+                    step="1"
+                  />
                 </label>
                 <button id="chart-next" aria-label="回看後一天">›</button>
                 <button id="chart-live" class="tiny-button">回到現在</button>
@@ -232,7 +267,9 @@
                 滑鼠移入或手指按住線圖，看時間與價格。所有已經走過的行情都會保留。
               </p>
               <div class="chart-explainer">
-                <span id="chart-story">線往上：價格變貴。線往下：價格變便宜。</span>
+                <span id="chart-story"
+                  >線往上：價格變貴。線往下：價格變便宜。</span
+                >
                 <span class="fiction-label">完全虛構行情</span>
               </div>
               <div id="asset-note" class="asset-note"></div>
@@ -315,8 +352,17 @@
                 </button>
               </div>
               <div id="leverage-zone">
-                <label for="leverage">輸贏放大幾倍？ <b id="leverage-label">1 倍</b> </label>
-                <input id="leverage" type="range" min="0" max="6" value="0" step="1" />
+                <label for="leverage"
+                  >輸贏放大幾倍？ <b id="leverage-label">1 倍</b>
+                </label>
+                <input
+                  id="leverage"
+                  type="range"
+                  min="0"
+                  max="6"
+                  value="0"
+                  step="1"
+                />
                 <div class="range-labels">
                   <span>1 倍</span>
                   <span>10 倍</span>
@@ -336,7 +382,9 @@
               <button id="temptation-leverage">🔥 直接設定 100 倍</button>
               <button id="temptation-mystery">🎁 神秘未上市股</button>
               <button id="temptation-casino">🎰 換張桌子，繼續翻本</button>
-              <button id="organ-button" class="organ-link">🖤 黑市身體合約</button>
+              <button id="organ-button" class="organ-link">
+                🖤 黑市身體合約
+              </button>
               <small>越缺錢，誘惑看起來越像出口。</small>
             </section>
           </aside>
@@ -359,7 +407,9 @@
       </div>
       <div class="session-actions">
         <button id="skip-button" class="soft">快轉 5 天</button>
-        <button id="next-button" class="primary">過一天，看看結果 <span>🌙</span></button>
+        <button id="next-button" class="primary">
+          過一天，看看結果 <span>🌙</span>
+        </button>
       </div>
     </div>
     <div id="dread-overlay" aria-hidden="true"></div>
@@ -381,7 +431,9 @@
         <p id="coach-body"></p>
         <small id="coach-task"> </small>
         <div class="coach-track" id="coach-track"></div>
-        <button id="tutorial-skip" class="ghost" data-action="skip-lesson">跳過說明，直接玩</button>
+        <button id="tutorial-skip" class="ghost" data-action="skip-lesson">
+          跳過說明，直接玩
+        </button>
       </section>
     </div>
     <div id="glitch-screen" class="glitch-screen" hidden>
@@ -395,11 +447,20 @@
           <i> </i>
         </div>
         <small>ERR_MONEY_NOT_FOUND · 真實頁面沒有當機</small>
-        <button id="reconnect-button" class="primary">重新連線，看看剩多少</button>
-        <button id="skip-glitch-button" class="ghost">直接跳過演出並結算</button>
+        <button id="reconnect-button" class="primary">
+          重新連線，看看剩多少
+        </button>
+        <button id="skip-glitch-button" class="ghost">
+          直接跳過演出並結算
+        </button>
       </div>
     </div>
-    <div id="toast-container" class="toasts" role="status" aria-live="polite"></div>
+    <div
+      id="toast-container"
+      class="toasts"
+      role="status"
+      aria-live="polite"
+    ></div>
     <dialog id="modal" aria-labelledby="modal-title">
       <div id="modal-content" class="modal-content"></div>
     </dialog>
