@@ -7,7 +7,8 @@
   window.akanePortalPaused = false;
   window.addEventListener("message", (event) => {
     if (event.source !== window.parent) return;
-    if (location.protocol !== "file:" && event.origin !== location.origin) return;
+    if (location.protocol !== "file:" && event.origin !== location.origin)
+      return;
     if (event.data?.type !== "akane-portal-state") return;
     window.akanePortalPaused = event.data.paused === true;
     window.dispatchEvent(
@@ -25,7 +26,7 @@
     nav.setAttribute("aria-label", "遊戲館導覽");
     const back = document.createElement("a");
     back.href = "../../index.html#games";
-    back.textContent = "‹ 返回黑川茜遊戲館";
+    back.textContent = "‹ 返回 Blue World 遊戲館";
     const version = document.createElement("span");
     version.textContent = "整合版 1.2";
     nav.append(back, version);
