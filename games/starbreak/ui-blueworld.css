@@ -1,0 +1,303 @@
+/*
+ * Blue World 整合版 1.2 / r11
+ * 此檔最後載入：只修介面，不改敵人強度、傷害或存檔格式。
+ */
+
+/* 清楚告訴玩家這是可按的收合欄，保留原生鍵盤／觸控操作。 */
+.loadout-config summary {
+  list-style: none;
+  min-height: 60px;
+  gap: 12px;
+  border-radius: 8px;
+  background: linear-gradient(110deg, #18314b, #101c30);
+  transition: background 0.2s;
+}
+
+.loadout-config summary::-webkit-details-marker {
+  display: none;
+}
+
+.loadout-summary-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  min-width: 0;
+}
+
+.loadout-summary-title b {
+  font-weight: 600;
+}
+
+.loadout-toggle-hint {
+  font-size: 11px;
+  color: #91eee4;
+  border: 1px solid #82daca55;
+  border-radius: 20px;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+.loadout-config summary::after {
+  content: "⌄";
+  flex: 0 0 24px;
+  font-size: 24px;
+  text-align: center;
+  color: #9dffed;
+}
+
+.loadout-config[open] summary::after {
+  content: "⌃";
+}
+
+.loadout-config .when-open,
+.loadout-config[open] .when-closed {
+  display: none;
+}
+
+.loadout-config[open] .when-open {
+  display: inline;
+}
+
+.loadout-config[open] summary {
+  border-bottom: 1px solid #38566e;
+  border-radius: 8px 8px 0 0;
+}
+
+.loadout-config summary:hover {
+  background: #1c3952;
+}
+
+/*
+ * 原本 Boss HUD 是蓋在 canvas 中間的 absolute 區塊。
+ * 現在將外框拆成兩列：狀態列 + 獨立戰場，總高度保持不變。
+ * 所有攻擊預警、角色、搖桿與技能仍定位在 .battle-field 內。
+ */
+.arena-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.battle-field {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.boss-hud {
+  position: static;
+  inset: auto;
+  transform: none;
+  display: flex;
+  flex: 0 0 82px;
+  height: 82px;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 0;
+  border-bottom: 1px solid #975c8959;
+  border-radius: 0;
+  background: linear-gradient(100deg, #281b37, #111c31);
+  backdrop-filter: none;
+  pointer-events: auto;
+}
+
+.boss-hud img {
+  display: block;
+  width: 36px;
+  height: 36px;
+}
+
+.boss-hud-info {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.boss-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+#boss-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffe2ef;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#boss-status-details {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  min-height: 26px;
+  font-size: 11px;
+  line-height: 1.2;
+  color: #c9efff;
+  background: #1c314a;
+  border-color: #6393b680;
+}
+
+.boss-vitals {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.boss-vitals > div {
+  min-width: 0;
+}
+
+.boss-hud-info small {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.boss-vitals .bar {
+  margin: 3px 0 0;
+  height: 4px;
+}
+
+#boss-shield-fill {
+  background: linear-gradient(90deg, #3f9dd1, #8deaff);
+}
+
+#boss-move {
+  color: #efc1d6;
+}
+
+.boss-hud-info > .boss-adaptation {
+  display: none;
+}
+
+.standalone-portal-nav {
+  font-family: "Akane Sans", "Microsoft JhengHei", system-ui, sans-serif;
+}
+
+@media (max-width: 760px) {
+  .loadout-config summary {
+    padding: 12px;
+    gap: 7px;
+  }
+
+  .loadout-summary-title {
+    flex: 1;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .loadout-config summary small {
+    flex: 0 1 42%;
+    font-size: 11px;
+    overflow-wrap: anywhere;
+  }
+
+  .boss-hud {
+    flex-basis: 78px;
+    height: 78px;
+    padding: 5px 8px;
+    gap: 6px;
+  }
+
+  .boss-hud img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .boss-vitals {
+    gap: 7px;
+  }
+
+  .boss-hud-info small {
+    font-size: 10px;
+  }
+
+  .standalone-portal-game .arena-wrap {
+    height: clamp(340px, calc(100dvh - 206px), 700px);
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .topbar {
+    padding: 6px 12px;
+    gap: 12px;
+  }
+
+  .brand {
+    font-size: 14px;
+    gap: 6px;
+  }
+
+  .brand-mark {
+    font-size: 24px;
+    line-height: 1;
+  }
+
+  .brand small {
+    font-size: 9px;
+  }
+
+  .topbar nav {
+    gap: 4px;
+  }
+
+  .topbar nav button {
+    font-size: 11px;
+    padding: 5px 7px;
+    min-height: 32px;
+  }
+
+  .hud-actions button {
+    padding: 5px 8px;
+    font-size: 12px;
+    min-height: 32px;
+  }
+
+  .hud .timer {
+    font-size: 18px;
+  }
+
+  .arena-wrap {
+    height: clamp(180px, calc(100dvh - 100px), 380px);
+  }
+
+  .boss-hud {
+    flex-basis: 54px;
+    height: 54px;
+    padding: 2px 8px;
+  }
+
+  .boss-hud img {
+    display: none;
+  }
+
+  .boss-hud-info {
+    gap: 2px;
+  }
+
+  #boss-status-details {
+    min-height: 22px;
+  }
+
+  .boss-hud-info small {
+    font-size: 10px;
+  }
+
+  #boss-move {
+    display: none;
+  }
+
+  .standalone-portal-game .arena-wrap {
+    height: max(170px, calc(100dvh - 146px));
+  }
+}

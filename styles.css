@@ -309,7 +309,8 @@ h2 {
 
 .game-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* 四款遊戲使用 2 × 2；680px 以下沿用單欄，不會剩一張孤單的卡片。 */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 22px;
 }
 

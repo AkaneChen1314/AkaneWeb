@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#080b1b" />
+    <meta
+      name="description"
+      content="星夜突圍：依等級與裝備接戰的 Boss、六檔難度、三種模式與自訂波數。進化武器，挑戰多重連攻，探索星域與商城。"
+    />
+    <title>星夜突圍 · STARBREAK</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../../shared/portal.css?v=1.2-r11" />
+    <link rel="stylesheet" href="style.css?v=1.2-r11" />
+    <link rel="stylesheet" href="ui-v12.css?v=1.2-r11" />
+    <link rel="stylesheet" href="ui-v13.css?v=1.2-r11" />
+    <link rel="stylesheet" href="ui-v14.css?v=1.2-r11" />
+    <link rel="stylesheet" href="ui-v15.css?v=1.2-r11" />
+    <link rel="stylesheet" href="ui-blueworld.css?v=1.2-r11" />
+    <link rel="stylesheet" href="../../shared/fonts.css?v=1.2-r11" />
+    <link rel="stylesheet" href="../../shared/japanese.css?v=1.2-r11" />
+    <script src="../../shared/portal.js?v=1.2-r11"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#" id="home-link"
+        ><span class="brand-mark">✦</span
+        ><span>星夜突圍<small>STARBREAK</small></span></a
+      >
+      <nav aria-label="主選單">
+        <button id="guide-btn">操作說明</button
+        ><button id="codex-btn">戰術圖鑑</button
+        ><button id="sound-btn" aria-pressed="false">音效：關</button>
+      </nav>
+      <span class="version">v1.2</span>
+    </header>
+    <main id="app"></main>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <dialog id="dialog">
+      <div id="dialog-content"></div>
+      <button class="dialog-close" id="dialog-close" aria-label="關閉">
+        ×
+      </button>
+    </dialog>
+    <script src="game.js?v=1.2-r11"></script>
+  </body>
+</html>

@@ -1,0 +1,84 @@
+/* Shield/body distinction, kept inside the existing compact Boss HUD. */
+.boss-vitals small {
+  display: block;
+  font-size: 12px;
+  color: #f2c3d4;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+}
+.boss-vitals .bar {
+  height: 5px;
+  margin: 2px 0 3px;
+}
+#boss-shield-label {
+  color: #a2edff;
+}
+.boss-shieldbar {
+  background: #14334c;
+}
+.boss-shieldbar i {
+  background: linear-gradient(90deg, #3f9dd1, #8deaff);
+}
+.boss-hud {
+  background: #101429ef;
+}
+.boss-hud-info {
+  min-width: 0;
+}
+.boss-hud-info > small {
+  display: block;
+  line-height: 1.5;
+  font-size: 12px;
+}
+.boss-difficulty-note {
+  border-top: 1px solid #8da9cc35;
+  padding-top: 10px;
+  margin-bottom: 0 !important;
+  color: #d7e8f6 !important;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 760px) {
+  .boss-hud {
+    left: 5%;
+    right: 5%;
+    padding: 5px 10px 5px 3px;
+  }
+  .boss-hud img {
+    width: 38px;
+    height: 38px;
+  }
+  .boss-hud-info > span {
+    font-size: 12px;
+  }
+  .boss-vitals small,
+  .boss-hud-info > small {
+    font-size: 11px;
+  }
+  .boss-vitals .bar {
+    height: 4px;
+  }
+  .boss-difficulty-note {
+    font-size: 12px !important;
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .boss-hud {
+    left: 26%;
+    right: 20%;
+    top: 44px;
+  }
+  .boss-hud img {
+    display: none;
+  }
+  .boss-hud-info > span {
+    font-size: 11px;
+  }
+  .boss-vitals small,
+  .boss-hud-info > small {
+    font-size: 10px;
+  }
+  .boss-vitals .bar {
+    height: 3px;
+    margin: 1px 0 2px;
+  }
+}

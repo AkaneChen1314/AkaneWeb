@@ -1,0 +1,341 @@
+/* v1.3 — clear rule dependencies, loadout tradeoffs and difficulty profiles. */
+[hidden] {
+  display: none !important;
+}
+.ship-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 13px;
+  margin: 9px 0 6px;
+  font-size: 13px;
+  color: #acbfd8;
+}
+.ship-stats b {
+  display: inline;
+  font-size: 15px;
+  color: #d9f7ed;
+  font-variant-numeric: tabular-nums;
+}
+.ship-card small {
+  font-size: 13px;
+  line-height: 1.65;
+}
+.ship-card {
+  min-height: 190px;
+}
+.ship-card .glyph {
+  margin-bottom: 3px;
+}
+.loadout-config {
+  margin-top: 12px;
+  border: 1px solid #36516a;
+  border-radius: 9px;
+  background: #0c1729;
+}
+.loadout-config summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 15px;
+  cursor: pointer;
+  color: #d3e5f5;
+  font-size: 14px;
+}
+.loadout-config summary small {
+  font-size: 12px;
+  color: var(--cyan);
+  text-align: right;
+}
+.loadout-config summary:focus-visible,
+.handbook-section summary:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.loadout-body {
+  padding: 3px 15px 16px;
+}
+.loadout-body label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 14px;
+}
+.loadout-body select {
+  width: 100%;
+  font-size: 15px;
+}
+.launch-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+  margin: 15px 0;
+  background: #17243a;
+  border-radius: 7px;
+  padding: 11px;
+}
+.launch-stats span {
+  font-size: 12px;
+  color: #acbfd9;
+}
+.launch-stats b {
+  display: block;
+  font-size: 19px;
+  color: #d9fcf1;
+  font-variant-numeric: tabular-nums;
+}
+.loadout-advantage,
+.loadout-cost {
+  font-size: 14px;
+  line-height: 1.75;
+  margin: 8px 0;
+}
+.loadout-advantage {
+  color: #b4e6d5;
+}
+.loadout-cost {
+  color: #f6c493;
+}
+.loadout-body > small {
+  display: block;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #b2c1db;
+}
+.difficulty-info {
+  border: 1px solid color-mix(in srgb, var(--difficulty-color) 35%, #2a3a52);
+  border-left: 3px solid var(--difficulty-color);
+  border-radius: 8px;
+  margin: 15px 0 6px;
+  padding: 13px 15px;
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--difficulty-color) 7%, #111b2c),
+    #0c1527
+  );
+}
+.difficulty-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.difficulty-heading b {
+  font-size: 15px;
+  color: var(--difficulty-color);
+}
+.difficulty-heading > span {
+  font-size: 12px;
+  color: #bfd1e6;
+}
+.difficulty-info p {
+  font-size: 13px;
+  color: #c1cde1;
+  margin: 7px 0 11px;
+  line-height: 1.7;
+}
+.difficulty-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  font-variant-numeric: tabular-nums;
+}
+.difficulty-metrics span {
+  padding: 3px 7px;
+  border: 1px solid #8da9cc25;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #b9cde5;
+  background: #0c162855;
+}
+.weapon-pro {
+  color: #aaddc9 !important;
+}
+.weapon-con {
+  color: #f4c398 !important;
+}
+.handbook-section {
+  border: 1px solid #34465f;
+  border-radius: 9px;
+  background: #0c1427;
+  margin: 11px 0;
+  overflow: hidden;
+}
+.handbook-section summary {
+  font-size: 16px;
+  font-weight: 650;
+  padding: 14px 17px;
+  cursor: pointer;
+  color: #d9e9fa;
+  background: #172139;
+}
+.handbook-section[open] summary {
+  border-bottom: 1px solid #3b4c65;
+  color: #a9f1e5;
+}
+.handbook-section > p {
+  font-size: 14px;
+  line-height: 1.9;
+  color: #bdcde5;
+  margin: 14px 17px;
+}
+.handbook-section .guide-steps {
+  padding: 15px;
+  gap: 13px;
+}
+.handbook-section .guide-steps article {
+  border: 1px solid #2c3e56;
+  padding: 14px;
+}
+.handbook-section .guide-steps p {
+  line-height: 1.8;
+}
+.handbook-launch {
+  position: sticky;
+  bottom: -30px;
+  background: #10182df5;
+  border-top: 1px solid #426175;
+  padding: 14px 0;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  z-index: 2;
+  margin-top: 14px;
+  backdrop-filter: blur(7px);
+}
+.handbook-launch button {
+  min-height: 45px;
+}
+.handbook-table {
+  overflow: auto;
+  margin: 15px 17px;
+  border: 1px solid #34465e;
+  border-radius: 7px;
+}
+.handbook-table table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 500px;
+  font-size: 13px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.handbook-table th,
+.handbook-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #2b3d56;
+  white-space: nowrap;
+}
+.handbook-table thead {
+  background: #1c2b42;
+  color: #c8eeed;
+}
+.handbook-table tbody tr:nth-child(even) {
+  background: #121f34;
+}
+@media (max-width: 760px) {
+  .ship-card {
+    min-height: 185px;
+  }
+  .ship-stats {
+    gap: 3px 7px;
+    font-size: 12px;
+  }
+  .ship-stats b {
+    font-size: 14px;
+  }
+  .ship-card small {
+    font-size: 12px;
+  }
+  .loadout-config summary {
+    font-size: 13px;
+    padding: 12px;
+  }
+  .loadout-config summary small {
+    font-size: 12px;
+  }
+  .loadout-body {
+    padding: 3px 12px 14px;
+  }
+  .loadout-body select {
+    font-size: 16px;
+    min-height: 44px;
+  }
+  .launch-stats {
+    grid-template-columns: 1fr 1fr;
+    padding: 10px;
+  }
+  .difficulty-info {
+    padding: 12px;
+  }
+  .difficulty-heading {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .difficulty-heading b {
+    font-size: 14px;
+  }
+  .difficulty-info p {
+    font-size: 13px;
+  }
+  .difficulty-metrics {
+    gap: 6px;
+  }
+  .difficulty-metrics span {
+    font-size: 12px;
+  }
+  .handbook-section summary {
+    font-size: 15px;
+    padding: 13px;
+  }
+  .handbook-section > p {
+    font-size: 14px;
+    margin: 12px 13px;
+  }
+  .handbook-section .guide-steps {
+    padding: 12px;
+  }
+  .handbook-launch {
+    bottom: -18px;
+    gap: 8px;
+  }
+  .handbook-launch button {
+    padding: 11px 15px;
+    font-size: 14px;
+  }
+  .handbook-table {
+    margin: 12px;
+  }
+  .handbook-section .guide-steps article {
+    padding: 13px;
+  }
+}
+@media (max-width: 400px) {
+  .ship-card {
+    min-height: 200px;
+    padding: 12px 8px;
+  }
+  .ship-stats {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .loadout-config summary {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .loadout-config summary small {
+    text-align: left;
+  }
+  .difficulty-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .difficulty-metrics span {
+    white-space: normal;
+  }
+  .handbook-launch button {
+    flex: 1;
+  }
+}

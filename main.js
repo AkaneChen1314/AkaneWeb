@@ -49,6 +49,20 @@ const games = {
     ],
     note: "全為虛構的黑色幽默故事，包含賭博、負債、器官交易與死亡情節；不是投資或醫療建議。\n返回遊戲館會暫停時間並嘗試保存。同一瀏覽器與網址可使用原有自動存檔。",
   },
+  starbreak: {
+    name: "星夜突圍：STARBREAK",
+    category: "即時射擊 / 星艦生存",
+    cover: "games/starbreak/assets/starbreak.png",
+    path: "games/starbreak/index.html",
+    description:
+      "駕駛星艦穿越異星敵潮，武器會自動攻擊。靠走位、衝刺與過載突破包圍，搭配武器進化、研究與模組，迎戰擁有獨立本體血量及防護罩的星域 Boss。",
+    steps: [
+      "選擇星艦、起始武器與航行方案，再依喜好調整波數、難度與 Boss 規則。",
+      "電腦用 WASD 或方向鍵移動、空白鍵衝刺、Q 過載；手機左手拖曳移動、右手使用技能。",
+      "收集晶體並選擇強化，搭配武器進化、遺物與商城補給；避開 Boss 的紅色攻擊預警。",
+    ],
+    note: "喜歡即時閃避、武器搭配與華麗星艦戰鬥的人可以選這款。\n返回遊戲館會暫停並嘗試保存；再次進入後按「繼續航行」接續。本遊戲為獨立自製作品，與黑川茜無關。",
+  },
 };
 
 const lounge = document.getElementById("lounge");
@@ -230,7 +244,7 @@ function showZone() {
 }
 
 function syncRoute() {
-  const match = location.hash.match(/^#play=(abyss|arcane|trader)$/);
+  const match = location.hash.match(/^#play=(abyss|arcane|trader|starbreak)$/);
   if (match) openGame(match[1]);
   else {
     returnToLounge();
@@ -283,11 +297,21 @@ window.addEventListener("pagehide", () =>
   frames.forEach((frame) => setPaused(frame, true)),
 );
 
+// 切換分頁或從瀏覽器的上一頁回來時，同步外層與遊戲的休息狀態。
+function syncGameVisibility() {
+  frames.forEach((frame, id) => {
+    setPaused(frame, document.hidden || activeGame !== id);
+  });
+}
+document.addEventListener("visibilitychange", syncGameVisibility);
+window.addEventListener("pageshow", syncGameVisibility);
+
 // 只推薦與標示卡片，不直接啟動遊戲；仍先顯示玩法介紹。
 const moodMessages = {
   abyss: "推薦《深境冒險》：從第一層出發，把每次戰鬥都變成成長。",
   arcane: "推薦《星界牌陣》：觀察敵方意圖，組合屬於你的致勝戰術。",
   trader: "推薦《百億炒股人生》：試著做不同選擇，看看人生會走向哪裡。",
+  starbreak: "推薦《星夜突圍》：駕駛星艦、閃避敵潮，組出你的星海火力。",
 };
 document.querySelectorAll("[data-mood]").forEach((button) => {
   button.addEventListener("click", () => {

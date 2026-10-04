@@ -1,0 +1,48 @@
+/* v1.5：接戰資訊保留在原 HUD，窄螢幕與橫向手機避免占住走位區。 */
+.boss-hud-info > .boss-adaptation {
+  color: #a2bfdb;
+  font-size: 10px;
+  letter-spacing: 0.025em;
+}
+.effects-setting {
+  justify-content: space-between;
+  gap: 18px;
+}
+.effects-setting select {
+  max-width: 72%;
+  color: var(--text);
+  background: #141f37;
+  border: 1px solid #3c506c;
+  border-radius: 8px;
+  padding: 9px 12px;
+  min-height: 44px;
+}
+#sector-label {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .boss-hud-info > .boss-adaptation {
+    font-size: 9px;
+  }
+  .effects-setting {
+    flex-wrap: wrap;
+  }
+  .effects-setting select {
+    font-size: 13px;
+    max-width: 100%;
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .boss-hud-info > .boss-adaptation {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,4 @@
+1.2
+Edition: Blue World r11
+Source: Starbreak v1.5
+Save schema: 1 (unchanged)

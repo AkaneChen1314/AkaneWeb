@@ -1,0 +1,781 @@
+/* v1.2 — focused setup and controls that remain within reach. */
+.setup-caption {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 24px 0 12px;
+}
+.setup-caption b {
+  font-size: 15px;
+}
+.setup-caption small {
+  font-size: 12px;
+}
+.preset-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+  margin: 0 0 20px;
+}
+.preset-row button {
+  padding: 13px 9px;
+  text-align: left;
+  white-space: normal;
+  border-radius: 9px;
+  background: linear-gradient(145deg, #192640, #0e182b);
+}
+.preset-row b,
+.preset-row small {
+  display: block;
+}
+.preset-row b {
+  font-size: 14px;
+}
+.preset-row small {
+  font-size: 11px;
+  margin-top: 4px;
+}
+.preset-row button.active {
+  background: linear-gradient(135deg, #164440, #18303c);
+  border-color: #8cf5e8;
+  box-shadow: inset 0 0 0 1px #8cf5e817;
+}
+.preset-row button.active small {
+  color: #b5e3d9;
+}
+.primary-config {
+  grid-template-columns: 1.2fr 0.7fr 1fr;
+  padding-bottom: 6px;
+}
+.advanced-caption {
+  margin-top: 26px;
+  margin-bottom: 10px;
+}
+.advanced-config {
+  margin-top: 8px;
+  padding: 0 16px;
+  background: #0a1324a0;
+  border-color: #2e3f5b;
+}
+.advanced-config summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  list-style: none;
+  padding: 13px 0;
+}
+.advanced-config summary::after {
+  content: "＋";
+  color: #8cf5e8;
+  font-size: 19px;
+  margin-left: auto;
+}
+.advanced-config[open] summary::after {
+  content: "−";
+}
+.advanced-config summary::-webkit-details-marker {
+  display: none;
+}
+.advanced-config summary span {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+.advanced-config summary b {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.advanced-config summary small {
+  font-size: 12px;
+  text-align: right;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.advanced-config[open] {
+  padding-bottom: 15px;
+  border-color: #5f7d9c;
+  background: linear-gradient(145deg, #142137, #0c1427);
+}
+.advanced-config[open] summary {
+  margin-bottom: 15px;
+  border-color: #354c68;
+}
+.advanced-config summary:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+  border-radius: 5px;
+}
+.setting-note {
+  font-size: 12px;
+  line-height: 1.8;
+  color: #a9bdd7;
+  margin: 14px 0 0;
+}
+.plan-summary {
+  font-size: 13px;
+  margin-top: 17px;
+}
+.config-grid .check-label {
+  min-height: 44px;
+  font-size: 13px;
+}
+.boss-arrival {
+  position: absolute;
+  top: 78px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 245px;
+  max-width: calc(100% - 28px);
+  text-align: center;
+  border: 1px solid #ad759754;
+  border-radius: 9px;
+  background: linear-gradient(110deg, #211830ee, #141c31e0);
+  backdrop-filter: blur(8px);
+  padding: 8px 18px;
+  pointer-events: none;
+}
+.boss-arrival[hidden] {
+  display: none;
+}
+.boss-arrival > span {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: #c8a9f7;
+}
+.boss-arrival b {
+  display: block;
+  font-size: 17px;
+  color: #fff0fb;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+.boss-arrival small {
+  display: block;
+  font-size: 10px;
+  color: #c6b5d3;
+}
+.boss-arrival.imminent {
+  border-color: #ff86b6;
+  background: #3d1630dd;
+  box-shadow: 0 0 26px #fa588933;
+}
+.boss-arrival.imminent b {
+  color: #ffafcc;
+}
+.arena-top {
+  gap: 20px;
+}
+.wave-progress {
+  width: 170px;
+}
+.wave-progress small {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 5px;
+  color: #c1f7e8;
+}
+.game-controls {
+  position: absolute;
+  left: 16px;
+  bottom: 14px;
+  transform: none;
+  z-index: 2;
+  margin: 0;
+  gap: 10px;
+}
+.ability {
+  min-width: 124px;
+  padding: 9px 16px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 13px;
+  text-align: left;
+  background: #16243ee6;
+  border-color: #5c799b77;
+  backdrop-filter: blur(8px);
+  touch-action: none;
+  user-select: none;
+}
+.ability b {
+  font-size: 15px;
+}
+.ability span {
+  font-size: 12px;
+  grid-column: 1/3;
+  color: #d1e4ef;
+  font-variant-numeric: tabular-nums;
+}
+.ability .key-hint {
+  font-size: 10px;
+  color: #adc2d9;
+  align-self: center;
+  letter-spacing: 0.06em;
+}
+.ability:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+.ability:disabled b {
+  color: #a4b8c4;
+}
+.touch-move-zone {
+  display: none;
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  width: 150px;
+  height: 132px;
+  pointer-events: none;
+  color: #c1dae899;
+  text-align: center;
+}
+.touch-move-zone span {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+.touch-move-ring {
+  width: 86px;
+  height: 86px;
+  border: 1px solid #80d8d73a;
+  background: #18414318;
+  border-radius: 50%;
+  margin: 8px auto;
+}
+.touch-move-ring::after {
+  content: "";
+  display: block;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #9bf7e544;
+  border-radius: 50%;
+  margin: 28px;
+}
+.joystick {
+  z-index: 2;
+}
+.objective-hud {
+  bottom: 18px;
+  right: 14px;
+  width: 190px;
+  padding: 7px 10px;
+}
+.floating-hint {
+  bottom: 120px;
+  font-size: 12px;
+}
+.combo-hud {
+  bottom: 94px;
+}
+.game-side .log {
+  overflow-wrap: anywhere;
+}
+.xp-row {
+  margin-top: 9px;
+}
+.boss-hud-info small {
+  overflow-wrap: anywhere;
+}
+.game-overlay {
+  touch-action: pan-y;
+}
+.overlay {
+  overscroll-behavior: contain;
+}
+.overlay-inner {
+  padding-bottom: 4px;
+}
+@media (max-width: 1050px) {
+  .preset-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .objective-hud {
+    width: 165px;
+  }
+}
+@media (max-width: 760px) {
+  .topbar {
+    padding: 10px 12px;
+    padding-top: max(10px, env(safe-area-inset-top));
+    gap: 8px;
+  }
+  .brand {
+    font-size: 14px;
+    gap: 7px;
+  }
+  .brand-mark {
+    font-size: 24px;
+  }
+  .brand small {
+    font-size: 9px;
+    letter-spacing: 0.18em;
+  }
+  .topbar nav button {
+    font-size: 11px;
+    padding: 8px 6px;
+    min-height: 36px;
+  }
+  main {
+    padding: 12px 10px 24px;
+  }
+  .panel {
+    padding: 17px;
+  }
+  .hero {
+    min-height: 300px;
+  }
+  .hero-copy {
+    padding: 27px 23px;
+  }
+  .hero h1 {
+    font-size: 43px;
+  }
+  .hero-copy p {
+    font-size: 14px;
+  }
+  .hero-badge {
+    padding: 6px 9px;
+  }
+  .hero-copy .hero-actions {
+    margin-top: 17px;
+  }
+  .ships {
+    gap: 7px;
+  }
+  .ship-card {
+    min-height: 140px;
+    padding: 12px 9px;
+  }
+  .ship-card .glyph {
+    font-size: 25px;
+  }
+  .ship-card small {
+    font-size: 11px;
+  }
+  .setup-caption {
+    margin-top: 21px;
+  }
+  .setup-caption small {
+    font-size: 11px;
+  }
+  .preset-row {
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .preset-row button {
+    padding: 12px;
+  }
+  .preset-row small {
+    font-size: 11px;
+  }
+  .primary-config {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .primary-config > label:first-child {
+    grid-column: 1/3;
+  }
+  .primary-config select,
+  .config-grid select,
+  .config-grid input[type="number"] {
+    font-size: 16px;
+    min-height: 44px;
+    padding: 9px;
+  }
+  .advanced-config {
+    padding: 0 12px;
+  }
+  .advanced-config summary {
+    padding: 12px 0;
+  }
+  .advanced-config summary span {
+    gap: 12px;
+  }
+  .advanced-config summary b {
+    font-size: 13px;
+  }
+  .advanced-config summary small {
+    font-size: 11px;
+  }
+  .advanced-config[open] {
+    padding-bottom: 13px;
+  }
+  .setting-note {
+    font-size: 12px;
+  }
+  .advanced-config .check-label {
+    grid-column: 1/3;
+    font-size: 13px;
+  }
+  .advanced-caption {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .plan-summary {
+    line-height: 1.8;
+  }
+  .hud {
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+  .hud h2 {
+    font-size: 15px;
+  }
+  .hud-left {
+    gap: 10px;
+  }
+  .hud-left .eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+  }
+  .hud .timer {
+    font-size: 17px;
+  }
+  .hud-actions button {
+    padding: 9px 8px;
+    font-size: 12px;
+    min-height: 40px;
+  }
+  .arena-wrap {
+    height: clamp(340px, calc(100vh - 160px), 700px);
+    height: clamp(340px, calc(100dvh - 160px), 700px);
+    border-radius: 11px;
+  }
+  .arena-top {
+    left: 12px;
+    right: 12px;
+    top: 35px;
+    gap: 12px;
+  }
+  .hp-label {
+    font-size: 11px;
+  }
+  .hpbar {
+    min-width: 90px;
+  }
+  .wave-progress {
+    width: 130px;
+  }
+  .wave-progress small {
+    font-size: 11px;
+  }
+  .boss-arrival {
+    top: 72px;
+    min-width: 215px;
+    padding: 6px 13px;
+  }
+  .boss-arrival b {
+    font-size: 15px;
+  }
+  .boss-arrival > span,
+  .boss-arrival small {
+    font-size: 9px;
+  }
+  .boss-hud {
+    left: 9%;
+    right: 9%;
+    top: 72px;
+  }
+  .boss-hud-info > span {
+    font-size: 12px;
+  }
+  .touch-move-zone {
+    display: block;
+    width: 120px;
+    left: 4px;
+    bottom: 14px;
+  }
+  .touch-move-ring {
+    width: 82px;
+    height: 82px;
+  }
+  .touch-move-ring::after {
+    margin: 26px;
+  }
+  .game-controls {
+    left: auto;
+    right: 12px;
+    bottom: max(13px, env(safe-area-inset-bottom));
+    transform: none;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .ability {
+    min-width: 76px;
+    min-height: 58px;
+    padding: 8px 12px;
+    grid-template-columns: 1fr;
+    text-align: center;
+    border-radius: 12px;
+  }
+  .ability b {
+    font-size: 15px;
+  }
+  .ability span {
+    grid-column: 1;
+    font-size: 11px;
+  }
+  .ability .key-hint {
+    display: none;
+  }
+  .objective-hud {
+    left: 12px;
+    right: auto;
+    bottom: 157px;
+    width: 165px;
+    padding: 6px 9px;
+  }
+  .objective-hud small {
+    font-size: 10px;
+  }
+  .objective-hud b {
+    font-size: 11px;
+    margin-bottom: 5px;
+  }
+  .combo-hud {
+    bottom: 157px;
+    left: auto;
+    right: 14px;
+    font-size: 16px;
+  }
+  .floating-hint {
+    bottom: 224px;
+    font-size: 11px;
+  }
+  .xp-row {
+    font-size: 11px;
+    gap: 8px;
+  }
+  .game-side {
+    grid-template-columns: 1fr 1fr;
+  }
+  .game-side .empty-slot {
+    display: none;
+  }
+  .weapon-row {
+    font-size: 12px;
+    padding: 6px;
+    gap: 5px;
+  }
+  .weapon-row small {
+    font-size: 10px;
+  }
+  .weapon-row .icon {
+    font-size: 18px;
+    width: 20px;
+  }
+  .choice-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .choice {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 3px 12px;
+    padding: 12px 15px;
+  }
+  .choice .choice-icon {
+    grid-row: 1/4;
+    font-size: 25px;
+  }
+  .choice b,
+  .choice small,
+  .choice .tag {
+    grid-column: 2;
+  }
+  .choice b {
+    font-size: 16px;
+  }
+  .choice small {
+    font-size: 13px;
+  }
+  .overlay {
+    padding: 16px 12px;
+  }
+  .overlay-inner {
+    margin: auto;
+  }
+  .overlay h2 {
+    font-size: 22px;
+  }
+  .overlay p {
+    font-size: 13px;
+  }
+  .overlay-footer button {
+    min-height: 44px;
+  }
+  .shop-footer {
+    bottom: -12px;
+  }
+  .shop-card button {
+    min-height: 42px;
+  }
+  .shop-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  dialog {
+    max-height: 88dvh;
+    padding: 28px 18px;
+  }
+  .boss-preview img {
+    height: 145px;
+  }
+  .footer-note {
+    font-size: 12px;
+  }
+}
+@media (pointer: coarse) and (min-width: 761px) {
+  .touch-move-zone {
+    display: block;
+  }
+  .game-controls {
+    left: auto;
+    right: 16px;
+    transform: none;
+  }
+  .ability {
+    min-height: 62px;
+    min-width: 94px;
+  }
+  .ability .key-hint {
+    display: none;
+  }
+  .objective-hud {
+    right: 16px;
+    bottom: 97px;
+  }
+}
+@media (max-width: 400px) {
+  .setup-caption {
+    gap: 7px;
+  }
+  .setup-caption small {
+    font-size: 10px;
+  }
+  .advanced-config .config-grid {
+    grid-template-columns: 1fr;
+  }
+  .advanced-config .check-label {
+    grid-column: 1;
+  }
+  .advanced-config summary span {
+    gap: 8px;
+  }
+  .advanced-config summary small {
+    font-size: 10px;
+  }
+  .hero h1 {
+    font-size: 40px;
+  }
+  .hud .timer {
+    display: none;
+  }
+  .topbar nav {
+    gap: 0;
+  }
+  .topbar nav button {
+    padding: 8px 5px;
+  }
+  .boss-hud {
+    left: 5%;
+    right: 5%;
+  }
+  .wave-progress {
+    width: 115px;
+  }
+  .game-side {
+    grid-template-columns: 1fr 1fr;
+  }
+  .game-side > .panel:nth-child(2) {
+    display: block;
+  }
+  .run-stats {
+    font-size: 11px;
+    gap: 8px;
+  }
+  .run-stats b {
+    font-size: 16px;
+  }
+  .boss-gallery-grid {
+    gap: 8px;
+  }
+  .boss-preview {
+    padding: 11px;
+  }
+  .boss-preview img {
+    height: 125px;
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .game-layout {
+    grid-template-columns: 1fr;
+  }
+  .game-side {
+    display: none;
+  }
+  .arena-wrap {
+    height: clamp(230px, calc(100dvh - 114px), 380px);
+  }
+  .hud {
+    margin-bottom: 6px;
+  }
+  .game-main .hud-left .eyebrow,
+  .arena-label {
+    display: none;
+  }
+  .arena-top {
+    top: 12px;
+  }
+  .boss-hud,
+  .boss-arrival {
+    top: 47px;
+  }
+  .boss-hud {
+    left: 32%;
+    right: 20%;
+  }
+  .boss-arrival {
+    left: 48%;
+  }
+  .objective-hud {
+    bottom: 14px;
+    left: 152px;
+    width: 166px;
+  }
+  .touch-move-zone {
+    bottom: 6px;
+  }
+  .game-controls {
+    bottom: 10px;
+    right: 12px;
+    left: auto;
+    transform: none;
+    flex-direction: row;
+  }
+  .ability {
+    min-width: 72px;
+    padding: 7px 10px;
+    min-height: 55px;
+  }
+  .combo-hud {
+    bottom: 87px;
+  }
+  .floating-hint {
+    display: none;
+  }
+  .topbar {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  main {
+    padding-top: 8px;
+  }
+  .xp-row {
+    margin-top: 5px;
+  }
+}

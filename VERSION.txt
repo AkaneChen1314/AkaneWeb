@@ -1,3 +1,3 @@
 1.2
-Edition: 20261004-blueworld-r10
+Edition: 20261004-blueworld-r11
 Site: Blue World
