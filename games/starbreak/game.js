@@ -4081,6 +4081,7 @@
     canvasWidth = 0,
     canvasHeight = 0,
     canvasDpr = 0,
+    touchViewScale = 1,
     arenaObserver = null;
   const escapeHTML = (s) =>
     String(s).replace(
@@ -4209,6 +4210,7 @@
   // 4. 瀏覽器介面：出航設定、HUD、商城、說明與控制輸入。
   function showHome() {
     resetControls();
+    document.body?.classList.remove("wide-touch-game");
     arenaObserver?.disconnect();
     screen = "home";
     canvas = null;
@@ -5230,6 +5232,30 @@
           <div class="bar"><i id="xp-fill"></i></div>
           <span id="xp-label"></span>
         </div>
+        <!-- 僅手機的「電腦版網站」模式使用；原本手機及鍵盤排版保持不變。 -->
+        <section
+          class="touch-control-dock"
+          id="touch-control-dock"
+          aria-label="下方觸控操作區"
+          hidden
+        >
+          <div
+            class="dock-move-pad"
+            id="dock-move-pad"
+            role="group"
+            aria-label="移動搖桿，按住並往想移動的方向拖曳"
+          >
+            <div class="dock-joystick" id="dock-joystick" aria-hidden="true">
+              <i></i>
+            </div>
+            <span>按住拖曳移動</span>
+          </div>
+          <div class="touch-ability-column">
+            <span class="dock-caption">自動開火 · 右手使用技能</span>
+            <div id="touch-ability-host"></div>
+            <small>可同時移動、衝刺與過載</small>
+          </div>
+        </section>
       </section>
       <aside class="game-side">
         <section class="panel">
@@ -5287,28 +5313,100 @@
         }
       });
     }
-    canvas.addEventListener("pointerdown", pointerDown);
-    canvas.addEventListener("pointermove", pointerMove);
-    canvas.addEventListener("pointerup", pointerUp);
-    canvas.addEventListener("pointercancel", pointerUp);
-    canvas.addEventListener("lostpointercapture", pointerUp);
-    if (typeof ResizeObserver !== "undefined") {
-      arenaObserver = new ResizeObserver(resizeCanvas);
-      arenaObserver.observe(document.getElementById("battle-field"));
+    for (const surface of [canvas, document.getElementById("dock-move-pad")]) {
+      surface.addEventListener("pointerdown", pointerDown);
+      surface.addEventListener("pointermove", pointerMove);
+      surface.addEventListener("pointerup", pointerUp);
+      surface.addEventListener("pointercancel", pointerUp);
+      surface.addEventListener("lostpointercapture", pointerUp);
+      surface.addEventListener("contextmenu", (e) => e.preventDefault());
     }
+    if (typeof ResizeObserver !== "undefined") {
+      arenaObserver = new ResizeObserver(resizeGameLayout);
+      // 字型載入、導覽列換行或操作區變高時，也重新分配可見高度。
+      for (const element of [
+        document.getElementById("battle-field"),
+        document.getElementById("touch-control-dock"),
+        document.querySelector(".hud"),
+        document.querySelector(".xp-row"),
+        document.querySelector(".topbar"),
+      ]) {
+        if (element) arenaObserver.observe(element);
+      }
+    }
+    syncTouchLayout();
     resizeCanvas();
     renderOverlay();
     updateHUD(true);
     // 出航設定頁可能已捲到很下面；開始或接續時回到戰場頂端。
     window.scrollTo?.({ top: 0, behavior: "instant" });
   }
+  function syncTouchLayout() {
+    if (screen !== "game") return;
+    const layout = document.querySelector(".game-layout"),
+      dock = document.getElementById("touch-control-dock"),
+      controls = document.querySelector(".game-controls");
+    if (!layout || !dock || !controls) return;
+    // 桌面 UA 不代表鍵盤：部分手機開電腦版仍保有觸控點與小螢幕。
+    const hasTouch =
+      (window.navigator?.maxTouchPoints || 0) > 0 ||
+      matchMedia("(pointer:coarse)").matches ||
+      matchMedia("(any-pointer:coarse)").matches;
+    const width = window.innerWidth || 0;
+    const shortSide = Math.min(
+      window.screen?.width || width,
+      window.screen?.height || window.innerHeight || width,
+    );
+    const physicalWidth = window.screen?.width || width;
+    const wide =
+      hasTouch &&
+      width > 760 &&
+      width > physicalWidth * 1.1 &&
+      shortSide > 0 &&
+      shortSide <= 700;
+    if (dock.hidden !== !wide) resetControls();
+    dock.hidden = !wide;
+    layout.classList.toggle("wide-touch-layout", wide);
+    document.body?.classList.toggle("wide-touch-game", wide);
+    touchViewScale = 1;
+    const host = wide
+      ? document.getElementById("touch-ability-host")
+      : document.getElementById("battle-field");
+    // 移動同一組按鈕，而不是複製：冷卻、鍵盤與事件都只保留一份。
+    if (controls.parentElement !== host) host.append(controls);
+    if (!wide) return;
+    const uiScale = clamp(width / (window.screen?.width || shortSide), 1, 3);
+    touchViewScale = uiScale;
+    layout.style.setProperty("--touch-ui-scale", uiScale.toFixed(3));
+    const arena = document.getElementById("arena-wrap"),
+      xp = document.querySelector(".xp-row");
+    // 讓戰場與操作區一起填滿可見高度，不再被原本 760px 上限卡住。
+    const available =
+      window.innerHeight -
+      arena.getBoundingClientRect().top -
+      dock.getBoundingClientRect().height -
+      xp.getBoundingClientRect().height -
+      24;
+    const minHeight =
+      width > window.innerHeight && window.innerHeight < 750 ? 160 : 360;
+    const height = `${Math.max(minHeight, Math.floor(available))}px`;
+    if (layout.style.getPropertyValue("--touch-arena-height") !== height)
+      layout.style.setProperty("--touch-arena-height", height);
+  }
   function resizeCanvas() {
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect(),
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      dpr = Math.max(
+        1,
+        Math.min((window.devicePixelRatio || 1) / touchViewScale, 2),
+      );
     if (!rect.width || !rect.height) return;
     const pixelWidth = Math.round(rect.width * dpr);
     const pixelHeight = Math.round(rect.height * dpr);
+    engine.viewRadius =
+      Math.hypot(rect.width, rect.height) /
+      2 /
+      ((rect.width < 600 ? 0.83 : 1) * touchViewScale);
     // 同尺寸的 visualViewport 通知不重設畫布，避免清空／重畫造成閃爍。
     if (
       canvas.width === pixelWidth &&
@@ -5324,31 +5422,58 @@
     canvas.width = pixelWidth;
     canvas.height = pixelHeight;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    engine.viewRadius =
-      Math.hypot(canvasWidth, canvasHeight) /
-      2 /
-      (canvasWidth < 600 ? 0.83 : 1);
   }
   function resetControls() {
     keys.clear();
+    releaseMovePointer();
+  }
+  function releaseMovePointer() {
     input = { x: 0, y: 0 };
-    const id = pointer?.id;
+    const id = pointer?.id,
+      element = pointer?.element;
     pointer = null;
-    if (id !== undefined && canvas?.hasPointerCapture?.(id))
-      canvas.releasePointerCapture(id);
+    if (id !== undefined && element?.hasPointerCapture?.(id))
+      element.releasePointerCapture(id);
     const joy = document.getElementById("joystick");
     if (joy) joy.style.display = "none";
+    const dockJoy = document.getElementById("dock-joystick");
+    dockJoy?.classList.remove("is-active");
+    const thumb = dockJoy?.querySelector("i");
+    if (thumb) thumb.style.transform = "translate(0px, 0px)";
   }
   function pointerDown(e) {
     if (!engine.r || engine.r.phase !== "play" || pointer || e.button > 0)
       return;
     e.preventDefault();
     canvas.focus({ preventScroll: true });
-    canvas.setPointerCapture(e.pointerId);
+    const element = e.currentTarget || canvas;
+    element.setPointerCapture(e.pointerId);
+    if (element.id === "dock-move-pad") {
+      const joy = document.getElementById("dock-joystick"),
+        rect = joy.getBoundingClientRect();
+      pointer = {
+        id: e.pointerId,
+        element,
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+        radius: Math.max(45, rect.width * 0.32),
+        joystickId: "dock-joystick",
+      };
+      joy.classList.add("is-active");
+      pointerMove(e);
+      return;
+    }
     const rect = canvas.getBoundingClientRect(),
       x = clamp(e.clientX, rect.left + 56, rect.right - 56),
       y = clamp(e.clientY, rect.top + 80, rect.bottom - 56);
-    pointer = { id: e.pointerId, x: e.clientX, y: e.clientY, rect };
+    pointer = {
+      id: e.pointerId,
+      element,
+      x: e.clientX,
+      y: e.clientY,
+      radius: 45,
+      joystickId: "joystick",
+    };
     const joy = document.getElementById("joystick");
     joy.style.display = "block";
     joy.style.left = `${x - rect.left - 56}px`;
@@ -5362,23 +5487,20 @@
     const x = e.clientX - pointer.x,
       y = e.clientY - pointer.y,
       n = Math.hypot(x, y),
-      m = Math.min(n, 45);
+      radius = pointer.radius,
+      m = Math.min(n, radius),
+      deadZone = radius / 9;
     input = {
-      x: n > 5 ? x / Math.max(n, 45) : 0,
-      y: n > 5 ? y / Math.max(n, 45) : 0,
+      x: n > deadZone ? x / Math.max(n, radius) : 0,
+      y: n > deadZone ? y / Math.max(n, radius) : 0,
     };
-    const joy = document.querySelector("#joystick i");
+    const joy = document.getElementById(pointer.joystickId)?.querySelector("i");
     if (joy)
       joy.style.transform = `translate(${n ? (x / n) * m : 0}px,${n ? (y / n) * m : 0}px)`;
   }
   function pointerUp(e) {
     if (!pointer || e.pointerId !== pointer.id) return;
-    const id = pointer.id;
-    pointer = null;
-    input = { x: 0, y: 0 };
-    if (canvas?.hasPointerCapture?.(id)) canvas.releasePointerCapture(id);
-    const joy = document.getElementById("joystick");
-    if (joy) joy.style.display = "none";
+    releaseMovePointer();
   }
   function card(c, i, kind = "upgrade") {
     return /* HTML */ `<button
@@ -5658,6 +5780,9 @@
       p.dashCD > 0 || r.phase !== "play";
     document.getElementById("burst").disabled =
       p.burstCD > 0 || r.phase !== "play";
+    document
+      .getElementById("dock-move-pad")
+      ?.setAttribute("aria-disabled", String(r.phase !== "play"));
     const mission = r.objective;
     const labels = {
       kills: "擊破敵人",
@@ -5836,6 +5961,9 @@
             </article>
             <article>
               <b>手機／平板</b>
+              <p>
+                手機開電腦版網站時，改用全寬戰場下方的加大搖桿與技能鈕；武器配置在操作列下方。
+              </p>
               <p>
                 左手在戰場拖曳搖桿，放開停止；右手按衝刺或過載。兩根手指可同時操作，第二指不會取代移動指。
               </p>
@@ -6362,7 +6490,10 @@
   // 演出品質與戰鬥規則分開：關閉光效也不會少一顆敵彈。
   function presentationSettings() {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const mobile = matchMedia("(pointer:coarse)").matches || canvasWidth < 600;
+    const mobile =
+      touchViewScale > 1 ||
+      matchMedia("(pointer:coarse)").matches ||
+      canvasWidth < 600;
     const choice = profile.settings.effectsLevel || "auto";
     const quality =
       choice === "none"
@@ -6528,6 +6659,7 @@
     visual.motion = visual.motion && r.phase === "play";
     const zoom =
       (w < 600 ? 0.83 : 1) *
+      touchViewScale *
       (1 +
         (visual.motion
           ? engine.zoomPulse * (quality === 2 ? 0.025 : 0.012)
@@ -7167,8 +7299,12 @@
     }
     // 再次進入保留暫停或選擇畫面，避免自動繼續後立即受傷。
   });
-  window.addEventListener("resize", resizeCanvas);
-  window.visualViewport?.addEventListener("resize", resizeCanvas);
+  function resizeGameLayout() {
+    syncTouchLayout();
+    resizeCanvas();
+  }
+  window.addEventListener("resize", resizeGameLayout);
+  window.visualViewport?.addEventListener("resize", resizeGameLayout);
   function frame(ts) {
     if (window.akanePortalPaused || document.hidden) {
       previous = 0;

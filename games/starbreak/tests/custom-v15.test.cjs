@@ -315,6 +315,9 @@ test("cinematic events are bounded, rate-limited and do not consume RNG or alter
 test("effect preferences cannot change deterministic combat results", () => {
   const a = run(3, { bossDelay: 15 }),
     b = run(3, { bossDelay: 15 });
+  // 遠征 ID 含啟動時間；兩局跨過同一毫秒，不應被當作戰鬥結果不同。
+  // 只對齊這個識別欄位，其他角色、敵人、亂數與戰鬥資料仍逐項比較。
+  b.r.id = a.r.id;
   a.profile.settings.effectsLevel = "full";
   b.profile.settings.effectsLevel = "none";
   b.profile.settings.shake = false;

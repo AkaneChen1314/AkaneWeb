@@ -71,7 +71,8 @@
 /*
  * 原本 Boss HUD 是蓋在 canvas 中間的 absolute 區塊。
  * 現在將外框拆成兩列：狀態列 + 獨立戰場，總高度保持不變。
- * 所有攻擊預警、角色、搖桿與技能仍定位在 .battle-field 內。
+ * 所有攻擊預警與角色仍定位在 .battle-field 內。
+ * 手機電腦版的技能與移動搖桿另放在下方，不蓋住戰場。
  */
 .arena-wrap {
   display: flex;
@@ -181,6 +182,395 @@
 
 .standalone-portal-nav {
   font-family: "Akane Sans", "Microsoft JhengHei", system-ui, sans-serif;
+}
+
+/*
+ * 手機要求「電腦版網站」時，CSS 視窗常變成 980px。
+ * game.js 依觸控能力與實際螢幕辨識，僅在這種情況加上此 class。
+ * --touch-ui-scale 補償整頁縮小，讓搖桿、字與按鈕仍容易看清及按到。
+ */
+.touch-control-dock {
+  display: none;
+}
+
+.wide-touch-layout {
+  --touch-ui-scale: 1;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.wide-touch-layout .arena-wrap {
+  height: var(--touch-arena-height, 70dvh);
+  max-height: none;
+}
+
+.wide-touch-layout .touch-control-dock {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: calc(12px * var(--touch-ui-scale));
+  padding: calc(10px * var(--touch-ui-scale));
+  margin-top: 12px;
+  border: 1px solid #385875;
+  border-radius: 16px;
+  background: linear-gradient(120deg, #112b3d, #11172e 75%);
+}
+
+.wide-touch-layout .touch-control-dock[hidden] {
+  display: none;
+}
+
+.dock-move-pad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(8px * var(--touch-ui-scale));
+  min-height: calc(126px * var(--touch-ui-scale));
+  border-radius: 12px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.dock-move-pad > span {
+  font-size: calc(12px * var(--touch-ui-scale));
+  color: #b4e6ed;
+  pointer-events: none;
+}
+
+.dock-move-pad[aria-disabled="true"] {
+  opacity: 0.45;
+}
+
+.dock-joystick {
+  position: relative;
+  width: calc(104px * var(--touch-ui-scale));
+  height: calc(104px * var(--touch-ui-scale));
+  flex: 0 0 auto;
+  border: 1px solid #8df5e575;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #548fba24 30%, transparent 70%),
+    linear-gradient(135deg, #143a4d, #151f3d);
+  box-shadow: inset 0 0 22px #82e6e81a;
+  pointer-events: none;
+}
+
+.dock-joystick::before,
+.dock-joystick::after {
+  content: "";
+  position: absolute;
+  background: #95dfee29;
+  pointer-events: none;
+}
+
+.dock-joystick::before {
+  width: 1px;
+  inset-block: 10%;
+  left: 50%;
+}
+
+.dock-joystick::after {
+  height: 1px;
+  inset-inline: 10%;
+  top: 50%;
+}
+
+.dock-joystick i {
+  position: absolute;
+  width: 34%;
+  height: 34%;
+  left: 33%;
+  top: 33%;
+  border: 1px solid #bbfff1;
+  border-radius: 50%;
+  background: linear-gradient(140deg, #a8f8e5, #5794c8);
+  box-shadow: 0 0 20px #70eee34d;
+}
+
+.dock-joystick.is-active {
+  border-color: #a1ffeb;
+  box-shadow: 0 0 22px #70eee337;
+}
+
+.touch-ability-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(8px * var(--touch-ui-scale));
+  min-width: 0;
+}
+
+.dock-caption {
+  font-size: calc(12px * var(--touch-ui-scale));
+  color: #c4e3f7;
+}
+
+.touch-ability-column > small {
+  font-size: calc(10px * var(--touch-ui-scale));
+  color: #93adc9;
+}
+
+.wide-touch-layout .game-controls {
+  position: static;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(8px * var(--touch-ui-scale));
+  margin: 0;
+  transform: none;
+}
+
+.wide-touch-layout .ability {
+  min-width: 0;
+  min-height: calc(56px * var(--touch-ui-scale));
+  padding: calc(8px * var(--touch-ui-scale));
+  grid-template-columns: 1fr;
+  text-align: center;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #205574, #1a2949);
+  backdrop-filter: none;
+}
+
+.wide-touch-layout .ability b {
+  font-size: calc(16px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .ability span {
+  grid-column: 1;
+  font-size: calc(12px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .key-hint,
+.wide-touch-layout .touch-move-zone,
+.wide-touch-layout .floating-hint,
+.wide-touch-layout .arena-label {
+  display: none;
+}
+
+.wide-touch-layout .hud h2,
+.wide-touch-layout .hud-actions button {
+  font-size: calc(14px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .hud-actions button {
+  min-height: calc(44px * var(--touch-ui-scale));
+  padding: calc(6px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .timer {
+  font-size: calc(17px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .eyebrow,
+.wide-touch-layout .xp-row {
+  font-size: calc(10px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .arena-top {
+  top: calc(12px * var(--touch-ui-scale));
+  left: calc(12px * var(--touch-ui-scale));
+  right: calc(12px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .hp-label,
+.wide-touch-layout .wave-progress small {
+  font-size: calc(11px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .wave-progress {
+  width: calc(115px * var(--touch-ui-scale));
+  max-width: 42%;
+}
+
+.wide-touch-layout .boss-hud {
+  flex-basis: calc(88px * var(--touch-ui-scale));
+  height: calc(88px * var(--touch-ui-scale));
+  padding: calc(4px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout #boss-name {
+  font-size: calc(12px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout #boss-status-details {
+  font-size: calc(11px * var(--touch-ui-scale));
+  min-height: calc(44px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .boss-hud-info small {
+  font-size: calc(10px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .objective-hud {
+  right: calc(10px * var(--touch-ui-scale));
+  bottom: calc(10px * var(--touch-ui-scale));
+  width: calc(130px * var(--touch-ui-scale));
+  max-width: 45%;
+  font-size: calc(11px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .game-side {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  font-size: calc(12px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .game-side > .panel:first-child {
+  grid-column: 1 / -1;
+}
+
+.wide-touch-layout .game-side > .panel {
+  display: block;
+}
+
+.wide-touch-layout .game-side h3,
+.wide-touch-layout .run-stats b {
+  font-size: calc(14px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .weapons-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wide-touch-layout .weapon-row {
+  min-width: 0;
+  font-size: calc(12px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .weapon-row small,
+.wide-touch-layout .weapon-row .lv,
+.wide-touch-layout .empty-slot,
+.wide-touch-layout .run-stats,
+.wide-touch-layout .log,
+.wide-touch-layout .pilot-line {
+  font-size: calc(10px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .overlay h2 {
+  font-size: calc(22px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .overlay p {
+  font-size: calc(12px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .choice {
+  min-height: 0;
+  padding: calc(8px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .choice b {
+  font-size: calc(14px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .choice small {
+  font-size: calc(11px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .weapon-row .icon {
+  font-size: calc(18px * var(--touch-ui-scale));
+  width: calc(22px * var(--touch-ui-scale));
+  flex-shrink: 0;
+}
+
+.wide-touch-layout .panel-heading small,
+.wide-touch-layout .choice .tag {
+  font-size: calc(10px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .overlay-footer button {
+  min-height: calc(44px * var(--touch-ui-scale));
+  font-size: calc(12px * var(--touch-ui-scale));
+  padding: calc(6px * var(--touch-ui-scale)) calc(12px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .shop-card h3 {
+  font-size: calc(14px * var(--touch-ui-scale));
+}
+
+.wide-touch-layout .shop-card small,
+.wide-touch-layout .shop-card button {
+  font-size: calc(12px * var(--touch-ui-scale));
+}
+
+/* 寬版觸控若轉成橫向，收緊導覽與操作列，保留戰場高度。 */
+@media (max-height: 750px) and (orientation: landscape) {
+  .wide-touch-game .topbar {
+    padding: 5px 12px;
+    gap: 12px;
+  }
+
+  .wide-touch-game .brand {
+    font-size: 14px;
+  }
+
+  .wide-touch-game .brand-mark {
+    font-size: 24px;
+  }
+
+  .wide-touch-game .topbar nav button {
+    min-height: 30px;
+    padding: 4px 8px;
+  }
+
+  .wide-touch-game main {
+    padding-top: 6px;
+  }
+
+  .wide-touch-layout .hud {
+    margin-bottom: 5px;
+  }
+
+  .wide-touch-layout .hud-actions button {
+    min-height: calc(32px * var(--touch-ui-scale));
+    font-size: calc(12px * var(--touch-ui-scale));
+  }
+
+  .wide-touch-layout .touch-control-dock {
+    padding: calc(5px * var(--touch-ui-scale));
+    margin-top: 6px;
+  }
+
+  .wide-touch-layout .dock-move-pad {
+    min-height: calc(70px * var(--touch-ui-scale));
+    flex-direction: row;
+    gap: calc(12px * var(--touch-ui-scale));
+  }
+
+  .wide-touch-layout .dock-joystick {
+    width: calc(64px * var(--touch-ui-scale));
+    height: calc(64px * var(--touch-ui-scale));
+  }
+
+  .wide-touch-layout .ability {
+    min-height: calc(44px * var(--touch-ui-scale));
+  }
+
+  .wide-touch-layout .touch-ability-column > small {
+    display: none;
+  }
+
+  .wide-touch-layout .eyebrow,
+  .wide-touch-layout .dock-caption {
+    display: none;
+  }
+
+  .wide-touch-layout .boss-hud {
+    flex-basis: calc(48px * var(--touch-ui-scale));
+    height: calc(48px * var(--touch-ui-scale));
+    padding: 2px 8px;
+  }
+
+  .wide-touch-layout .boss-hud img,
+  .wide-touch-layout #boss-move {
+    display: none;
+  }
+
+  .wide-touch-layout #boss-status-details {
+    min-height: calc(24px * var(--touch-ui-scale));
+  }
 }
 
 @media (max-width: 760px) {

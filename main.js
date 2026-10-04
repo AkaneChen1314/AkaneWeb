@@ -53,12 +53,12 @@ const games = {
     name: "星夜突圍：STARBREAK",
     category: "即時射擊 / 星艦生存",
     cover: "games/starbreak/assets/starbreak.png",
-    path: "games/starbreak/index.html",
+    path: "games/starbreak/index.html?v=1.2-r11-touch",
     description:
       "駕駛星艦穿越異星敵潮，武器會自動攻擊。靠走位、衝刺與過載突破包圍，搭配武器進化、研究與模組，迎戰擁有獨立本體血量及防護罩的星域 Boss。",
     steps: [
       "選擇星艦、起始武器與航行方案，再依喜好調整波數、難度與 Boss 規則。",
-      "電腦用 WASD 或方向鍵移動、空白鍵衝刺、Q 過載；手機左手拖曳移動、右手使用技能。",
+      "電腦用 WASD 或方向鍵移動、空白鍵衝刺、Q 過載；手機左手拖曳、右手使用技能。手機開啟電腦版網站時，改用戰場下方的加大操作區。",
       "收集晶體並選擇強化，搭配武器進化、遺物與商城補給；避開 Boss 的紅色攻擊預警。",
     ],
     note: "喜歡即時閃避、武器搭配與華麗星艦戰鬥的人可以選這款。\n返回遊戲館會暫停並嘗試保存；再次進入後按「繼續航行」接續。本遊戲為獨立自製作品，與黑川茜無關。",
