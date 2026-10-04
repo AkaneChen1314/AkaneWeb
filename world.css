@@ -264,10 +264,10 @@ body:not(.playing) {
   border-radius: 50%;
   background: linear-gradient(130deg, #7ccfff, #9286de);
 }
-[data-world-tone="twilight"] i {
+.world-tones button[data-world-tone="twilight"] i {
   background: linear-gradient(130deg, #b6b0ff, #df8ab8);
 }
-[data-world-tone="petal"] i {
+.world-tones button[data-world-tone="petal"] i {
   background: linear-gradient(130deg, #99e3ff, #f0accb);
 }
 .world-tones button[aria-pressed="true"] {
