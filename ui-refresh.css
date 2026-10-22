@@ -692,12 +692,33 @@ button.text-link:hover {
   padding-top: 0;
 }
 
-/* 三欄桌機版的三個粗體標題使用相同尺寸與行高，落在同一條水平線。 */
+/* 寬桌機三欄版的三個粗體標題使用相同尺寸與行高。 */
 @media (min-width: 1101px) {
   .moment-copy h3,
   .moment-feature .moment-copy h3 {
     font-size: 22px;
     line-height: 1.55;
+  }
+}
+
+/*
+ * 手機「電腦版網站」多半落在 901–1100px。此時第一張說明比另外
+ * 兩張多一行，若整組內容靠底會把第一個標題往上推。改為從相同
+ * 起點排列，並替三張說明保留三行高度，讓標題與來源都維持同列。
+ */
+@media (min-width: 901px) and (max-width: 1100px) {
+  .moment-copy h3,
+  .moment-feature .moment-copy h3 {
+    font-size: clamp(18px, 1.9vw, 20px);
+    line-height: 1.55;
+  }
+
+  .moment-copy {
+    justify-content: flex-start;
+  }
+
+  .moment-copy > p:not(.eyebrow) {
+    min-height: calc(1.85em * 3);
   }
 }
 

@@ -2,7 +2,7 @@ Blue World 1.2 / r12｜新增與修改檔案
 ===================================
 
 修訂日期：2026-10-23
-版本辨識：20261023-blueworld-r12-ui-11
+版本辨識：20261023-blueworld-r12-ui-12
 比較基準：上一份 r11 四款遊戲完整包
 公開顯示版本：1.2
 
@@ -22,7 +22,7 @@ index.html
   載入 ui-refresh.css，更新 r12 版本辨識與頁尾日期。
 
 VERSION.txt
-  Edition 更新為 20261023-blueworld-r12-ui-11；公開版本仍是 1.2。
+  Edition 更新為 20261023-blueworld-r12-ui-12；公開版本仍是 1.2。
 
 README_先看這裡.md
   新增 r12 重點、部署核對方式與此次更新包範圍。
@@ -48,7 +48,7 @@ README_新增與修改檔案.txt
 4. 不要刪除 assets、games、shared 或原有 CSS／JavaScript。
 5. 一次提交全部變更，等待 GitHub Pages 最後一筆部署完成。
 6. 開啟正式網站並檢視原始碼，搜尋
-   20261023-blueworld-r12-ui-11，確認載入新版。
+   20261023-blueworld-r12-ui-12，確認載入新版。
 7. 若仍看到舊字級或舊按鈕，請重新整理或清除網站快取。
 
 四、不必重新上傳
