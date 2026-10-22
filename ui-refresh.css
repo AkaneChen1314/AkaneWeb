@@ -741,6 +741,18 @@ button.text-link:hover {
   width: 186px;
 }
 
+/*
+ * 平板與手機「電腦版網站」通常使用約 980px 的版面寬度。
+ * edition.css 會在 1250px 以下把收藏筆記改成三欄滿寬排列，
+ * 因此這裡必須延續滿寬，避免後載入的 186px 桌機寬度把三欄
+ * 壓成直排文字。
+ */
+@media (min-width: 761px) and (max-width: 1250px) {
+  .hero-notes {
+    width: 100%;
+  }
+}
+
 .hero-collection-note {
   padding: 15px;
   border-radius: 16px;

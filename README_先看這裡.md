@@ -1,6 +1,6 @@
 # Blue World 1.2
 
-目前修訂：`20261023-blueworld-r12-ui-10`。網站與四款遊戲的公開顯示版本仍是 1.2，不需要安裝套件或執行編譯指令；r12 是首頁與收藏館的可讀性、按鈕與整體 UI 修訂，不會改動四款遊戲的玩法、難度或存檔格式。
+目前修訂：`20261023-blueworld-r12-ui-11`。網站與四款遊戲的公開顯示版本仍是 1.2，不需要安裝套件或執行編譯指令；r12 是首頁與收藏館的可讀性、按鈕、響應式排版與整體 UI 修訂，不會改動四款遊戲的玩法、難度或存檔格式。
 
 ## 解壓後發布到 GitHub Pages
 
@@ -8,7 +8,7 @@
 2. 打開解壓後的 `AkaneWeb-main` 資料夾。
 3. 把資料夾**裡面的全部內容**放進 `AkaneWeb` 儲存庫根目錄；`index.html` 必須和 `assets`、`games`、`shared` 位於同一層。
 4. 一次提交全部變更，等待 GitHub Pages 的最後一筆部署完成。
-5. 開啟 `https://akanechen1314.github.io/AkaneWeb/`，在原始碼搜尋 `20261023-blueworld-r12-ui-10` 即可確認新版 UI 已上線。
+5. 開啟 `https://akanechen1314.github.io/AkaneWeb/`，在原始碼搜尋 `20261023-blueworld-r12-ui-11` 即可確認新版 UI 已上線。
 
 建議使用 GitHub Desktop 一次提交，因為 GitHub 網頁上傳一次最多只能處理有限數量的檔案。若用網頁分很多次上傳，每一個 `Add files via upload` 都會各自觸發部署；中間那一次可能出現紅叉，但應以**全部檔案上傳完成後的最後一筆部署**為準。不要把 ZIP 本身直接上傳，GitHub Pages 不會自動解壓。
 
