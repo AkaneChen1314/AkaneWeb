@@ -1,0 +1,992 @@
+/* Blue World r12 UI refresh
+ * 統一字體、可讀字級、互動元件與卡片語言。
+ * 本檔最後載入，只調整呈現，不改動專區與遊戲邏輯。
+ */
+@font-face {
+  font-family: "Blue World Display";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("games/arcane/assets/fonts/astral-sans.woff") format("woff");
+}
+
+:root {
+  --ui-font:
+    "Akane Sans", "Akane Japanese", "Akane Symbols", "Microsoft JhengHei",
+    "PingFang TC", sans-serif;
+  --ui-display-font:
+    "Akane Sans", "Akane Japanese", "Akane Symbols", "Microsoft JhengHei",
+    "PingFang TC", sans-serif;
+  --ui-latin-font:
+    "Blue World Display", "Akane Sans", "Akane Symbols", sans-serif;
+  --ui-control-radius: 12px;
+  --ui-surface-radius: 20px;
+  --ui-control-bg: #17334d;
+  --ui-control-bg-hover: #204763;
+  --ui-control-border: #83b9d45c;
+  --ui-control-border-strong: #9adff0;
+  --ui-control-text: #dceefa;
+  --ui-muted: #c3d5e4;
+  --ui-focus-ring: #8de8f4;
+  --ui-grid-gap: 22px;
+  --muted: #bacdde;
+}
+
+html,
+body,
+button,
+input,
+textarea,
+select,
+summary {
+  font-family: var(--ui-font);
+}
+
+html {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  color: #edf6ff;
+  font-size: 17px;
+  line-height: 1.75;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+h1,
+h2,
+h3,
+h4,
+.brand,
+.site-header nav,
+button,
+summary,
+.gateway-link,
+.primary-button,
+.card-button,
+.season-picker,
+.world-title,
+.hero-name {
+  font-family: var(--ui-display-font);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  text-wrap: balance;
+}
+
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline: 3px solid var(--ui-focus-ring);
+  outline-offset: 3px;
+}
+
+.section-heading {
+  row-gap: 14px;
+}
+
+.section-heading h2 {
+  line-height: 1.42;
+}
+
+.section-heading > p {
+  max-width: 34rem;
+}
+
+/* 中文介面完整使用同一套 Akane 字型，避免單行內因字形回退而忽粗忽細。 */
+.hero-type h1,
+.hero-metrics b,
+.zone-heading h2 em,
+.profile-content h3,
+.season-picker button > span,
+.home-season-strip b,
+.gallery-group-title span,
+.hero-collection-note small,
+.profile-portrait figcaption {
+  font-family: var(--ui-font);
+}
+
+/* 只讓純英文標籤使用展示字體，不混入中文句子。 */
+.brand,
+.blue-hour-hero .hero-type h1 .hero-name,
+.blue-hour-hero .hero-type h1 strong.world-title,
+.eyebrow,
+.gateway-kicker,
+.guide-caption,
+.strip-title,
+.moment-badge {
+  font-family: var(--ui-latin-font);
+}
+
+.blue-hour-hero .hero-type h1 strong.world-title {
+  font-weight: 800;
+  letter-spacing: -4px;
+}
+
+/* 句子中的數字或強調標籤沿用整句字重，不再局部變粗。 */
+p strong,
+p b,
+button strong,
+button b,
+summary strong,
+summary b,
+.gallery-hint b,
+.chibi-pocket b,
+.season-picker small b {
+  font-weight: inherit;
+}
+
+.section-heading > p,
+.archive-intro,
+.blue-hour-hero .archive-intro,
+.hero-about p,
+.gateway-copy p,
+.moments-intro,
+.moment-copy > p:not(.eyebrow),
+.curator-note-copy > p:not(.eyebrow),
+.profile-content > p,
+.actor-room-note > p:not(.eyebrow),
+.actor-room-footnote,
+.design-note-content p,
+.design-note-footnote,
+.special-art-copy > p:not(.eyebrow),
+.chibi-stage > p,
+.chibi-activity > p,
+.card-description,
+.recommendation,
+.welcome-note p,
+.games-independence-note,
+.game-independence-note,
+.section-footnote,
+.detail-note,
+.dialog-content > p:not(.eyebrow),
+.dialog-content li {
+  color: var(--ui-muted);
+}
+
+.eyebrow,
+.gateway-kicker,
+.guide-caption,
+.strip-title,
+.moment-badge,
+.gallery-label,
+.image-corner,
+.cover-caption span {
+  color: #a9dff0;
+}
+
+/* 常用說明文字維持至少可閱讀的尺寸。 */
+.eyebrow,
+.hero-type .eyebrow,
+.hero-about .eyebrow,
+.section-heading .eyebrow,
+.home-editorial .eyebrow,
+.moment-copy .eyebrow,
+.curator-note-copy .eyebrow,
+.profile-content .eyebrow,
+.actor-room-note .eyebrow,
+.design-notes > .eyebrow,
+.special-art-copy .eyebrow,
+.playroom-heading .eyebrow,
+.chibi-copy > .eyebrow,
+.season-heading .eyebrow,
+.viewer-info .eyebrow,
+.reference-viewer-heading .eyebrow {
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.brand small,
+.blue-hour-hero .hero-type h1 .hero-name,
+.hero-notes-label,
+.hero-collection-note small,
+.hero-character figcaption,
+.hero-character figcaption span,
+.character-signature small,
+.floating-tag,
+.stage-index,
+.world-orbit-label,
+.gateway-kicker,
+.guide-caption,
+.moment-badge,
+#motion-status,
+.design-sheet figcaption,
+#design-note-number,
+.gallery-label,
+.gallery-group-title span,
+.cover-caption span,
+.portrait-label small {
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.archive-intro,
+.blue-hour-hero .archive-intro,
+.hero-about p,
+.gateway-copy p,
+.moments-intro,
+.moment-copy > p:not(.eyebrow),
+.curator-note-copy > p:not(.eyebrow),
+.actor-room-note > p:not(.eyebrow),
+.design-note-content p,
+.special-art-copy > p:not(.eyebrow),
+.chibi-stage > p,
+.chibi-activity > p,
+.card-description,
+.welcome-note p,
+.dialog-content > p:not(.eyebrow),
+.dialog-content li {
+  font-size: 15px;
+  line-height: 1.85;
+}
+
+.hero-collection-note p,
+.world-palette-bar > p,
+.home-season-strip a small,
+.game-independence-note,
+.games-independence-note,
+.source-link,
+.text-link,
+.profile-facts dt,
+.profile-content .source-inline,
+.trait-card > span,
+.story-notes summary small,
+.story-notes summary b,
+.timeline a,
+.compass-intro p:last-child,
+.compass-links a span,
+.design-note-footnote,
+.chibi-light-picker > span,
+.chibi-activity .chibi-pocket,
+.activity-footer p,
+.activity-footer .text-link,
+.activity-footer .source-link,
+.chibi-activity .quiz-progress,
+.motion-source-list p,
+.motion-source-list a,
+.mood-title small,
+.mood-result,
+.recommendation span,
+.detail-note,
+.player-title small,
+.player-hint,
+.section-footnote,
+.archive-sources small,
+.guide-source-links,
+.visual-note,
+.episode-note,
+.gallery-hint,
+.gallery-card-footer a,
+.gallery-status,
+.viewer-controls > span,
+.viewer-controls a,
+footer {
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.compass-links a,
+.profile-portrait figcaption,
+.profile-portrait figcaption a,
+.reading-links a,
+.archive-bookmark summary,
+.archive-bookmark nav a,
+.season-picker button > span,
+.season-picker small,
+.episode-control,
+#season-description,
+.gallery-filters button,
+.viewer-controls button,
+.tags,
+.world-tones button,
+.stage-toggle,
+.motion-toggle,
+.soft-button,
+.ambient-motion-toggle,
+.actor-room-choices button,
+.design-note-tabs button,
+.chibi-look-picker button,
+.chibi-light-picker button,
+.chibi-mode-picker button,
+.chibi-quiz-answers button,
+.mood-buttons button,
+.surprise-button,
+.card-button,
+.return-button {
+  font-size: 14px;
+}
+
+/* 卡片採用一致的 20px 外圓角，內層控制項採用 12px。 */
+.gateway,
+.loop-card,
+.curator-note,
+.profile-portrait,
+.archive-compass,
+.actor-room-layout,
+.design-room,
+.special-art-card,
+.chibi-postcard,
+.mood-picker,
+.game-card,
+.welcome-note,
+.details-dialog,
+.reference-viewer,
+.special-viewer,
+.image-viewer {
+  border-radius: var(--ui-surface-radius);
+}
+
+.profile-portrait {
+  overflow: hidden;
+}
+
+/* 人物肖像只保留圖片本身，不疊加左上標籤或直排裝飾字。 */
+.profile-portrait::before {
+  content: none;
+}
+
+@media (min-width: 901px) {
+  .profile-portrait img {
+    height: 480px;
+    padding-top: 12px;
+    object-position: center bottom;
+  }
+}
+
+/* 次要按鈕與切換器：同一高度、圓角、邊框和背景，不再左右飄動。 */
+.stage-toggle,
+.world-tones button,
+.motion-toggle,
+.soft-button,
+.ambient-motion-toggle,
+.actor-room-choices button,
+.design-note-tabs button,
+.gallery-filters button,
+.viewer-controls button,
+.chibi-look-picker button,
+.chibi-light-picker button,
+.chibi-mode-picker button,
+.chibi-quiz-answers button,
+.mood-buttons button,
+.surprise-button,
+.return-button,
+.archive-bookmark summary,
+.episode-control select {
+  min-height: 44px;
+  border: 1px solid var(--ui-control-border);
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-control-bg);
+  color: var(--ui-control-text);
+  box-shadow: none;
+  font-weight: 600;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.stage-toggle {
+  flex: 0 0 auto;
+  min-width: 106px;
+  white-space: nowrap;
+}
+
+.stage-toggle:hover,
+.world-tones button:hover,
+.motion-toggle:hover,
+.soft-button:hover,
+.ambient-motion-toggle:hover,
+.actor-room-choices button:hover,
+.design-note-tabs button:hover,
+.gallery-filters button:hover,
+.viewer-controls button:hover,
+.chibi-look-picker button:hover,
+.chibi-light-picker button:hover,
+.chibi-mode-picker button:hover,
+.chibi-quiz-answers button:hover,
+.mood-buttons button:hover,
+.surprise-button:hover,
+.return-button:hover,
+.archive-bookmark summary:hover,
+.episode-control select:hover {
+  border-color: var(--ui-control-border-strong);
+  background: var(--ui-control-bg-hover);
+  color: #ffffff;
+  box-shadow: 0 0 0 3px #80d6ee13;
+  transform: none;
+}
+
+.world-tones button[aria-pressed="true"],
+.actor-room-choices button[aria-pressed="true"],
+.design-note-tabs button[aria-pressed="true"],
+.gallery-filters button[aria-pressed="true"],
+.chibi-look-picker button[aria-pressed="true"],
+.chibi-light-picker button[aria-pressed="true"],
+.chibi-mode-picker button[aria-pressed="true"],
+.mood-buttons button[aria-pressed="true"] {
+  border-color: #a4e8f3;
+  background: #2c6077;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+/* 主要動作預設保持深藍；只有 hover／focus 時才提亮。 */
+.primary-button,
+.card-button,
+.gateway .gateway-link,
+.gateway:hover .gateway-link,
+.game-gateway .gateway-link,
+#play-game {
+  min-height: 48px;
+  border: 1px solid #72b6d875;
+  border-radius: 14px;
+  background: linear-gradient(115deg, #173e59, #264b74);
+  color: #eefaff;
+  box-shadow: none;
+  font-size: 15px;
+  font-weight: 600;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.primary-button:hover,
+.card-button:hover,
+.gateway .gateway-link:hover,
+#play-game:hover {
+  border-color: #a6e9f6;
+  background: linear-gradient(115deg, #256680, #3c62a0);
+  color: #ffffff;
+  box-shadow: 0 0 0 3px #8bdff221;
+  transform: none;
+}
+
+.primary-button:focus-visible,
+.card-button:focus-visible,
+.gateway .gateway-link:focus-visible,
+#play-game:focus-visible {
+  border-color: #c5f4ff;
+  background: linear-gradient(115deg, #256680, #3c62a0);
+  color: #ffffff;
+  outline: 3px solid #8de8f4;
+  outline-offset: 3px;
+}
+
+.primary-button:active,
+.card-button:active,
+.gateway .gateway-link:active,
+#play-game:active {
+  background: linear-gradient(115deg, #15384f, #203f66);
+}
+
+.card-button {
+  justify-content: space-between;
+}
+
+.card-button > span {
+  color: #aeeeff;
+}
+
+/* 大型分季選擇保留資訊卡形式，但與其他控制項共用色彩和圓角。 */
+.season-picker button {
+  border-radius: 16px;
+  background: #17334d;
+  box-shadow: none;
+}
+
+.season-picker button:hover,
+.season-picker button[aria-pressed="true"] {
+  border-color: #9adff0;
+  background: #24546d;
+  box-shadow: none;
+  transform: none;
+}
+
+.season-picker button > span,
+.season-picker small {
+  color: #b6cde0;
+}
+
+/* 文字連結維持輕量，不偽裝成另一套按鈕。 */
+.source-link,
+.text-link,
+button.text-link {
+  color: #b2e8f6;
+  text-decoration: underline;
+  text-decoration-color: #8dcbe052;
+  text-underline-offset: 4px;
+}
+
+button.text-link {
+  min-height: 44px;
+  padding: 6px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.source-link:hover,
+.text-link:hover,
+button.text-link:hover {
+  color: #ffffff;
+  text-decoration-color: currentColor;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+/* 關閉、圖片與星座按鈕具有特殊用途，只統一平面回饋。 */
+.dialog-close {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-color: var(--ui-control-border);
+  background: #17334df2;
+  color: transparent;
+  font-size: 0;
+  line-height: 0;
+  box-shadow: none;
+}
+
+/* 以兩條線繪製關閉圖示，避免字型的乘號基線讓叉號偏離圓心。 */
+.dialog-close::before,
+.dialog-close::after {
+  content: "";
+  position: absolute;
+  width: 24px;
+  height: 2px;
+  border-radius: 999px;
+  background: #f3f8ff;
+  pointer-events: none;
+}
+
+.dialog-close::before {
+  transform: rotate(45deg);
+}
+
+.dialog-close::after {
+  transform: rotate(-45deg);
+}
+
+.dialog-close:hover {
+  border-color: var(--ui-control-border-strong);
+  background: #204763;
+  transform: none;
+}
+
+.game-card:hover,
+.gallery-card:hover,
+.gateway:hover,
+.gateway:hover .gateway-link {
+  transform: none;
+}
+
+.gallery-card:hover,
+.game-card:hover,
+.gateway:hover {
+  border-color: #88bdd76b;
+  box-shadow: 0 0 0 1px #85c7dd1c;
+}
+
+/* 首頁雙入口收尾：移除右側裝飾字後，重新平衡文字、人物與按鈕。 */
+.gateway-grid {
+  gap: var(--ui-grid-gap);
+  align-items: stretch;
+}
+
+.gateway {
+  min-height: 376px;
+  padding: 30px;
+  border-color: #82bdd660;
+  background: linear-gradient(132deg, #153b5be8, #102a49e8);
+}
+
+.game-gateway {
+  background: linear-gradient(132deg, #193a5ce8, #182b4ce8);
+}
+
+.gateway-copy {
+  width: 55%;
+  max-width: 330px;
+}
+
+.gateway h3 {
+  margin-bottom: 15px;
+  font-size: clamp(25px, 2vw, 30px);
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  text-wrap: balance;
+}
+
+.gateway-copy p {
+  margin: 0;
+  color: #cbddea;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.game-independence-note {
+  display: block;
+  margin-top: 10px;
+  color: #b9cedd;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.reaching-guide {
+  width: 72%;
+  top: 48px;
+  bottom: 70px;
+}
+
+.welcome-guide {
+  width: 59%;
+  top: 18px;
+  bottom: 68px;
+}
+
+.gateway:hover .gateway-guide img {
+  transform: none;
+}
+
+/* 動態卡同列等高；文字群組靠近底部，來源固定在同一條基線。 */
+.moments-grid {
+  gap: var(--ui-grid-gap);
+  align-items: stretch;
+}
+
+.moment-card {
+  height: 100%;
+}
+
+.moment-badge {
+  top: 28px;
+}
+
+.moment-copy {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 20px;
+}
+
+.moment-copy p:not(.eyebrow) {
+  margin-bottom: 0;
+}
+
+.moment-copy .source-link {
+  align-self: flex-start;
+  margin-top: 17px;
+  padding-top: 0;
+}
+
+/* 三欄桌機版的三個粗體標題使用相同尺寸與行高，落在同一條水平線。 */
+@media (min-width: 1101px) {
+  .moment-copy h3,
+  .moment-feature .moment-copy h3 {
+    font-size: 22px;
+    line-height: 1.55;
+  }
+}
+
+@media (min-width: 1101px) {
+  .moment-feature .moment-screen {
+    height: 260px;
+  }
+}
+
+/* 其他同列卡片也使用一致底線與內容收尾，避免按鈕上下跳動。 */
+.game-grid,
+.trait-grid,
+.special-art-grid {
+  align-items: stretch;
+}
+
+.game-card,
+.trait-card,
+.special-art-card {
+  height: 100%;
+}
+
+.special-art-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.special-art-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.special-art-copy .text-link {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+/* 首頁中央收藏筆記不再使用極小字。 */
+.hero-notes {
+  width: 186px;
+}
+
+.hero-collection-note {
+  padding: 15px;
+  border-radius: 16px;
+}
+
+.hero-collection-note h3 {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.world-palette-bar,
+.archive-compass {
+  background: linear-gradient(115deg, #263d5e70, #10253a70);
+}
+
+.profile-content .source-inline {
+  color: var(--ui-muted);
+}
+
+/* 舊樣式中較高權重的 6–10px 標籤，在此明確拉回可讀尺寸。 */
+.blue-hour-hero .hero-type h1 .hero-name,
+.world-palette-bar .eyebrow,
+.gateway-kicker,
+.guide-caption,
+.moment-badge,
+.strip-title,
+.strip-title small,
+.hero-about-tags span,
+.curator-tags span,
+.blue-hour-hero .hero-character figcaption,
+.blue-hour-hero .hero-character figcaption span,
+.blue-hour-hero .character-signature small {
+  font-size: 12px;
+}
+
+.moment-copy .source-link,
+.curator-actions .text-link,
+footer small {
+  font-size: 13px;
+}
+
+.image-corner,
+.profile-tags span,
+.archive-compass .eyebrow,
+#actor-room-caption,
+.reference-zoom,
+.design-sheet figcaption,
+.akane-palette span,
+.timeline article > span,
+.gallery-card .gallery-label,
+.cover-caption span {
+  font-size: 12px;
+}
+
+.profile-content .source-inline,
+.profile-content .source-inline a {
+  font-size: 13px !important;
+}
+
+.actor-room-footnote,
+.playroom-heading > .text-link,
+#chibi-source {
+  font-size: 13px;
+}
+
+@media (max-width: 760px) {
+  body {
+    font-size: 16px;
+  }
+
+  .site-header {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 16px 12px;
+  }
+
+  .brand {
+    font-size: 18px;
+  }
+
+  .brand small {
+    font-size: 10px;
+  }
+
+  .site-header nav {
+    order: 3;
+    width: 100%;
+    justify-content: space-between;
+    gap: 6px;
+    padding-top: 10px;
+    border-top: 1px solid #75b7d326;
+    font-size: 13px;
+  }
+
+  .site-header nav a {
+    flex: 1 1 0;
+    justify-content: center;
+    white-space: nowrap;
+    min-height: 42px;
+    padding: 9px 8px;
+    border-radius: 10px;
+    text-align: center;
+  }
+
+  .moment-badge {
+    top: 18px;
+  }
+
+  .stage-toggle {
+    margin-left: auto;
+    min-width: 44px;
+  }
+
+  .hero-notes {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .hero-collection-note {
+    padding: 13px 11px;
+  }
+
+  .hero-collection-note h3 {
+    font-size: 14px;
+  }
+
+  .hero-collection-note p {
+    font-size: 12px;
+  }
+
+  .hero-collection-note small,
+  .hero-character figcaption,
+  .hero-character figcaption span,
+  .character-signature small,
+  .floating-tag,
+  .stage-index,
+  .world-orbit-label,
+  .gateway-kicker,
+  .moment-badge,
+  .season-picker button > span,
+  .season-picker small,
+  .gallery-group-title span {
+    font-size: 10px;
+  }
+
+  .gateway-copy p,
+  .home-season-strip a span,
+  .home-season-strip a small,
+  .game-independence-note,
+  .games-independence-note,
+  .episode-note,
+  .visual-note,
+  .gallery-hint,
+  .section-footnote {
+    font-size: 12px;
+  }
+
+  .gateway {
+    min-height: 360px;
+    padding: 24px;
+  }
+
+  .gateway-copy {
+    width: 64%;
+    max-width: none;
+  }
+
+  .gateway h3 {
+    font-size: 25px;
+  }
+
+  .reaching-guide {
+    width: 76%;
+    top: 64px;
+    bottom: 68px;
+  }
+
+  .welcome-guide {
+    width: 61%;
+    top: 28px;
+    bottom: 66px;
+  }
+
+  .world-tones button,
+  .actor-room-choices button,
+  .design-note-tabs button,
+  .gallery-filters button,
+  .chibi-look-picker button,
+  .chibi-light-picker button,
+  .chibi-mode-picker button,
+  .mood-buttons button,
+  .surprise-button,
+  .card-button {
+    font-size: 13px;
+  }
+
+  .season-picker button {
+    min-height: 126px;
+    padding: 15px 11px;
+  }
+
+  .season-picker strong {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 400px) {
+  .site-header nav a {
+    padding-inline: 8px;
+    font-size: 12px;
+  }
+
+  .season-picker {
+    grid-template-columns: 1fr;
+  }
+
+  .season-picker button {
+    min-height: 0;
+  }
+
+  .season-picker small {
+    display: flex;
+  }
+
+  .gateway-copy {
+    width: 68%;
+  }
+
+  .gateway h3 {
+    font-size: 23px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-toggle,
+  .world-tones button,
+  .motion-toggle,
+  .soft-button,
+  .ambient-motion-toggle,
+  .primary-button,
+  .card-button,
+  .gateway-link,
+  .game-card,
+  .gallery-card,
+  .gateway {
+    transition: none;
+  }
+}
