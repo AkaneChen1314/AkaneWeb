@@ -336,16 +336,26 @@ const moodMessages = {
 document.querySelectorAll("[data-mood]").forEach((button) => {
   button.addEventListener("click", () => {
     const id = button.dataset.mood;
+    if (!Object.hasOwn(games, id)) return;
+    let recommendedCard = null;
     document.querySelectorAll("[data-mood]").forEach((choice) => {
       choice.setAttribute("aria-pressed", String(choice === button));
     });
     document.querySelectorAll(".game-card").forEach((card) => {
-      card.classList.toggle(
-        "recommended",
-        card.classList.contains(`${id}-card`),
-      );
+      const recommended = card.classList.contains(`${id}-card`);
+      card.classList.toggle("recommended", recommended);
+      if (recommended) recommendedCard = card;
     });
     document.getElementById("mood-result").textContent = moodMessages[id];
+    if (recommendedCard) {
+      recommendedCard.tabIndex = -1;
+      recommendedCard.focus({ preventScroll: true });
+      window.scrollTo({
+        top: Math.max(0, window.scrollY + recommendedCard.getBoundingClientRect().top - 24),
+        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant" : "smooth",
+      });
+    }
   });
 });
 document.getElementById("surprise-game").addEventListener("click", (event) => {

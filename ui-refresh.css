@@ -1031,6 +1031,36 @@ footer small {
   min-width: 0;
 }
 
+.game-card {
+  scroll-margin-top: 24px;
+}
+
+.game-card.recommended:focus {
+  outline: 2px solid #a1dce8;
+  outline-offset: 4px;
+}
+
+.extra-outfit-grid {
+  margin-top: var(--ui-grid-gap);
+}
+
+.product-art-card .special-art-image img {
+  height: 330px;
+  object-fit: contain;
+  background: #fff;
+  mask-image: none;
+}
+
+.product-art-card .special-art-copy {
+  padding-top: 24px;
+}
+
+.chibi-playroom .chibi-image-button img,
+.chibi-playroom[data-chibi-look] .chibi-image-button img {
+  object-fit: contain;
+  mask-image: none;
+}
+
 .game-card h3 {
   overflow-wrap: anywhere;
 }

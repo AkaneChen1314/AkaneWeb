@@ -9,6 +9,14 @@
   const room = document.getElementById("chibi-room");
   const looks = [
     {
+      key: "crepe",
+      title: "可麗餅小茜",
+      caption: "官方授權周邊示意 · 可麗餅 ver. 迷你寫真卡／兩款皆為黑川茜",
+      alt: "官方黑川茜可麗餅Q版迷你寫真卡兩款示意，紫色制服與廚師帽，原商品圖完整保留",
+      note: "可麗餅、紫色小帽與認真的小表情。兩張小卡都是茜，把這份甜甜的心情也收藏起來。",
+      source: "https://store.kadokawa.co.jp/shop/g/g302311004954/",
+    },
+    {
       key: "uniform",
       title: "襯衫小茜",
       caption: "官方角色插畫 · 白襯衫與格紋裙",
@@ -41,13 +49,16 @@
       source: "https://store.kadokawa.co.jp/shop/g/g302511002524/",
     },
   ];
-  let lookIndex = 0;
+  let lookIndex = looks.findIndex((look) => look.key === "uniform");
   function chooseLook(index) {
     lookIndex = index;
     const look = looks[index];
     const photo = document.getElementById("chibi-image");
     photo.src = `assets/akane/chibi-${look.key}.webp`;
     photo.alt = look.alt;
+    document.getElementById("chibi-change").setAttribute(
+      "aria-label", `目前：${look.title}。切換下一款Q版黑川茜造型`,
+    );
     document.getElementById("chibi-note").textContent = look.note;
     document.getElementById("chibi-art-caption").textContent = look.caption;
     document.getElementById("chibi-source").href = look.source;

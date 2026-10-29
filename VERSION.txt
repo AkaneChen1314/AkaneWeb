@@ -1,3 +1,3 @@
 1.2
-Edition: 20261030-blueworld-r13-neonstrike
+Edition: 20261030-blueworld-r14-akane
 Site: Blue World

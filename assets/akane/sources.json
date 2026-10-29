@@ -1,5 +1,54 @@
 [
   {
+    "file": "assets/akane/s1-official-dress.webp",
+    "source_page": "https://ichigoproduction.com/Season1/chara/akane.html",
+    "original_url": "https://ichigoproduction.com/Season1/core_sys/images/contents/00000022/block/00000062/00000062.png",
+    "downloaded": "2026-10-30",
+    "type": "official anime character visual; full image retained",
+    "season": 1,
+    "size": [600, 1550],
+    "sha256": "6834b5a101c360ace3b32890ccb61466f06b12c07a9d27677e7adaa31e02f5e3"
+  },
+  {
+    "file": "assets/akane/s3-ep34-4.webp",
+    "source_page": "https://ichigoproduction.com/Season3/story/34.html",
+    "original_url": "https://ichigoproduction.com/Season3/core_sys/images/contents/00000036/block/00000163/00000130.jpg?1789545935",
+    "downloaded": "2026-10-30",
+    "type": "official anime episode still; Akane only",
+    "season": 3,
+    "episode": 34,
+    "frame_order": 4,
+    "size": [1200, 675],
+    "sha256": "9e572fc0c1a8afc5ef84dbfd8d571c875eda2165522f9e717cb1b603134f6acb"
+  },
+  {
+    "file": "assets/akane/outfit-hospital.webp",
+    "source_page": "https://store.kadokawa.co.jp/shop/g/g302507000220/",
+    "original_url": "https://store.kadokawa.co.jp/img/goods/L/302507000220.jpg",
+    "downloaded": "2026-10-30",
+    "type": "official licensed merchandise sample; Akane only; SAMPLE and base retained",
+    "size": [1100, 1100],
+    "sha256": "e92578a3ace0698664b4d7cfdc91c1cb4298f9a48015cef09930985af346e94b"
+  },
+  {
+    "file": "assets/akane/outfit-outing.webp",
+    "source_page": "https://store.kadokawa.co.jp/shop/g/g302402005303/",
+    "original_url": "https://store.kadokawa.co.jp/img/goods/L/302402005303.jpg",
+    "downloaded": "2026-10-30",
+    "type": "official licensed merchandise sample; Akane only; SAMPLE and base retained",
+    "size": [1000, 1000],
+    "sha256": "61efbb4dec1e297186915765a66c3acd2800cd6f95a2ce961b15bb8abf9a0217"
+  },
+  {
+    "file": "assets/akane/chibi-crepe.webp",
+    "source_page": "https://store.kadokawa.co.jp/shop/g/g302311004954/",
+    "original_url": "https://store.kadokawa.co.jp/img/goods/2/302311004954.jpg",
+    "downloaded": "2026-10-30",
+    "type": "official licensed chibi merchandise sample; both cards depict Akane; full original retained",
+    "size": [1000, 1000],
+    "sha256": "09b55e8501e02653810e54e2887924d6a0e44b8caad29c7fb226d55955ebdaf3"
+  },
+  {
     "file": "assets/akane/hero.webp",
     "source_page": "https://ichigoproduction.com/Season3/chara/akane.html",
     "original_url": "https://ichigoproduction.com/Season3/core_sys/images/contents/00000007/block/00000019/00000035.png?1789545926",

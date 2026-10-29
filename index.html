@@ -73,22 +73,22 @@
     <link rel="stylesheet" href="styles.css?v=1.2-blueworld-r11" />
     <link rel="stylesheet" href="ambience.css?v=1.2-blueworld-r11" />
     <link rel="stylesheet" href="archive.css?v=1.2-blueworld-r11" />
-    <script src="main.js?v=20261030-blueworld-r13" defer></script>
+    <script src="main.js?v=20261030-blueworld-r14" defer></script>
     <script src="ambience.js?v=1.2-blueworld-r11" defer></script>
     <link rel="stylesheet" href="seasons.css?v=1.2-blueworld-r11" />
-    <script src="gallery-data.js?v=1.2-blueworld-r11" defer></script>
-    <script src="archive.js?v=1.2-blueworld-r11" defer></script>
+    <script src="gallery-data.js?v=20261030-blueworld-r14" defer></script>
+    <script src="archive.js?v=20261030-blueworld-r14" defer></script>
     <link rel="stylesheet" href="polish.css?v=1.2-blueworld-r11" />
     <link rel="stylesheet" href="edition.css?v=1.2-blueworld-r11" />
     <link rel="stylesheet" href="zone-effects.css?v=1.2-blueworld-r11" />
-    <script src="zone-effects.js?v=1.2-blueworld-r11" defer></script>
+    <script src="zone-effects.js?v=20261030-blueworld-r14" defer></script>
     <link rel="stylesheet" href="explore.css?v=1.2-blueworld-r11" />
-    <script src="explore.js?v=1.2-blueworld-r11" defer></script>
-    <meta name="akane-edition" content="20261030-blueworld-r13-neonstrike" />
+    <script src="explore.js?v=20261030-blueworld-r14" defer></script>
+    <meta name="akane-edition" content="20261030-blueworld-r14-akane" />
     <script src="polish.js?v=1.2-blueworld-r11" defer></script>
     <link rel="stylesheet" href="world.css?v=1.2-blueworld-r11" />
     <script src="world.js?v=1.2-blueworld-r11" defer></script>
-    <link rel="stylesheet" href="ui-refresh.css?v=20261030-blueworld-r13" />
+    <link rel="stylesheet" href="ui-refresh.css?v=20261030-blueworld-r14" />
   </head>
   <body class="stage-on">
     <a class="skip-link" href="#main-content">跳到主要內容</a>
@@ -972,12 +972,12 @@
               <p class="eyebrow">THREE SEASONS / HER STORY IN FRAMES</p>
               <h2>每一季，都有不同的茜。</h2>
             </div>
-            <p>30 張不同的官方劇照與立繪。<br />先選一季，再按話數慢慢收藏。</p>
+            <p><span id="gallery-total-count">33</span> 張官方劇照與立繪。<br />先選一季，再按話數慢慢收藏。</p>
           </div>
           <div class="season-picker" role="group" aria-label="選擇動畫季數">
             <button data-season="1" aria-pressed="true">
               <span>SEASON 01</span><strong>第一季</strong
-              ><small>相遇・節目・星光 <b data-season-count="1">8 張</b></small>
+              ><small>相遇・節目・星光 <b data-season-count="1">9 張</b></small>
             </button>
             <button data-season="2" aria-pressed="false">
               <span>SEASON 02</span><strong>第二季</strong
@@ -987,7 +987,7 @@
             </button>
             <button data-season="3" aria-pressed="false">
               <span>SEASON 03</span><strong>第三季</strong
-              ><small>日常・演出・心緒 <b data-season-count="3">6 張</b></small>
+              ><small>日常・演出・心緒 <b data-season-count="3">8 張</b></small>
             </button>
           </div>
           <div class="season-heading">
@@ -1015,7 +1015,7 @@
           <div class="gallery-toolbar">
             <div class="gallery-filters" role="group" aria-label="本季圖庫篩選">
               <button data-gallery-filter="all" aria-pressed="true">
-                本季全部 <span id="season-total">8</span>
+                本季全部 <span id="season-total">9</span>
               </button>
               <button data-gallery-filter="still" aria-pressed="false">
                 動畫劇照
@@ -1062,7 +1062,7 @@
                 <p class="eyebrow">BEYOND THE EPISODES / SPECIAL COLLECTION</p>
                 <h2 id="special-room-title">換一種造型，也一樣喜歡。</h2>
               </div>
-              <p>和服、魔女與小小的她。<br />官方特別插畫，另外慢慢收藏。</p>
+              <p>和服、魔女與更多單人造型。<br />特別插畫與授權周邊，另外慢慢收藏。</p>
             </div>
             <div class="special-art-grid">
               <article class="special-art-card">
@@ -1116,6 +1116,30 @@
                 </div>
               </article>
             </div>
+            <div class="special-art-grid extra-outfit-grid" aria-label="黑川茜單人造型收藏">
+              <article class="special-art-card product-art-card">
+                <button data-special-art="hospital" class="special-art-image" aria-label="放大黑川茜 Dreamy Hospital 造型">
+                  <img src="assets/akane/outfit-hospital.webp" alt="黑川茜 Dreamy Hospital 單人立牌示意，保留 SAMPLE 與底座" width="1100" height="1100" loading="lazy" />
+                </button>
+                <div class="special-art-copy">
+                  <p class="eyebrow">DREAMY HOSPITAL / LICENSED GOODS</p>
+                  <h3>把溫柔，穿成另一種顏色。</h3>
+                  <p>淡紫與粉色的 Dreamy Hospital 造型。官方授權周邊示意，保留原圖 SAMPLE 與底座，不對應動畫季數。</p>
+                  <button data-special-art="hospital" class="text-link">放大欣賞 ↗</button>
+                </div>
+              </article>
+              <article class="special-art-card product-art-card">
+                <button data-special-art="outing" class="special-art-image" aria-label="放大黑川茜出遊造型">
+                  <img src="assets/akane/outfit-outing.webp" alt="短髮黑川茜穿黑色高領與藍色長裙的單人立牌示意，保留 SAMPLE 與底座" width="1000" height="1000" loading="lazy" />
+                </button>
+                <div class="special-art-copy">
+                  <p class="eyebrow">A DAY OUT / LICENSED GOODS</p>
+                  <h3>帶著一點藍，輕輕出門。</h3>
+                  <p>黑色高領、藍色長裙與手提包，是短髮茜的出遊造型。官方授權周邊示意，原圖標記完整保留。</p>
+                  <button data-special-art="outing" class="text-link">放大欣賞 ↗</button>
+                </div>
+              </article>
+            </div>
             <section
               class="chibi-playroom"
               id="chibi-room"
@@ -1136,7 +1160,7 @@
                   <button
                     id="chibi-change"
                     class="chibi-image-button"
-                    aria-label="切換下一款Q版黑川茜造型"
+                    aria-label="目前：襯衫小茜。切換下一款Q版黑川茜造型"
                   >
                     <img
                       id="chibi-image"
@@ -1162,8 +1186,11 @@
                     ><button data-chibi-look="orchestra" aria-pressed="false">
                       音符小茜
                     </button>
+                    <button data-chibi-look="crepe" aria-pressed="false">
+                      可麗餅小茜
+                    </button>
                   </div>
-                  <p id="chibi-art-caption">官方角色插畫 · 白襯衫與格紋裙</p>
+                  <p id="chibi-art-caption" aria-live="polite">官方角色插畫 · 白襯衫與格紋裙</p>
                   <a
                     id="chibi-source"
                     class="source-link"
@@ -1472,6 +1499,9 @@
               </div>
             </div>
             <div class="mood-buttons" role="group" aria-label="依心情推薦遊戲">
+              <button data-mood="neonstrike" aria-pressed="false">
+                想來場戰術突襲
+              </button>
               <button data-mood="abyss" aria-pressed="false">想慢慢變強</button>
               <button data-mood="arcane" aria-pressed="false">想動動腦</button>
               <button data-mood="trader" aria-pressed="false">
@@ -1480,16 +1510,13 @@
               <button data-mood="starbreak" aria-pressed="false">
                 想來場星海突圍
               </button>
-              <button data-mood="neonstrike" aria-pressed="false">
-                想來場戰術突擊
-              </button>
             </div>
             <button id="surprise-game" class="surprise-button">
               交給命運 <span aria-hidden="true">↗</span>
             </button>
           </div>
           <p id="mood-result" class="mood-result" role="status">
-            五種旅程，都從一點好奇開始。NEON STRIKE 需使用鍵盤滑鼠。
+            選擇心情，帶你看看對應的遊戲；查看玩法後再開始。NEON STRIKE 需使用鍵盤滑鼠。
           </p>
           <div class="game-grid">
             <article class="game-card neonstrike-card">
@@ -1667,7 +1694,7 @@
         <span>✦ BLUE WORLD</span>
         <p>二次元守護者的收藏館 · 非官方粉絲主題</p>
         <a href="#sources">來源與圖片權利</a
-        ><small>Blue World · 五款獨立遊戲 · 2026.10.30 r13</small>
+        ><small>Blue World · 五款獨立遊戲 · 2026.10.30 r14</small>
       </footer>
     </div>
     <dialog

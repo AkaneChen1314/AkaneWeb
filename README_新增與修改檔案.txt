@@ -1,3 +1,20 @@
+Blue World 1.2 / r14｜新增與修改檔案
+===================================
+
+修訂日期：2026-10-30
+版本辨識：20261030-blueworld-r14-akane
+比較基準：r13 五款遊戲版
+
+新增圖片：assets/akane/s1-official-dress.webp、s3-ep34-4.webp、outfit-hospital.webp、outfit-outing.webp、chibi-crepe.webp
+  五張都只包含黑川茜，完整保留官方原圖與商品標記；hero.webp 共用現有素材，不另複製。
+
+修改程式：index.html、main.js、archive.js、gallery-data.js、zone-effects.js、explore.js、ui-refresh.css
+修改說明：VERSION.txt、README_先看這裡.md、README_更新說明.txt、README_新增與修改檔案.txt、圖片與資料來源.md、程式導覽.md、測試紀錄.md
+修改來源資料：assets/akane/sources.json
+
+發布時需將變更檔案與新增圖片一起提交。五款遊戲、存檔與舊圖片沒有修改。
+
+以下為 r13 歷史檔案清單：
 Blue World 1.2 / r13｜新增與修改檔案
 ===================================
 

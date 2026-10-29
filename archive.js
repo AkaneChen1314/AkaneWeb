@@ -13,6 +13,10 @@
       a.order - b.order,
   );
   const seasonNames = { 1: "第一季", 2: "第二季", 3: "第三季" };
+  document.getElementById("gallery-total-count").textContent = galleryItems.length;
+  document.querySelectorAll("[data-season-count]").forEach((count) => {
+    count.textContent = `${galleryItems.filter((item) => item.season === Number(count.dataset.seasonCount)).length} 張`;
+  });
   const seasonInfo = {
     1: {
       range: "1–11",

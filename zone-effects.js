@@ -72,6 +72,22 @@
   // 節慶插畫獨立收藏，不混入動畫話數時間線。
   const specialArts = [
     {
+      key: "hospital",
+      image: "outfit-hospital",
+      title: "黑川茜 · Dreamy Hospital",
+      date: "官方授權周邊示意 · SAMPLE 與底座保留",
+      source: "https://store.kadokawa.co.jp/shop/g/g302507000220/",
+      product: true,
+    },
+    {
+      key: "outing",
+      image: "outfit-outing",
+      title: "黑川茜 · 出遊造型",
+      date: "官方授權周邊示意 · SAMPLE 與底座保留",
+      source: "https://store.kadokawa.co.jp/shop/g/g302402005303/",
+      product: true,
+    },
+    {
       key: "newyear",
       image: "newyear-2025",
       title: "新年和服的茜",
@@ -93,7 +109,7 @@
     const art = specialArts[specialIndex];
     const photo = document.getElementById("special-viewer-image");
     photo.src = `assets/akane/${art.image}.webp`;
-    photo.alt = `官方黑川茜插畫：${art.title}`;
+    photo.alt = `${art.product ? "官方授權黑川茜周邊示意" : "官方黑川茜插畫"}：${art.title}`;
     document.getElementById("special-viewer-title").textContent = art.title;
     document.getElementById("special-viewer-date").textContent = art.date;
     document.getElementById("special-viewer-counter").textContent =
