@@ -1,3 +1,17 @@
+Blue World 1.2 / r15｜新增與修改檔案
+===================================
+
+修訂日期：2026-10-30
+版本辨識：20261030-blueworld-r15-outfits
+比較基準：r14
+
+程式：index.html、main.js、explore.js、zone-effects.js、ui-refresh.css
+說明：VERSION.txt、README_先看這裡.md、README_更新說明.txt、README_新增與修改檔案.txt、程式導覽.md、測試紀錄.md
+
+新設 #outfit-room 獨立造型區，放大圖順序與頁面順序一致，卡片與放大圖片區改為彩色漸層背景。
+沒有新增或改寫圖片檔案，原圖 SAMPLE 與底座完整保留。五款遊戲、存檔及既有素材不必重新上傳。
+
+以下為 r14 歷史檔案清單：
 Blue World 1.2 / r14｜新增與修改檔案
 ===================================
 

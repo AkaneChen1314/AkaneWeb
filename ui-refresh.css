@@ -1040,19 +1040,73 @@ footer small {
   outline-offset: 4px;
 }
 
-.extra-outfit-grid {
-  margin-top: var(--ui-grid-gap);
+.outfit-room {
+  margin: 56px 0;
+  padding: clamp(20px, 3vw, 36px);
+  border: 1px solid #9fcfe338;
+  border-radius: var(--ui-surface-radius);
+  scroll-margin-top: 24px;
+  background:
+    radial-gradient(ellipse at 0 0, #8674c72b, transparent 58%),
+    radial-gradient(ellipse at 100% 100%, #56c9db21, transparent 58%),
+    #10243a;
+}
+
+.hospital-art,
+.special-viewer[data-art="hospital"] {
+  --outfit-bg:
+    radial-gradient(ellipse at 18% 18%, #f6c6de, transparent 60%),
+    radial-gradient(ellipse at 85% 85%, #b8e1ec, transparent 65%),
+    linear-gradient(135deg, #e5d4f9, #d0d9fa);
+}
+
+.outing-art,
+.special-viewer[data-art="outing"] {
+  --outfit-bg:
+    radial-gradient(ellipse at 20% 15%, #c4edf0, transparent 60%),
+    radial-gradient(ellipse at 85% 85%, #d6c6f5, transparent 65%),
+    linear-gradient(135deg, #c6d9f4, #b8e0db);
+}
+
+.product-art-card .special-art-image {
+  isolation: isolate;
+  background: var(--outfit-bg);
 }
 
 .product-art-card .special-art-image img {
-  height: 330px;
+  height: clamp(300px, 32vw, 400px);
+  aspect-ratio: auto;
   object-fit: contain;
-  background: #fff;
+  background: transparent;
   mask-image: none;
+  mix-blend-mode: multiply;
 }
 
 .product-art-card .special-art-copy {
   padding-top: 24px;
+}
+
+.special-viewer-art {
+  isolation: isolate;
+  background: #081327;
+}
+
+.special-viewer-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 68dvh;
+  object-fit: contain;
+  background: #081327;
+}
+
+.special-viewer[data-product="true"] .special-viewer-art {
+  background: var(--outfit-bg);
+}
+
+.special-viewer[data-product="true"] .special-viewer-art img {
+  background: transparent;
+  mix-blend-mode: multiply;
 }
 
 .chibi-playroom .chibi-image-button img,

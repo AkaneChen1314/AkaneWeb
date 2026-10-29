@@ -214,6 +214,7 @@ function showZone() {
     "traits",
     "story-notes",
     "special-room",
+    "outfit-room",
     "chibi-room",
   ];
   const zone =

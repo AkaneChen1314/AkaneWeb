@@ -73,7 +73,7 @@
     <link rel="stylesheet" href="styles.css?v=1.2-blueworld-r11" />
     <link rel="stylesheet" href="ambience.css?v=1.2-blueworld-r11" />
     <link rel="stylesheet" href="archive.css?v=1.2-blueworld-r11" />
-    <script src="main.js?v=20261030-blueworld-r14" defer></script>
+    <script src="main.js?v=20261030-blueworld-r15" defer></script>
     <script src="ambience.js?v=1.2-blueworld-r11" defer></script>
     <link rel="stylesheet" href="seasons.css?v=1.2-blueworld-r11" />
     <script src="gallery-data.js?v=20261030-blueworld-r14" defer></script>
@@ -81,14 +81,14 @@
     <link rel="stylesheet" href="polish.css?v=1.2-blueworld-r11" />
     <link rel="stylesheet" href="edition.css?v=1.2-blueworld-r11" />
     <link rel="stylesheet" href="zone-effects.css?v=1.2-blueworld-r11" />
-    <script src="zone-effects.js?v=20261030-blueworld-r14" defer></script>
+    <script src="zone-effects.js?v=20261030-blueworld-r15" defer></script>
     <link rel="stylesheet" href="explore.css?v=1.2-blueworld-r11" />
-    <script src="explore.js?v=20261030-blueworld-r14" defer></script>
-    <meta name="akane-edition" content="20261030-blueworld-r14-akane" />
+    <script src="explore.js?v=20261030-blueworld-r15" defer></script>
+    <meta name="akane-edition" content="20261030-blueworld-r15-outfits" />
     <script src="polish.js?v=1.2-blueworld-r11" defer></script>
     <link rel="stylesheet" href="world.css?v=1.2-blueworld-r11" />
     <script src="world.js?v=1.2-blueworld-r11" defer></script>
-    <link rel="stylesheet" href="ui-refresh.css?v=20261030-blueworld-r14" />
+    <link rel="stylesheet" href="ui-refresh.css?v=20261030-blueworld-r15" />
   </head>
   <body class="stage-on">
     <a class="skip-link" href="#main-content">跳到主要內容</a>
@@ -652,6 +652,7 @@
               ><a href="#season-2">第二季 <span>舞台上的光</span></a
               ><a href="#season-3">第三季 <span>鏡頭外的日常</span></a
               ><a href="#special-room">特別收藏 <span>和服與魔女</span></a
+              ><a href="#outfit-room">造型收藏 <span>溫柔與日常</span></a
               ><a href="#chibi-room">小茜遊樂室 <span>星光與小問答</span></a
               ><a href="#sources">資料來源 <span>從官方看見她</span></a>
             </div>
@@ -1062,7 +1063,7 @@
                 <p class="eyebrow">BEYOND THE EPISODES / SPECIAL COLLECTION</p>
                 <h2 id="special-room-title">換一種造型，也一樣喜歡。</h2>
               </div>
-              <p>和服、魔女與更多單人造型。<br />特別插畫與授權周邊，另外慢慢收藏。</p>
+              <p>和服與魔女，收藏節慶裡的茜。<br />更多授權造型，放在下方的獨立收藏區。</p>
             </div>
             <div class="special-art-grid">
               <article class="special-art-card">
@@ -1116,8 +1117,17 @@
                 </div>
               </article>
             </div>
+          </section>
+          <section id="outfit-room" class="outfit-room" aria-labelledby="outfit-room-title">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">AKANE WARDROBE / LITTLE COLLECTIONS</p>
+                <h2 id="outfit-room-title">把喜歡，換成不同的造型。</h2>
+              </div>
+              <p>黑川茜的單人授權造型。<br />在柔和的色彩裡，慢慢欣賞服裝與細節。</p>
+            </div>
             <div class="special-art-grid extra-outfit-grid" aria-label="黑川茜單人造型收藏">
-              <article class="special-art-card product-art-card">
+              <article class="special-art-card product-art-card hospital-art">
                 <button data-special-art="hospital" class="special-art-image" aria-label="放大黑川茜 Dreamy Hospital 造型">
                   <img src="assets/akane/outfit-hospital.webp" alt="黑川茜 Dreamy Hospital 單人立牌示意，保留 SAMPLE 與底座" width="1100" height="1100" loading="lazy" />
                 </button>
@@ -1128,7 +1138,7 @@
                   <button data-special-art="hospital" class="text-link">放大欣賞 ↗</button>
                 </div>
               </article>
-              <article class="special-art-card product-art-card">
+              <article class="special-art-card product-art-card outing-art">
                 <button data-special-art="outing" class="special-art-image" aria-label="放大黑川茜出遊造型">
                   <img src="assets/akane/outfit-outing.webp" alt="短髮黑川茜穿黑色高領與藍色長裙的單人立牌示意，保留 SAMPLE 與底座" width="1000" height="1000" loading="lazy" />
                 </button>
@@ -1140,6 +1150,7 @@
                 </div>
               </article>
             </div>
+          </section>
             <section
               class="chibi-playroom"
               id="chibi-room"
@@ -1363,6 +1374,7 @@
                     ><a href="#season-2">第二季圖庫</a
                     ><a href="#season-3">第三季圖庫</a
                     ><a href="#special-room">特別收藏</a
+                    ><a href="#outfit-room">造型收藏</a
                     ><a href="#chibi-room">小茜互動</a
                     ><a href="#sources">資料來源</a>
                   </div>
@@ -1372,7 +1384,6 @@
             <p class="actor-room-footnote">
               節慶插畫依公布時間排列，不歸入任何一話。Q版包含官方插畫與授權周邊示意圖；原圖標記完整保留，短句為本館創作。
             </p>
-          </section>
           <section
             class="archive-sources"
             id="sources"
@@ -1694,7 +1705,7 @@
         <span>✦ BLUE WORLD</span>
         <p>二次元守護者的收藏館 · 非官方粉絲主題</p>
         <a href="#sources">來源與圖片權利</a
-        ><small>Blue World · 五款獨立遊戲 · 2026.10.30 r14</small>
+        ><small>Blue World · 五款獨立遊戲 · 2026.10.30 r15</small>
       </footer>
     </div>
     <dialog
@@ -1776,13 +1787,15 @@
       <button class="dialog-close" id="close-special" aria-label="關閉特別插畫">
         ×
       </button>
-      <img
-        id="special-viewer-image"
-        src="assets/akane/newyear-2025.webp"
-        alt="黑川茜新年和服官方插畫"
-        width="1200"
-        height="852"
-      />
+      <div class="special-viewer-art">
+        <img
+          id="special-viewer-image"
+          src="assets/akane/newyear-2025.webp"
+          alt="黑川茜新年和服官方插畫"
+          width="1200"
+          height="852"
+        />
+      </div>
       <div class="special-viewer-info">
         <p class="eyebrow" id="special-viewer-date">2025.01 / NEW YEAR</p>
         <h2 id="special-viewer-title">新年和服的茜</h2>

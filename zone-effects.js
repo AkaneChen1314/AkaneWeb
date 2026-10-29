@@ -72,6 +72,20 @@
   // 節慶插畫獨立收藏，不混入動畫話數時間線。
   const specialArts = [
     {
+      key: "newyear",
+      image: "newyear-2025",
+      title: "新年和服的茜",
+      date: "2025.01 / NEW YEAR",
+      source: "https://ichigoproduction.com/Season2/news/index01340000.html",
+    },
+    {
+      key: "halloween",
+      image: "halloween-2025",
+      title: "星光魔女的茜",
+      date: "2025.10 / HALLOWEEN",
+      source: "https://ichigoproduction.com/Season3/news/index00510000.html",
+    },
+    {
       key: "hospital",
       image: "outfit-hospital",
       title: "黑川茜 · Dreamy Hospital",
@@ -87,26 +101,14 @@
       source: "https://store.kadokawa.co.jp/shop/g/g302402005303/",
       product: true,
     },
-    {
-      key: "newyear",
-      image: "newyear-2025",
-      title: "新年和服的茜",
-      date: "2025.01 / NEW YEAR",
-      source: "https://ichigoproduction.com/Season2/news/index01340000.html",
-    },
-    {
-      key: "halloween",
-      image: "halloween-2025",
-      title: "星光魔女的茜",
-      date: "2025.10 / HALLOWEEN",
-      source: "https://ichigoproduction.com/Season3/news/index00510000.html",
-    },
   ];
   const specialViewer = document.getElementById("special-viewer");
   let specialIndex = 0;
   let specialTrigger = null;
   function showSpecial() {
     const art = specialArts[specialIndex];
+    specialViewer.dataset.art = art.key;
+    specialViewer.dataset.product = String(art.product === true);
     const photo = document.getElementById("special-viewer-image");
     photo.src = `assets/akane/${art.image}.webp`;
     photo.alt = `${art.product ? "官方授權黑川茜周邊示意" : "官方黑川茜插畫"}：${art.title}`;

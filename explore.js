@@ -345,6 +345,7 @@
     ["story-notes", "成長脈絡"],
     ["gallery", "三季圖庫"],
     ["special-room", "特別收藏"],
+    ["outfit-room", "造型收藏"],
     ["chibi-room", "小茜互動"],
     ["sources", "資料來源"],
   ];
