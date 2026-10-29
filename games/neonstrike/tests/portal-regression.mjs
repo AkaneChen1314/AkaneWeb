@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import { createHarness } from './test-harness.mjs';
+
+const h = createHarness();
+h.run("setupEvents(); clock={getDelta(){return .05;}}; gameState='playing'; gameStart=100; keys.KeyW=true; mouseDown=true; grenades.length=0; let framesRendered=0; renderFrame=()=>{framesRendered++;}; audioContext={suspend(){return Promise.resolve();}};");
+h.dispatchGlobal('akane-portal-pause', { detail: { paused: true } });
+assert.equal(h.run('gameState'), 'paused');
+assert.equal(h.run('portalPaused'), true);
+assert.equal(h.run('keys.KeyW'), false);
+assert.equal(h.run('mouseDown'), false);
+for (let i = 0; i < 10; i++) h.run('animate(2000);');
+assert.equal(h.run('framesRendered'), 0, 'hidden game must stop rendering');
+h.run('resumeGame();');
+assert.equal(h.run('gameState'), 'paused', 'hidden game must not resume');
+h.dispatchGlobal('akane-portal-pause', { detail: { paused: false } });
+assert.equal(h.run('gameState'), 'paused', 'returning must await a user gesture');
+h.setNow(6000);
+h.run('resumeGame();');
+assert.equal(h.run('gameState'), 'playing');
+assert.equal(h.run('gameStart'), 5100, 'portal pause time must be excluded');
+console.log('PASS portal return pauses combat, clears input, stops rendering and waits for manual resume');

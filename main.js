@@ -7,6 +7,20 @@
 
 // 在這裡修改首頁遊戲說明，不必修改遊戲邏輯。
 const games = {
+  neonstrike: {
+    name: "NEON STRIKE：霓光突擊",
+    category: "3D 第一人稱射擊 / 戰術任務",
+    version: "鍵盤・滑鼠",
+    path: "games/neonstrike/index.html?v=20261030-r13",
+    description:
+      "進入暗夜港區與熔火工廠，選擇三名幹員、裝備與難度，挑戰全面肅清、波次攻堅、限時獵殺與首領討伐。利用掩體、補給與技能突破防線。",
+    steps: [
+      "在作戰準備中依序選擇幹員裝備、地圖、任務與難度，再確認部署。",
+      "使用電腦鍵盤與滑鼠：WASD 移動、Shift 衝刺、空白鍵跳躍、左鍵射擊、右鍵瞄準、R 換彈、Q 技能；按住 G 預覽、放開投擲手榴彈。",
+      "按 Esc 解除滑鼠鎖定並暫停，再點上方「返回遊戲館」。再次進入後由「繼續任務」恢復；滑鼠無法鎖定時可使用右鍵拖曳視角。",
+    ],
+    note: "需要支援 WebGL 的瀏覽器與鍵盤滑鼠，目前沒有手機觸控操作。\n同一次開啟網頁期間保留戰局；重新整理或關閉網頁會重開。返回遊戲館會暫停戰鬥、聲音與 3D 繪製。本遊戲為獨立自製作品。",
+  },
   abyss: {
     name: "深境冒險",
     category: "回合冒險 / 角色養成 RPG",
@@ -126,6 +140,10 @@ function openGame(id) {
   document.body.classList.add("playing");
   document.dispatchEvent(new Event("lounge-visibility"));
   document.getElementById("player-title").textContent = game.name;
+  document.getElementById("player-version").textContent = game.version || "v1.2";
+  document.querySelector(".player-hint").textContent = id === "neonstrike"
+    ? "按 Esc 後可返回遊戲館"
+    : "休息一下，隨時回來";
 
   frames.forEach((frame, key) => {
     frame.hidden = key !== id;
@@ -136,7 +154,8 @@ function openGame(id) {
   if (!frame) {
     loading.hidden = false;
     frame = document.createElement("iframe");
-    frame.title = `${game.name} 1.2`;
+    frame.title = game.name;
+    frame.allow = "fullscreen";
     frame.dataset.game = id;
     frame.src = game.path;
     // 同一來源的原遊戲需要 localStorage 與下載功能，因此不加 sandbox。
@@ -244,8 +263,8 @@ function showZone() {
 }
 
 function syncRoute() {
-  const match = location.hash.match(/^#play=(abyss|arcane|trader|starbreak)$/);
-  if (match) openGame(match[1]);
+  const match = /^#play=([a-z]+)$/.exec(location.hash);
+  if (match && Object.hasOwn(games, match[1])) openGame(match[1]);
   else {
     returnToLounge();
     showZone();
@@ -308,6 +327,7 @@ window.addEventListener("pageshow", syncGameVisibility);
 
 // 只推薦與標示卡片，不直接啟動遊戲；仍先顯示玩法介紹。
 const moodMessages = {
+  neonstrike: "推薦《NEON STRIKE》：帶上鍵盤滑鼠，挑選幹員與地圖，來場戰術突擊。",
   abyss: "推薦《深境冒險》：從第一層出發，把每次戰鬥都變成成長。",
   arcane: "推薦《星界牌陣》：觀察敵方意圖，組合屬於你的致勝戰術。",
   trader: "推薦《百億炒股人生》：試著做不同選擇，看看人生會走向哪裡。",

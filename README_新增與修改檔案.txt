@@ -1,3 +1,24 @@
+Blue World 1.2 / r13｜新增與修改檔案
+===================================
+
+修訂日期：2026-10-30
+版本辨識：20261030-blueworld-r13-neonstrike
+比較基準：r12-ui-12 四款遊戲版
+
+新增：games/neonstrike/
+  NEON STRIKE 遊戲程式、兩張地圖封面、音效、本機 Three.js、原有回歸檢查與本機啟動器。
+  portal.css 處理直接開啟遊戲時的返回列；tests/portal-regression.mjs 檢查網站暫停整合。
+
+修改：index.html、main.js、ui-refresh.css、VERSION.txt
+  新增第五款入口、介紹、推薦與路由，更新五款文案及版面。
+
+說明：README_先看這裡.md、README_更新說明.txt、README_新增與修改檔案.txt、程式導覽.md、測試紀錄.md
+
+發布時需同時上傳上述根目錄檔案與完整 games/neonstrike/。
+其他四款遊戲、角色圖片、影片及原有存檔格式保持不變。
+不要上傳 E:\game\output 的截圖、錄影或測試輸出。
+
+以下為 r12 歷史檔案清單：
 Blue World 1.2 / r12｜新增與修改檔案
 ===================================
 

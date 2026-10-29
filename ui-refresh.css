@@ -1008,6 +1008,75 @@ footer small {
   }
 }
 
+/* 五款遊戲：新作獨立橫向主卡，其餘四款保持兩欄成對排列。 */
+.neonstrike-card {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+}
+
+.neonstrike-card .card-visual {
+  min-height: 340px;
+  height: 100%;
+  aspect-ratio: auto;
+}
+
+.neonstrike-card .card-visual img {
+  position: absolute;
+  inset: 0;
+  object-position: 36% center;
+}
+
+.game-card .card-body {
+  min-width: 0;
+}
+
+.game-card h3 {
+  overflow-wrap: anywhere;
+}
+
+.mood-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+}
+
+.mood-buttons {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  min-width: 0;
+  width: 100%;
+  margin-left: 0;
+  flex-wrap: wrap;
+}
+
+.surprise-button {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+@media (max-width: 760px) {
+  .game-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .neonstrike-card {
+    display: flex;
+    grid-column: auto;
+  }
+
+  .neonstrike-card .card-visual {
+    min-height: 0;
+    height: auto;
+    aspect-ratio: 1.7;
+  }
+
+  .neonstrike-card .card-visual img {
+    position: static;
+  }
+
+}
+
 @media (prefers-reduced-motion: reduce) {
   .stage-toggle,
   .world-tones button,

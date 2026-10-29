@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0a0d12" />
+    <title>NEON STRIKE // 3D 射擊競技場</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="../../shared/portal.css" />
+    <link rel="stylesheet" href="./portal.css" />
+    <script defer src="../../shared/portal.js"></script>
+  </head>
+  <body>
+    <div id="game"></div>
+    <aside id="fileNotice" class="file-notice" hidden>
+      <b>需要本機遊戲伺服器</b>
+      <span>瀏覽器不允許直接以 file:// 載入 3D 模組。請雙擊資料夾內的「開始遊戲.cmd」；新版啟動器使用 Windows 內建元件，不需要另外安裝 Node.js。</span>
+      <a href="http://localhost:4173">伺服器已啟動？進入遊戲 →</a>
+    </aside>
+    <aside id="loadError" class="file-notice" hidden><b>遊戲未能啟動</b><span>請重新載入頁面，或使用支援 WebGL 的 Edge／Chrome 開啟遊戲。</span></aside>
+
+    <button id="helpButton" class="help-button" type="button" aria-haspopup="dialog" aria-expanded="false">
+      <span>?</span><b>遊戲說明</b><small>HOW TO PLAY</small>
+    </button>
+
+    <section id="lobby" class="overlay visible" aria-label="遊戲大廳">
+      <div class="lobby-art" aria-hidden="true"></div>
+      <div class="scanline"></div>
+      <header class="brand">
+        <span class="eyebrow"><i></i> NIGHTFALL OPERATIONS // 01</span>
+        <h1>NEON<br /><em>STRIKE</em></h1>
+        <span class="brand-location"><span id="brandMapName">RUST HARBOR</span> <b id="brandMapLabel">暗夜港區</b></span>
+        <p>自訂你的戰場，突破菁英防線，迎戰戰區指揮官。選擇幹員、火力與挑戰，讓每次部署都有不同節奏。</p>
+        <div class="hero-tags"><span>單人戰術 FPS</span><span>4 種任務</span><span>菁英 · 首領戰</span></div>
+      </header>
+
+      <div class="setup-shell panel">
+        <div class="setup-heading"><div><small>OPERATION SETUP</small><h2>作戰準備</h2></div><span id="setupProgress">01 / 04</span></div>
+        <nav class="setup-tabs" aria-label="作戰準備步驟">
+          <button type="button" data-step-tab="0" aria-current="step"><b>01</b><span>幹員裝備</span></button>
+          <button type="button" data-step-tab="1"><b>02</b><span>選擇地圖</span></button>
+          <button type="button" data-step-tab="2"><b>03</b><span>戰鬥配置</span></button>
+          <button type="button" data-step-tab="3"><b>04</b><span>任務確認</span></button>
+        </nav>
+        <div class="setup-content">
+      <div class="loadout" data-lobby-step="0">
+        <div class="panel-title"><span>01</span> 武器塗裝</div>
+        <div id="weaponSkins" class="swatches" role="radiogroup" aria-label="武器塗裝"></div>
+        <div id="weaponName" class="selection-name">酸蝕迷彩</div>
+
+        <div class="panel-title spaced"><span>02</span> 初始幹員</div>
+        <div id="operatorSkins" class="operators" role="radiogroup" aria-label="幹員制服"></div>
+        <div class="operator-profile">
+          <div><b id="operatorName">VANTA // 夜襲</b><span id="operatorRole">均衡型</span></div>
+          <p id="operatorDescription">生命、速度與火力均衡，適合第一次進入戰區。</p>
+          <div class="attribute"><span>生命</span><i><b id="statHealth"></b></i><em id="statHealthValue">100</em></div>
+          <div class="attribute"><span>速度</span><i><b id="statSpeed"></b></i><em id="statSpeedValue">5.1</em></div>
+          <div class="attribute"><span>護甲</span><i><b id="statArmor"></b></i><em id="statArmorValue">50</em></div>
+          <div class="attribute"><span>火力</span><i><b id="statPower"></b></i><em id="statPowerValue">100%</em></div>
+        </div>
+      </div>
+
+      <section class="map-step" data-lobby-step="1" hidden>
+        <div class="panel-title"><span>02</span> 選擇戰場</div>
+        <p class="setup-copy">比較兩個戰區的地形，選擇適合你的作戰路線。</p>
+        <select id="mapSelect" hidden aria-hidden="true" tabindex="-1"><option value="0">RUST HARBOR // 暗夜港區</option><option value="1">EMBER FOUNDRY // 熔火工廠</option></select>
+        <fieldset class="map-cards">
+          <legend>作戰地圖 <small>SELECT YOUR ARENA</small></legend>
+          <label class="map-card harbor-card">
+            <input type="radio" name="arena" value="0" checked />
+            <span class="map-card-body">
+              <span class="map-card-top"><b>01 / HARBOR</b><span class="map-selected">已選擇 ✓</span></span>
+              <span class="map-card-info"><small>RUST HARBOR</small><strong>暗夜港區</strong><span>雨夜港口與貨櫃掩體，外環視野開闊。</span><span class="map-card-tags"><i>遠近交戰</i><i>09 區域</i></span></span>
+            </span>
+          </label>
+          <label class="map-card foundry-card">
+            <input type="radio" name="arena" value="1" />
+            <span class="map-card-body">
+              <span class="map-card-top"><b>02 / FOUNDRY</b><span class="map-selected">已選擇 ✓</span></span>
+              <span class="map-card-info"><small>EMBER FOUNDRY</small><strong>熔火工廠</strong><span>熔爐與交錯通道，適合近距離突擊。</span><span class="map-card-tags"><i>近距突擊</i><i>05 區域</i></span></span>
+            </span>
+          </label>
+        </fieldset>
+      </section>
+
+      <div class="mission">
+        <div class="mission-body">
+        <section data-lobby-step="2" hidden>
+        <div class="panel-title"><span>03</span> 遊戲模式<button id="encounterJump" class="encounter-jump" type="button">自訂敵軍與首領 ↓</button></div>
+        <div id="modeOptions" class="mode-options" role="radiogroup" aria-label="遊戲模式"></div>
+        <p id="modeDescription" class="mode-description">清除整座港區內的所有敵軍，沒有增援，也沒有時間限制。</p>
+        <div class="panel-title spaced compact-title"><span>04</span> 戰場難度</div>
+        <div id="difficultyOptions" class="difficulty-options" role="radiogroup" aria-label="戰場難度"></div>
+        <p id="difficultyDescription" class="difficulty-description">標準戰鬥模擬；敵人反應與傷害維持均衡。</p>
+        <p id="encounterSummary" class="encounter-summary">12 名常規敵軍 · 強度 1.00× · 菁英約 15%</p>
+        <details class="settings-drawer encounter-drawer">
+          <summary><span><b class="drawer-kicker">ADVANCED SETTINGS</b>自訂敵軍配置</span><small>調整數量、菁英與首領</small></summary>
+          <div class="encounter-controls">
+            <div class="control-group-heading"><span>01</span><div><b>敵軍規模</b><small>決定戰場上的敵人數量與強度</small></div></div>
+            <label for="enemyCountSelect"><span>敵軍數量<small>波次模式為最後一波人數</small></span><select id="enemyCountSelect"><option value="0">依模式建議</option><option value="6">6 名</option><option value="12">12 名</option><option value="18">18 名</option><option value="24">24 名</option><option value="30">30 名</option></select></label>
+            <label for="enemyPowerSelect"><span>強度倍率<small>疊加於上方難度</small></span><select id="enemyPowerSelect"><option value="0.8">0.80× 輕裝</option><option value="1" selected>1.00× 標準</option><option value="1.25">1.25× 強化</option><option value="1.5">1.50× 重裝</option></select></label>
+            <label for="eliteSelect"><span>菁英比例<small id="eliteNote">更強的裝備與戰術</small></span><select id="eliteSelect"><option value="0">無菁英</option><option value="0.15" selected>約 15%</option><option value="0.25">約 25%</option><option value="0.3">約 30%</option></select></label>
+            <label for="bossSelect"><span>最後追加首領<small>討伐模式固定開啟</small></span><select id="bossSelect"><option value="off" selected>關閉</option><option value="on">開啟 · 另計 1 名</option></select></label>
+            <div class="control-group-heading boss-group-heading"><span>02</span><div><b>首領配置</b><small id="bossConfigurationHint">啟用首領後生效</small></div></div>
+            <label for="bossHealthSelect"><span>首領基礎生命<small>會依難度與敵軍強度調整</small></span><select id="bossHealthSelect"><option value="350">350 · 輕裝</option><option value="700" selected>700 · 標準</option><option value="1200">1200 · 強韌</option><option value="2000">2000 · 史詩</option></select></label>
+            <label for="bossSpeedSelect"><span>首領基礎移速倍率<small>也會受難度、強度及階段影響</small></span><select id="bossSpeedSelect"><option value="0.75">0.75× 沉穩</option><option value="1" selected>1.00× 標準</option><option value="1.75">1.75× 高速</option><option value="3.2">3.20× 極速</option></select></label>
+            <label for="bossPowerSelect"><span>首領攻擊強度<small>影響首領造成的傷害</small></span><select id="bossPowerSelect"><option value="0.75">0.75× 輕裝</option><option value="1" selected>1.00× 標準</option><option value="1.5">1.50× 強化</option><option value="2">2.00× 致命</option></select></label>
+          </div>
+          <p class="encounter-help">數量：波次攻堅選的是最後一波人數；限時獵殺的目標會隨人數調整。強度與難度會共同影響敵人生命及火力。<br>首領：基礎生命再乘上難度與敵軍強度；速度和攻擊倍率只影響首領。討伐模式至少有 25% 菁英；限時獵殺不追加首領。配置保留在目前瀏覽器分頁。</p>
+        </details>
+        </section>
+        <section data-lobby-step="3" hidden>
+        <div class="panel-title spaced compact-title"><span>05</span> 任務簡報</div>
+        <p class="confirmation-intro">確認本次部署的設定，隨時可以返回修改。</p>
+        <div id="setupSummary" class="briefing-grid" aria-label="目前作戰設定">
+          <div><small>幹員 / OPERATOR</small><strong id="summaryOperator">—</strong></div>
+          <div><small>戰場 / MAP</small><strong id="summaryMap">—</strong></div>
+          <div><small>模式 / MODE</small><strong id="summaryMode">—</strong></div>
+          <div><small>難度 / DIFFICULTY</small><strong id="summaryDifficulty">—</strong></div>
+          <div id="summaryBossCard" class="briefing-boss" hidden><small>首領設定 / BOSS</small><strong id="summaryBoss">—</strong></div>
+        </div>
+        <div class="stat-grid">
+          <div><strong id="briefEnemyCount">12</strong><small id="briefEnemyLabel">敵軍總數</small></div>
+          <div><strong id="briefSectorCount">09</strong><small>戰術區域</small></div>
+          <div><strong id="briefMissionValue">ALL</strong><small id="briefMissionLabel">任務目標</small></div>
+        </div>
+        <div class="intel-tags" aria-label="地圖特性"><span id="mapFeature">大型港區</span><span>室內外戰</span><span>多路側翼</span><span>4 種補給</span></div>
+        <label class="quality-control" for="qualitySelect"><span>畫面品質<small>依電腦效能調整</small></span><select id="qualitySelect"><option value="0">精緻</option><option value="1" selected>均衡</option><option value="2">流暢</option></select></label>
+        <label class="quality-control volume-control" for="volumeControl"><span>音效音量<small>槍聲・換彈・環境</small></span><input id="volumeControl" type="range" min="0" max="100" value="72" aria-label="遊戲音量" /><output id="volumeValue" for="volumeControl">72%</output></label>
+        <details class="settings-drawer audio-drawer">
+          <summary><span>音效混音</span><small>戰鬥 · 環境 · 提示</small></summary>
+          <label class="mix-control" for="effectsVolume"><span>戰鬥音效<small>槍聲、換彈、腳步、爆炸</small></span><input id="effectsVolume" type="range" min="0" max="100" value="80" /><output id="effectsVolumeValue" for="effectsVolume">80%</output></label>
+          <label class="mix-control" for="ambienceVolume"><span>環境聲<small>港區風聲與背景氛圍</small></span><input id="ambienceVolume" type="range" min="0" max="100" value="35" /><output id="ambienceVolumeValue" for="ambienceVolume">35%</output></label>
+          <label class="mix-control" for="feedbackVolume"><span>提示音<small>選單、技能與命中確認</small></span><input id="feedbackVolume" type="range" min="0" max="100" value="55" /><output id="feedbackVolumeValue" for="feedbackVolume">55%</output></label>
+        </details>
+        <button class="guide-teaser" type="button" data-open-help><span>第一次作戰？</span><b>查看完整操作、模式與補給指南 →</b></button>
+        </section>
+        </div>
+      </div>
+        </div>
+        <div class="setup-actions">
+          <button id="setupPrevious" class="setup-nav-button" type="button" disabled>← 上一步</button>
+          <button id="setupNext" class="setup-nav-button next" type="button">下一步 →</button>
+        <button id="deployButton" class="deploy-button" disabled aria-busy="true" hidden>
+          <span>部署幹員</span><b>ENTER ARENA →</b>
+        </button>
+        </div>
+      </div>
+
+      <footer class="lobby-footer">
+        <span>MAP // MULTI-ARENA</span><span id="modeFooter">MODE // PURGE</span><span>BUILD // 7.5 VISUAL CLARITY</span>
+      </footer>
+    </section>
+
+    <div id="hud" class="hud hidden" aria-hidden="true">
+      <div class="top-bar">
+        <div id="enemyCard" class="match-card enemy-counter">
+          <span class="live-dot"></span>
+          <div class="enemy-readout">
+            <small>敵軍作戰統計</small>
+            <div class="enemy-metrics">
+              <span><b id="enemyTotal">12</b><small>總數</small></span>
+              <span><b id="enemyKilled">00</b><small>已擊殺</small></span>
+              <span class="remaining"><b id="enemyRemaining">12</b><small>剩餘</small></span>
+            </div>
+            <div class="enemy-progress"><i id="enemyProgress"></i></div>
+            <b id="enemyStatus">ACTIVE CONTACTS</b>
+          </div>
+        </div>
+        <div class="compass"><span>W</span><span>NW</span><b id="heading">N 000°</b><span>NE</span><span>E</span></div>
+        <div class="score-cluster">
+          <div class="score-card"><small>擊殺</small><strong id="killCount">0</strong></div>
+          <div class="score-card timer-card"><small>任務時間</small><strong id="missionTimer">00:00</strong></div>
+        </div>
+      </div>
+
+      <section id="bossHud" class="boss-hud hidden" aria-label="首領戰鬥狀態"><div><small id="bossPhase">PHASE 01 // 裝甲指揮官</small><b id="bossHealth">700 / 700</b></div><strong id="bossName">港區指揮官</strong><div class="boss-health-track"><i id="bossHealthFill"></i></div></section>
+      <div id="bossWarning" class="boss-warning hidden" role="status">首領範圍攻擊 · 離開標記區域</div>
+      <canvas id="minimap" width="180" height="180" aria-label="戰術小地圖"></canvas>
+
+      <div id="damageIndicator" class="damage-indicator"></div>
+      <div id="damageDirection" class="damage-direction">▲</div>
+      <div id="combatBanner" class="combat-banner"><span>⚠</span><b>ENEMY CONTACT</b><small id="threatDistance">— M</small></div>
+      <div id="pickupPrompt" class="pickup-prompt"><span>附近補給</span><b>—</b><small>— M</small></div>
+      <div id="buffStatus" class="buff-status hidden"><span>⚡</span><b>幹員技能強化</b><small>8s</small></div>
+      <div id="streakStatus" class="streak-status"><span>✦</span><b>1 連殺</b><small>15 秒內擊殺 • 每 3 連殺獲得補給</small></div>
+      <div id="abilityStatus" class="ability-status ready"><kbd>Q</kbd><b>戰地急救</b><small>生命 +22 / 護甲 +12</small><i></i></div>
+      <div id="grenadePreviewHint" class="grenade-preview-hint hidden"><b>手榴彈投擲預覽</b><span>放開 G 投擲 · 左鍵取消</span><small>預測第一落點</small><em>橙色標記：預測爆點</em></div>
+      <div id="killNotice" class="kill-notice" role="status"><i>✕</i><small>HOSTILE DOWN</small><strong>擊殺確認</strong><p></p></div>
+      <div id="killFeed" class="kill-feed" aria-label="近期擊殺紀錄"></div>
+      <div class="crosshair"><i></i><i></i><i></i><i></i><span></span></div>
+      <div id="hitmarker" class="hitmarker"><i></i><i></i></div>
+
+      <div class="bottom-left">
+        <div class="operator-badge"><span id="operatorInitials">VN</span></div>
+        <div class="vitals">
+          <div class="vitals-row"><b id="healthValue">100</b><small>生命值</small></div>
+          <div class="bar health-bar"><i id="healthBar"></i></div>
+          <div class="armor"><span>◆</span><div class="bar"><i id="armorBar"></i></div><b id="armorValue">50</b></div>
+        </div>
+      </div>
+
+      <div class="bottom-center">
+        <div id="eventFeed" class="event-feed"><span>你已進入 RUST HARBOR</span></div>
+      </div>
+
+      <div class="bottom-right">
+        <div class="weapon-label"><span>AR-9</span><small>AUTO</small></div>
+        <div class="ammo"><strong id="ammoCount">30</strong><i>/</i><b id="reserveCount">120</b></div>
+        <div class="ammo-track" id="ammoTrack"></div>
+        <div class="grenade-count"><span>GRENADE</span><b>◉ <i id="grenadeCount">2</i></b></div>
+      </div>
+
+      <div id="reloadPrompt" class="reload-prompt">按 <kbd>R</kbd> 重新裝填</div>
+      <div class="weapon-blocked-hint">貼牆射擊 · 注意掩體遮擋</div>
+      <div class="objective"><span id="missionPhase">PRIMARY OBJECTIVE</span><b id="objectiveText">消滅所有敵人</b></div>
+      <div class="sector-readout"><small>目前區域</small><b id="zoneName">GATE A // 南側檢查站</b></div>
+      <div class="mission-config"><span id="hudOperator">VANTA</span><i>//</i><b id="hudMode">PURGE</b><i>//</i><b id="hudDifficulty">TACTICAL</b></div>
+    </div>
+
+    <section id="helpModal" class="modal help-modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <div class="modal-card help-card">
+        <button id="helpCloseButton" class="modal-close" type="button" aria-label="關閉遊戲說明">×</button>
+        <span class="eyebrow">FIELD MANUAL // RUST HARBOR</span>
+        <h2 id="helpTitle">遊戲說明</h2>
+        <p class="help-intro">依序選擇幹員、地圖、模式與難度，再確認配置並部署。利用掩體、爆炸物和場上補給完成任務。</p>
+        <div class="help-grid">
+          <section>
+            <h3><span>01</span> 基本操作</h3>
+            <div class="help-controls">
+              <div><kbd>W A S D</kbd><span>移動</span></div><div><kbd>滑鼠左鍵</kbd><span>射擊</span></div>
+              <div><kbd>滑鼠右鍵</kbd><span>紅點瞄準</span></div><div><kbd>Shift</kbd><span>衝刺</span></div>
+              <div><kbd>R</kbd><span>換彈</span></div><div><kbd>按住 G</kbd><span>預覽，放開投擲／左鍵取消</span></div>
+              <div><kbd>Space</kbd><span>跳躍／越過矮掩體</span></div><div><kbd>Esc</kbd><span>暫停</span></div>
+              <div><kbd>Q</kbd><span>幹員主動技能</span></div>
+            </div>
+          </section>
+          <section>
+            <h3><span>02</span> 戰場補給</h3>
+            <div class="guide-pickups">
+              <div class="med"><i>✚</i><b>醫療包</b><small>恢復生命</small></div>
+              <div class="plate"><i>◆</i><b>護甲板</b><small>補充護甲</small></div>
+              <div class="ammo-guide"><i>▥</i><b>彈藥箱</b><small>補充備彈</small></div>
+              <div class="nade"><i>●</i><b>手榴彈</b><small>補充投擲庫存</small></div>
+            </div>
+          </section>
+          <section>
+            <h3><span>03</span> 任務模式</h3>
+            <ul class="help-rules">
+              <li><b>PURGE</b><span>清除全圖敵軍，人數可自訂。</span></li>
+              <li><b>ONSLAUGHT</b><span>撐過三波敵軍，總數依配置調整；波次間獲得補給。</span></li>
+              <li><b>HUNTER</b><span>180 秒內完成合約，目標依敵軍數量調整，最多 12 次擊殺。</span></li>
+              <li><b>WARLORD</b><span>突破菁英護衛，挑戰兩階段指揮官。護衛清除後獲得補給。</span></li>
+            </ul>
+          </section>
+          <section>
+            <h3><span>04</span> 戰鬥提示</h3>
+            <ul class="help-rules tips">
+              <li>左上角會顯示敵軍總數、已擊殺與剩餘數。</li>
+              <li>接近補給會自動拾取；無法使用的補給會保留。</li>
+              <li>鏈網會阻擋人物與手榴彈，但子彈仍可穿過網孔。</li>
+              <li>紅色油桶可被射爆並造成連鎖範圍傷害。</li>
+              <li>小地圖會標示敵人與可拾取補給的位置。</li>
+              <li>15 秒內持續擊殺可累積連殺；每 3 連殺補充生命、護甲與備彈。</li>
+              <li>VANTA 可急救，RIFT 可加速，GHOST 可補甲與減傷；Q 技能冷卻 28 秒。</li>
+              <li>厚實牆面能阻擋爆炸傷害；利用掩體保護自己。</li>
+              <li>手榴彈由右手位置投出，只顯示一條主軌跡。青色圈為首次碰撞；橙色菱形為反彈後的預測爆點，太接近的標記會合併。按住 G 時左鍵可取消。</li>
+              <li>手榴彈投出後 1.75 秒起爆，傷害半徑約 7.5 公尺；爆點太近會顯示紅色警示。厚實掩體可擋爆風。</li>
+              <li>三名幹員都能跳過低管線、橫桿與一般矮掩體；貼近障礙前按 Space 並持續移動。高牆與完整鐵網仍會阻擋；小棧板可以直接踏過。</li>
+              <li>貼牆時槍身會收起，仍可持續射擊；子彈由安全槍口射出，會命中實際擋住彈道的牆面。</li>
+              <li>彈匣打空且有備彈時會自動換彈；按住左鍵可在裝填完成後繼續射擊。</li>
+              <li>自訂配置可調整敵軍數量、強度與菁英比例；波次人數逐波增加，追加首領另計 1 名。</li>
+              <li>菁英帶有青藍色裝甲，小地圖以青色標示；首領為橙色菱形，具有獨立血條。</li>
+              <li>敵人名稱旁顯示目前與最大生命；首領可自訂基礎生命、速度與攻擊強度，實際生命還會受難度及敵軍強度影響。</li>
+              <li>指揮官輪替精準轟擊、分段連續轟擊與扇形震波；所有轟擊落點會預先標示且固定，保持移動並利用厚實掩體。</li>
+              <li>震波可以跳躍越過，或移向青色安全缺口；大招結束後弱點會短暫開放，青色核心與血條會提示反擊時機。</li>
+              <li>半血進入第二階段，連段轟擊增至三次；弱點開放時，身體傷害提升為 1.4 倍，頭部為 1.9 倍。</li>
+              <li>主音量之外，可分別調整戰鬥音效、環境聲與提示音；設定會保留。</li>
+            </ul>
+          </section>
+        </div>
+        <button id="helpDoneButton" class="deploy-button" type="button"><span>了解，準備作戰</span><b>CLOSE MANUAL →</b></button>
+      </div>
+    </section>
+
+    <section id="pauseMenu" class="modal hidden" aria-label="暫停選單">
+      <div class="modal-card">
+        <span class="eyebrow">SYSTEM // PAUSED</span>
+        <h2>戰術暫停</h2>
+        <p>點擊下方按鈕返回戰場。</p>
+        <div class="pause-settings">
+          <label class="quality-control volume-control" for="pauseVolumeControl"><span>遊戲音量</span><input id="pauseVolumeControl" type="range" min="0" max="100" value="72" /><output id="pauseVolumeValue" for="pauseVolumeControl">72%</output></label>
+          <label class="quality-control" for="pauseQualitySelect"><span>畫面品質</span><select id="pauseQualitySelect"><option value="0">精緻</option><option value="1" selected>均衡</option><option value="2">流暢</option></select></label>
+        </div>
+        <button id="resumeButton" class="deploy-button"><span>繼續任務</span><b>RESUME →</b></button>
+        <button id="fallbackButton" class="ghost-button">瀏覽器無法鎖定滑鼠？使用拖曳視角</button>
+        <small class="fallback-hint">相容操作：右鍵拖曳轉向，左鍵射擊。</small>
+        <button class="ghost-button" type="button" data-open-help>查閱作戰手冊</button>
+        <button id="restartButton" class="ghost-button">重新開始</button>
+      </div>
+    </section>
+
+    <section id="resultScreen" class="modal hidden" aria-live="polite">
+      <div class="modal-card result-card">
+        <span id="resultEyebrow" class="eyebrow">MISSION COMPLETE</span>
+        <h2 id="resultTitle">區域已肅清</h2>
+        <p id="resultMeta" class="result-meta">PURGE // TACTICAL // RUST HARBOR</p>
+        <div class="result-stats">
+          <div><strong id="resultKills">7</strong><small>擊殺</small></div>
+          <div><strong id="resultAccuracy">0%</strong><small>命中率</small></div>
+          <div><strong id="resultTime">00:00</strong><small>任務時間</small></div>
+        </div>
+        <button id="playAgainButton" class="deploy-button"><span>再次部署</span><b>RESTART →</b></button>
+      </div>
+    </section>
+
+    <div id="rotateNotice"><p>NEON STRIKE 目前需要鍵盤與滑鼠操作。<br />請使用電腦開啟遊玩。</p><a href="../../index.html#games" target="_top">返回遊戲館，看看其他遊戲 ↗</a></div>
+    <script defer src="./lobby.js"></script>
+    <script>
+      if (location.protocol === 'file:') {
+        document.getElementById('fileNotice').hidden = false;
+        document.body.classList.add('file-mode');
+      } else {
+        import('./main.js').catch(error=>{document.getElementById('loadError').hidden=false;console.error('Game initialization failed',error);});
+      }
+    </script>
+  </body>
+</html>

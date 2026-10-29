@@ -1,0 +1,51 @@
+/* The standalone return bar must not cover the fixed game lobby or HUD. */
+.standalone-portal-nav {
+  position: fixed;
+  inset: 0 0 auto;
+  height: 46px;
+  min-height: 46px;
+  z-index: 110;
+  font-family: 'Noto Sans TC', sans-serif;
+}
+.standalone-portal-game #game {
+  height: calc(100% - 46px);
+  margin-top: 46px;
+}
+.standalone-portal-game :is(.overlay, .modal, .hud, #rotateNotice) {
+  top: 46px;
+}
+.standalone-portal-game .help-button { top: 60px; }
+.standalone-portal-game .setup-shell { max-height: calc(100dvh - 164px); }
+#rotateNotice {
+  align-content: center;
+  gap: 24px;
+  font-size: 17px;
+  line-height: 1.9;
+}
+#rotateNotice a {
+  padding: 12px 16px;
+  border: 1px solid #426e95;
+  border-radius: 12px;
+  color: #d9efff;
+  font-size: 14px;
+  text-decoration: none;
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+  #lobby.overlay {
+    grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+    gap: 24px;
+    padding: 30px 24px;
+  }
+  #lobby .brand {
+    grid-column: auto;
+    align-self: center;
+  }
+  #lobby .setup-shell {
+    min-width: 0;
+    width: 100%;
+  }
+}
+@media (max-width: 760px) {
+  .standalone-portal-nav span { display: none; }
+  .standalone-portal-game .setup-shell { max-height: none; }
+}
