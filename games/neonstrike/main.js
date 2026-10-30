@@ -1428,7 +1428,7 @@ function setupEvents() {
   addEventListener('resize', onResize);
   addEventListener('keydown', event => {
     if(event.code==='Escape'&&!ui.helpModal.classList.contains('hidden')){closeHelp();return;}
-    if(event.code==='Escape'&&freeLook){pauseGame();return;}
+    if(event.code==='Escape'){pauseGame();document.exitPointerLock?.();return;}
     keys[event.code] = true;
     if(gameState==='playing'&&['Space','KeyQ','KeyG'].includes(event.code))event.preventDefault();
     if (event.code === 'KeyR') reload();
@@ -2685,7 +2685,7 @@ async function loadAudioAssets(){
   const missing=Object.entries(soundFiles).filter(([name])=>!soundBuffers[name]);if(!missing.length)return;
   audioLoadPromise=Promise.allSettled(missing.map(async([name,url])=>{
     try{
-      const response=await fetch(url);if(!response.ok)throw new Error(`HTTP ${response.status}`);
+      const response=await fetch(globalThis.neonAudioAssets?.[name] || url);if(!response.ok)throw new Error(`HTTP ${response.status}`);
       const buffer=await audioContext.decodeAudioData(await response.arrayBuffer());soundBuffers[name]=buffer;
       // Gentle level matching avoids a single unusually loud source dominating
       // the mix. Never boost a quiet sample by more than 25 percent.

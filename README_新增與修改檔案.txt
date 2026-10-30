@@ -1,3 +1,19 @@
+Blue World 1.2 / r17｜新增與修改檔案
+===================================
+
+修訂日期：2026-10-30
+版本辨識：20261030-blueworld-r17-direct-play
+比較基準：r16
+
+新增：games/neonstrike/browser.js、browser-entry.js、build.mjs、.gitattributes、tests/direct-startup.mjs
+網站程式：index.html、main.js、explore.js、zone-effects.js、ui-refresh.css
+遊戲程式及說明：games/neonstrike/index.html、main.js、README.md
+網站說明：VERSION.txt、README_先看這裡.md、README_更新說明.txt、README_新增與修改檔案.txt、圖片與資料來源.md、程式導覽.md、測試紀錄.md
+
+browser.js 必須與遊戲頁一起發布；已含執行所需模組與音效。玩家不必安裝打包工具或啟動伺服器。
+四張收藏改為橫幅，直幅圖獨立保留；共用現有performance.webp，不新增、刪除或重繪圖片。
+
+以下為 r16 歷史檔案清單：
 Blue World 1.2 / r16｜新增與修改檔案
 ===================================
 

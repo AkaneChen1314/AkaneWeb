@@ -69,7 +69,7 @@
         .scrollIntoView({ behavior: "instant" });
     });
 
-  // 特別插畫與私服肖像獨立收藏，不混入動畫話數時間線。
+  // 四張橫幅收藏與獨立的直幅私服肖像共用放大視窗。
   const specialArts = [
     {
       key: "newyear",
@@ -93,38 +93,57 @@
       source: "https://ichigoproduction.com/Season1/news/index00950000.html",
     },
     {
-      key: "puzzle-casual",
-      image: "puzzle-casual",
-      title: "黑川茜 · Puzzle Star 私服插畫",
-      date: "PUZZLE STAR / 官方角色插畫",
-      source: "https://oshinoko-puzzle.com/",
+      key: "stage-saya",
+      image: "performance",
+      title: "黑川茜 · 鞘姬舞台造型",
+      date: "第二季 · 總第18話 / TOKYO BLADE",
+      source: "https://ichigoproduction.com/Season2/story/18.html",
     },
   ];
   const specialViewer = document.getElementById("special-viewer");
+  const portraitArt = {
+    key: "puzzle-casual", image: "puzzle-casual",
+    title: "黑川茜 · Puzzle Star 私服肖像",
+    date: "PUZZLE STAR / 官方角色插畫",
+    source: "https://oshinoko-puzzle.com/",
+  };
+  let portraitMode = false;
   let specialIndex = 0;
   let specialTrigger = null;
   function showSpecial() {
-    const art = specialArts[specialIndex];
+    const art = portraitMode ? portraitArt : specialArts[specialIndex];
     specialViewer.dataset.art = art.key;
     const photo = document.getElementById("special-viewer-image");
     photo.src = `assets/akane/${art.image}.webp`;
-    photo.alt = `官方黑川茜插畫：${art.title}`;
+    photo.alt = `官方黑川茜圖片：${art.title}`;
     document.getElementById("special-viewer-title").textContent = art.title;
     document.getElementById("special-viewer-date").textContent = art.date;
     document.getElementById("special-viewer-counter").textContent =
-      `${specialIndex + 1} / ${specialArts.length}`;
+      portraitMode ? "私服肖像" : `${specialIndex + 1} / ${specialArts.length}`;
+    document.getElementById("special-previous").hidden = portraitMode;
+    document.getElementById("special-next").hidden = portraitMode;
     document.getElementById("special-viewer-source").href = art.source;
   }
   function moveSpecial(direction) {
+    if (portraitMode) return;
     specialIndex =
       (specialIndex + direction + specialArts.length) % specialArts.length;
     showSpecial();
   }
   document.querySelectorAll("[data-special-art]").forEach((button) => {
     button.addEventListener("click", () => {
+      portraitMode = false;
       specialIndex = specialArts.findIndex(
         (art) => art.key === button.dataset.specialArt,
       );
+      specialTrigger = button;
+      showSpecial();
+      specialViewer.showModal();
+    });
+  });
+  document.querySelectorAll("[data-portrait-open]").forEach((button) => {
+    button.addEventListener("click", () => {
+      portraitMode = true;
       specialTrigger = button;
       showSpecial();
       specialViewer.showModal();

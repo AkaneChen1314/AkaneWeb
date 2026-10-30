@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0a0d12" />
+    <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg" />
     <title>NEON STRIKE // 3D 射擊競技場</title>
     <link rel="stylesheet" href="./styles.css" />
     <link rel="stylesheet" href="../../shared/portal.css" />
@@ -12,11 +13,6 @@
   </head>
   <body>
     <div id="game"></div>
-    <aside id="fileNotice" class="file-notice" hidden>
-      <b>需要本機遊戲伺服器</b>
-      <span>瀏覽器不允許直接以 file:// 載入 3D 模組。請雙擊資料夾內的「開始遊戲.cmd」；新版啟動器使用 Windows 內建元件，不需要另外安裝 Node.js。</span>
-      <a href="http://localhost:4173">伺服器已啟動？進入遊戲 →</a>
-    </aside>
     <aside id="loadError" class="file-notice" hidden><b>遊戲未能啟動</b><span>請重新載入頁面，或使用支援 WebGL 的 Edge／Chrome 開啟遊戲。</span></aside>
 
     <button id="helpButton" class="help-button" type="button" aria-haspopup="dialog" aria-expanded="false">
@@ -316,13 +312,6 @@
 
     <div id="rotateNotice"><p>NEON STRIKE 目前需要鍵盤與滑鼠操作。<br />請使用電腦開啟遊玩。</p><a href="../../index.html#games" target="_top">返回遊戲館，看看其他遊戲 ↗</a></div>
     <script defer src="./lobby.js"></script>
-    <script>
-      if (location.protocol === 'file:') {
-        document.getElementById('fileNotice').hidden = false;
-        document.body.classList.add('file-mode');
-      } else {
-        import('./main.js').catch(error=>{document.getElementById('loadError').hidden=false;console.error('Game initialization failed',error);});
-      }
-    </script>
+    <script defer src="./browser.js?v=20261030-r17" onerror="document.getElementById('loadError').hidden=false"></script>
   </body>
 </html>

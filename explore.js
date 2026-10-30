@@ -341,6 +341,7 @@
     ["actor-room", "表情觀察"],
     ["little-facts", "小小知識"],
     ["design-room", "造型資料"],
+    ["portrait-room", "私服肖像"],
     ["traits", "演員筆記"],
     ["story-notes", "成長脈絡"],
     ["gallery", "三季圖庫"],

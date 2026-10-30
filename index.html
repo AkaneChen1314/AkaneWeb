@@ -73,7 +73,7 @@
     <link rel="stylesheet" href="styles.css?v=1.2-blueworld-r11" />
     <link rel="stylesheet" href="ambience.css?v=1.2-blueworld-r11" />
     <link rel="stylesheet" href="archive.css?v=1.2-blueworld-r11" />
-    <script src="main.js?v=20261030-blueworld-r15" defer></script>
+    <script src="main.js?v=20261030-blueworld-r17" defer></script>
     <script src="ambience.js?v=1.2-blueworld-r11" defer></script>
     <link rel="stylesheet" href="seasons.css?v=1.2-blueworld-r11" />
     <script src="gallery-data.js?v=20261030-blueworld-r14" defer></script>
@@ -81,14 +81,14 @@
     <link rel="stylesheet" href="polish.css?v=1.2-blueworld-r11" />
     <link rel="stylesheet" href="edition.css?v=1.2-blueworld-r11" />
     <link rel="stylesheet" href="zone-effects.css?v=1.2-blueworld-r11" />
-    <script src="zone-effects.js?v=20261030-blueworld-r16" defer></script>
+    <script src="zone-effects.js?v=20261030-blueworld-r17" defer></script>
     <link rel="stylesheet" href="explore.css?v=1.2-blueworld-r11" />
-    <script src="explore.js?v=20261030-blueworld-r15" defer></script>
-    <meta name="akane-edition" content="20261030-blueworld-r16-artwork" />
+    <script src="explore.js?v=20261030-blueworld-r17" defer></script>
+    <meta name="akane-edition" content="20261030-blueworld-r17-direct-play" />
     <script src="polish.js?v=1.2-blueworld-r11" defer></script>
     <link rel="stylesheet" href="world.css?v=1.2-blueworld-r11" />
     <script src="world.js?v=1.2-blueworld-r11" defer></script>
-    <link rel="stylesheet" href="ui-refresh.css?v=20261030-blueworld-r16" />
+    <link rel="stylesheet" href="ui-refresh.css?v=20261030-blueworld-r17" />
   </head>
   <body class="stage-on">
     <a class="skip-link" href="#main-content">跳到主要內容</a>
@@ -646,13 +646,14 @@
               ><a href="#actor-room">表情觀察 <span>眨眼與笑容</span></a
               ><a href="#little-facts">小小知識 <span>多認識一點</span></a
               ><a href="#design-room">造型資料 <span>表情與色彩</span></a
+              ><a href="#portrait-room">私服肖像 <span>長髮與微笑</span></a
               ><a href="#traits">演員筆記 <span>喜歡她的理由</span></a
               ><a href="#story-notes">成長脈絡 <span>展開劇情筆記</span></a
               ><a href="#season-1">第一季 <span>走進她的故事</span></a
               ><a href="#season-2">第二季 <span>舞台上的光</span></a
               ><a href="#season-3">第三季 <span>鏡頭外的日常</span></a
               ><a href="#special-room">特別收藏 <span>和服與魔女</span></a
-              ><a href="#outfit-room">造型收藏 <span>冬日與私服</span></a
+              ><a href="#outfit-room">造型收藏 <span>冬日與舞台</span></a
               ><a href="#chibi-room">小茜遊樂室 <span>星光與小問答</span></a
               ><a href="#sources">資料來源 <span>從官方看見她</span></a>
             </div>
@@ -849,6 +850,20 @@
                 <p class="design-note-footnote">
                   本館文字為圖片觀賞筆記。資料頁獨立收藏，三季劇照仍依話數排序。
                 </p>
+              </div>
+            </div>
+          </section>
+          <section class="portrait-room" id="portrait-room" aria-labelledby="portrait-room-title">
+            <button class="portrait-art" data-portrait-open aria-label="放大黑川茜 Puzzle Star 私服肖像">
+              <img src="assets/akane/puzzle-casual.webp" width="720" height="1040" alt="黑川茜穿棕色上衣與淺色洋裝、輕攏藍色長髮的官方私服肖像" loading="lazy" />
+            </button>
+            <div class="portrait-copy">
+              <p class="eyebrow">AKANE PORTRAIT / A QUIET MOMENT</p>
+              <h2 id="portrait-room-title">讓日常，也有一點星光。</h2>
+              <p>棕色上衣、淺色洋裝與輕輕揚起的長髮，收藏她柔和的私服模樣。留一個獨立的位置，慢慢看完整的她。</p>
+              <div class="portrait-actions">
+                <button class="soft-button" data-portrait-open>看完整肖像 ↗</button>
+                <a class="source-link" href="https://oshinoko-puzzle.com/" target="_blank" rel="noopener noreferrer">官方原頁 ↗</a>
               </div>
             </div>
           </section>
@@ -1124,7 +1139,7 @@
                 <p class="eyebrow">AKANE WARDROBE / LITTLE COLLECTIONS</p>
                 <h2 id="outfit-room-title">把喜歡，換成不同的造型。</h2>
               </div>
-              <p>冬日燈光與輕柔私服，只收藏黑川茜。<br />沿著畫面的色彩，欣賞不同時刻的她。</p>
+              <p>冬日燈光與鞘姬舞台，只收藏黑川茜。<br />沿著畫面的色彩，欣賞不同時刻的她。</p>
             </div>
             <div class="special-art-grid extra-outfit-grid" aria-label="黑川茜單人造型收藏">
               <article class="special-art-card">
@@ -1138,15 +1153,15 @@
                   <button data-special-art="christmas" class="text-link">放大欣賞 ↗</button>
                 </div>
               </article>
-              <article class="special-art-card casual-portrait-card">
-                <button data-special-art="puzzle-casual" class="special-art-image" aria-label="放大黑川茜 Puzzle Star 私服插畫">
-                  <img src="assets/akane/puzzle-casual.webp" alt="黑川茜穿棕色上衣與淺色洋裝、輕攏藍色長髮的官方私服插畫" width="720" height="1040" loading="lazy" />
+              <article class="special-art-card">
+                <button data-special-art="stage-saya" class="special-art-image" aria-label="放大黑川茜鞘姬舞台劇照">
+                  <img src="assets/akane/performance.webp" alt="黑川茜以淺色長髮與鞘姬服裝演出的官方橫幅舞台劇照" width="1200" height="675" loading="lazy" />
                 </button>
                 <div class="special-art-copy">
-                  <p class="eyebrow">PUZZLE STAR / CASUAL PORTRAIT</p>
-                  <h3>讓日常，也有一點星光。</h3>
-                  <p>棕色上衣、淺色洋裝與輕輕揚起的長髮，收藏她柔和的私服模樣。</p>
-                  <button data-special-art="puzzle-casual" class="text-link">放大欣賞 ↗</button>
+                  <p class="eyebrow">TOKYO BLADE / SAYA</p>
+                  <h3>換上鞘姬，走進故事的光。</h3>
+                  <p>淺色長髮、精緻髮飾與專注的目光，在舞台上看見茜作為演員的另一面。</p>
+                  <button data-special-art="stage-saya" class="text-link">放大欣賞 ↗</button>
                 </div>
               </article>
             </div>
@@ -1368,6 +1383,7 @@
                     ><a href="#actor-room">表情觀察</a
                     ><a href="#little-facts">小小知識</a
                     ><a href="#design-room">造型資料</a
+                    ><a href="#portrait-room">私服肖像</a
                     ><a href="#traits">演員筆記</a
                     ><a href="#story-notes">成長脈絡</a
                     ><a href="#season-1">第一季圖庫</a
@@ -1705,7 +1721,7 @@
         <span>✦ BLUE WORLD</span>
         <p>二次元守護者的收藏館 · 非官方粉絲主題</p>
         <a href="#sources">來源與圖片權利</a
-        ><small>Blue World · 五款獨立遊戲 · 2026.10.30 r16</small>
+        ><small>Blue World · 五款獨立遊戲 · 2026.10.30 r17</small>
       </footer>
     </div>
     <dialog
@@ -1806,7 +1822,7 @@
             aria-label="上一張特別插畫"
           >
             ←</button
-          ><span id="special-viewer-counter">1 / 2</span
+          ><span id="special-viewer-counter">1 / 4</span
           ><button
             id="special-next"
             class="soft-button"

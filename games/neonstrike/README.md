@@ -244,9 +244,11 @@ node tests/environment-layout.mjs
 
 ## 執行方式
 
-由於瀏覽器的 ES Module 安全限制，請用本機 HTTP 伺服器開啟。Windows 使用者不需要安裝 Node.js：
+網站整合版已提供 `browser.js`，包含3D模組、玩法與八種音效。可以直接雙擊本遊戲的 `index.html`，也可以從 Blue World 遊戲館或 GitHub Pages 開啟，不需安裝 Node.js、不必啟動伺服器。
 
-最簡單的方式是直接雙擊：
+需要鍵盤滑鼠與支援 WebGL 的瀏覽器。Esc 暫停並釋放滑鼠；若瀏覽器不允許鎖定滑鼠，可在暫停選單使用拖曳視角。
+
+以下本機伺服器方式保留供開發測試，屬可選工具：
 
 ```text
 開始遊戲.cmd
@@ -272,7 +274,18 @@ powershell -ExecutionPolicy Bypass -File .\server.ps1 -OpenBrowser
 - 按住 `G`：預覽手榴彈，放開投擲；預覽時左鍵取消
 - `Esc`：暫停／解除滑鼠鎖定
 
-> 首次執行不需安裝套件；Three.js 已放在 `vendor/` 中。
+> 玩家不需要打包工具。Three.js原始模組保留於vendor，發布頁使用已產生的browser.js。
+
+### 修改來源後重新打包
+
+修改main.js、玩法模組、browser-entry.js或音效後，需要以官方esbuild **0.28.2**重新產生browser.js。將執行檔路徑傳入：
+
+```powershell
+node .\build.mjs C:\tools\esbuild.exe
+node .\tests\direct-startup.mjs
+```
+
+build.mjs會核對工具版本，並將模組與data URL音效打包為傳統IIFE腳本。browser.js必須和index.html一起提交；GitHub Pages發布現有檔案時不需安裝或編譯。
 
 ## 音效素材
 

@@ -1040,6 +1040,7 @@ footer small {
   outline-offset: 4px;
 }
 
+.portrait-room,
 .special-room,
 .outfit-room {
   margin: 56px 0;
@@ -1050,8 +1051,57 @@ footer small {
   background: linear-gradient(135deg, #142b42, #102238);
 }
 
-.casual-portrait-card .special-art-image img {
-  object-position: center 28%;
+.portrait-room {
+  display: grid;
+  grid-template-columns: minmax(0, .65fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 56px);
+}
+
+.portrait-art {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--ui-surface-radius);
+  background: transparent;
+  cursor: pointer;
+}
+
+.portrait-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.portrait-copy h2 {
+  margin: 14px 0 20px;
+  font-size: clamp(23px, 2.5vw, 32px);
+  line-height: 1.5;
+}
+
+.portrait-copy > p:not(.eyebrow) {
+  max-width: 44ch;
+  color: var(--ui-muted);
+  font-size: 16px;
+  line-height: 1.9;
+}
+
+.portrait-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+@media (max-width: 760px) {
+  .portrait-room { grid-template-columns: minmax(0, 1fr); }
+  .portrait-art { max-width: 280px; }
 }
 
 .special-viewer-art {
