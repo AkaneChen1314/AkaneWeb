@@ -9,14 +9,6 @@
   const room = document.getElementById("chibi-room");
   const looks = [
     {
-      key: "crepe",
-      title: "可麗餅小茜",
-      caption: "官方授權周邊示意 · 可麗餅 ver. 迷你寫真卡／兩款皆為黑川茜",
-      alt: "官方黑川茜可麗餅Q版迷你寫真卡兩款示意，紫色制服與廚師帽，原商品圖完整保留",
-      note: "可麗餅、紫色小帽與認真的小表情。兩張小卡都是茜，把這份甜甜的心情也收藏起來。",
-      source: "https://store.kadokawa.co.jp/shop/g/g302311004954/",
-    },
-    {
       key: "uniform",
       title: "襯衫小茜",
       caption: "官方角色插畫 · 白襯衫與格紋裙",
@@ -31,22 +23,6 @@
       alt: "官方Q版黑川茜：藍色長髮與日常外套",
       note: "換上日常造型的小茜，帶著一點俏皮的神情。今天，也留一點時間給好心情。",
       source: "https://ichigoproduction.com/Season3/news/index00310000.html",
-    },
-    {
-      key: "kimono",
-      title: "和服小茜",
-      caption: "官方授權周邊示意 · Kimono ver.／原圖 SAMPLE 標記保留",
-      alt: "官方授權Q版黑川茜和服立牌示意圖，保留SAMPLE標記與底座",
-      note: "深藍和服、蝴蝶結與小小的手勢，這次從官方周邊的造型看見另一種可愛。",
-      source: "https://store.kadokawa.co.jp/shop/g/g302407002531/",
-    },
-    {
-      key: "orchestra",
-      title: "音符小茜",
-      caption: "官方授權周邊示意 · 音符抱枕正背面／原圖標記保留",
-      alt: "官方黑川茜Q版音符抱枕正背面示意圖，保留SAMPLE標記",
-      note: "抱著一顆藍色音符的小茜，來自官方音樂會周邊。像把喜歡，輕輕抱在懷裡。",
-      source: "https://store.kadokawa.co.jp/shop/g/g302511002524/",
     },
   ];
   let lookIndex = looks.findIndex((look) => look.key === "uniform");

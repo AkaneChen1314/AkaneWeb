@@ -1,3 +1,20 @@
+Blue World 1.2 / r18｜新增與修改檔案
+===================================
+
+修訂日期：2026-10-30
+版本辨識：20261030-blueworld-r18-collections
+比較基準：r17
+
+新增圖片：assets/akane/quiet-smile.webp
+網站程式：index.html、explore.js、zone-effects.js、ui-refresh.css
+素材來源：assets/akane/sources.json、圖片與資料來源.md
+網站說明：VERSION.txt、README_先看這裡.md、README_更新說明.txt、README_新增與修改檔案.txt、程式導覽.md、測試紀錄.md
+歷史排序：games/neonstrike/README.md、games/starbreak/README_更新說明.txt、games/starbreak/測試紀錄.md
+
+小茜只保留兩款同風格素材；新增橫幅替換重複圖，私服肖像收緊版面。歷史文件保留內容，由新到舊排序。
+遊戲程式、存檔、既有圖片及原始E:\game未修改。
+
+以下為 r17 歷史檔案清單：
 Blue World 1.2 / r17｜新增與修改檔案
 ===================================
 

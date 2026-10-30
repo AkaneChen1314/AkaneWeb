@@ -93,11 +93,12 @@
       source: "https://ichigoproduction.com/Season1/news/index00950000.html",
     },
     {
-      key: "stage-saya",
-      image: "performance",
-      title: "黑川茜 · 鞘姬舞台造型",
-      date: "第二季 · 總第18話 / TOKYO BLADE",
-      source: "https://ichigoproduction.com/Season2/story/18.html",
+      key: "quiet-smile",
+      image: "quiet-smile",
+      title: "一點笑意的茜",
+      date: "A SOFT SMILE / ANIME MOMENT",
+      source: "https://www.gunber-stories.com/entry/2024/08/29/055928",
+      sourceLabel: "圖片出處 ↗",
     },
   ];
   const specialViewer = document.getElementById("special-viewer");
@@ -115,7 +116,7 @@
     specialViewer.dataset.art = art.key;
     const photo = document.getElementById("special-viewer-image");
     photo.src = `assets/akane/${art.image}.webp`;
-    photo.alt = `官方黑川茜圖片：${art.title}`;
+    photo.alt = `黑川茜圖片：${art.title}`;
     document.getElementById("special-viewer-title").textContent = art.title;
     document.getElementById("special-viewer-date").textContent = art.date;
     document.getElementById("special-viewer-counter").textContent =
@@ -123,6 +124,7 @@
     document.getElementById("special-previous").hidden = portraitMode;
     document.getElementById("special-next").hidden = portraitMode;
     document.getElementById("special-viewer-source").href = art.source;
+    document.getElementById("special-viewer-source").textContent = art.sourceLabel || "官方原頁 ↗";
   }
   function moveSpecial(direction) {
     if (portraitMode) return;

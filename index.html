@@ -81,14 +81,14 @@
     <link rel="stylesheet" href="polish.css?v=1.2-blueworld-r11" />
     <link rel="stylesheet" href="edition.css?v=1.2-blueworld-r11" />
     <link rel="stylesheet" href="zone-effects.css?v=1.2-blueworld-r11" />
-    <script src="zone-effects.js?v=20261030-blueworld-r17" defer></script>
+    <script src="zone-effects.js?v=20261030-blueworld-r18" defer></script>
     <link rel="stylesheet" href="explore.css?v=1.2-blueworld-r11" />
-    <script src="explore.js?v=20261030-blueworld-r17" defer></script>
-    <meta name="akane-edition" content="20261030-blueworld-r17-direct-play" />
+    <script src="explore.js?v=20261030-blueworld-r18" defer></script>
+    <meta name="akane-edition" content="20261030-blueworld-r18-collections" />
     <script src="polish.js?v=1.2-blueworld-r11" defer></script>
     <link rel="stylesheet" href="world.css?v=1.2-blueworld-r11" />
     <script src="world.js?v=1.2-blueworld-r11" defer></script>
-    <link rel="stylesheet" href="ui-refresh.css?v=20261030-blueworld-r17" />
+    <link rel="stylesheet" href="ui-refresh.css?v=20261030-blueworld-r18" />
   </head>
   <body class="stage-on">
     <a class="skip-link" href="#main-content">跳到主要內容</a>
@@ -653,7 +653,7 @@
               ><a href="#season-2">第二季 <span>舞台上的光</span></a
               ><a href="#season-3">第三季 <span>鏡頭外的日常</span></a
               ><a href="#special-room">特別收藏 <span>和服與魔女</span></a
-              ><a href="#outfit-room">造型收藏 <span>冬日與舞台</span></a
+              ><a href="#outfit-room">造型收藏 <span>冬日與笑容</span></a
               ><a href="#chibi-room">小茜遊樂室 <span>星光與小問答</span></a
               ><a href="#sources">資料來源 <span>從官方看見她</span></a>
             </div>
@@ -860,7 +860,11 @@
             <div class="portrait-copy">
               <p class="eyebrow">AKANE PORTRAIT / A QUIET MOMENT</p>
               <h2 id="portrait-room-title">讓日常，也有一點星光。</h2>
-              <p>棕色上衣、淺色洋裝與輕輕揚起的長髮，收藏她柔和的私服模樣。留一個獨立的位置，慢慢看完整的她。</p>
+              <p>輕攏長髮的瞬間，像把喧鬧留在畫面之外。棕色與米白襯著她的藍，簡單的日常，也讓人想多停留一下。</p>
+              <dl class="portrait-details">
+                <div><dt>今天的穿搭</dt><dd>棕色針織 × 淺色洋裝</dd></div>
+                <div><dt>想收藏的細節</dt><dd>輕揚髮梢與青綠色眼眸</dd></div>
+              </dl>
               <div class="portrait-actions">
                 <button class="soft-button" data-portrait-open>看完整肖像 ↗</button>
                 <a class="source-link" href="https://oshinoko-puzzle.com/" target="_blank" rel="noopener noreferrer">官方原頁 ↗</a>
@@ -1139,7 +1143,7 @@
                 <p class="eyebrow">AKANE WARDROBE / LITTLE COLLECTIONS</p>
                 <h2 id="outfit-room-title">把喜歡，換成不同的造型。</h2>
               </div>
-              <p>冬日燈光與鞘姬舞台，只收藏黑川茜。<br />沿著畫面的色彩，欣賞不同時刻的她。</p>
+              <p>冬日燈光與日常微笑，只收藏黑川茜。<br />沿著畫面的色彩，欣賞不同時刻的她。</p>
             </div>
             <div class="special-art-grid extra-outfit-grid" aria-label="黑川茜單人造型收藏">
               <article class="special-art-card">
@@ -1154,14 +1158,14 @@
                 </div>
               </article>
               <article class="special-art-card">
-                <button data-special-art="stage-saya" class="special-art-image" aria-label="放大黑川茜鞘姬舞台劇照">
-                  <img src="assets/akane/performance.webp" alt="黑川茜以淺色長髮與鞘姬服裝演出的官方橫幅舞台劇照" width="1200" height="675" loading="lazy" />
+                <button data-special-art="quiet-smile" class="special-art-image" aria-label="放大黑川茜日常微笑的單人近景">
+                  <img src="assets/akane/quiet-smile.webp" alt="黑川茜穿白色高領與深色荷葉邊衣裝，坐在米色沙發前露出微笑" width="960" height="540" loading="lazy" />
                 </button>
                 <div class="special-art-copy">
-                  <p class="eyebrow">TOKYO BLADE / SAYA</p>
-                  <h3>換上鞘姬，走進故事的光。</h3>
-                  <p>淺色長髮、精緻髮飾與專注的目光，在舞台上看見茜作為演員的另一面。</p>
-                  <button data-special-art="stage-saya" class="text-link">放大欣賞 ↗</button>
+                  <p class="eyebrow">A SOFT SMILE / ANIME MOMENT</p>
+                  <h3>一點笑意，讓日常柔軟。</h3>
+                  <p>白色高領、深色荷葉邊與柔和的笑容，留下一個讓人想靠近的日常瞬間。</p>
+                  <button data-special-art="quiet-smile" class="text-link">放大欣賞 ↗</button>
                 </div>
               </article>
             </div>
@@ -1206,14 +1210,7 @@
                     <button data-chibi-look="uniform" aria-pressed="true">
                       襯衫小茜</button
                     ><button data-chibi-look="daily" aria-pressed="false">
-                      日常小茜</button
-                    ><button data-chibi-look="kimono" aria-pressed="false">
-                      和服小茜</button
-                    ><button data-chibi-look="orchestra" aria-pressed="false">
-                      音符小茜
-                    </button>
-                    <button data-chibi-look="crepe" aria-pressed="false">
-                      可麗餅小茜
+                      日常小茜
                     </button>
                   </div>
                   <p id="chibi-art-caption" aria-live="polite">官方角色插畫 · 白襯衫與格紋裙</p>
@@ -1398,7 +1395,7 @@
               </details>
             </section>
             <p class="actor-room-footnote">
-              節慶插畫依公布時間排列，不歸入任何一話。Q版包含官方插畫與授權周邊示意圖；原圖標記完整保留，短句為本館創作。
+              節慶插畫不歸入動畫話數；日常近景保留圖片出處。Q版選用同一組官方小茜插畫，短句為本館創作。
             </p>
           <section
             class="archive-sources"
@@ -1721,7 +1718,7 @@
         <span>✦ BLUE WORLD</span>
         <p>二次元守護者的收藏館 · 非官方粉絲主題</p>
         <a href="#sources">來源與圖片權利</a
-        ><small>Blue World · 五款獨立遊戲 · 2026.10.30 r17</small>
+        ><small>Blue World · 五款獨立遊戲 · 2026.10.30 r18</small>
       </footer>
     </div>
     <dialog
