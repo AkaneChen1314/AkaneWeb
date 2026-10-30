@@ -79,6 +79,7 @@
       document.querySelectorAll("[data-chibi-panel]").forEach((panel) => {
         panel.hidden = panel.dataset.chibiPanel !== button.dataset.chibiMode;
       });
+      room.dispatchEvent(new CustomEvent("chibi-mode-change", { detail: button.dataset.chibiMode }));
     });
   });
 
@@ -309,15 +310,160 @@
   });
   renderQuestion();
 
+  // 四對圖案可用鍵盤或觸控翻牌；離開玩法時收回未配對的牌。
+  const memoryBoard = document.getElementById("chibi-memory-board");
+  const memoryStatus = document.getElementById("chibi-memory-status");
+  const memorySymbols = ["✦", "☾", "♡", "☁"];
+  const memoryNames = ["星星", "月亮", "愛心", "雲朵"];
+  let memoryDeck = [];
+  let memoryOpen = [];
+  let memoryPairs = 0;
+  let memoryMoves = 0;
+  let memoryTimer = null;
+  function paintMemoryCard(index) {
+    const card = memoryDeck[index];
+    const visible = card.matched || memoryOpen.includes(index);
+    const button = memoryBoard.children[index];
+    button.textContent = visible ? memorySymbols[card.value] : "◇";
+    button.dataset.revealed = String(visible);
+    button.dataset.matched = String(card.matched);
+    button.setAttribute("aria-label", `第${index + 1}張，${visible ? memoryNames[card.value] : "尚未翻開"}${card.matched ? "，已配對" : ""}`);
+    button.setAttribute("aria-disabled", String(card.matched));
+  }
+  function closeUnmatchedCards() {
+    clearTimeout(memoryTimer);
+    memoryTimer = null;
+    const previous = memoryOpen;
+    memoryOpen = [];
+    previous.forEach(paintMemoryCard);
+  }
+  function resetMemory() {
+    closeUnmatchedCards();
+    memoryPairs = 0;
+    memoryMoves = 0;
+    memoryDeck = [...memorySymbols, ...memorySymbols].map((_, i) => ({ value: i % 4, matched: false }));
+    for (let i = memoryDeck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [memoryDeck[i], memoryDeck[j]] = [memoryDeck[j], memoryDeck[i]];
+    }
+    memoryBoard.replaceChildren();
+    memoryDeck.forEach((card, index) => {
+      const button = document.createElement("button");
+      button.className = "soft-button memory-card";
+      button.addEventListener("click", () => {
+        if (memoryTimer !== null || card.matched || memoryOpen.includes(index)) return;
+        memoryOpen.push(index);
+        paintMemoryCard(index);
+        if (memoryOpen.length !== 2) return;
+        memoryMoves++;
+        const [first, second] = memoryOpen;
+        const match = memoryDeck[first].value === memoryDeck[second].value;
+        if (match) {
+          memoryDeck[first].matched = memoryDeck[second].matched = true;
+          memoryOpen = [];
+          memoryPairs++;
+          paintMemoryCard(first);
+          paintMemoryCard(second);
+          if (memoryPairs === 4) littleSparkles();
+        } else {
+          memoryTimer = setTimeout(closeUnmatchedCards, 800);
+        }
+        memoryStatus.textContent = memoryPairs === 4
+          ? `四組都找到了！用了 ${memoryMoves} 次，記住了這片小小星空。`
+          : `找到 ${memoryPairs} / 4 組 · 翻牌 ${memoryMoves} 次${match ? "，配對成功！" : "，再記住這兩張。"}`;
+      });
+      memoryBoard.append(button);
+      paintMemoryCard(index);
+    });
+    memoryStatus.textContent = "找到 0 / 4 組 · 翻牌 0 次";
+  }
+  document.getElementById("chibi-memory-reset").addEventListener("click", resetMemory);
+  room.addEventListener("chibi-mode-change", (event) => {
+    if (event.detail !== "memory") closeUnmatchedCards();
+  });
+  document.addEventListener("zone-change", closeUnmatchedCards);
+  document.addEventListener("lounge-visibility", closeUnmatchedCards);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) closeUnmatchedCards();
+  });
+  resetMemory();
+
+  // 本館原創短句，依心情輪流抽取，避免連續看到同一句。
+  const fortunes = {
+    rest: ["把步調放輕一點，喜歡的事物會等你。", "今天先照顧好自己，也是一件值得收藏的事。", "留一小段空白給呼吸，再慢慢走向下一頁。"],
+    courage: ["小小的一步，也能讓明天的風景不一樣。", "認真喜歡一件事的你，已經有自己的光。", "還沒做到的部分，留給下一次更勇敢的嘗試。"],
+    focus: ["先完成眼前的一小格，故事就往前了一點。", "把目光放回此刻，一次做好一件事。", "不必一次看見終點，先讓今天的努力清楚一點。"],
+  };
+  const fortuneIndexes = { rest: 0, courage: 0, focus: 0 };
+  let fortuneMood = "rest";
+  document.querySelectorAll("[data-chibi-mood]").forEach((button) => {
+    button.addEventListener("click", () => {
+      fortuneMood = button.dataset.chibiMood;
+      document.querySelectorAll("[data-chibi-mood]").forEach((choice) => choice.setAttribute("aria-pressed", String(choice === button)));
+      document.getElementById("chibi-fortune-note").textContent = "心情選好了，抽一張送給現在的自己。";
+    });
+  });
+  document.getElementById("chibi-fortune-draw").addEventListener("click", () => {
+    const options = fortunes[fortuneMood];
+    document.getElementById("chibi-fortune-note").textContent = options[fortuneIndexes[fortuneMood] % options.length];
+    fortuneIndexes[fortuneMood]++;
+    littleSparkles();
+  });
+
+  // 本館配色練習，不宣稱是官方角色色票。滑桿原生支援方向鍵。
+  const colorTargets = [
+    { name: "深海藍", rgb: [46, 91, 145] },
+    { name: "髮梢青", rgb: [110, 200, 194] },
+    { name: "暮光紫", rgb: [143, 126, 190] },
+    { name: "櫻光粉", rgb: [219, 153, 183] },
+  ];
+  const colorSliders = [...document.querySelectorAll("[data-color-channel]")];
+  let colorIndex = 0;
+  const colorStatus = document.getElementById("chibi-color-status");
+  function paintMixedColor() {
+    const values = colorSliders.map((slider) => Number(slider.value));
+    document.getElementById("chibi-color-mix").style.backgroundColor = `rgb(${values.join(",")})`;
+    ["r", "g", "b"].forEach((channel, i) => { document.getElementById(`chibi-output-${channel}`).value = values[i]; });
+    colorStatus.textContent = "調好了嗎？按「看看相似度」確認。";
+  }
+  function newColorTarget() {
+    const target = colorTargets[colorIndex];
+    document.getElementById("chibi-color-target").style.backgroundColor = `rgb(${target.rgb.join(",")})`;
+    document.getElementById("chibi-color-name").textContent = target.name;
+    document.getElementById("chibi-color-target").setAttribute("aria-label", `目標顏色：${target.name}`);
+    colorSliders.forEach((slider) => { slider.value = 128; });
+    document.getElementById("chibi-color-tip").hidden = true;
+    paintMixedColor();
+  }
+  colorSliders.forEach((slider) => slider.addEventListener("input", paintMixedColor));
+  document.getElementById("chibi-color-check").addEventListener("click", () => {
+    const target = colorTargets[colorIndex];
+    const distance = Math.hypot(...colorSliders.map((slider, i) => Number(slider.value) - target.rgb[i]));
+    const similarity = Math.round(100 * (1 - distance / Math.hypot(255, 255, 255)));
+    colorStatus.textContent = `相似度 ${similarity}%${similarity >= 94 ? "，配得很接近了！這一抹茜色送給你。" : "，再輕輕調整一點試試。"}`;
+    if (similarity >= 94) littleSparkles();
+  });
+  document.getElementById("chibi-color-hint").addEventListener("click", () => {
+    const tip = document.getElementById("chibi-color-tip");
+    const [r, g, b] = colorTargets[colorIndex].rgb;
+    tip.textContent = `調色提示：紅 R ${r}、綠 G ${g}、藍 B ${b}。也可以用方向鍵微調。`;
+    tip.hidden = false;
+  });
+  document.getElementById("chibi-color-next").addEventListener("click", () => {
+    colorIndex = (colorIndex + 1) % colorTargets.length;
+    newColorTarget();
+  });
+  newColorTarget();
+
   // 閱讀超過基本介紹後才出現低調書籤，進遊戲或放大圖片時收起。
   const bookmark = document.getElementById("archive-bookmark");
   const sections = [
     ["profile", "人物檔案"],
     ["archive-compass", "閱讀路線"],
+    ["design-room", "造型資料"],
     ["actor-room", "表情觀察"],
     ["little-facts", "小小知識"],
-    ["design-room", "造型資料"],
-    ["portrait-room", "私服肖像"],
+    ["portrait-room", "肖像收藏"],
     ["traits", "演員筆記"],
     ["story-notes", "成長脈絡"],
     ["gallery", "三季圖庫"],

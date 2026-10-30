@@ -1,3 +1,19 @@
+Blue World 1.2 / r19｜新增與修改檔案
+===================================
+
+修訂日期：2026-10-30
+版本辨識：20261030-blueworld-r19-playroom
+比較基準：r18
+
+新增圖片：assets/akane/portrait-raindrops.webp、portrait-anniversary.webp、sakura-kimono.webp
+網站程式：index.html、explore.js、zone-effects.js、ui-refresh.css
+素材來源：assets/akane/sources.json、圖片與資料來源.md
+網站說明：VERSION.txt、README_先看這裡.md、README_更新說明.txt、README_新增與修改檔案.txt、程式導覽.md、測試紀錄.md
+
+肖像收藏滿寬且可切換，四張橫幅不重複；小茜遊樂室由三種增加至六種玩法。資料區與觀察區的位置、導覽同步對調。
+原有圖片與歷史紀錄保留；quiet-smile.webp不再被目前的展示或放大清單引用。遊戲程式、存檔及原始E:\game未修改。
+
+以下為 r18 歷史檔案清單：
 Blue World 1.2 / r18｜新增與修改檔案
 ===================================
 

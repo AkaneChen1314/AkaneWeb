@@ -81,14 +81,14 @@
     <link rel="stylesheet" href="polish.css?v=1.2-blueworld-r11" />
     <link rel="stylesheet" href="edition.css?v=1.2-blueworld-r11" />
     <link rel="stylesheet" href="zone-effects.css?v=1.2-blueworld-r11" />
-    <script src="zone-effects.js?v=20261030-blueworld-r18" defer></script>
+    <script src="zone-effects.js?v=20261030-blueworld-r19" defer></script>
     <link rel="stylesheet" href="explore.css?v=1.2-blueworld-r11" />
-    <script src="explore.js?v=20261030-blueworld-r18" defer></script>
-    <meta name="akane-edition" content="20261030-blueworld-r18-collections" />
+    <script src="explore.js?v=20261030-blueworld-r19" defer></script>
+    <meta name="akane-edition" content="20261030-blueworld-r19-playroom" />
     <script src="polish.js?v=1.2-blueworld-r11" defer></script>
     <link rel="stylesheet" href="world.css?v=1.2-blueworld-r11" />
     <script src="world.js?v=1.2-blueworld-r11" defer></script>
-    <link rel="stylesheet" href="ui-refresh.css?v=20261030-blueworld-r18" />
+    <link rel="stylesheet" href="ui-refresh.css?v=20261030-blueworld-r19" />
   </head>
   <body class="stage-on">
     <a class="skip-link" href="#main-content">跳到主要內容</a>
@@ -643,21 +643,96 @@
             </div>
             <div class="compass-links">
               <a href="#profile">人物檔案 <span>初次認識</span></a
+              ><a href="#design-room">造型資料 <span>表情與色彩</span></a
               ><a href="#actor-room">表情觀察 <span>眨眼與笑容</span></a
               ><a href="#little-facts">小小知識 <span>多認識一點</span></a
-              ><a href="#design-room">造型資料 <span>表情與色彩</span></a
-              ><a href="#portrait-room">私服肖像 <span>長髮與微笑</span></a
+              ><a href="#portrait-room">肖像收藏 <span>日常、雨日與慶典</span></a
               ><a href="#traits">演員筆記 <span>喜歡她的理由</span></a
               ><a href="#story-notes">成長脈絡 <span>展開劇情筆記</span></a
               ><a href="#season-1">第一季 <span>走進她的故事</span></a
               ><a href="#season-2">第二季 <span>舞台上的光</span></a
               ><a href="#season-3">第三季 <span>鏡頭外的日常</span></a
               ><a href="#special-room">特別收藏 <span>和服與魔女</span></a
-              ><a href="#outfit-room">造型收藏 <span>冬日與笑容</span></a
-              ><a href="#chibi-room">小茜遊樂室 <span>星光與小問答</span></a
+              ><a href="#outfit-room">造型收藏 <span>冬日與春櫻</span></a
+              ><a href="#chibi-room">小茜遊樂室 <span>六種小玩法</span></a
               ><a href="#sources">資料來源 <span>從官方看見她</span></a>
             </div>
           </nav>
+          <section
+            class="design-room"
+            id="design-room"
+            aria-labelledby="design-title"
+          >
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">
+                  REFERENCE ROOM / EXPRESSIONS &amp; COSTUME
+                </p>
+                <h2 id="design-title">
+                  從一張設定頁，<br />讀懂她的不同表情。
+                </h2>
+              </div>
+              <p>不只劇照，也收藏造型、<br />正側背面與表情的細節。</p>
+            </div>
+            <div class="design-room-grid">
+              <figure class="design-sheet">
+                <button
+                  id="open-reference"
+                  aria-label="放大黑川茜造型與表情資料頁"
+                >
+                  <img
+                    src="assets/akane/design-sheet.webp"
+                    width="1200"
+                    height="1010"
+                    alt="黑川茜角色資料頁，含紫色服裝全身造型、正側背面及多種表情"
+                    loading="lazy"
+                  />
+                  <span class="reference-zoom"
+                    >放大看完整資料 <span aria-hidden="true">↗</span></span
+                  >
+                </button>
+                <figcaption>
+                  收藏者提供 · 造型與表情參考 · 不指定話數
+                </figcaption>
+              </figure>
+              <div class="design-notes">
+                <p class="eyebrow">THREE DETAILS TO NOTICE</p>
+                <div
+                  class="design-note-tabs"
+                  role="group"
+                  aria-label="選擇資料頁觀賞重點"
+                >
+                  <button data-design-note="expression" aria-pressed="true">
+                    表情</button
+                  ><button data-design-note="costume" aria-pressed="false">
+                    造型</button
+                  ><button data-design-note="color" aria-pressed="false">
+                    色彩
+                  </button>
+                </div>
+                <div class="design-note-content" aria-live="polite">
+                  <span id="design-note-number">01 / EXPRESSION</span>
+                  <h3 id="design-note-title">同一張臉，藏著很多情緒。</h3>
+                  <p id="design-note-description">
+                    這份資料把驚訝、微笑、低落與側臉放在一起。可以先看眉毛的角度，再看眼睛與嘴角，感受小小變化如何讓人物的情緒變得不同。
+                  </p>
+                </div>
+                <div
+                  class="akane-palette"
+                  aria-label="深藍、藍紫、湖水藍、淡粉與月白的角色配色"
+                >
+                  <i style="--swatch: #202d65"></i
+                  ><i style="--swatch: #8c87d9"></i
+                  ><i style="--swatch: #7ce0df"></i
+                  ><i style="--swatch: #e6adcc"></i
+                  ><i style="--swatch: #dcebf1"></i>
+                </div>
+                <p class="design-note-footnote">
+                  本館文字為圖片觀賞筆記。資料頁獨立收藏，三季劇照仍依話數排序。
+                </p>
+              </div>
+            </div>
+          </section>
           <section
             class="actor-room"
             id="actor-room"
@@ -778,96 +853,36 @@
               表情短句為本館觀賞筆記；設定資料依上方官方來源整理。劇照可能包含劇情。
             </p>
           </section>
-          <section
-            class="design-room"
-            id="design-room"
-            aria-labelledby="design-title"
-          >
-            <div class="section-heading">
-              <div>
-                <p class="eyebrow">
-                  REFERENCE ROOM / EXPRESSIONS &amp; COSTUME
-                </p>
-                <h2 id="design-title">
-                  從一張設定頁，<br />讀懂她的不同表情。
-                </h2>
-              </div>
-              <p>不只劇照，也收藏造型、<br />正側背面與表情的細節。</p>
-            </div>
-            <div class="design-room-grid">
-              <figure class="design-sheet">
-                <button
-                  id="open-reference"
-                  aria-label="放大黑川茜造型與表情資料頁"
-                >
-                  <img
-                    src="assets/akane/design-sheet.webp"
-                    width="1200"
-                    height="1010"
-                    alt="黑川茜角色資料頁，含紫色服裝全身造型、正側背面及多種表情"
-                    loading="lazy"
-                  />
-                  <span class="reference-zoom"
-                    >放大看完整資料 <span aria-hidden="true">↗</span></span
-                  >
-                </button>
-                <figcaption>
-                  收藏者提供 · 造型與表情參考 · 不指定話數
-                </figcaption>
-              </figure>
-              <div class="design-notes">
-                <p class="eyebrow">THREE DETAILS TO NOTICE</p>
-                <div
-                  class="design-note-tabs"
-                  role="group"
-                  aria-label="選擇資料頁觀賞重點"
-                >
-                  <button data-design-note="expression" aria-pressed="true">
-                    表情</button
-                  ><button data-design-note="costume" aria-pressed="false">
-                    造型</button
-                  ><button data-design-note="color" aria-pressed="false">
-                    色彩
-                  </button>
-                </div>
-                <div class="design-note-content" aria-live="polite">
-                  <span id="design-note-number">01 / EXPRESSION</span>
-                  <h3 id="design-note-title">同一張臉，藏著很多情緒。</h3>
-                  <p id="design-note-description">
-                    這份資料把驚訝、微笑、低落與側臉放在一起。可以先看眉毛的角度，再看眼睛與嘴角，感受小小變化如何讓人物的情緒變得不同。
-                  </p>
-                </div>
-                <div
-                  class="akane-palette"
-                  aria-label="深藍、藍紫、湖水藍、淡粉與月白的角色配色"
-                >
-                  <i style="--swatch: #202d65"></i
-                  ><i style="--swatch: #8c87d9"></i
-                  ><i style="--swatch: #7ce0df"></i
-                  ><i style="--swatch: #e6adcc"></i
-                  ><i style="--swatch: #dcebf1"></i>
-                </div>
-                <p class="design-note-footnote">
-                  本館文字為圖片觀賞筆記。資料頁獨立收藏，三季劇照仍依話數排序。
-                </p>
-              </div>
-            </div>
-          </section>
           <section class="portrait-room" id="portrait-room" aria-labelledby="portrait-room-title">
-            <button class="portrait-art" data-portrait-open aria-label="放大黑川茜 Puzzle Star 私服肖像">
-              <img src="assets/akane/puzzle-casual.webp" width="720" height="1040" alt="黑川茜穿棕色上衣與淺色洋裝、輕攏藍色長髮的官方私服肖像" loading="lazy" />
-            </button>
+            <div class="portrait-stage">
+              <button class="portrait-art" data-portrait-open aria-label="放大黑川茜 Puzzle Star 私服肖像">
+                <img id="portrait-image" src="assets/akane/puzzle-casual.webp" width="720" height="1040" alt="黑川茜穿棕色上衣與淺色洋裝、輕攏藍色長髮的官方私服肖像" loading="lazy" />
+              </button>
+              <div class="portrait-previews" id="portrait-previews" aria-label="其他黑川茜肖像"></div>
+            </div>
             <div class="portrait-copy">
-              <p class="eyebrow">AKANE PORTRAIT / A QUIET MOMENT</p>
-              <h2 id="portrait-room-title">讓日常，也有一點星光。</h2>
-              <p>輕攏長髮的瞬間，像把喧鬧留在畫面之外。棕色與米白襯著她的藍，簡單的日常，也讓人想多停留一下。</p>
+              <p class="eyebrow">AKANE PORTRAITS / THREE LITTLE WORLDS</p>
+              <div class="portrait-choices" role="group" aria-label="選擇黑川茜直幅肖像">
+                <button class="soft-button" data-portrait-choice="puzzle-casual" aria-pressed="true">日常星光</button>
+                <button class="soft-button" data-portrait-choice="raindrops" aria-pressed="false">雨後花語</button>
+                <button class="soft-button" data-portrait-choice="anniversary" aria-pressed="false">糖彩慶典</button>
+              </div>
+              <div class="portrait-note" aria-live="polite">
+                <h2 id="portrait-room-title">讓日常，也有一點星光。</h2>
+                <p id="portrait-description">輕攏長髮的瞬間，像把喧鬧留在畫面之外。棕色與米白襯著她的藍，簡單的日常，也讓人想多停留一下。</p>
+              </div>
               <dl class="portrait-details">
-                <div><dt>今天的穿搭</dt><dd>棕色針織 × 淺色洋裝</dd></div>
-                <div><dt>想收藏的細節</dt><dd>輕揚髮梢與青綠色眼眸</dd></div>
+                <div><dt>今天的穿搭</dt><dd id="portrait-outfit">棕色針織 × 淺色洋裝</dd></div>
+                <div><dt>想收藏的細節</dt><dd id="portrait-detail">輕揚髮梢與青綠色眼眸</dd></div>
               </dl>
               <div class="portrait-actions">
                 <button class="soft-button" data-portrait-open>看完整肖像 ↗</button>
-                <a class="source-link" href="https://oshinoko-puzzle.com/" target="_blank" rel="noopener noreferrer">官方原頁 ↗</a>
+                <a id="portrait-source" class="source-link" href="https://oshinoko-puzzle.com/" target="_blank" rel="noopener noreferrer">官方原頁 ↗</a>
+              </div>
+              <div class="portrait-pagination">
+                <button id="portrait-previous" class="soft-button" aria-label="上一張黑川茜肖像">←</button>
+                <span id="portrait-counter">1 / 3 · 日常星光</span>
+                <button id="portrait-next" class="soft-button" aria-label="下一張黑川茜肖像">→</button>
               </div>
             </div>
           </section>
@@ -1143,7 +1158,7 @@
                 <p class="eyebrow">AKANE WARDROBE / LITTLE COLLECTIONS</p>
                 <h2 id="outfit-room-title">把喜歡，換成不同的造型。</h2>
               </div>
-              <p>冬日燈光與日常微笑，只收藏黑川茜。<br />沿著畫面的色彩，欣賞不同時刻的她。</p>
+              <p>冬日燈光與春日櫻花，只收藏黑川茜。<br />沿著畫面的色彩，欣賞不同時刻的她。</p>
             </div>
             <div class="special-art-grid extra-outfit-grid" aria-label="黑川茜單人造型收藏">
               <article class="special-art-card">
@@ -1158,14 +1173,14 @@
                 </div>
               </article>
               <article class="special-art-card">
-                <button data-special-art="quiet-smile" class="special-art-image" aria-label="放大黑川茜日常微笑的單人近景">
-                  <img src="assets/akane/quiet-smile.webp" alt="黑川茜穿白色高領與深色荷葉邊衣裝，坐在米色沙發前露出微笑" width="960" height="540" loading="lazy" />
+                <button data-special-art="sakura-kimono" class="special-art-image" aria-label="放大黑川茜春櫻和服插畫">
+                  <img src="assets/akane/sakura-kimono.webp" alt="黑川茜穿粉紅花紋和服，撐著和傘站在櫻花飛舞的春日裡" width="1800" height="1228" loading="lazy" />
                 </button>
                 <div class="special-art-copy">
-                  <p class="eyebrow">A SOFT SMILE / ANIME MOMENT</p>
-                  <h3>一點笑意，讓日常柔軟。</h3>
-                  <p>白色高領、深色荷葉邊與柔和的笑容，留下一個讓人想靠近的日常瞬間。</p>
-                  <button data-special-art="quiet-smile" class="text-link">放大欣賞 ↗</button>
+                  <p class="eyebrow">SAKURA / KIMONO ILLUSTRATION</p>
+                  <h3>把春天，留在花開的這一刻。</h3>
+                  <p>粉紅和服、和傘與飛舞的櫻花，讓喜歡的藍，也染上一點溫柔的春色。</p>
+                  <button data-special-art="sakura-kimono" class="text-link">放大欣賞 ↗</button>
                 </div>
               </article>
             </div>
@@ -1258,6 +1273,9 @@
                     ><button data-chibi-mode="quiz" aria-pressed="false">
                       小茜小問答 ♡
                     </button>
+                    <button data-chibi-mode="memory" aria-pressed="false">翻牌記憶 ◇</button>
+                    <button data-chibi-mode="fortune" aria-pressed="false">心情籤 ☁</button>
+                    <button data-chibi-mode="palette" aria-pressed="false">色彩調配 ◉</button>
                   </div>
                   <div class="chibi-activity" data-chibi-panel="gift">
                     <p>把一顆星留在這裡，也收下一句小小的鼓勵。</p>
@@ -1341,6 +1359,44 @@
                       </button>
                     </div>
                   </div>
+                  <div class="chibi-activity" data-chibi-panel="memory" hidden>
+                    <p>翻開兩張卡，找到四組相同的小圖案。沒有倒數，慢慢記住就好。</p>
+                    <div id="chibi-memory-board" class="chibi-memory-board" aria-label="八張記憶卡"></div>
+                    <div class="activity-footer">
+                      <p id="chibi-memory-status" role="status">找到 0 / 4 組 · 翻牌 0 次</p>
+                      <button id="chibi-memory-reset" class="soft-button">重新洗牌 ↻</button>
+                    </div>
+                  </div>
+                  <div class="chibi-activity" data-chibi-panel="fortune" hidden>
+                    <p>挑一個今天的心情，收下一句本館原創的小小鼓勵。</p>
+                    <div class="chibi-mood-choices" role="group" aria-label="今天想要的心情">
+                      <button class="soft-button" data-chibi-mood="rest" aria-pressed="true">想放鬆</button>
+                      <button class="soft-button" data-chibi-mood="courage" aria-pressed="false">想打氣</button>
+                      <button class="soft-button" data-chibi-mood="focus" aria-pressed="false">想專注</button>
+                    </div>
+                    <blockquote id="chibi-fortune-note" class="chibi-fortune-note" role="status">留一點時間，聽聽今天的自己。</blockquote>
+                    <button id="chibi-fortune-draw" class="soft-button">抽一張心情籤 ✧</button>
+                    <p class="chibi-pocket">原創觀賞短句，並非角色台詞。</p>
+                  </div>
+                  <div class="chibi-activity" data-chibi-panel="palette" hidden>
+                    <p>調整三道色光，試著配出左邊的顏色。這是本館的茜色靈感小遊戲。</p>
+                    <div class="chibi-color-tiles">
+                      <div><span id="chibi-color-target" class="chibi-color-tile"></span><span id="chibi-color-name">深海藍</span></div>
+                      <div><span id="chibi-color-mix" class="chibi-color-tile"></span><span>你的配色</span></div>
+                    </div>
+                    <div class="chibi-color-sliders">
+                      <label for="chibi-color-r">紅 R <output id="chibi-output-r">128</output></label><input id="chibi-color-r" data-color-channel="0" type="range" min="0" max="255" value="128" />
+                      <label for="chibi-color-g">綠 G <output id="chibi-output-g">128</output></label><input id="chibi-color-g" data-color-channel="1" type="range" min="0" max="255" value="128" />
+                      <label for="chibi-color-b">藍 B <output id="chibi-output-b">128</output></label><input id="chibi-color-b" data-color-channel="2" type="range" min="0" max="255" value="128" />
+                    </div>
+                    <p id="chibi-color-status" role="status">試著靠近左邊的顏色。</p>
+                    <div class="activity-footer color-actions">
+                      <button id="chibi-color-check" class="soft-button">看看相似度</button>
+                      <button id="chibi-color-hint" class="text-link">看調色提示</button>
+                      <button id="chibi-color-next" class="soft-button">換一種顏色 ↻</button>
+                    </div>
+                    <p id="chibi-color-tip" hidden></p>
+                  </div>
                   <div class="chibi-activity" data-chibi-panel="quiz" hidden>
                     <p class="quiz-progress" id="chibi-quiz-progress">
                       小茜小問答 · 1 / 5
@@ -1377,10 +1433,10 @@
                   <p>下一束光，想看哪裡？</p>
                   <div>
                     <a href="#profile">人物檔案</a
+                    ><a href="#design-room">造型資料</a
                     ><a href="#actor-room">表情觀察</a
                     ><a href="#little-facts">小小知識</a
-                    ><a href="#design-room">造型資料</a
-                    ><a href="#portrait-room">私服肖像</a
+                    ><a href="#portrait-room">肖像收藏</a
                     ><a href="#traits">演員筆記</a
                     ><a href="#story-notes">成長脈絡</a
                     ><a href="#season-1">第一季圖庫</a
@@ -1718,7 +1774,7 @@
         <span>✦ BLUE WORLD</span>
         <p>二次元守護者的收藏館 · 非官方粉絲主題</p>
         <a href="#sources">來源與圖片權利</a
-        ><small>Blue World · 五款獨立遊戲 · 2026.10.30 r18</small>
+        ><small>Blue World · 五款獨立遊戲 · 2026.10.30 r19</small>
       </footer>
     </div>
     <dialog

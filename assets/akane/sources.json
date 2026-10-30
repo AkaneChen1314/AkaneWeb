@@ -1,5 +1,41 @@
 [
   {
+    "file": "assets/akane/portrait-raindrops.webp",
+    "source_page": "https://group.kadokawa.co.jp/information/promotional_topics/article-15016.html",
+    "original_url": "https://prcdn.freetls.fastly.net/release_image/7006/19557/7006-19557-79576a21cf01bd07a84fed98e009194d-899x1221.jpg",
+    "downloaded": "2026-10-30",
+    "type": "official Puzzle Star Rainy Drops card illustration; Akane only; full frame and original copyright retained; no SAMPLE overlay",
+    "size": [
+      899,
+      1221
+    ],
+    "sha256": "4d66bafa489f0a7cb18e74e19f6739accfcc98c68bf6d9961d2523de183a9603"
+  },
+  {
+    "file": "assets/akane/portrait-anniversary.webp",
+    "source_page": "https://group.kadokawa.co.jp/information/promotional_topics/article-15579.html",
+    "original_url": "https://prcdn.freetls.fastly.net/release_image/7006/20044/7006-20044-c4560521c443e6b3c83006a259e4bd90-899x1221.jpg",
+    "downloaded": "2026-10-30",
+    "type": "official Puzzle Star Half Anniversary card illustration; Akane only; full frame and original copyright retained; no SAMPLE overlay",
+    "size": [
+      899,
+      1221
+    ],
+    "sha256": "a1a535eb492ac44cff809b65331c207f1a7da9dc4b9cfa5f3896d24c4b9dfac8"
+  },
+  {
+    "file": "assets/akane/sakura-kimono.webp",
+    "source_page": "https://wall.alphacoders.com/big.php?i=1408487",
+    "original_url": "https://images.alphacoders.com/140/1408487.jpg",
+    "downloaded": "2026-10-30",
+    "type": "Akane kimono illustration via community-hosted Wallpaper Abyss; original logo and artist/copyright credit retained; not attributed to a verified official event or date; no SAMPLE overlay",
+    "size": [
+      1800,
+      1228
+    ],
+    "sha256": "26a57bbfc75cc5a4c23054183b433880cc0c280804e1d4a20144b5d9d4516678"
+  },
+  {
     "file": "assets/akane/quiet-smile.webp",
     "source_page": "https://www.gunber-stories.com/entry/2024/08/29/055928",
     "original_url": "https://cdn-ak.f.st-hatena.com/images/fotolife/g/gunber/20240824/20240824063209.png",
