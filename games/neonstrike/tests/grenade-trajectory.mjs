@@ -95,7 +95,7 @@ const labelNodes=new Map();
 const hintClasses=new Set();
 const hint={classList:{toggle(name,value){if(value)hintClasses.add(name);else hintClasses.delete(name);},remove(name){hintClasses.delete(name);}},querySelector(selector){if(!labelNodes.has(selector))labelNodes.set(selector,{textContent:''});return labelNodes.get(selector);}};
 const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera();camera.position.copy(origin);
-const context=vm.createContext({THREE,scene,camera,predictGrenadePath,GRENADE_FUSE,GRENADE_BLAST_RADIUS,ui:{grenadeHint:hint,hud:{classList:{toggle(){}}}},grenadePreview:null,grenadeAiming:true,gameState:'playing',grenadeCount:2,lastGrenadePreview:0,collisionBoxes:[new THREE.Box3(new THREE.Vector3(-2,0,-4.05),new THREE.Vector3(2,4,-4))]});
+const context=vm.createContext({THREE,scene,camera,predictGrenadePath,GRENADE_FUSE,GRENADE_BLAST_RADIUS,ui:{grenadeHint:hint,hud:{classList:{toggle(){}}}},touchControls:null,grenadePreview:null,grenadeAiming:true,gameState:'playing',grenadeCount:2,lastGrenadePreview:0,collisionBoxes:[new THREE.Box3(new THREE.Vector3(-2,0,-4.05),new THREE.Vector3(2,4,-4))]});
 vm.runInContext(previewFunctions,context);
 vm.runInContext('createGrenadePreview();createGrenadePreview();updateGrenadePreview(1000,true);',context);
 assert.equal(scene.children.length,1,'repeated setup reuses one preview group');

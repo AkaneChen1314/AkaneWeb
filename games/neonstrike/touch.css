@@ -1,0 +1,82 @@
+/* Touch controls use the same font, border and flat surface throughout. */
+#touchControls[hidden] { display: none !important; }
+#touchControls { position: fixed; top: 0; left: 0; width: calc(100% / var(--touch-scale, 1)); height: calc(100% / var(--touch-scale, 1)); transform: scale(var(--touch-scale, 1)); transform-origin: top left; z-index: 20; pointer-events: none; user-select: none; -webkit-user-select: none; --touch-edge: max(12px, env(safe-area-inset-right)); }
+.neon-touch :is(#lobby, .hud, .modal) { top: 0; left: 0; right: auto; bottom: auto; width: calc(100% / var(--touch-scale, 1)); height: calc(100% / var(--touch-scale, 1)); transform: scale(var(--touch-scale, 1)); transform-origin: top left; }
+.neon-touch #lobby { display: block; overflow-y: auto; padding: 20px; }
+.neon-touch #lobby .brand { margin: 0 auto 16px; padding: 0; max-width: 760px; }
+.neon-touch #lobby .brand h1 { font-size: 38px; line-height: 1; margin: 0; }
+.neon-touch #lobby .brand h1 br { display: none; }
+.neon-touch #lobby .brand :is(.eyebrow, .hero-tags, .brand-location, p), .neon-touch .lobby-footer { display: none; }
+.neon-touch #lobby .setup-shell { width: 100%; max-width: 760px; max-height: none; margin: auto; overflow: visible; }
+.neon-touch #lobby .setup-content, .neon-touch #lobby .mission, .neon-touch #lobby .mission-body { overflow: visible; max-height: none; }
+.neon-touch #lobby .setup-tabs button { min-height: 48px; padding: 8px 5px; }
+.neon-touch #lobby .setup-tabs button span { font-size: 12px; }
+.neon-touch #lobby :is(select, .setup-actions button, .difficulty-button, .mode-button) { min-height: 44px; }
+.neon-touch #lobby .encounter-controls select { max-width: 56%; }
+.neon-touch #lobby button { min-height: 44px; }
+.neon-touch #lobby .swatches { flex-wrap: wrap; }
+.neon-touch #lobby .swatch { min-width: 44px; }
+.neon-touch .modal .modal-card { width: calc(100% - 24px); max-width: 560px; max-height: calc(100% - 24px); }
+.neon-touch .modal-card button { min-height: 44px; }
+.neon-touch #game canvas { touch-action: none; }
+#touchControls button { pointer-events: auto; touch-action: none; min-width: 48px; min-height: 48px; padding: 8px; border: 1px solid #a9d5dd70; border-radius: 12px; background: #102934d9; color: #edfaff; font: 600 13px/1.4 'Noto Sans TC', sans-serif; box-shadow: none; -webkit-tap-highlight-color: transparent; }
+#touchControls button.pressed { background: #376a77ed; border-color: #b2f6ff; }
+#touchControls button:focus-visible { outline: 3px solid #b2f6ff; outline-offset: 3px; }
+.touch-move { position: absolute; width: 124px; height: 124px; left: max(20px, env(safe-area-inset-left)); bottom: max(28px, env(safe-area-inset-bottom)); border-radius: 50% !important; padding: 0 !important; background: #10293475 !important; }
+.touch-move span { position: absolute; width: 48px; height: 48px; left: calc(50% - 24px); top: calc(50% - 24px); border: 1px solid #b2f6ff9c; border-radius: 50%; background: #5b9aaa92; pointer-events: none; }
+.touch-move b { position: absolute; bottom: 9px; left: 0; right: 0; font-size: 12px; font-weight: inherit; color: #d5edf2; }
+.touch-actions { position: absolute; bottom: max(20px, env(safe-area-inset-bottom)); right: var(--touch-edge); display: grid; width: min(172px, calc(100% - 160px)); grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.touch-actions [data-touch-action="grenade"] { padding-inline: 4px !important; font-size: 12px !important; white-space: nowrap; }
+#touchControls .touch-fire { grid-column: 2 / 4; min-height: 68px; background: #24536bdf; font-size: 16px; }
+.touch-pause { position: absolute; top: max(12px, env(safe-area-inset-top)); right: var(--touch-edge); }
+.touch-sprint { position: absolute; left: max(20px, env(safe-area-inset-left)); bottom: calc(max(28px, env(safe-area-inset-bottom)) + 136px); }
+.touch-cancel { position: absolute; bottom: 215px; right: var(--touch-edge); }
+.touch-hint { position: absolute; left: 50%; top: 43%; transform: translateX(-50%); width: max-content; max-width: 80%; margin: 0; padding: 10px; border-radius: 12px; background: #102934df; color: #d5edf2; font: 13px/1.6 'Noto Sans TC', sans-serif; text-align: center; }
+#touchControls[data-interacted="true"] .touch-hint { display: none; }
+.neon-touch .fallback-hint, .neon-touch #fallbackButton { display: none; }
+.neon-touch .modal-card { max-height: calc(100dvh - 24px); }
+.neon-touch .hud .top-bar { top: 12px; left: 12px; right: 80px; }
+.neon-touch .enemy-counter { min-width: 0; padding: 6px 8px; clip-path: none; }
+.neon-touch .enemy-readout > small, .neon-touch #enemyStatus, .neon-touch .enemy-progress, .neon-touch .live-dot { display: none; }
+.neon-touch .enemy-metrics small { font-size: 10px; }
+.neon-touch .enemy-metrics > span { min-width: 62px; padding: 4px 8px; }
+.neon-touch .enemy-metrics b { font-size: 20px; }
+.neon-touch .enemy-counter > small, .neon-touch .counter-track, .neon-touch .compass, .neon-touch .timer-card { display: none; }
+.neon-touch .score-card { min-width: 44px; padding: 4px 8px; }
+.neon-touch .score-card strong { font-size: 24px; }
+.neon-touch #minimap { width: 90px; height: 90px; left: 12px; top: 80px; }
+.neon-touch .bottom-left { left: 12px; bottom: auto; top: 180px; }
+.neon-touch .operator-badge, .neon-touch .bottom-center, .neon-touch .ammo-track, .neon-touch .weapon-label, .neon-touch .grenade-count { display: none; }
+.neon-touch .vitals { width: 108px; }
+.neon-touch .vitals-row b { font-size: 22px; }
+.neon-touch .bottom-right { right: 16px; top: 82px; bottom: auto; min-width: 0; }
+.neon-touch .ammo strong { font-size: 36px; }
+.neon-touch .ammo b { font-size: 18px; }
+.neon-touch .ability-status { top: 142px; bottom: auto; right: 12px; min-width: 135px; max-width: 175px; padding: 7px; grid-template-columns: 1fr; }
+.neon-touch .ability-status kbd { display: none; }
+.neon-touch .ability-status b { font-size: 12px; }
+.neon-touch .ability-status small { font-size: 10px; }
+.neon-touch .objective, .neon-touch .sector-readout, .neon-touch .mission-config, .neon-touch .kill-feed, .neon-touch .streak-status { display: none; }
+.neon-touch .boss-hud { top: 80px; left: 116px; right: 116px; width: auto; transform: none; padding: 7px; }
+.neon-touch .boss-hud > strong { font-size: 12px; }
+.neon-touch .boss-warning { top: 212px; font-size: 11px; max-width: 90vw; white-space: normal; text-align: center; }
+.neon-touch .grenade-preview-hint { top: 220px; bottom: auto; left: 12px; width: min(290px, calc(100vw - 24px)); }
+.neon-touch .kill-notice { top: 80px; width: 210px; }
+.neon-touch .combat-banner { top: 42%; }
+.neon-touch .reload-prompt { top: 56%; bottom: auto; }
+.standalone-portal-game.neon-touch :is(#touchControls, #lobby, .hud, .modal) { top: 46px; height: calc((100% - 46px) / var(--touch-scale, 1)); }
+.touch-manual { margin: 14px 0; padding: 12px; border: 1px solid #80c6d848; border-radius: 12px; color: #cfedf5; font: 14px/1.8 'Noto Sans TC', sans-serif; }
+@media (orientation: landscape) and (max-height: 540px) {
+  .touch-move { width: 106px; height: 106px; bottom: max(12px, env(safe-area-inset-bottom)); }
+  .touch-sprint { bottom: calc(max(12px, env(safe-area-inset-bottom)) + 116px); }
+  .touch-actions { width: auto; grid-template-columns: repeat(5, 48px); gap: 6px; bottom: max(12px, env(safe-area-inset-bottom)); }
+  #touchControls .touch-fire { grid-column: 4 / 6; grid-row: 1 / 3; min-height: 102px; }
+  .touch-cancel { bottom: 12px; right: 290px; }
+  .neon-touch #minimap { width: 64px; height: 64px; top: 76px; }
+  .neon-touch .bottom-left { top: 80px; left: 116px; }
+  .neon-touch .bottom-right { top: 76px; right: 16px; }
+  .neon-touch .ability-status { top: 78px; right: 110px; }
+  .neon-touch .boss-hud { top: 70px; left: 250px; right: 290px; }
+  .neon-touch .boss-warning { top: 130px; }
+  .neon-touch .grenade-preview-hint { top: 130px; left: 140px; width: 250px; }
+}

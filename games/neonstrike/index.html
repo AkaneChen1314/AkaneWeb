@@ -2,13 +2,14 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0a0d12" />
     <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg" />
     <title>NEON STRIKE // 3D 射擊競技場</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=20261030-r13-touch" />
     <link rel="stylesheet" href="../../shared/portal.css" />
-    <link rel="stylesheet" href="./portal.css" />
+    <link rel="stylesheet" href="./portal.css?v=20261030-r13-touch" />
+    <link rel="stylesheet" href="./touch.css?v=20261030-r13-touch" />
     <script defer src="../../shared/portal.js"></script>
   </head>
   <body>
@@ -121,7 +122,7 @@
           <div><strong id="briefMissionValue">ALL</strong><small id="briefMissionLabel">任務目標</small></div>
         </div>
         <div class="intel-tags" aria-label="地圖特性"><span id="mapFeature">大型港區</span><span>室內外戰</span><span>多路側翼</span><span>4 種補給</span></div>
-        <label class="quality-control" for="qualitySelect"><span>畫面品質<small>依電腦效能調整</small></span><select id="qualitySelect"><option value="0">精緻</option><option value="1" selected>均衡</option><option value="2">流暢</option></select></label>
+        <label class="quality-control" for="qualitySelect"><span>畫面品質<small>依裝置效能調整</small></span><select id="qualitySelect"><option value="0">精緻</option><option value="1" selected>均衡</option><option value="2">流暢</option></select></label>
         <label class="quality-control volume-control" for="volumeControl"><span>音效音量<small>槍聲・換彈・環境</small></span><input id="volumeControl" type="range" min="0" max="100" value="72" aria-label="遊戲音量" /><output id="volumeValue" for="volumeControl">72%</output></label>
         <details class="settings-drawer audio-drawer">
           <summary><span>音效混音</span><small>戰鬥 · 環境 · 提示</small></summary>
@@ -214,12 +215,29 @@
       <div class="mission-config"><span id="hudOperator">VANTA</span><i>//</i><b id="hudMode">PURGE</b><i>//</i><b id="hudDifficulty">TACTICAL</b></div>
     </div>
 
+    <div id="touchControls" hidden aria-label="手機戰鬥操作">
+      <button class="touch-move" data-touch-move aria-label="移動搖桿，拖曳控制方向"><span></span><b>移動</b></button>
+      <button class="touch-sprint" data-touch-action="sprint" aria-pressed="false">衝刺</button>
+      <div class="touch-actions">
+        <button data-touch-action="jump">跳躍</button>
+        <button data-touch-action="reload">換彈</button>
+        <button data-touch-action="aim" aria-pressed="false">瞄準</button>
+        <button data-touch-action="ability">技能</button>
+        <button data-touch-action="grenade" aria-label="按住預覽手榴彈，放開投擲">手榴彈</button>
+        <button class="touch-fire" data-touch-action="fire" aria-label="按住連射，拖曳同時瞄準">射擊</button>
+      </div>
+      <button class="touch-pause" data-touch-action="pause">暫停</button>
+      <button class="touch-cancel" data-touch-action="grenade-cancel" hidden>取消投擲</button>
+      <p class="touch-hint">左手搖桿移動，右手滑動畫面轉向。<br />射擊鍵可按住連射、拖曳瞄準。</p>
+    </div>
+
     <section id="helpModal" class="modal help-modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
       <div class="modal-card help-card">
         <button id="helpCloseButton" class="modal-close" type="button" aria-label="關閉遊戲說明">×</button>
         <span class="eyebrow">FIELD MANUAL // RUST HARBOR</span>
         <h2 id="helpTitle">遊戲說明</h2>
         <p class="help-intro">依序選擇幹員、地圖、模式與難度，再確認配置並部署。利用掩體、爆炸物和場上補給完成任務。</p>
+        <p class="touch-manual">手機操作：左搖桿移動，右側畫面滑動轉向；射擊鍵按住連射，也能拖曳瞄準。瞄準與衝刺可點按切換；手榴彈按住預覽、放開投擲，另有取消鍵。直向與橫向皆可玩，橫向視野較寬。</p>
         <div class="help-grid">
           <section>
             <h3><span>01</span> 基本操作</h3>
@@ -292,6 +310,7 @@
         <button id="fallbackButton" class="ghost-button">瀏覽器無法鎖定滑鼠？使用拖曳視角</button>
         <small class="fallback-hint">相容操作：右鍵拖曳轉向，左鍵射擊。</small>
         <button class="ghost-button" type="button" data-open-help>查閱作戰手冊</button>
+        <button id="touchReturnButton" class="ghost-button" type="button">返回遊戲館</button>
         <button id="restartButton" class="ghost-button">重新開始</button>
       </div>
     </section>
@@ -310,8 +329,7 @@
       </div>
     </section>
 
-    <div id="rotateNotice"><p>NEON STRIKE 目前需要鍵盤與滑鼠操作。<br />請使用電腦開啟遊玩。</p><a href="../../index.html#games" target="_top">返回遊戲館，看看其他遊戲 ↗</a></div>
     <script defer src="./lobby.js"></script>
-    <script defer src="./browser.js?v=20261030-r13" onerror="document.getElementById('loadError').hidden=false"></script>
+    <script defer src="./browser.js?v=20261030-r13-touch" onerror="document.getElementById('loadError').hidden=false"></script>
   </body>
 </html>

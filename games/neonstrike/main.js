@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.min.js';
 import { createGrenadeMotion, advanceGrenadeMotion, predictGrenadePath, GRENADE_FUSE, GRENADE_BLAST_RADIUS } from './grenade-trajectory.js';
 import { orientCollider, roundCollider, bodyOverlapsCollider, sweepSphereCollider } from './spatial-collision.js';
+import { createTouchControls } from './touch-controls.js';
 
 const $ = (selector) => document.querySelector(selector);
 const ui = {
@@ -73,12 +74,14 @@ let selectedDifficulty = Math.min(difficulties.length-1,savedIndex('neonDifficul
 let selectedMode = Math.min(gameModes.length-1,savedIndex('neonMode',0));
 let selectedMap=Math.min(mapDefinitions.length-1,savedIndex('neonMap',0)),builtMap=-1,arenaObjects=[];
 let missionSettings=loadMissionSettings(),activeEncounter=null;
-let qualityIndex=Math.min(2,savedIndex('neonQuality',1));
+const touchCapable=(globalThis.navigator?.maxTouchPoints||0)>0||globalThis.matchMedia?.('(any-pointer: coarse)').matches===true;
+let qualityIndex=Math.min(2,savedIndex('neonQuality',touchCapable?2:1));
 let masterVolume=Math.min(100,savedIndex('neonVolume',72))/100;
 let scene, camera, renderer, clock, yaw, pitch, weapon, muzzleFlash, muzzleAnchor, opticGroup;
 let gameState = 'lobby';
 let portalPaused = globalThis.akanePortalPaused === true;
 let freeLook=false;
+let touchControls=null;
 let gameStart = 0;
 let pauseStarted = 0;
 let audioContext;
@@ -275,9 +278,9 @@ function init3D() {
   yaw.position.set(0, eyeHeight, 65);
   scene.add(yaw);
 
-  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  renderer = new THREE.WebGLRenderer({ antialias: !touchCapable, powerPreference: 'high-performance' });
   renderer.autoClear=false;
-  renderer.setPixelRatio(Math.min(devicePixelRatio, [1.8,1.35,1][qualityIndex]));
+  renderer.setPixelRatio(Math.min(devicePixelRatio, (touchCapable?[1.35,1.1,1]:[1.8,1.35,1])[qualityIndex]));
   renderer.setSize(innerWidth, innerHeight);
   renderer.shadowMap.enabled = qualityIndex!==2;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -315,6 +318,9 @@ function init3D() {
   createGrenadePreview();
   addAmbientDetails();
   setupEvents();
+  touchControls=createTouchControls({root:$('#touchControls'),canvas:renderer.domElement,onLook:onTouchLook,onAction:onTouchAction});
+  if(touchControls.enabled)ui.reload.textContent='點「換彈」重新裝填';
+  onResize();
   updateHUD();
   animate();
 }
@@ -1394,7 +1400,7 @@ function setGameVolume(percent){
 function setGraphicsQuality(value){
   const index=Number(value);qualityIndex=Number.isInteger(index)&&index>=0&&index<=2?index:1;
   ui.quality.value=String(qualityIndex);ui.pauseQuality.value=String(qualityIndex);saveChoice('neonQuality',qualityIndex);
-  renderer.setPixelRatio(Math.min(devicePixelRatio,[1.8,1.35,1][qualityIndex]));renderer.shadowMap.enabled=qualityIndex!==2;renderer.shadowMap.needsUpdate=true;onResize();
+  renderer.setPixelRatio(Math.min(devicePixelRatio,(touchCapable?[1.35,1.1,1]:[1.8,1.35,1])[qualityIndex]));renderer.shadowMap.enabled=qualityIndex!==2;renderer.shadowMap.needsUpdate=true;onResize();
 }
 
 function setupEvents() {
@@ -1403,6 +1409,10 @@ function setupEvents() {
   if(typeof window!=='undefined')window.refreshLobbyMapPreview?.();
   mapControl.addEventListener('change',()=>{if(setSelectedMap(Number(mapControl.value))&&typeof window!=='undefined')window.refreshLobbyMapPreview?.();});
   ui.resume.addEventListener('click', requestLock);
+  $('#touchReturnButton').addEventListener('click',()=>{
+    if(window.parent!==window)window.parent.postMessage({type:'akane-return'},location.protocol==='file:'?'*':location.origin);
+    else location.href='../../index.html#games';
+  });
   $('#fallbackButton').addEventListener('click',()=>{freeLook=true;resumeGame();feed('相容操作 // 按住右鍵拖曳轉向，左鍵射擊；Esc 暫停');});
   ui.restart.addEventListener('click', () => location.reload());
   ui.again.addEventListener('click', () => location.reload());
@@ -1445,6 +1455,7 @@ function setupEvents() {
   });
   addEventListener('contextmenu',event=>event.preventDefault());
   addEventListener('mousedown', event => {
+    if(event.sourceCapabilities?.firesTouchEvents || (event.target && event.target!==renderer.domElement))return;
     if(event.button===2&&gameState==='playing'){aiming=true;return;}
     if(event.button===0&&gameState==='playing'){
       if(grenadeAiming){
@@ -1479,7 +1490,7 @@ function setupEvents() {
   });
 }
 
-function clearInputs(){mouseDown=false;aiming=false;grenadeAiming=false;jumpBuffer=0;groundGrace=0;updateGrenadePreview(performance.now(),true);Object.keys(keys).forEach(key=>keys[key]=false);}
+function clearInputs(){touchControls?.setPlaying(false);touchControls?.reset();mouseDown=false;aiming=false;grenadeAiming=false;jumpBuffer=0;groundGrace=0;updateGrenadePreview(performance.now(),true);Object.keys(keys).forEach(key=>keys[key]=false);}
 
 function pauseGame(message){
   if(gameState!=='playing')return;
@@ -1499,6 +1510,7 @@ function resumeGame(){
     gameState='playing';
   }
   ui.pause.classList.add('hidden');
+  touchControls?.setPlaying(gameState==='playing');
 }
 
 function startGame() {
@@ -1528,6 +1540,7 @@ function startGame() {
 }
 
 function requestLock() {
+  if(touchControls?.enabled){freeLook=true;resumeGame();return;}
   try{
     if(document.pointerLockElement===renderer.domElement){freeLook=false;resumeGame();return;}
     if(!renderer.domElement.requestPointerLock){pauseGame();return;}
@@ -1587,6 +1600,7 @@ function createGrenadePreview(){
 
 function updateGrenadePreview(time,force=false){
   const active=gameState==='playing'&&grenadeAiming&&grenadeCount>0;
+  touchControls?.setGrenadePreview(active);
   ui.hud.classList.toggle('grenade-aiming',active);
   const hint=ui.grenadeHint;
   if(hint)hint.classList.toggle('hidden',!active);
@@ -1623,10 +1637,36 @@ function updateGrenadePreview(time,force=false){
   if(hint){
     const contact=prediction.firstImpact?(normal.y>.5?'首次落地':normal.y<-.5?'碰到頂部':'首次撞牆'):'空中起爆';
     hint.classList.toggle('danger',danger);
-    hint.querySelector('b').textContent='手榴彈投擲預覽';hint.querySelector('span').textContent='放開 G 投擲 · 左鍵取消';
+    hint.querySelector('b').textContent='手榴彈投擲預覽';hint.querySelector('span').textContent=touchControls?.enabled?'放開手榴彈鍵投擲 · 按取消保留':'放開 G 投擲 · 左鍵取消';
     hint.querySelector('small').textContent=`${contact} ${Math.round(Math.hypot(landing.x-origin.x,landing.z-origin.z))} M · ${(prediction.firstImpactTime??GRENADE_FUSE).toFixed(1)} 秒`;
     hint.querySelector('em').textContent=danger?'注意：預測爆點在自身爆炸範圍內':prediction.firstImpactTime!==null&&prediction.firstImpactTime<.12?'前方緊貼障礙，投出後會立即反彈':`橙色菱形：預測爆點 · 投出 ${GRENADE_FUSE} 秒後起爆`;
   }
+}
+
+function onTouchLook(dx,dy){
+  if(gameState!=='playing'||portalPaused)return;
+  const sensitivity=1-adsAmount*.32;
+  yaw.rotation.y-=dx*.004*sensitivity;
+  pitch.rotation.x=Math.max(-1.38,Math.min(1.38,pitch.rotation.x-dy*.0035*sensitivity));
+}
+
+function onTouchAction(action,pressed){
+  if(action==='fire'&&!pressed){mouseDown=false;return;}
+  if(action==='aim'&&!pressed){aiming=false;return;}
+  if(action==='grenade-cancel'){grenadeAiming=false;updateGrenadePreview(performance.now(),true);return;}
+  if(gameState!=='playing'||portalPaused)return;
+  if(action==='fire'){
+    if(grenadeAiming){grenadeAiming=false;updateGrenadePreview(performance.now(),true);return;}
+    mouseDown=true;const now=performance.now();if(now-lastShot>92)shoot(now);
+  }else if(action==='aim')aiming=pressed;
+  else if(action==='jump')jump();
+  else if(action==='reload')reload();
+  else if(action==='ability')useAbility();
+  else if(action==='pause')pauseGame();
+  else if(action==='grenade-start'){
+    if(grenadeCount>0){grenadeAiming=true;mouseDown=false;updateGrenadePreview(performance.now(),true);}
+    else feed('手榴彈已用盡 // 尋找手榴彈補給');
+  }else if(action==='grenade-throw'&&grenadeAiming)throwGrenade();
 }
 
 function onMouseMove(event) {
@@ -1700,14 +1740,14 @@ function updateWeaponPose(dt,time,bob=0,reloadPose=0){
 function updatePlayer(dt,time) {
   jumpBuffer=Math.max(0,jumpBuffer-dt);groundGrace=grounded?.1:Math.max(0,groundGrace-dt);
   if(jumpBuffer>0&&(grounded||groundGrace>0))jump();
-  let mx = 0, mz = 0;
+  let mx = touchControls?.moveX||0, mz = touchControls?.moveY||0;
   if (keys.KeyW) mz -= 1;
   if (keys.KeyS) mz += 1;
   if (keys.KeyA) mx -= 1;
   if (keys.KeyD) mx += 1;
-  const magnitude = Math.hypot(mx,mz) || 1;
+  const magnitude = Math.max(1,Math.hypot(mx,mz));
   mx /= magnitude; mz /= magnitude;
-  const sprinting = (keys.ShiftLeft || keys.ShiftRight) && mz < 0 && !aiming&&!grenadeAiming;
+  const sprinting = (keys.ShiftLeft || keys.ShiftRight || touchControls?.sprint) && mz < 0 && !aiming&&!grenadeAiming;
   const operator=currentOperator();
   const boost=time<speedBoostUntil?1.22:1;
   const speed = (sprinting ? operator.sprintSpeed : operator.moveSpeed)*boost;
@@ -2777,7 +2817,7 @@ function startAmbientSound(){
   source.connect(filter).connect(gain).connect(audioDestination('ambience'));source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();ambientStarted=false;};source.start();
 }
 
-function onResize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);}
+function onResize(){const view=$('#game'),width=view.clientWidth||innerWidth,height=view.clientHeight||innerHeight;camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setSize(width,height,false);}
 
 function renderFrame(){
   const background=scene.background,shadowUpdate=renderer.shadowMap.autoUpdate;
@@ -2795,6 +2835,7 @@ function renderFrame(){
 function animate(time=0) {
   requestAnimationFrame(animate);
   const elapsed=Math.max(0,clock.getDelta());
+  touchControls?.setPlaying(gameState==='playing'&&!portalPaused&&!document.hidden);
   if(portalPaused || document.hidden)return;
   // A long suspended frame must not teleport the player or consume a contract.
   // The clock is still sampled on paused frames, so resuming has no catch-up loop.

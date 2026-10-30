@@ -1,10 +1,11 @@
 Blue World 1.2 / r13｜2026-10-30 整合檔案清單
 ================================================
 
-版本辨識：20261030-blueworld-r13
+版本辨識：20261030-blueworld-r13-touch
 範圍：本日新增遊戲、收藏、互動、單張肖像及文件收尾統一記為r13，接續r12四款遊戲版。
 
 新增遊戲：games/neonstrike/完整目錄，包含程式、兩張地圖封面、音效、Three.js模組、portal.css及回歸檢查。
+手機操作新增：games/neonstrike/touch-controls.js、touch.css、tests/touch-controls.test.mjs。同步修改遊戲main.js、index.html、styles.css、portal.css、重新產生browser.js；網站入口、說明與快取更新，仍歸r13。
 直接載入：games/neonstrike/browser.js、browser-entry.js、build.mjs、.gitattributes、tests/direct-startup.mjs。browser.js已打包3D與音效，發布現成檔案不需編譯；修改遊戲來源後須重建，方法見遊戲README。
 網站程式：index.html、main.js、archive.js、gallery-data.js、zone-effects.js、explore.js、ui-refresh.css。
 目前展示的新圖片：assets/akane/s1-official-dress.webp、s3-ep34-4.webp、christmas-2023.webp、puzzle-casual.webp、portrait-raindrops.webp、portrait-anniversary.webp、sakura-kimono.webp。
