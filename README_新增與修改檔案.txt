@@ -1,8 +1,8 @@
-Blue World 1.2 / r19｜2026-10-30 整合檔案清單
+Blue World 1.2 / r13｜2026-10-30 整合檔案清單
 ================================================
 
-版本辨識：20261030-blueworld-r19-consolidated
-範圍：同日原r13～r19及單張肖像／文件收尾合併，對照r12四款遊戲版。
+版本辨識：20261030-blueworld-r13
+範圍：本日新增遊戲、收藏、互動、單張肖像及文件收尾統一記為r13，接續r12四款遊戲版。
 
 新增遊戲：games/neonstrike/完整目錄，包含程式、兩張地圖封面、音效、Three.js模組、portal.css及回歸檢查。
 直接載入：games/neonstrike/browser.js、browser-entry.js、build.mjs、.gitattributes、tests/direct-startup.mjs。browser.js已打包3D與音效，發布現成檔案不需編譯；修改遊戲來源後須重建，方法見遊戲README。

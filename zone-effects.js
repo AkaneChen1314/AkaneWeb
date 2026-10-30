@@ -155,6 +155,19 @@
   document.querySelectorAll("[data-portrait-choice]").forEach((button, i) => {
     button.addEventListener("click", () => choosePortrait(i));
   });
+  portraitRoom.querySelector(".portrait-choices").addEventListener("keydown", (event) => {
+    if (!event.target.matches("[data-portrait-choice]")) return;
+    const current = [...document.querySelectorAll("[data-portrait-choice]")].indexOf(event.target);
+    let next;
+    if (event.key === "ArrowLeft") next = current - 1;
+    else if (event.key === "ArrowRight") next = current + 1;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = portraitArts.length - 1;
+    else return;
+    event.preventDefault();
+    choosePortrait(next);
+    document.querySelectorAll("[data-portrait-choice]")[portraitIndex].focus({ preventScroll: true });
+  });
   document.getElementById("portrait-previous").addEventListener("click", () => choosePortrait(portraitIndex - 1));
   document.getElementById("portrait-next").addEventListener("click", () => choosePortrait(portraitIndex + 1));
   choosePortrait(0);

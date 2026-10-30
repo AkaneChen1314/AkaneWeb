@@ -11,7 +11,7 @@ const games = {
     name: "NEON STRIKE：霓光突擊",
     category: "3D 第一人稱射擊 / 戰術任務",
     version: "鍵盤・滑鼠",
-    path: "games/neonstrike/index.html?v=20261030-r17",
+    path: "games/neonstrike/index.html?v=20261030-r13",
     description:
       "進入暗夜港區與熔火工廠，選擇三名幹員、裝備與難度，挑戰全面肅清、波次攻堅、限時獵殺與首領討伐。利用掩體、補給與技能突破防線。",
     steps: [

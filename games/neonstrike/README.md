@@ -1,6 +1,6 @@
 # NEON STRIKE
 
-## Blue World 網站整合（2026-10-30）
+## Blue World r13 網站整合（2026-10-30）
 
 網站入口：`../../index.html#play=neonstrike`。可透過 GitHub Pages 直接遊玩，不需執行本機啟動器。
 目前需要鍵盤與滑鼠，沒有手機觸控操作。網站返回會暫停戰鬥、音訊與 3D 繪製；同次開啟頁面保留戰局，再次進入後手動繼續。
