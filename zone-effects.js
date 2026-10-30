@@ -69,7 +69,7 @@
         .scrollIntoView({ behavior: "instant" });
     });
 
-  // 節慶插畫獨立收藏，不混入動畫話數時間線。
+  // 特別插畫與私服肖像獨立收藏，不混入動畫話數時間線。
   const specialArts = [
     {
       key: "newyear",
@@ -86,20 +86,18 @@
       source: "https://ichigoproduction.com/Season3/news/index00510000.html",
     },
     {
-      key: "hospital",
-      image: "outfit-hospital",
-      title: "黑川茜 · Dreamy Hospital",
-      date: "官方授權周邊示意 · SAMPLE 與底座保留",
-      source: "https://store.kadokawa.co.jp/shop/g/g302507000220/",
-      product: true,
+      key: "christmas",
+      image: "christmas-2023",
+      title: "冬日燈光裡的茜",
+      date: "2023.12 / CHRISTMAS",
+      source: "https://ichigoproduction.com/Season1/news/index00950000.html",
     },
     {
-      key: "outing",
-      image: "outfit-outing",
-      title: "黑川茜 · 出遊造型",
-      date: "官方授權周邊示意 · SAMPLE 與底座保留",
-      source: "https://store.kadokawa.co.jp/shop/g/g302402005303/",
-      product: true,
+      key: "puzzle-casual",
+      image: "puzzle-casual",
+      title: "黑川茜 · Puzzle Star 私服插畫",
+      date: "PUZZLE STAR / 官方角色插畫",
+      source: "https://oshinoko-puzzle.com/",
     },
   ];
   const specialViewer = document.getElementById("special-viewer");
@@ -108,10 +106,9 @@
   function showSpecial() {
     const art = specialArts[specialIndex];
     specialViewer.dataset.art = art.key;
-    specialViewer.dataset.product = String(art.product === true);
     const photo = document.getElementById("special-viewer-image");
     photo.src = `assets/akane/${art.image}.webp`;
-    photo.alt = `${art.product ? "官方授權黑川茜周邊示意" : "官方黑川茜插畫"}：${art.title}`;
+    photo.alt = `官方黑川茜插畫：${art.title}`;
     document.getElementById("special-viewer-title").textContent = art.title;
     document.getElementById("special-viewer-date").textContent = art.date;
     document.getElementById("special-viewer-counter").textContent =

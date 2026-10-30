@@ -1,3 +1,19 @@
+Blue World 1.2 / r16｜新增與修改檔案
+===================================
+
+修訂日期：2026-10-30
+版本辨識：20261030-blueworld-r16-artwork
+比較基準：r15
+
+新增圖片：assets/akane/christmas-2023.webp、assets/akane/puzzle-casual.webp
+程式：index.html、zone-effects.js、ui-refresh.css
+來源：assets/akane/sources.json、圖片與資料來源.md
+說明：VERSION.txt、README_先看這裡.md、README_更新說明.txt、README_新增與修改檔案.txt、程式導覽.md、測試紀錄.md
+
+用兩張原本無浮水印的官方單人插畫取代商品圖；兩區使用一致深藍外框，取消 CSS 展示混色。
+舊商品圖保留原檔供歷史相容，頁面與放大清單已不再引用。遊戲未修改。
+
+以下為 r15 歷史檔案清單：
 Blue World 1.2 / r15｜新增與修改檔案
 ===================================
 
