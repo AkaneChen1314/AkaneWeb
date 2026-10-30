@@ -1,120 +1,22 @@
-Blue World 1.2 / r19｜新增與修改檔案
-===================================
+Blue World 1.2 / r19｜2026-10-30 整合檔案清單
+================================================
 
-修訂日期：2026-10-30
-版本辨識：20261030-blueworld-r19-playroom
-比較基準：r18
+版本辨識：20261030-blueworld-r19-consolidated
+範圍：同日原r13～r19及單張肖像／文件收尾合併，對照r12四款遊戲版。
 
-新增圖片：assets/akane/portrait-raindrops.webp、portrait-anniversary.webp、sakura-kimono.webp
-網站程式：index.html、explore.js、zone-effects.js、ui-refresh.css
-素材來源：assets/akane/sources.json、圖片與資料來源.md
-網站說明：VERSION.txt、README_先看這裡.md、README_更新說明.txt、README_新增與修改檔案.txt、程式導覽.md、測試紀錄.md
+新增遊戲：games/neonstrike/完整目錄，包含程式、兩張地圖封面、音效、Three.js模組、portal.css及回歸檢查。
+直接載入：games/neonstrike/browser.js、browser-entry.js、build.mjs、.gitattributes、tests/direct-startup.mjs。browser.js已打包3D與音效，發布現成檔案不需編譯；修改遊戲來源後須重建，方法見遊戲README。
+網站程式：index.html、main.js、archive.js、gallery-data.js、zone-effects.js、explore.js、ui-refresh.css。
+目前展示的新圖片：assets/akane/s1-official-dress.webp、s3-ep34-4.webp、christmas-2023.webp、puzzle-casual.webp、portrait-raindrops.webp、portrait-anniversary.webp、sakura-kimono.webp。
+原檔保留但目前未展示：outfit-hospital.webp、outfit-outing.webp、chibi-crepe.webp、quiet-smile.webp，皆在assets/akane/，來源與原始標記保留。
+素材來源：assets/akane/sources.json、圖片與資料來源.md。
+說明與紀錄：VERSION.txt、README_先看這裡.md、README_更新說明.txt、README_新增與修改檔案.txt、程式導覽.md、測試紀錄.md、games/neonstrike/README.md、games/starbreak/README_更新說明.txt及測試紀錄.md。
 
-肖像收藏滿寬且可切換，四張橫幅不重複；小茜遊樂室由三種增加至六種玩法。資料區與觀察區的位置、導覽同步對調。
-原有圖片與歷史紀錄保留；quiet-smile.webp不再被目前的展示或放大清單引用。遊戲程式、存檔及原始E:\game未修改。
+三張直幅一次只顯示選中的一張，主題／左右鍵切換，放大保留完整圖；四張橫幅與三張直幅各自循環。遊樂室有六種互動。圖片、影片、字型與各遊戲目錄須維持原有相對路徑。
+原始E:\game未修改；原有其他四款遊戲與存檔格式保留。不要上傳測試截圖、錄影或output目錄。
 
-以下為 r18 歷史檔案清單：
-Blue World 1.2 / r18｜新增與修改檔案
-===================================
+以下為r12歷史檔案清單：
 
-修訂日期：2026-10-30
-版本辨識：20261030-blueworld-r18-collections
-比較基準：r17
-
-新增圖片：assets/akane/quiet-smile.webp
-網站程式：index.html、explore.js、zone-effects.js、ui-refresh.css
-素材來源：assets/akane/sources.json、圖片與資料來源.md
-網站說明：VERSION.txt、README_先看這裡.md、README_更新說明.txt、README_新增與修改檔案.txt、程式導覽.md、測試紀錄.md
-歷史排序：games/neonstrike/README.md、games/starbreak/README_更新說明.txt、games/starbreak/測試紀錄.md
-
-小茜只保留兩款同風格素材；新增橫幅替換重複圖，私服肖像收緊版面。歷史文件保留內容，由新到舊排序。
-遊戲程式、存檔、既有圖片及原始E:\game未修改。
-
-以下為 r17 歷史檔案清單：
-Blue World 1.2 / r17｜新增與修改檔案
-===================================
-
-修訂日期：2026-10-30
-版本辨識：20261030-blueworld-r17-direct-play
-比較基準：r16
-
-新增：games/neonstrike/browser.js、browser-entry.js、build.mjs、.gitattributes、tests/direct-startup.mjs
-網站程式：index.html、main.js、explore.js、zone-effects.js、ui-refresh.css
-遊戲程式及說明：games/neonstrike/index.html、main.js、README.md
-網站說明：VERSION.txt、README_先看這裡.md、README_更新說明.txt、README_新增與修改檔案.txt、圖片與資料來源.md、程式導覽.md、測試紀錄.md
-
-browser.js 必須與遊戲頁一起發布；已含執行所需模組與音效。玩家不必安裝打包工具或啟動伺服器。
-四張收藏改為橫幅，直幅圖獨立保留；共用現有performance.webp，不新增、刪除或重繪圖片。
-
-以下為 r16 歷史檔案清單：
-Blue World 1.2 / r16｜新增與修改檔案
-===================================
-
-修訂日期：2026-10-30
-版本辨識：20261030-blueworld-r16-artwork
-比較基準：r15
-
-新增圖片：assets/akane/christmas-2023.webp、assets/akane/puzzle-casual.webp
-程式：index.html、zone-effects.js、ui-refresh.css
-來源：assets/akane/sources.json、圖片與資料來源.md
-說明：VERSION.txt、README_先看這裡.md、README_更新說明.txt、README_新增與修改檔案.txt、程式導覽.md、測試紀錄.md
-
-用兩張原本無浮水印的官方單人插畫取代商品圖；兩區使用一致深藍外框，取消 CSS 展示混色。
-舊商品圖保留原檔供歷史相容，頁面與放大清單已不再引用。遊戲未修改。
-
-以下為 r15 歷史檔案清單：
-Blue World 1.2 / r15｜新增與修改檔案
-===================================
-
-修訂日期：2026-10-30
-版本辨識：20261030-blueworld-r15-outfits
-比較基準：r14
-
-程式：index.html、main.js、explore.js、zone-effects.js、ui-refresh.css
-說明：VERSION.txt、README_先看這裡.md、README_更新說明.txt、README_新增與修改檔案.txt、程式導覽.md、測試紀錄.md
-
-新設 #outfit-room 獨立造型區，放大圖順序與頁面順序一致，卡片與放大圖片區改為彩色漸層背景。
-沒有新增或改寫圖片檔案，原圖 SAMPLE 與底座完整保留。五款遊戲、存檔及既有素材不必重新上傳。
-
-以下為 r14 歷史檔案清單：
-Blue World 1.2 / r14｜新增與修改檔案
-===================================
-
-修訂日期：2026-10-30
-版本辨識：20261030-blueworld-r14-akane
-比較基準：r13 五款遊戲版
-
-新增圖片：assets/akane/s1-official-dress.webp、s3-ep34-4.webp、outfit-hospital.webp、outfit-outing.webp、chibi-crepe.webp
-  五張都只包含黑川茜，完整保留官方原圖與商品標記；hero.webp 共用現有素材，不另複製。
-
-修改程式：index.html、main.js、archive.js、gallery-data.js、zone-effects.js、explore.js、ui-refresh.css
-修改說明：VERSION.txt、README_先看這裡.md、README_更新說明.txt、README_新增與修改檔案.txt、圖片與資料來源.md、程式導覽.md、測試紀錄.md
-修改來源資料：assets/akane/sources.json
-
-發布時需將變更檔案與新增圖片一起提交。五款遊戲、存檔與舊圖片沒有修改。
-
-以下為 r13 歷史檔案清單：
-Blue World 1.2 / r13｜新增與修改檔案
-===================================
-
-修訂日期：2026-10-30
-版本辨識：20261030-blueworld-r13-neonstrike
-比較基準：r12-ui-12 四款遊戲版
-
-新增：games/neonstrike/
-  NEON STRIKE 遊戲程式、兩張地圖封面、音效、本機 Three.js、原有回歸檢查與本機啟動器。
-  portal.css 處理直接開啟遊戲時的返回列；tests/portal-regression.mjs 檢查網站暫停整合。
-
-修改：index.html、main.js、ui-refresh.css、VERSION.txt
-  新增第五款入口、介紹、推薦與路由，更新五款文案及版面。
-
-說明：README_先看這裡.md、README_更新說明.txt、README_新增與修改檔案.txt、程式導覽.md、測試紀錄.md
-
-發布時需同時上傳上述根目錄檔案與完整 games/neonstrike/。
-其他四款遊戲、角色圖片、影片及原有存檔格式保持不變。
-不要上傳 E:\game\output 的截圖、錄影或測試輸出。
-
-以下為 r12 歷史檔案清單：
 Blue World 1.2 / r12｜新增與修改檔案
 ===================================
 

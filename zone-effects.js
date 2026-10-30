@@ -151,25 +151,6 @@
     document.querySelectorAll("[data-portrait-choice]").forEach((button, i) => {
       button.setAttribute("aria-pressed", String(i === portraitIndex));
     });
-    const previews = document.getElementById("portrait-previews");
-    previews.replaceChildren();
-    portraitArts.forEach((other, i) => {
-      if (i === portraitIndex) return;
-      const button = document.createElement("button");
-      button.className = "portrait-preview";
-      button.setAttribute("aria-label", `切換至${other.label}，黑川茜肖像`);
-      const photo = document.createElement("img");
-      photo.loading = "lazy";
-      setPortraitImage(photo, other);
-      const caption = document.createElement("span");
-      caption.textContent = other.label;
-      button.append(photo, caption);
-      button.addEventListener("click", () => {
-        choosePortrait(i);
-        document.querySelectorAll("[data-portrait-choice]")[i].focus({ preventScroll: true });
-      });
-      previews.append(button);
-    });
   }
   document.querySelectorAll("[data-portrait-choice]").forEach((button, i) => {
     button.addEventListener("click", () => choosePortrait(i));
