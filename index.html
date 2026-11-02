@@ -84,11 +84,11 @@
     <script src="zone-effects.js?v=20261030-blueworld-r13-touch" defer></script>
     <link rel="stylesheet" href="explore.css?v=1.2-blueworld-r11" />
     <script src="explore.js?v=20261030-blueworld-r13-touch" defer></script>
-    <meta name="akane-edition" content="20261102-blueworld-r14-layout" />
+    <meta name="akane-edition" content="20261102-blueworld-r14-refined" />
     <script src="polish.js?v=1.2-blueworld-r11" defer></script>
-    <link rel="stylesheet" href="world.css?v=20261102-blueworld-r14-layout" />
+    <link rel="stylesheet" href="world.css?v=20261102-blueworld-r14-refined" />
     <script src="world.js?v=1.2-blueworld-r11" defer></script>
-    <link rel="stylesheet" href="ui-refresh.css?v=20261102-blueworld-r14-layout" />
+    <link rel="stylesheet" href="ui-refresh.css?v=20261102-blueworld-r14-refined" />
   </head>
   <body class="stage-on">
     <a class="skip-link" href="#main-content">跳到主要內容</a>
@@ -232,20 +232,11 @@
               <p class="archive-intro">
                 收藏黑川茜的每一種光，<br />也把下一場冒險，留給今天的你。
               </p>
-              <div class="hero-entry-actions" aria-label="選擇專區">
-                <a class="soft-button hero-entry-link" href="#akane">黑川茜專區</a>
-                <a class="soft-button hero-entry-link" href="#games">小遊戲專區</a>
-              </div>
             </div>
             <div class="hero-stage">
-              <span class="world-orbit-label" aria-hidden="true"
-                >EVERY SHADE TELLS A STORY · BLUE WORLD ·</span
-              >
-              <div class="world-horizon" aria-hidden="true"></div>
               <div class="stage-ring ring-one" aria-hidden="true"></div>
               <div class="stage-ring ring-two" aria-hidden="true"></div>
               <figure class="hero-character">
-                <figcaption>黑川茜 <span>第三季官方立繪</span></figcaption>
                 <img
                   src="assets/akane/hero.webp"
                   width="500"
@@ -253,14 +244,7 @@
                   alt="官方第三季立繪：穿黑色長裙的黑川茜"
                   fetchpriority="high"
                 />
-                <div class="character-signature">
-                  黒川あかね<small>ACTRESS / LALALAI</small>
-                </div>
               </figure>
-              <span class="floating-tag"
-                ><i class="status-dot" aria-hidden="true"></i>THE BLUE
-                HOUR</span
-              ><span class="stage-index" aria-hidden="true">01 / AKANE</span>
             </div>
           </div>
           <div class="section-heading home-heading">
@@ -312,65 +296,20 @@
               >
             </article>
           </div>
-          <section class="home-welcome-notes" aria-labelledby="home-welcome-title">
-            <div class="hero-about">
-              <h2 id="home-welcome-title">認真演好每一個角色，<br />也慢慢找到自己。</h2>
-              <p>這裡有茜的角色檔案、造型資料、三季圖庫與會動的表情，也有五款可以隨時返回的小遊戲。選一個今天想停留的角落，慢慢發現她不同的樣子。</p>
-              <div class="hero-about-tags">
-                <span>三季收藏</span><span>造型與表情</span><span>無聲動態</span><span>原創小遊戲</span>
-              </div>
-            </div>
-            <aside class="hero-notes" aria-label="首頁收藏筆記">
-              <p class="hero-notes-label">收藏她的不同片刻</p>
-              <div class="hero-collection-note note-stage">
-                <h3>舞台上的專注</h3>
-                <p>用觀察讀懂角色，<br />用真心靠近故事。</p>
-              </div>
-              <div class="hero-collection-note note-daily">
-                <h3>日常裡的溫柔</h3>
-                <p>笑容、認真與努力，<br />都是她不同的顏色。</p>
-              </div>
-              <div class="hero-collection-note note-collection">
-                <h3>留住喜歡的片刻</h3>
-                <p>從一張照片開始，<br />慢慢看見每一種茜。</p>
-              </div>
-            </aside>
-          </section>
           <div class="home-season-strip" aria-label="三季收藏導覽">
-            <span class="strip-title"
-              >FOLLOW HER STORY <small>按季，慢慢走近她。</small></span
-            >
-            <a href="#gallery" data-jump-season="1"
-              ><b>01</b><span>第一季<small>從節目到星光</small></span
+            <h2 class="strip-title">三季收藏</h2>
+            <a href="#gallery" data-jump-season="1" aria-label="第一季：從節目到星光"
+              ><b>01</b><span>第一季</span
               ><i aria-hidden="true">↗</i></a
             >
-            <a href="#gallery" data-jump-season="2"
-              ><b>02</b><span>第二季<small>走進舞台的深處</small></span
+            <a href="#gallery" data-jump-season="2" aria-label="第二季：走進舞台的深處"
+              ><b>02</b><span>第二季</span
               ><i aria-hidden="true">↗</i></a
             >
-            <a href="#gallery" data-jump-season="3"
-              ><b>03</b><span>第三季<small>鏡頭前後的溫度</small></span
+            <a href="#gallery" data-jump-season="3" aria-label="第三季：鏡頭前後的溫度"
+              ><b>03</b><span>第三季</span
               ><i aria-hidden="true">↗</i></a
             >
-          </div>
-          <div class="world-palette-bar">
-            <div>
-              <p>今天，你想停在哪一種藍？</p>
-            </div>
-            <div class="world-tones" role="group" aria-label="選擇網站光色">
-              <button data-world-tone="ocean" aria-pressed="true">
-                <i></i>深海藍
-              </button>
-              <button data-world-tone="twilight" aria-pressed="false">
-                <i></i>暮光紫
-              </button>
-              <button data-world-tone="petal" aria-pressed="false">
-                <i></i>櫻光藍
-              </button>
-            </div>
-            <p id="world-tone-note" role="status">
-              讓星光慢慢流過，留一點時間給喜歡。
-            </p>
           </div>
           <section
             class="home-editorial blue-hour"
@@ -379,9 +318,8 @@
           >
             <div class="section-heading blue-hour-heading">
               <div>
-                <p class="eyebrow">BLUE HOUR / LITTLE MOMENTS</p>
                 <h2 id="blue-hour-title">
-                  舞台之外，<br /><span>也有這些小小的她。</span>
+                  舞台之外，<br />也有這些小小的她。
                 </h2>
               </div>
               <div class="motion-tools">
@@ -502,15 +440,10 @@
             <div class="curator-note">
               <div class="curator-mark" aria-hidden="true">✧</div>
               <div class="curator-note-copy">
-                <p class="eyebrow">TODAY'S WAY TO LOOK</p>
                 <h3 id="viewing-title">今天，先看她的眼神。</h3>
                 <p id="viewing-description">
                   同樣是微笑，目光停留的位置不同，感覺也會跟著改變。試著在三季圖庫裡找一張讓你停下來的畫面。
                 </p>
-                <div class="curator-tags">
-                  <span>表情</span><span>光影</span><span>舞台</span
-                  ><span>日常</span>
-                </div>
               </div>
               <div class="curator-actions">
                 <button id="next-viewing-note" class="soft-button">
@@ -1752,6 +1685,18 @@
         </section>
       </main>
       <footer>
+        <details class="appearance-settings">
+          <summary>外觀設定</summary>
+          <div class="appearance-settings-panel">
+            <span>網站光色</span>
+            <div class="world-tones" role="group" aria-label="選擇網站光色">
+              <button data-world-tone="ocean" aria-pressed="true"><i></i>深海藍</button>
+              <button data-world-tone="twilight" aria-pressed="false"><i></i>暮光紫</button>
+              <button data-world-tone="petal" aria-pressed="false"><i></i>櫻光藍</button>
+            </div>
+            <p id="world-tone-note" role="status">讓星光慢慢流過，留一點時間給喜歡。</p>
+          </div>
+        </details>
         <span>✦ BLUE WORLD</span>
         <p>二次元守護者的收藏館 · 非官方粉絲主題</p>
         <a href="#sources">來源與圖片權利</a

@@ -29,6 +29,8 @@
   --ui-control-text: #dceefa;
   --ui-muted: #c3d5e4;
   --ui-secondary-text: #bed2e3;
+  --ui-panel-bg: #102638;
+  --ui-panel-line: #44647c;
   --ui-focus-ring: #8de8f4;
   --ui-grid-gap: 22px;
   --muted: #bacdde;
@@ -778,6 +780,8 @@ button.text-link:hover {
 .special-art-card {
   display: flex;
   flex-direction: column;
+  background: var(--ui-panel-bg);
+  border-color: var(--ui-panel-line);
 }
 
 .special-art-copy {
