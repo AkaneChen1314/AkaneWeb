@@ -1,3 +1,3 @@
 1.2
-Edition: 20261030-blueworld-r13-touch
+Edition: 20261102-blueworld-r14-layout
 Site: Blue World

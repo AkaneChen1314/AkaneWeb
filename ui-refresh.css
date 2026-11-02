@@ -1,4 +1,4 @@
-/* Blue World r12 UI refresh
+/* Blue World r14 UI refresh
  * 統一字體、可讀字級、互動元件與卡片語言。
  * 本檔最後載入，只調整呈現，不改動專區與遊戲邏輯。
  */
@@ -25,8 +25,10 @@
   --ui-control-bg-hover: #204763;
   --ui-control-border: #83b9d45c;
   --ui-control-border-strong: #9adff0;
+  --ui-field-border: #7fa7c1;
   --ui-control-text: #dceefa;
   --ui-muted: #c3d5e4;
+  --ui-secondary-text: #bed2e3;
   --ui-focus-ring: #8de8f4;
   --ui-grid-gap: 22px;
   --muted: #bacdde;
@@ -83,6 +85,8 @@ h4 {
 
 a:focus-visible,
 button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
 select:focus-visible,
 summary:focus-visible {
   outline: 3px solid var(--ui-focus-ring);
@@ -293,6 +297,14 @@ footer {
   line-height: 1.75;
 }
 
+/* 輔助資訊使用固定亮度，避免被舊樣式的深灰色或背景光暈吃掉。 */
+.gallery-hint,
+.chibi-activity .chibi-pocket,
+.archive-sources small,
+.archive-sources > p:not(.eyebrow) {
+  color: var(--ui-secondary-text);
+}
+
 .compass-links a,
 .profile-portrait figcaption,
 .profile-portrait figcaption a,
@@ -398,6 +410,15 @@ footer {
   flex: 0 0 auto;
   min-width: 106px;
   white-space: nowrap;
+}
+
+.site-header nav a {
+  min-height: 44px;
+  align-items: center;
+}
+
+.episode-control select {
+  border-color: var(--ui-field-border);
 }
 
 .stage-toggle:hover,
@@ -534,6 +555,19 @@ button.text-link {
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+}
+
+/* 獨立來源列保留文字連結外觀，但整行有足夠觸控範圍；行內引文不套用。 */
+a.source-link,
+a.text-link,
+.reading-links a,
+.guide-source-links a,
+.gallery-card-footer a,
+.profile-portrait figcaption a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-block: 8px;
 }
 
 .source-link:hover,
@@ -873,7 +907,7 @@ footer small {
     flex: 1 1 0;
     justify-content: center;
     white-space: nowrap;
-    min-height: 42px;
+    min-height: 44px;
     padding: 9px 8px;
     border-radius: 10px;
     text-align: center;
