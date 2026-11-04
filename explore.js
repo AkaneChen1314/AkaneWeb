@@ -1,4 +1,8 @@
 /*
+ * 檔案導讀：小茜遊樂室：前段定義造型、問題與短句，後段連接六種玩法及段落書籤。
+ * data-chibi-mode 對應 index.html 的玩法按鈕；離開玩法時要保留原本的計時器清理。
+ */
+/*
  * r6 小茜遊樂室與段落書籤。
  * 素材各有自己的展示位置；圖片放大仍由既有的視窗管理。
  * 修改造型看 looks，修改問答看 questions，配色看 explore.css。
@@ -32,9 +36,12 @@
     const photo = document.getElementById("chibi-image");
     photo.src = `assets/akane/chibi-${look.key}.webp`;
     photo.alt = look.alt;
-    document.getElementById("chibi-change").setAttribute(
-      "aria-label", `目前：${look.title}。切換下一款Q版黑川茜造型`,
-    );
+    document
+      .getElementById("chibi-change")
+      .setAttribute(
+        "aria-label",
+        `目前：${look.title}。切換下一款Q版黑川茜造型`,
+      );
     document.getElementById("chibi-note").textContent = look.note;
     document.getElementById("chibi-art-caption").textContent = look.caption;
     document.getElementById("chibi-source").href = look.source;
@@ -79,7 +86,11 @@
       document.querySelectorAll("[data-chibi-panel]").forEach((panel) => {
         panel.hidden = panel.dataset.chibiPanel !== button.dataset.chibiMode;
       });
-      room.dispatchEvent(new CustomEvent("chibi-mode-change", { detail: button.dataset.chibiMode }));
+      room.dispatchEvent(
+        new CustomEvent("chibi-mode-change", {
+          detail: button.dataset.chibiMode,
+        }),
+      );
     });
   });
 
@@ -327,7 +338,10 @@
     button.textContent = visible ? memorySymbols[card.value] : "◇";
     button.dataset.revealed = String(visible);
     button.dataset.matched = String(card.matched);
-    button.setAttribute("aria-label", `第${index + 1}張，${visible ? memoryNames[card.value] : "尚未翻開"}${card.matched ? "，已配對" : ""}`);
+    button.setAttribute(
+      "aria-label",
+      `第${index + 1}張，${visible ? memoryNames[card.value] : "尚未翻開"}${card.matched ? "，已配對" : ""}`,
+    );
     button.setAttribute("aria-disabled", String(card.matched));
   }
   function closeUnmatchedCards() {
@@ -341,7 +355,10 @@
     closeUnmatchedCards();
     memoryPairs = 0;
     memoryMoves = 0;
-    memoryDeck = [...memorySymbols, ...memorySymbols].map((_, i) => ({ value: i % 4, matched: false }));
+    memoryDeck = [...memorySymbols, ...memorySymbols].map((_, i) => ({
+      value: i % 4,
+      matched: false,
+    }));
     for (let i = memoryDeck.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [memoryDeck[i], memoryDeck[j]] = [memoryDeck[j], memoryDeck[i]];
@@ -351,7 +368,8 @@
       const button = document.createElement("button");
       button.className = "soft-button memory-card";
       button.addEventListener("click", () => {
-        if (memoryTimer !== null || card.matched || memoryOpen.includes(index)) return;
+        if (memoryTimer !== null || card.matched || memoryOpen.includes(index))
+          return;
         memoryOpen.push(index);
         paintMemoryCard(index);
         if (memoryOpen.length !== 2) return;
@@ -368,16 +386,19 @@
         } else {
           memoryTimer = setTimeout(closeUnmatchedCards, 800);
         }
-        memoryStatus.textContent = memoryPairs === 4
-          ? `四組都找到了！用了 ${memoryMoves} 次，記住了這片小小星空。`
-          : `找到 ${memoryPairs} / 4 組 · 翻牌 ${memoryMoves} 次${match ? "，配對成功！" : "，再記住這兩張。"}`;
+        memoryStatus.textContent =
+          memoryPairs === 4
+            ? `四組都找到了！用了 ${memoryMoves} 次，記住了這片小小星空。`
+            : `找到 ${memoryPairs} / 4 組 · 翻牌 ${memoryMoves} 次${match ? "，配對成功！" : "，再記住這兩張。"}`;
       });
       memoryBoard.append(button);
       paintMemoryCard(index);
     });
     memoryStatus.textContent = "找到 0 / 4 組 · 翻牌 0 次";
   }
-  document.getElementById("chibi-memory-reset").addEventListener("click", resetMemory);
+  document
+    .getElementById("chibi-memory-reset")
+    .addEventListener("click", resetMemory);
   room.addEventListener("chibi-mode-change", (event) => {
     if (event.detail !== "memory") closeUnmatchedCards();
   });
@@ -390,25 +411,45 @@
 
   // 本館原創短句，依心情輪流抽取，避免連續看到同一句。
   const fortunes = {
-    rest: ["把步調放輕一點，喜歡的事物會等你。", "今天先照顧好自己，也是一件值得收藏的事。", "留一小段空白給呼吸，再慢慢走向下一頁。"],
-    courage: ["小小的一步，也能讓明天的風景不一樣。", "認真喜歡一件事的你，已經有自己的光。", "還沒做到的部分，留給下一次更勇敢的嘗試。"],
-    focus: ["先完成眼前的一小格，故事就往前了一點。", "把目光放回此刻，一次做好一件事。", "不必一次看見終點，先讓今天的努力清楚一點。"],
+    rest: [
+      "把步調放輕一點，喜歡的事物會等你。",
+      "今天先照顧好自己，也是一件值得收藏的事。",
+      "留一小段空白給呼吸，再慢慢走向下一頁。",
+    ],
+    courage: [
+      "小小的一步，也能讓明天的風景不一樣。",
+      "認真喜歡一件事的你，已經有自己的光。",
+      "還沒做到的部分，留給下一次更勇敢的嘗試。",
+    ],
+    focus: [
+      "先完成眼前的一小格，故事就往前了一點。",
+      "把目光放回此刻，一次做好一件事。",
+      "不必一次看見終點，先讓今天的努力清楚一點。",
+    ],
   };
   const fortuneIndexes = { rest: 0, courage: 0, focus: 0 };
   let fortuneMood = "rest";
   document.querySelectorAll("[data-chibi-mood]").forEach((button) => {
     button.addEventListener("click", () => {
       fortuneMood = button.dataset.chibiMood;
-      document.querySelectorAll("[data-chibi-mood]").forEach((choice) => choice.setAttribute("aria-pressed", String(choice === button)));
-      document.getElementById("chibi-fortune-note").textContent = "心情選好了，抽一張送給現在的自己。";
+      document
+        .querySelectorAll("[data-chibi-mood]")
+        .forEach((choice) =>
+          choice.setAttribute("aria-pressed", String(choice === button)),
+        );
+      document.getElementById("chibi-fortune-note").textContent =
+        "心情選好了，抽一張送給現在的自己。";
     });
   });
-  document.getElementById("chibi-fortune-draw").addEventListener("click", () => {
-    const options = fortunes[fortuneMood];
-    document.getElementById("chibi-fortune-note").textContent = options[fortuneIndexes[fortuneMood] % options.length];
-    fortuneIndexes[fortuneMood]++;
-    littleSparkles();
-  });
+  document
+    .getElementById("chibi-fortune-draw")
+    .addEventListener("click", () => {
+      const options = fortunes[fortuneMood];
+      document.getElementById("chibi-fortune-note").textContent =
+        options[fortuneIndexes[fortuneMood] % options.length];
+      fortuneIndexes[fortuneMood]++;
+      littleSparkles();
+    });
 
   // 本館配色練習，不宣稱是官方角色色票。滑桿原生支援方向鍵。
   const colorTargets = [
@@ -422,24 +463,38 @@
   const colorStatus = document.getElementById("chibi-color-status");
   function paintMixedColor() {
     const values = colorSliders.map((slider) => Number(slider.value));
-    document.getElementById("chibi-color-mix").style.backgroundColor = `rgb(${values.join(",")})`;
-    ["r", "g", "b"].forEach((channel, i) => { document.getElementById(`chibi-output-${channel}`).value = values[i]; });
+    document.getElementById("chibi-color-mix").style.backgroundColor =
+      `rgb(${values.join(",")})`;
+    ["r", "g", "b"].forEach((channel, i) => {
+      document.getElementById(`chibi-output-${channel}`).value = values[i];
+    });
     colorStatus.textContent = "調好了嗎？按「看看相似度」確認。";
   }
   function newColorTarget() {
     const target = colorTargets[colorIndex];
-    document.getElementById("chibi-color-target").style.backgroundColor = `rgb(${target.rgb.join(",")})`;
+    document.getElementById("chibi-color-target").style.backgroundColor =
+      `rgb(${target.rgb.join(",")})`;
     document.getElementById("chibi-color-name").textContent = target.name;
-    document.getElementById("chibi-color-target").setAttribute("aria-label", `目標顏色：${target.name}`);
-    colorSliders.forEach((slider) => { slider.value = 128; });
+    document
+      .getElementById("chibi-color-target")
+      .setAttribute("aria-label", `目標顏色：${target.name}`);
+    colorSliders.forEach((slider) => {
+      slider.value = 128;
+    });
     document.getElementById("chibi-color-tip").hidden = true;
     paintMixedColor();
   }
-  colorSliders.forEach((slider) => slider.addEventListener("input", paintMixedColor));
+  colorSliders.forEach((slider) =>
+    slider.addEventListener("input", paintMixedColor),
+  );
   document.getElementById("chibi-color-check").addEventListener("click", () => {
     const target = colorTargets[colorIndex];
-    const distance = Math.hypot(...colorSliders.map((slider, i) => Number(slider.value) - target.rgb[i]));
-    const similarity = Math.round(100 * (1 - distance / Math.hypot(255, 255, 255)));
+    const distance = Math.hypot(
+      ...colorSliders.map((slider, i) => Number(slider.value) - target.rgb[i]),
+    );
+    const similarity = Math.round(
+      100 * (1 - distance / Math.hypot(255, 255, 255)),
+    );
     colorStatus.textContent = `相似度 ${similarity}%${similarity >= 94 ? "，配得很接近了！這一抹茜色送給你。" : "，再輕輕調整一點試試。"}`;
     if (similarity >= 94) littleSparkles();
   });

@@ -1,3 +1,4 @@
+/* 閱讀提示：星界牌陣的基礎外觀；手機補充規則另見 responsive.css，特效另見 spectacle.css。 */
 :root {
   --bg: #07091b;
   --panel: rgba(12, 17, 46, 0.76);
@@ -114,7 +115,11 @@ button {
 }
 
 .glass {
-  background: linear-gradient(145deg, rgba(20, 29, 68, 0.86), rgba(8, 12, 35, 0.68));
+  background: linear-gradient(
+    145deg,
+    rgba(20, 29, 68, 0.86),
+    rgba(8, 12, 35, 0.68)
+  );
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
@@ -340,7 +345,11 @@ button {
   height: 190px;
   border: 1px solid #7aefff;
   border-radius: 15px;
-  background: linear-gradient(150deg, rgba(80, 154, 255, 0.75), rgba(20, 13, 57, 0.94));
+  background: linear-gradient(
+    150deg,
+    rgba(80, 154, 255, 0.75),
+    rgba(20, 13, 57, 0.94)
+  );
   display: flex;
   align-items: center;
   justify-content: center;
@@ -445,7 +454,11 @@ button {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(transparent 32%, rgba(5, 8, 28, 0.2) 49%, rgba(5, 8, 28, 0.98) 80%);
+  background: linear-gradient(
+    transparent 32%,
+    rgba(5, 8, 28, 0.2) 49%,
+    rgba(5, 8, 28, 0.98) 80%
+  );
 }
 
 .fighter-copy {
@@ -628,8 +641,18 @@ button {
 
 .battle-vignette {
   background:
-    radial-gradient(circle at 50% 30%, transparent 15%, rgba(3, 5, 18, 0.45) 70%, #050716 100%),
-    linear-gradient(180deg, rgba(6, 8, 27, 0.7), transparent 25%, rgba(5, 7, 23, 0.9) 85%);
+    radial-gradient(
+      circle at 50% 30%,
+      transparent 15%,
+      rgba(3, 5, 18, 0.45) 70%,
+      #050716 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(6, 8, 27, 0.7),
+      transparent 25%,
+      rgba(5, 7, 23, 0.9) 85%
+    );
 }
 
 .battle-top {
@@ -1033,7 +1056,11 @@ button {
   margin: 0 -10px;
   border: 1px solid color-mix(in srgb, var(--card) 65%, white);
   border-radius: 16px;
-  background: linear-gradient(155deg, color-mix(in srgb, var(--card) 35%, #101630), #090c22 55%);
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--card) 35%, #101630),
+    #090c22 55%
+  );
   position: relative;
   padding: 14px;
   cursor: pointer;
@@ -1151,7 +1178,12 @@ button {
   content: "";
   position: absolute;
   inset: -50%;
-  background: linear-gradient(90deg, transparent, rgba(255, 231, 149, 0.13), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 231, 149, 0.13),
+    transparent
+  );
   transform: rotate(25deg);
   animation: shine 2.5s infinite;
 }
@@ -1331,7 +1363,11 @@ button {
   padding: 5vw;
   overflow: hidden;
   background:
-    radial-gradient(circle at 24% 30%, rgba(68, 114, 255, 0.35), transparent 30%),
+    radial-gradient(
+      circle at 24% 30%,
+      rgba(68, 114, 255, 0.35),
+      transparent 30%
+    ),
     url("assets/arena.webp") center/cover;
 }
 
@@ -1339,7 +1375,11 @@ button {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(6, 8, 25, 0.3), rgba(6, 8, 25, 0.92) 65%);
+  background: linear-gradient(
+    90deg,
+    rgba(6, 8, 25, 0.3),
+    rgba(6, 8, 25, 0.92) 65%
+  );
 }
 
 .result-art {
@@ -1734,7 +1774,11 @@ button {
   padding: 18px;
   border-radius: 15px;
   border: 1px solid var(--line);
-  background: linear-gradient(145deg, rgba(23, 31, 70, 0.88), rgba(9, 13, 36, 0.9));
+  background: linear-gradient(
+    145deg,
+    rgba(23, 31, 70, 0.88),
+    rgba(9, 13, 36, 0.9)
+  );
   cursor: pointer;
   transition: 0.25s;
 }
@@ -2127,8 +2171,16 @@ button {
 
 .selection-screen {
   background:
-    radial-gradient(circle at 12% 12%, rgba(62, 129, 206, 0.16), transparent 28%),
-    radial-gradient(circle at 88% 38%, rgba(116, 63, 186, 0.14), transparent 30%);
+    radial-gradient(
+      circle at 12% 12%,
+      rgba(62, 129, 206, 0.16),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 88% 38%,
+      rgba(116, 63, 186, 0.14),
+      transparent 30%
+    );
 }
 
 .fighter-grid {
@@ -2511,7 +2563,11 @@ button {
   }
 
   .fighter-card:after {
-    background: linear-gradient(transparent 18%, rgba(5, 8, 28, 0.2) 34%, rgba(5, 8, 28, 0.98) 60%);
+    background: linear-gradient(
+      transparent 18%,
+      rgba(5, 8, 28, 0.2) 34%,
+      rgba(5, 8, 28, 0.98) 60%
+    );
   }
 
   .fighter-copy {
@@ -2875,7 +2931,12 @@ button {
   border-width: 1px;
   border-color: color-mix(in srgb, var(--card) 72%, white);
   background:
-    linear-gradient(155deg, color-mix(in srgb, var(--card) 30%, #17224a), #080b20 56%), #090c22;
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--card) 30%, #17224a),
+      #080b20 56%
+    ),
+    #090c22;
 }
 
 .battle-card:after {
@@ -3789,8 +3850,8 @@ body.battle-mode #app {
 
   .battle-screen.active {
     gap: 4px;
-    padding: 5px max(5px, env(safe-area-inset-right)) max(4px, env(safe-area-inset-bottom))
-      max(5px, env(safe-area-inset-left));
+    padding: 5px max(5px, env(safe-area-inset-right))
+      max(4px, env(safe-area-inset-bottom)) max(5px, env(safe-area-inset-left));
   }
 
   .battle-top {

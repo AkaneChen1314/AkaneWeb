@@ -2,6 +2,8 @@
  * 統一字體、可讀字級、互動元件與卡片語言。
  * 本檔最後載入，只調整呈現，不改動專區與遊戲邏輯。
  */
+/* 閱讀提示：主介面優先修改這裡的 :root：字型、共用按鈕、文字色彩與圓角集中管理。 */
+
 @font-face {
   font-family: "Blue World Display";
   font-style: normal;
@@ -1122,13 +1124,39 @@ footer small {
   object-fit: contain;
 }
 
-.portrait-art:hover { filter: brightness(1.06); transform: none; }
-.portrait-choices, .portrait-pagination { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-.portrait-choices { margin-top: 18px; }
-.portrait-choices button[aria-pressed="true"] { border-color: #a5e0ee; background: #2d6176; }
-.portrait-pagination { margin-top: 20px; padding-top: 18px; border-top: 1px solid #9fcfe330; }
-.portrait-pagination span { flex: 1; text-align: center; font-size: 14px; color: #a8d7e8; }
-.portrait-pagination button { width: 44px; padding: 0; }
+.portrait-art:hover {
+  filter: brightness(1.06);
+  transform: none;
+}
+.portrait-choices,
+.portrait-pagination {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.portrait-choices {
+  margin-top: 18px;
+}
+.portrait-choices button[aria-pressed="true"] {
+  border-color: #a5e0ee;
+  background: #2d6176;
+}
+.portrait-pagination {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #9fcfe330;
+}
+.portrait-pagination span {
+  flex: 1;
+  text-align: center;
+  font-size: 14px;
+  color: #a8d7e8;
+}
+.portrait-pagination button {
+  width: 44px;
+  padding: 0;
+}
 
 .portrait-copy h2 {
   margin: 14px 0 20px;
@@ -1174,32 +1202,123 @@ footer small {
 }
 
 @media (max-width: 760px) {
-  .portrait-room { grid-template-columns: minmax(0, 1fr); }
-  .portrait-stage { width: min(100%, 340px); margin-inline: auto; }
-  .portrait-details { gap: 12px; }
+  .portrait-room {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .portrait-stage {
+    width: min(100%, 340px);
+    margin-inline: auto;
+  }
+  .portrait-details {
+    gap: 12px;
+  }
 }
 
 /* 六種玩法保持同一套按鈕與自然內容高度。 */
-.chibi-mode-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.chibi-mode-picker button { width: 100%; min-width: 0; padding-inline: 8px; }
-.chibi-memory-board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
-.chibi-memory-board .memory-card { min-height: 64px; font-size: 28px; padding: 8px; }
-.memory-card[data-revealed="true"] { background: #2d6176; border-color: #a5e0ee; }
-.memory-card[data-matched="true"] { background: #1e4c55; border-color: #79c6b3; color: #b8f3d8; cursor: default; }
-.chibi-mood-choices { display: flex; flex-wrap: wrap; gap: 8px; }
-.chibi-mood-choices button[aria-pressed="true"] { background: #2d6176; border-color: #a5e0ee; }
-.chibi-fortune-note { margin: 18px 0; padding: 18px; border-left: 3px solid #a5d7e7; background: #122d43; border-radius: 0 12px 12px 0; color: #e1effa; font-size: 17px; line-height: 1.8; }
-.chibi-color-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
-.chibi-color-tiles > div { display: grid; gap: 7px; color: #bed5e7; font-size: 14px; }
-.chibi-color-tile { display: block; height: 58px; border: 1px solid #b3d4e45c; border-radius: 12px; }
-.chibi-color-sliders { display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: center; gap: 4px 14px; }
-.chibi-color-sliders label { font-size: 14px; color: #d7e8f5; }
-.chibi-color-sliders output { display: inline-block; min-width: 26px; color: #9dd8e9; font-weight: inherit; font-variant-numeric: tabular-nums; }
-.chibi-color-sliders input { min-width: 0; width: 100%; height: 44px; margin: 0; accent-color: #95d8e9; cursor: pointer; }
-.color-actions { justify-content: flex-start; gap: 10px; flex-wrap: wrap; }
+.chibi-mode-picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.chibi-mode-picker button {
+  width: 100%;
+  min-width: 0;
+  padding-inline: 8px;
+}
+.chibi-memory-board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+}
+.chibi-memory-board .memory-card {
+  min-height: 64px;
+  font-size: 28px;
+  padding: 8px;
+}
+.memory-card[data-revealed="true"] {
+  background: #2d6176;
+  border-color: #a5e0ee;
+}
+.memory-card[data-matched="true"] {
+  background: #1e4c55;
+  border-color: #79c6b3;
+  color: #b8f3d8;
+  cursor: default;
+}
+.chibi-mood-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chibi-mood-choices button[aria-pressed="true"] {
+  background: #2d6176;
+  border-color: #a5e0ee;
+}
+.chibi-fortune-note {
+  margin: 18px 0;
+  padding: 18px;
+  border-left: 3px solid #a5d7e7;
+  background: #122d43;
+  border-radius: 0 12px 12px 0;
+  color: #e1effa;
+  font-size: 17px;
+  line-height: 1.8;
+}
+.chibi-color-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 14px 0;
+}
+.chibi-color-tiles > div {
+  display: grid;
+  gap: 7px;
+  color: #bed5e7;
+  font-size: 14px;
+}
+.chibi-color-tile {
+  display: block;
+  height: 58px;
+  border: 1px solid #b3d4e45c;
+  border-radius: 12px;
+}
+.chibi-color-sliders {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 14px;
+}
+.chibi-color-sliders label {
+  font-size: 14px;
+  color: #d7e8f5;
+}
+.chibi-color-sliders output {
+  display: inline-block;
+  min-width: 26px;
+  color: #9dd8e9;
+  font-weight: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.chibi-color-sliders input {
+  min-width: 0;
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  accent-color: #95d8e9;
+  cursor: pointer;
+}
+.color-actions {
+  justify-content: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 @media (max-width: 480px) {
-  .chibi-mode-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .portrait-details { grid-template-columns: 1fr; }
+  .chibi-mode-picker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .portrait-details {
+    grid-template-columns: 1fr;
+  }
 }
 
 .special-viewer-art {
@@ -1265,7 +1384,6 @@ footer small {
   .neonstrike-card .card-visual img {
     position: static;
   }
-
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,3 +1,7 @@
+/*
+ * 檔案導讀：金融模擬介面：透過 BillionEngine 呼叫 engine.js，將結果顯示在頁面。
+ * SAVE／PREF 分別保存遊戲與介面偏好；畫面文字、事件綁定和渲染可從這裡找。
+ */
 (function () {
   "use strict";
   const E = window.BillionEngine,
@@ -388,8 +392,7 @@
     $("loans").innerHTML = s.loans.length
       ? s.loans
           .map(
-            (l) =>
-              /* HTML */ `<div class="loan-row">
+            (l) => /* HTML */ `<div class="loan-row">
                 <div>
                   <b>${E.LOAN_TYPES[l.type].name}</b
                   ><span>${money(l.balance)}</span>
@@ -1015,8 +1018,7 @@
             s.social.length
               ? s.social
                   .map(
-                    (x) =>
-                      /* HTML */ `<article>
+                    (x) => /* HTML */ `<article>
                         <span
                           >${x.who === "不明群發帳號" ? "⚠️" : x.who === "催收通知" ? "🚪" : "💬"}</span
                         >
@@ -1325,8 +1327,7 @@
         '<div class="ledger-scroll">' +
         s.logs
           .map(
-            (l) =>
-              /* HTML */ `<div class="ledger-row">
+            (l) => /* HTML */ `<div class="ledger-row">
                 <span class="${l.type === "danger" ? "negative" : ""}"
                   >${esc(l.text)}</span
                 ><small>第 ${l.day} 天</small>
@@ -1347,8 +1348,7 @@
     $("news").innerHTML = s.news
       .slice(0, 3)
       .map(
-        (n) =>
-          /* HTML */ `<article class="news-item">
+        (n) => /* HTML */ `<article class="news-item">
             <small>第 ${n.day} 天 · ${esc(n.tag)}</small>
             <p>${esc(n.text)}</p>
           </article>`,
@@ -1648,8 +1648,7 @@
         <div class="intro-cards">
           ${(work ? E.JOBS : E.CASINO)
             .map(
-              (x) =>
-                /* HTML */ `<article>
+              (x) => /* HTML */ `<article>
                   <span>${x.icon}</span><b>${x.name}</b>
                   <p>${x.description}</p>
                   ${work ? /* HTML */ `<small>完成 ${x.rounds} 筆領 ${money(x.pay)}；答錯會扣薪。</small>` : ""}
@@ -1676,8 +1675,7 @@
         <div class="loan-types">
           ${Object.entries(E.LOAN_TYPES)
             .map(
-              ([id, t]) =>
-                /* HTML */ `<div class="loan-type">
+              ([id, t]) => /* HTML */ `<div class="loan-type">
                   <b>${t.name}</b><small>先扣 ${t.fee * 100}%</small
                   ><small>每日息 ${t.rate * 100}%</small
                   ><small>${t.days} 日催收</small>
@@ -2442,12 +2440,10 @@
         body: ".character-panel",
         holdings: ".holdings-panel",
       };
-      document
-        .querySelector(selectors[b.dataset.jump])
-        .scrollIntoView({
-          block: "start",
-          behavior: prefs.effects ? "smooth" : "instant",
-        });
+      document.querySelector(selectors[b.dataset.jump]).scrollIntoView({
+        block: "start",
+        behavior: prefs.effects ? "smooth" : "instant",
+      });
     }
     if (b.dataset.tab) {
       tab = b.dataset.tab;

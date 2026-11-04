@@ -1,3 +1,7 @@
+/*
+ * 檔案導讀：星夜突圍原始碼：資料設定 → 畫面與輸入 → 戰局更新 → 存檔與初始化。
+ * WEAPONS 是武器資料；KEY／RUNKEY 是存檔位置；VERSION 是存檔格式，並非網站修訂編號。
+ */
 /* 星夜突圍 v1.2 · Blue World r11 — 戰場外 Boss 狀態列與返回休息整合。 */
 "use strict";
 (() => {
@@ -4232,9 +4236,9 @@
           <h1>星夜突圍<span>STARBREAK</span></h1>
           <p>由你決定這趟航行有多遠。<br />組好火力，向星海深處出發。</p>
           <div class="hero-actions">
-            <button class="primary" id="launch">開始出航</button>${active
-              ? '<button id="continue">繼續上次遠征</button>'
-              : ""}
+            <button class="primary" id="launch">開始出航</button>${
+              active ? '<button id="continue">繼續上次遠征</button>' : ""
+            }
           </div>
           <div class="pilot-line" id="hero-plan"></div>
         </div>
@@ -4248,8 +4252,7 @@
           </div>
           <div class="ships">
             ${SHIPS.map(
-              (s) =>
-                /* HTML */ `<button
+              (s) => /* HTML */ `<button
                   class="ship-card ${s.id === selectedShip ? "active" : ""}"
                   data-ship="${s.id}"
                   aria-pressed="${s.id === selectedShip}"
@@ -4557,14 +4560,17 @@
           </div>
           <div class="equipped-module">
             <span class="module-emblem" id="equipped-icon"
-              >${MODULES.find((x) => x.id === p.moduleEquipped)?.icon ||
-              "◇"}</span
+              >${
+                MODULES.find((x) => x.id === p.moduleEquipped)?.icon || "◇"
+              }</span
             >
             <div>
               <small>目前出航模組</small
               ><b id="equipped-name"
-                >${MODULES.find((x) => x.id === p.moduleEquipped)?.name ||
-                "未裝備模組"}</b
+                >${
+                  MODULES.find((x) => x.id === p.moduleEquipped)?.name ||
+                  "未裝備模組"
+                }</b
               ><span>一個模組，搭配一種星艦。</span>
             </div>
             <button id="base-shop">模組商城</button>
@@ -4576,19 +4582,20 @@
             </button>
           </div>
           <div class="recent-title">最近航行</div>
-          ${records.length
-            ? records
-                .map(
-                  (x) =>
-                    /* HTML */ `<div class="record">
+          ${
+            records.length
+              ? records
+                  .map(
+                    (x) => /* HTML */ `<div class="record">
                       <span
                         >${SHIPS.find((s) => s.id === x.ship)?.name || "星艦"} ·
                         第 ${x.wave} 波${x.win ? " · 通關" : ""}</span
                       ><span>${timeText(x.time)}</span>
                     </div>`,
-                )
-                .join("")
-            : '<p class="muted">你的第一段航行紀錄，從這裡開始。</p>'}
+                  )
+                  .join("")
+              : '<p class="muted">你的第一段航行紀錄，從這裡開始。</p>'
+          }
           <div class="base-tip">
             <b>晶礦怎麼用？</b>
             <p>
@@ -4605,8 +4612,7 @@
         </div>
         <div class="boss-gallery-grid">
           ${BOSS_DATA.map(
-            (b, i) =>
-              /* HTML */ `<button
+            (b, i) => /* HTML */ `<button
                 class="boss-preview"
                 data-boss-preview="${i}"
                 style="--boss-color:${b.color}"
@@ -4921,14 +4927,12 @@
       ["自爆機", "靠近後停下，1.25 秒預警後引爆。紅圈鎖定後仍會爆炸。"],
       ["散射炮艇", "黃線蓄力後發射三方向彈幕。"],
     ];
-    openDialog(
-      /* HTML */ `<div class="eyebrow">ENEMY ARCHIVE</div>
+    openDialog(/* HTML */ `<div class="eyebrow">ENEMY ARCHIVE</div>
         <h2>小怪與強化編隊</h2>
         <div class="modal-grid">
           ${enemies
             .map(
-              ([name, desc]) =>
-                /* HTML */ `<article class="codex-card">
+              ([name, desc]) => /* HTML */ `<article class="codex-card">
                   <h3>${name}</h3>
                   <p>${desc}</p>
                 </article>`,
@@ -4937,14 +4941,12 @@
         </div>
         <p class="effect-note">
           精英：裝甲減傷、迅捷加速、爆裂死亡留下預警、再生緩慢回血。冠軍有雙重外圈，更高生命與接觸傷害，擊破獲得更多晶礦。
-        </p>`,
-    );
+        </p>`);
   }
   function showBaseShop() {
     const owned = profile.moduleOwned || [],
       equipped = profile.moduleEquipped || "none";
-    openDialog(
-      /* HTML */ `<div class="eyebrow">HANGAR MARKET / 永久解鎖</div>
+    openDialog(/* HTML */ `<div class="eyebrow">HANGAR MARKET / 永久解鎖</div>
         <h2>出航模組商城</h2>
         <p class="muted">
           解鎖後永久保留。每次出航可裝備一個模組，現在的遠征維持原有配置。
@@ -4954,8 +4956,7 @@
         </div>
         <div class="module-market">
           ${MODULES.map(
-            (m) =>
-              /* HTML */ `<article
+            (m) => /* HTML */ `<article
                 class="module-card ${equipped === m.id ? "selected" : ""}"
               >
                 <span class="module-emblem">${m.icon}</span>
@@ -4963,16 +4964,20 @@
                 <p>${m.desc}</p>
                 <button
                   data-module="${m.id}"
-                  ${equipped === m.id ||
-                  (!owned.includes(m.id) && profile.credits < m.cost)
-                    ? "disabled"
-                    : ""}
+                  ${
+                    equipped === m.id ||
+                    (!owned.includes(m.id) && profile.credits < m.cost)
+                      ? "disabled"
+                      : ""
+                  }
                 >
-                  ${equipped === m.id
-                    ? "已裝備"
-                    : owned.includes(m.id)
-                      ? "裝備模組"
-                      : `解鎖 · ${m.cost} 晶礦`}
+                  ${
+                    equipped === m.id
+                      ? "已裝備"
+                      : owned.includes(m.id)
+                        ? "裝備模組"
+                        : `解鎖 · ${m.cost} 晶礦`
+                  }
                 </button>
               </article>`,
           ).join("")}
@@ -4981,8 +4986,7 @@
           <button id="unequip" ${equipped === "none" ? "disabled" : ""}>
             卸下模組
           </button>
-        </div>`,
-    );
+        </div>`);
     dialogContent.querySelectorAll("[data-module]").forEach(
       (b) =>
         (b.onclick = () => {
@@ -5021,8 +5025,7 @@
   }
   function showBossCodex(focus = -1) {
     const list = focus >= 0 ? [BOSS_DATA[focus]] : BOSS_DATA;
-    openDialog(
-      /* HTML */ `<div class="eyebrow">HOSTILE ARCHIVE</div>
+    openDialog(/* HTML */ `<div class="eyebrow">HOSTILE ARCHIVE</div>
         <h2>星域 Boss 檔案</h2>
         <p class="muted">
           Boss
@@ -5031,8 +5034,7 @@
         <div class="boss-codex">
           ${list
             .map(
-              (b) =>
-                /* HTML */ `<article style="--boss-color:${b.color}">
+              (b) => /* HTML */ `<article style="--boss-color:${b.color}">
                   <div class="boss-art">
                     <img src="${b.image}" alt="${b.name}" />
                   </div>
@@ -5049,22 +5051,19 @@
                 </article>`,
             )
             .join("")}
-        </div>`,
-    );
+        </div>`);
   }
   function requestStart() {
     sound("level");
     if (hasActiveRun()) {
-      openDialog(
-        /* HTML */ `<h2>開始新的航行？</h2>
+      openDialog(/* HTML */ `<h2>開始新的航行？</h2>
           <p class="muted">
             目前的遠征將結算晶礦並結束；永久研究與航行紀錄會保留。
           </p>
           <div class="hero-actions">
             <button class="primary" id="confirm-new">結算並重新出航</button
             ><button id="cancel-new">繼續舊遠征</button>
-          </div>`,
-      );
+          </div>`);
       document.getElementById("confirm-new").onclick = () => {
         if (!engine.r && savedRun) engine.loadRun(savedRun);
         engine.finish(false, true);
@@ -5206,9 +5205,11 @@
             </div>
             <div class="joystick" id="joystick"><i></i></div>
             <div class="floating-hint">
-              ${matchMedia("(pointer:coarse)").matches
-                ? "左手拖曳移動 · 右手衝刺／過載"
-                : "WASD / 方向鍵移動 · 空白鍵衝刺 · Q 過載"}
+              ${
+                matchMedia("(pointer:coarse)").matches
+                  ? "左手拖曳移動 · 右手衝刺／過載"
+                  : "WASD / 方向鍵移動 · 空白鍵衝刺 · Q 過載"
+              }
             </div>
             <div class="objective-hud">
               <small id="objective-reward"></small><b id="objective-label"></b>
@@ -5523,9 +5524,11 @@
     let content = "";
     if (r.phase === "upgrade") {
       content = /* HTML */ `<div class="eyebrow">
-          ${r.offerReason === "wave"
-            ? "WAVE CLEAR / 波次獎勵"
-            : `LEVEL ${r.p.level} / 等級提升`}
+          ${
+            r.offerReason === "wave"
+              ? "WAVE CLEAR / 波次獎勵"
+              : `LEVEL ${r.p.level} / 等級提升`
+          }
         </div>
         <h2>決定下一步火力</h2>
         <p>選擇一項強化。進化條件可在武器圖鑑查看。</p>
@@ -5574,9 +5577,11 @@
             <h2>軌道補給站</h2>
             <p>
               第 ${r.wave + 1} 波 ·
-              ${isBossWave(r, r.wave + 1)
-                ? `Boss 倒數 ${r.config.bossDelay} 秒後登場`
-                : "下一輪敵潮"}<br />生命 ${Math.ceil(r.p.hp)} / ${r.p.maxHp}
+              ${
+                isBossWave(r, r.wave + 1)
+                  ? `Boss 倒數 ${r.config.bossDelay} 秒後登場`
+                  : "下一輪敵潮"
+              }<br />生命 ${Math.ceil(r.p.hp)} / ${r.p.maxHp}
             </p>
           </div>
           <div class="market-wallet">
@@ -5586,24 +5591,24 @@
         <div class="shop-grid">
           ${r.shopStock
             .map(
-              (item, i) =>
-                /* HTML */ `<article
-                  class="shop-card ${item.bought ? "sold" : ""} ${item.kind ===
-                  "evolve"
-                    ? "evolution"
-                    : ""}"
+              (item, i) => /* HTML */ `<article
+                  class="shop-card ${item.bought ? "sold" : ""} ${
+                    item.kind === "evolve" ? "evolution" : ""
+                  }"
                 >
                   <span class="choice-icon">${item.icon}</span
                   ><span class="tag"
-                    >${item.kind === "evolve"
-                      ? "進化核心"
-                      : item.kind === "relic"
-                        ? "星海遺物"
-                        : item.kind === "weapon"
-                          ? "武器裝備"
-                          : item.kind === "stat"
-                            ? "能力模組"
-                            : "戰術補給"}</span
+                    >${
+                      item.kind === "evolve"
+                        ? "進化核心"
+                        : item.kind === "relic"
+                          ? "星海遺物"
+                          : item.kind === "weapon"
+                            ? "武器裝備"
+                            : item.kind === "stat"
+                              ? "能力模組"
+                              : "戰術補給"
+                    }</span
                   >
                   <h3>${escapeHTML(item.label)}</h3>
                   <p>${escapeHTML(item.desc)}</p>
@@ -5651,16 +5656,20 @@
           ${result.win ? "MISSION COMPLETE" : "EXPEDITION LOG"}
         </div>
         <h2>
-          ${result.win
-            ? "你穿過了永夜"
-            : result.retreat
-              ? "安全撤離"
-              : "星光仍會再亮起"}
+          ${
+            result.win
+              ? "你穿過了永夜"
+              : result.retreat
+                ? "安全撤離"
+                : "星光仍會再亮起"
+          }
         </h2>
         <p>
-          ${result.win
-            ? `設定的 ${r.config.totalWaves} 波航行已完成。帶著這次的經驗，再試試不同航線。`
-            : "這次的晶礦已帶回基地，可以研究新裝備再出發。"}
+          ${
+            result.win
+              ? `設定的 ${r.config.totalWaves} 波航行已完成。帶著這次的經驗，再試試不同航線。`
+              : "這次的晶礦已帶回基地，可以研究新裝備再出發。"
+          }
         </p>
         <div class="result-grid">
           <div><b>${r.wave}</b><span>到達波數</span></div>
@@ -5875,15 +5884,16 @@
       document.getElementById("weapons").innerHTML =
         r.weapons
           .map(
-            (w) =>
-              /* HTML */ `<div class="weapon-row">
+            (w) => /* HTML */ `<div class="weapon-row">
                 <span class="icon" style="color:${WEAPONS[w.id].color}"
                   >${WEAPONS[w.id].icon}</span
                 ><span
                   >${w.evolved ? WEAPONS[w.id].evo : WEAPONS[w.id].name}<small
-                    >${w.evolved
-                      ? "進化完成"
-                      : `${STATS[WEAPONS[w.id].req].name} ${engine.stat(WEAPONS[w.id].req)}/${WEAPONS[w.id].need} · Lv.5 可進化`}</small
+                    >${
+                      w.evolved
+                        ? "進化完成"
+                        : `${STATS[WEAPONS[w.id].req].name} ${engine.stat(WEAPONS[w.id].req)}/${WEAPONS[w.id].need} · Lv.5 可進化`
+                    }</small
                   ></span
                 ><span class="lv">${w.evolved ? "★" : `Lv.${w.level}`}</span>
               </div>`,
@@ -5941,8 +5951,7 @@
     `);
   }
   function showGuide(launch = false) {
-    openDialog(
-      /* HTML */ `<div class="eyebrow">PILOT HANDBOOK / v1.2</div>
+    openDialog(/* HTML */ `<div class="eyebrow">PILOT HANDBOOK / v1.2</div>
         <h2>駕駛操作手冊</h2>
         <p class="muted">先熟悉移動、衝刺與過載，再展開你需要的戰鬥說明。</p>
         <details class="handbook-section" open>
@@ -6055,8 +6064,7 @@
               </thead>
               <tbody>
                 ${DIFFICULTIES.map(
-                  (d) =>
-                    /* HTML */ `<tr>
+                  (d) => /* HTML */ `<tr>
                       <th>${d.name}</th>
                       <td>×${d.hp.toFixed(2)}</td>
                       <td>×${d.damage.toFixed(2)}</td>
@@ -6153,10 +6161,11 @@
             以後已保存的擊破進度可完整還原。
           </p>
         </details>
-        ${launch
-          ? '<div class="handbook-launch"><button class="primary" id="guide-launch">了解，開始出航</button><button id="guide-skip">直接出航</button></div>'
-          : ""}`,
-    );
+        ${
+          launch
+            ? '<div class="handbook-launch"><button class="primary" id="guide-launch">了解，開始出航</button><button id="guide-skip">直接出航</button></div>'
+            : ""
+        }`);
     if (launch) {
       document.getElementById("guide-launch").onclick = document.getElementById(
         "guide-skip",
@@ -6167,8 +6176,7 @@
     }
   }
   function showCodex() {
-    openDialog(
-      /* HTML */ `<div class="eyebrow">ARSENAL DATABASE</div>
+    openDialog(/* HTML */ `<div class="eyebrow">ARSENAL DATABASE</div>
         <h2>武器與進化配方</h2>
         <div class="hero-actions">
           <button id="codex-boss-link">Boss 招式檔案</button
@@ -6181,8 +6189,7 @@
         <div class="modal-grid">
           ${Object.entries(WEAPONS)
             .map(
-              ([id, w]) =>
-                /* HTML */ `<article class="codex-card">
+              ([id, w]) => /* HTML */ `<article class="codex-card">
                   <span class="icon" style="color:${w.color}">${w.icon}</span>
                   <h3>${w.name}</h3>
                   <p>${w.desc}</p>
@@ -6202,20 +6209,17 @@
         <h2 style="margin-top:25px">星海遺物</h2>
         <div class="modal-grid">
           ${RELICS.map(
-            (x) =>
-              /* HTML */ `<article class="codex-card">
+            (x) => /* HTML */ `<article class="codex-card">
                 <h3>${x.icon} ${x.name}</h3>
                 <p>${x.desc}</p>
               </article>`,
           ).join("")}
-        </div>`,
-    );
+        </div>`);
     document.getElementById("codex-boss-link").onclick = () => showBossCodex();
     document.getElementById("codex-enemy-link").onclick = showEnemyCodex;
   }
   function showResearch() {
-    openDialog(
-      /* HTML */ `<div class="eyebrow">PERMANENT RESEARCH</div>
+    openDialog(/* HTML */ `<div class="eyebrow">PERMANENT RESEARCH</div>
         <h2>讓下一趟航行走得更遠</h2>
         <p class="muted">研究加成會從下一次出航生效，每項最高 5 級。</p>
         <p class="money">可用晶礦：<b>${Math.floor(profile.credits)}</b></p>
@@ -6234,8 +6238,7 @@
               ${lv >= 5 ? "研究完成" : `${cost} 晶礦`}
             </button>
           </div>`;
-        }).join("")}`,
-    );
+        }).join("")}`);
     dialogContent.querySelectorAll("[data-research]").forEach(
       (b) =>
         (b.onclick = () => {
@@ -6254,18 +6257,16 @@
     );
   }
   function showAchievements() {
-    openDialog(
-      /* HTML */ `<div class="eyebrow">FLIGHT MILESTONES</div>
+    openDialog(/* HTML */ `<div class="eyebrow">FLIGHT MILESTONES</div>
         <h2>
           星海成就 · ${profile.achievements.length} / ${ACHIEVEMENTS.length}
         </h2>
         <p class="muted">遠征結算時檢查成就，獎勵只領取一次。</p>
         ${ACHIEVEMENTS.map(
-          (a) =>
-            /* HTML */ `<article
-              class="achievement ${profile.achievements.includes(a.id)
-                ? "done"
-                : ""}"
+          (a) => /* HTML */ `<article
+              class="achievement ${
+                profile.achievements.includes(a.id) ? "done" : ""
+              }"
             >
               <span class="medal"
                 >${profile.achievements.includes(a.id) ? "✦" : "◇"}</span
@@ -6278,12 +6279,10 @@
                 </p>
               </div>
             </article>`,
-        ).join("")}`,
-    );
+        ).join("")}`);
   }
   function showSettings() {
-    openDialog(
-      /* HTML */ `<div class="eyebrow">SYSTEM & SAVE DATA</div>
+    openDialog(/* HTML */ `<div class="eyebrow">SYSTEM & SAVE DATA</div>
         <h2>設定與進度備份</h2>
         <label class="settings-row"
           ><input
@@ -6329,8 +6328,7 @@
             hidden
           />
         </div>
-        <p id="import-message" class="muted"></p>`,
-    );
+        <p id="import-message" class="muted"></p>`);
     document.getElementById("setting-effects").value =
       profile.settings.effectsLevel || "auto";
     document.getElementById("setting-effects").onchange = (e) => {

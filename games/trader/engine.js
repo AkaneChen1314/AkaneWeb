@@ -1,3 +1,7 @@
+/*
+ * 檔案導讀：金融模擬的純規則引擎：資產、借款、交易與事件計算集中在這裡。
+ * 介面操作在 app.js；引擎資料中的數值與商品皆為遊戲設定。
+ */
 /* Pure game simulation. All securities and prices are fictional. No network calls. */
 (function (root) {
   "use strict";

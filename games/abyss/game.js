@@ -1,3 +1,7 @@
+/*
+ * 檔案導讀：深境冒險原始碼：前段是職業、物品與規則資料，中段是存檔／戰鬥，後段是畫面渲染。
+ * 常改項目可搜尋 MAX_FLOOR、save、startGame、render；SAVE_KEY 與備份鍵需保持相容。
+ */
 "use strict";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)],
@@ -2087,6 +2091,7 @@ function stats() {
   return out;
 }
 
+// 先整理存檔內容，再寫入主要與備份位置；這裡的資料格式需與 load 配合。
 function save(force = false) {
   // Do not persist half-finished attack/potion transactions on pagehide.
   if (!S.started || (busy && force !== true)) return;
@@ -2124,6 +2129,7 @@ function migrateGearId(id, classId) {
   return legacy[id] || null;
 }
 
+// 讀取舊進度並檢查資料，避免不存在的裝備或過期設定直接進入戰鬥。
 function load() {
   try {
     let raw =
@@ -2237,6 +2243,7 @@ function load() {
   }
 }
 
+// 建立新冒險者的起始狀態；職業選擇會影響初始能力與可用技能。
 function startGame(id) {
   if (id === "god" && !godUnlocked) {
     requestGodMode();
@@ -4037,6 +4044,7 @@ function showBattle() {
   $("#turnText").textContent = "觀察敵人意圖，選擇技能、戰術或使用藥水";
 }
 
+// 統一更新主畫面；各區塊的細節由後面的 renderBag／renderShop 等函式負責。
 function render() {
   const c = baseClass(),
     st = stats();

@@ -8,7 +8,9 @@ function loan(s, amount, type = "bank") {
     amount,
     type,
     false,
-    type === "bank" ? null : { id: s.fictionId, signedName: s.playerName, contacts: true },
+    type === "bank"
+      ? null
+      : { id: s.fictionId, signedName: s.playerName, contacts: true },
   );
 }
 function chat(s) {
@@ -18,7 +20,10 @@ function resolve(s, style = "safe") {
   const p = s.pending;
   if (p.type === "glitch") return E.resolveGlitch(s);
   if (p.type === "survival")
-    return E.choose(s, style === "shark" && E.loanLimit(s, "shark") >= 10000 ? 1 : 0);
+    return E.choose(
+      s,
+      style === "shark" && E.loanLimit(s, "shark") >= 10000 ? 1 : 0,
+    );
   if (p.type === "debt") {
     chat(s);
     const l = s.loans.find((x) => x.id === p.loanId);
@@ -33,11 +38,23 @@ function resolve(s, style = "safe") {
             : 1,
     );
   }
-  return E.choose(s, [16, 24, 38, 48].includes(s.day) ? (s.day === 24 ? 1 : 0) : 1);
+  return E.choose(
+    s,
+    [16, 24, 38, 48].includes(s.day) ? (s.day === 24 ? 1 : 0) : 1,
+  );
 }
 let count = 0;
 for (let seed = 1; seed <= 100; seed++)
-  for (const strat of ["cash", "spot", "short", "hundred", "option", "online", "shark", "organs"]) {
+  for (const strat of [
+    "cash",
+    "spot",
+    "short",
+    "hundred",
+    "option",
+    "online",
+    "shark",
+    "organs",
+  ]) {
     const s = E.create(seed);
     let loops = 0;
     while (!s.ended) {
@@ -49,8 +66,20 @@ for (let seed = 1; seed <= 100; seed++)
       if (["online", "shark", "organs"].includes(strat) && s.day === 2)
         assert(loan(s, 1e8, strat === "online" ? "online" : "shark").ok);
       if (strat !== "cash" && s.cash > 1e7 && s.positions.length < 3) {
-        const prod = strat === "spot" ? "spot" : strat === "option" ? "option" : "margin",
-          lev = strat === "hundred" ? 100 : strat === "short" ? 2 : strat === "option" ? 10 : 1,
+        const prod =
+            strat === "spot"
+              ? "spot"
+              : strat === "option"
+                ? "option"
+                : "margin",
+          lev =
+            strat === "hundred"
+              ? 100
+              : strat === "short"
+                ? 2
+                : strat === "option"
+                  ? 10
+                  : 1,
           a = E.ASSETS[(s.day + seed) % E.ASSETS.length];
         assert(
           E.open(s, {
@@ -189,11 +218,18 @@ const original = s.markets.sky.price,
 assert(E.tick(s).ok);
 assert.equal(s.minute, oldMinute + 5);
 assert.notEqual(s.markets.sky.price, original);
-assert.notEqual(E.value(s, s.positions[0]), oldValue, "Live chart is not connected to holdings");
+assert.notEqual(
+  E.value(s, s.positions[0]),
+  oldValue,
+  "Live chart is not connected to holdings",
+);
 eq = s.cash;
 const current = E.value(s, s.positions[0]);
 E.closeAll(s);
-assert(Math.abs(s.cash - (eq + current - 150000)) < 1, "Sale did not use live price");
+assert(
+  Math.abs(s.cash - (eq + current - 150000)) < 1,
+  "Sale did not use live price",
+);
 while (s.minute < 810) E.tick(s);
 const archive = JSON.stringify(s.markets.sky.series),
   middayPrice = s.markets.sky.price;
@@ -252,7 +288,10 @@ assert.equal(s.markets.sky.series[0].day, 1);
 assert.equal(s.markets.sky.series.at(-1).day, 60);
 assert.equal(s.markets.sky.series.at(-1).minute, 1440);
 assert(E.validate(s));
-assert(JSON.stringify(E.pack(s)).length * 2 < 4.8e6, "Packed history exceeds storage budget");
+assert(
+  JSON.stringify(E.pack(s)).length * 2 < 4.8e6,
+  "Packed history exceeds storage budget",
+);
 const packedSave = JSON.stringify(E.pack(s)),
   restored = E.unpack(JSON.parse(packedSave));
 assert(E.validate(restored));
@@ -268,10 +307,15 @@ for (let i = 0; i < s.markets.sky.series.length; i++) {
   assert.equal(newPoint.minute, oldPoint.minute);
   assert.equal(newPoint.day, oldPoint.day);
   assert(
-    Math.abs(newPoint.price - oldPoint.price) <= Math.max(1e-8, Math.abs(oldPoint.price) * 1e-7),
+    Math.abs(newPoint.price - oldPoint.price) <=
+      Math.max(1e-8, Math.abs(oldPoint.price) * 1e-7),
   );
 }
-console.log("60-day compressed save:", Math.round((packedSave.length * 2) / 1024), "KiB UTF-16");
+console.log(
+  "60-day compressed save:",
+  Math.round((packedSave.length * 2) / 1024),
+  "KiB UTF-16",
+);
 console.log(
   "PASS: both kidneys/corneas, all 3 participatory jobs, no premature/double wages, wrong answers, resumable work, job locking, actual live P&L/sale prices, prior-wick isolation, 24-hour continuation / midnight rollover, v2 migration, and all 17,340 price points per asset through day 60.",
 );
@@ -288,8 +332,11 @@ snap = JSON.stringify(s);
 assert(!E.borrow(s, 1e8, "online").ok);
 assert.equal(JSON.stringify(s), snap, "Unsigned loan changed money");
 assert(
-  !E.borrow(s, 1e8, "online", false, { id: "REAL-ID", signedName: s.playerName, contacts: true })
-    .ok,
+  !E.borrow(s, 1e8, "online", false, {
+    id: "REAL-ID",
+    signedName: s.playerName,
+    contacts: true,
+  }).ok,
 );
 assert(loan(s, 1e8, "online").ok);
 assert.equal(s.contracts[0].signedName, "幻影旅人");
@@ -319,7 +366,11 @@ overdue(s);
 assert.equal(s.loans[0].stage, 2);
 assert(E.choose(s, 1).ok);
 assert.equal(s.reputation, 72);
-assert(s.social.some((x) => x.text.includes("夜班測試員") && x.text.includes("不實抹黑")));
+assert(
+  s.social.some(
+    (x) => x.text.includes("夜班測試員") && x.text.includes("不實抹黑"),
+  ),
+);
 assert(Math.abs(E.loanRate(s.loans[0]) - 0.06) < 1e-12);
 assert(E.validate(s));
 s = E.create(8);
@@ -369,7 +420,11 @@ assert(loan(s, 5e8, "online").ok);
 s.cash = 0;
 s.loans[0].due = s.day + 1;
 E.nextDay(s);
-assert.equal(s.pending.type, "debt", "Empty pocket incorrectly bypassed due collector");
+assert.equal(
+  s.pending.type,
+  "debt",
+  "Empty pocket incorrectly bypassed due collector",
+);
 assert(E.validate(s));
 s = E.create(11);
 assert(E.sellOrgan(s, "lung_right").ok);
@@ -406,11 +461,17 @@ for (let seed = 1; seed <= 150; seed++)
         assert(E.gambleAction(s, seed % 2 ? "big" : "small").ok);
         r = E.gambleAction(s, "roll");
       } else if (mode.id === "cards") {
-        r = E.gambleAction(s, E.handScore(s.gamble.player) < 16 ? "hit" : "stand");
+        r = E.gambleAction(
+          s,
+          E.handScore(s.gamble.player) < 16 ? "hit" : "stand",
+        );
       } else {
-        if (seed % 3 === 0 && s.gamble.revealed.length) r = E.gambleAction(s, "cashout");
+        if (seed % 3 === 0 && s.gamble.revealed.length)
+          r = E.gambleAction(s, "cashout");
         else {
-          const index = [0, 1, 2, 3, 4, 5, 6, 7, 8].find((n) => !s.gamble.revealed.includes(n));
+          const index = [0, 1, 2, 3, 4, 5, 6, 7, 8].find(
+            (n) => !s.gamble.revealed.includes(n),
+          );
           r = E.gambleAction(s, "reveal", index);
         }
       }
@@ -430,7 +491,9 @@ E.startGamble(s, "mines", 1e7);
 snap = JSON.stringify(s);
 assert(!E.gambleAction(s, "reveal", -1).ok);
 assert.equal(JSON.stringify(s), snap);
-const safe = [0, 1, 2, 3, 4, 5, 6, 7, 8].find((n) => !s.gamble.bombs.includes(n));
+const safe = [0, 1, 2, 3, 4, 5, 6, 7, 8].find(
+  (n) => !s.gamble.bombs.includes(n),
+);
 E.gambleAction(s, "reveal", safe);
 snap = JSON.stringify(s);
 assert(!E.gambleAction(s, "reveal", safe).ok);

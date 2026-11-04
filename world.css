@@ -1,4 +1,6 @@
 /* Hallmark · theme: brand · genre: atmospheric · redesign: full · scope: homepage · r14 */
+/* 閱讀提示：首頁的精修構圖在檔案後段；三款光色變數在 :root 與 data-world-tone 區塊。 */
+
 /* Critique: Bring character art and title together; remove repeated introduction and relocate appearance controls. */
 /* Blue World 1.2 / r10
  * 最終視覺調整集中在此，既有專區與遊戲保持獨立。
@@ -296,7 +298,12 @@ body:not(.playing) {
   inset: 0;
   pointer-events: none;
   border-radius: inherit;
-  background: linear-gradient(125deg, #ffffff10, transparent 24% 74%, #8bdfff0c);
+  background: linear-gradient(
+    125deg,
+    #ffffff10,
+    transparent 24% 74%,
+    #8bdfff0c
+  );
 }
 .gateway-link {
   border-radius: 15px;
@@ -597,7 +604,9 @@ footer {
   padding: 0 0 0 24px;
 }
 
-.home-zone .blue-hour-hero .hero-type h1 { margin: 0; }
+.home-zone .blue-hour-hero .hero-type h1 {
+  margin: 0;
+}
 .home-zone .blue-hour-hero .hero-type h1 strong.world-title {
   max-width: 100%;
   font-family: var(--ui-display-font);
@@ -608,7 +617,10 @@ footer {
   min-width: 0;
 }
 
-.home-zone .blue-hour-hero .world-title-star { font-size: 30px; right: -42px; }
+.home-zone .blue-hour-hero .world-title-star {
+  font-size: 30px;
+  right: -42px;
+}
 .home-zone .blue-hour-hero .hero-type h1 .hero-poetry {
   margin-top: 28px;
   font-size: clamp(23px, 2.2vw, 29px);
@@ -665,7 +677,9 @@ footer {
   box-shadow: none;
 }
 
-.home-zone .home-heading { margin-top: 0; }
+.home-zone .home-heading {
+  margin-top: 0;
+}
 .home-zone .home-season-strip {
   display: grid;
   grid-template-columns: minmax(150px, 1fr) repeat(3, minmax(0, 1fr));
@@ -696,12 +710,26 @@ footer {
   border-radius: var(--ui-control-radius);
 }
 
-.home-zone .home-season-strip a b { font-size: 25px; font-weight: 400; color: var(--world-light); }
-.home-zone .home-season-strip a span { color: var(--ui-control-text); font-size: 16px; }
-.home-zone .home-season-strip a i { margin-left: auto; color: var(--ui-secondary-text); }
-.home-zone .blue-hour { margin-top: 0; }
+.home-zone .home-season-strip a b {
+  font-size: 25px;
+  font-weight: 400;
+  color: var(--world-light);
+}
+.home-zone .home-season-strip a span {
+  color: var(--ui-control-text);
+  font-size: 16px;
+}
+.home-zone .home-season-strip a i {
+  margin-left: auto;
+  color: var(--ui-secondary-text);
+}
+.home-zone .blue-hour {
+  margin-top: 0;
+}
 
-body[data-zone-view="home"] .edge-film[data-edge-zone="home"] { opacity: 0.1; }
+body[data-zone-view="home"] .edge-film[data-edge-zone="home"] {
+  opacity: 0.1;
+}
 
 footer .appearance-settings {
   flex: 0 0 100%;
@@ -728,10 +756,22 @@ footer .appearance-settings summary {
   font-weight: 600;
 }
 
-footer .appearance-settings summary::-webkit-details-marker { display: none; }
-footer .appearance-settings summary::after { content: "+"; margin-left: 20px; font-size: 19px; line-height: 1; }
-footer .appearance-settings[open] summary::after { content: "−"; }
-footer .appearance-settings summary:hover { border-color: var(--ui-control-border-strong); background: var(--ui-control-bg-hover); }
+footer .appearance-settings summary::-webkit-details-marker {
+  display: none;
+}
+footer .appearance-settings summary::after {
+  content: "+";
+  margin-left: 20px;
+  font-size: 19px;
+  line-height: 1;
+}
+footer .appearance-settings[open] summary::after {
+  content: "−";
+}
+footer .appearance-settings summary:hover {
+  border-color: var(--ui-control-border-strong);
+  background: var(--ui-control-bg-hover);
+}
 footer .appearance-settings-panel {
   width: min(100%, 600px);
   margin-top: 12px;
@@ -741,36 +781,111 @@ footer .appearance-settings-panel {
   background: var(--ui-panel-bg);
 }
 
-footer .appearance-settings-panel > span { display: block; margin-bottom: 12px; color: var(--ui-control-text); }
-footer .appearance-settings-panel p { margin: 12px 0 0; color: var(--ui-secondary-text); font-size: 13px; }
-footer .world-tones { gap: 10px; }
+footer .appearance-settings-panel > span {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--ui-control-text);
+}
+footer .appearance-settings-panel p {
+  margin: 12px 0 0;
+  color: var(--ui-secondary-text);
+  font-size: 13px;
+}
+footer .world-tones {
+  gap: 10px;
+}
 
 @media (max-width: 1100px) and (min-width: 761px) {
-  .home-zone .blue-hour-hero .hero-type { padding-left: 8px; }
-  .home-zone .blue-hour-hero .hero-stage { --home-art-height: 510px; transform: translateX(-12px); }
-  .home-zone .blue-hour-hero .hero-type h1 strong.world-title { font-size: clamp(76px, 9vw, 96px); }
+  .home-zone .blue-hour-hero .hero-type {
+    padding-left: 8px;
+  }
+  .home-zone .blue-hour-hero .hero-stage {
+    --home-art-height: 510px;
+    transform: translateX(-12px);
+  }
+  .home-zone .blue-hour-hero .hero-type h1 strong.world-title {
+    font-size: clamp(76px, 9vw, 96px);
+  }
 }
 
 @media (max-width: 760px) {
-  .home-zone .blue-hour-hero { grid-template-columns: minmax(0, 1fr); padding: 12px 0 28px; gap: 4px; }
-  .home-zone .blue-hour-hero .hero-type { padding: 0; }
-  .home-zone .blue-hour-hero .hero-type h1 strong.world-title { font-size: clamp(38px, 11.5vw, 72px); line-height: 1; letter-spacing: -0.035em; }
-  .home-zone .blue-hour-hero .world-title br { display: none; }
-  .home-zone .blue-hour-hero .world-title-star { font-size: 22px; right: -28px; top: 5px; }
-  .home-zone .blue-hour-hero .hero-type h1 .hero-poetry { margin-top: 14px; font-size: 21px; line-height: 1.5; }
-  .home-zone .blue-hour-hero .archive-intro { margin-top: 12px; font-size: 15px; }
-  .home-zone .blue-hour-hero .hero-stage { --home-art-height: clamp(360px, 110vw, 470px); transform: none; }
-  .home-zone .home-season-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 28px 0 36px; padding: 20px 0; gap: 12px 8px; }
-  .home-zone .home-season-strip .strip-title { grid-column: 1 / -1; font-size: 22px; }
-  .home-zone .home-season-strip a { flex-direction: column; justify-content: center; gap: 4px; padding: 8px; border: 1px solid var(--ui-control-border); }
-  .home-zone .home-season-strip a b { font-size: 22px; }
-  .home-zone .home-season-strip a span { font-size: 15px; }
-  .home-zone .home-season-strip a i { display: none; }
-  footer .appearance-settings-panel { padding: 16px; }
-  footer .world-tones { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-  footer .world-tones button { justify-content: center; padding: 8px 6px; font-size: 13px; }
+  .home-zone .blue-hour-hero {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 12px 0 28px;
+    gap: 4px;
+  }
+  .home-zone .blue-hour-hero .hero-type {
+    padding: 0;
+  }
+  .home-zone .blue-hour-hero .hero-type h1 strong.world-title {
+    font-size: clamp(38px, 11.5vw, 72px);
+    line-height: 1;
+    letter-spacing: -0.035em;
+  }
+  .home-zone .blue-hour-hero .world-title br {
+    display: none;
+  }
+  .home-zone .blue-hour-hero .world-title-star {
+    font-size: 22px;
+    right: -28px;
+    top: 5px;
+  }
+  .home-zone .blue-hour-hero .hero-type h1 .hero-poetry {
+    margin-top: 14px;
+    font-size: 21px;
+    line-height: 1.5;
+  }
+  .home-zone .blue-hour-hero .archive-intro {
+    margin-top: 12px;
+    font-size: 15px;
+  }
+  .home-zone .blue-hour-hero .hero-stage {
+    --home-art-height: clamp(360px, 110vw, 470px);
+    transform: none;
+  }
+  .home-zone .home-season-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 28px 0 36px;
+    padding: 20px 0;
+    gap: 12px 8px;
+  }
+  .home-zone .home-season-strip .strip-title {
+    grid-column: 1 / -1;
+    font-size: 22px;
+  }
+  .home-zone .home-season-strip a {
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px;
+    border: 1px solid var(--ui-control-border);
+  }
+  .home-zone .home-season-strip a b {
+    font-size: 22px;
+  }
+  .home-zone .home-season-strip a span {
+    font-size: 15px;
+  }
+  .home-zone .home-season-strip a i {
+    display: none;
+  }
+  footer .appearance-settings-panel {
+    padding: 16px;
+  }
+  footer .world-tones {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  footer .world-tones button {
+    justify-content: center;
+    padding: 8px 6px;
+    font-size: 13px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  footer .appearance-settings summary { transition: none; }
+  footer .appearance-settings summary {
+    transition: none;
+  }
 }

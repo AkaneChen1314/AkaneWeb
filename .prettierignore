@@ -1,0 +1,13 @@
+# Images, audio, fonts and provenance are maintained separately from source code.
+assets/
+**/assets/
+
+# Third-party libraries and generated deployment bundles are not hand-edited.
+**/vendor/
+games/neonstrike/browser.js
+
+# Local tools and verification output must never become website source.
+.git/
+.hallmark/
+node_modules/
+output/

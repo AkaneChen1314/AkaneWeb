@@ -1,3 +1,7 @@
+/*
+ * 檔案導讀：角色展示互動：表情觀察、橫幅插畫與三張肖像的選取及放大。
+ * 圖片清單和說明在檔案前段；事件綁定在後段。切換圖片不會自行開啟放大視窗。
+ */
 /* 表情觀察室的資料與互動。動畫播放統一交由 polish.js 管理。 */
 "use strict";
 
@@ -104,28 +108,51 @@
   const specialViewer = document.getElementById("special-viewer");
   const portraitArts = [
     {
-      key: "puzzle-casual", image: "puzzle-casual", label: "日常星光",
-      title: "讓日常，也有一點星光。", date: "PUZZLE STAR / CASUAL PORTRAIT",
-      description: "輕攏長髮的瞬間，像把喧鬧留在畫面之外。棕色與米白襯著她的藍，簡單的日常，也讓人想多停留一下。",
-      outfit: "棕色針織 × 淺色洋裝", detail: "輕揚髮梢與青綠色眼眸",
+      key: "puzzle-casual",
+      image: "puzzle-casual",
+      label: "日常星光",
+      title: "讓日常，也有一點星光。",
+      date: "PUZZLE STAR / CASUAL PORTRAIT",
+      description:
+        "輕攏長髮的瞬間，像把喧鬧留在畫面之外。棕色與米白襯著她的藍，簡單的日常，也讓人想多停留一下。",
+      outfit: "棕色針織 × 淺色洋裝",
+      detail: "輕揚髮梢與青綠色眼眸",
       alt: "黑川茜穿棕色上衣與淺色洋裝，輕攏藍色長髮的官方私服肖像",
-      width: 720, height: 1040, source: "https://oshinoko-puzzle.com/",
+      width: 720,
+      height: 1040,
+      source: "https://oshinoko-puzzle.com/",
     },
     {
-      key: "raindrops", image: "portrait-raindrops", label: "雨後花語",
-      title: "雨滴停下，留住一抹清新。", date: "PUZZLE STAR / RAINY DROPS",
-      description: "繡球花與雨光之間，藍綠色的裙襬接住清透的光。看看髮飾、緞帶與指尖的雨滴，收藏一個安靜又鮮明的茜。",
-      outfit: "藍綠洋裝 × 花朵髮飾", detail: "繡球花、雨滴與透亮的綠意",
+      key: "raindrops",
+      image: "portrait-raindrops",
+      label: "雨後花語",
+      title: "雨滴停下，留住一抹清新。",
+      date: "PUZZLE STAR / RAINY DROPS",
+      description:
+        "繡球花與雨光之間，藍綠色的裙襬接住清透的光。看看髮飾、緞帶與指尖的雨滴，收藏一個安靜又鮮明的茜。",
+      outfit: "藍綠洋裝 × 花朵髮飾",
+      detail: "繡球花、雨滴與透亮的綠意",
       alt: "黑川茜穿藍綠洋裝，在雨後的繡球花旁伸手接住雨滴的官方插畫",
-      width: 899, height: 1221, source: "https://group.kadokawa.co.jp/information/promotional_topics/article-15016.html",
+      width: 899,
+      height: 1221,
+      source:
+        "https://group.kadokawa.co.jp/information/promotional_topics/article-15016.html",
     },
     {
-      key: "anniversary", image: "portrait-anniversary", label: "糖彩慶典",
-      title: "把今天，裝飾成喜歡的顏色。", date: "PUZZLE STAR / HALF ANNIVERSARY",
-      description: "彩帶、星星與甜點包圍著笑容，紫色禮服也多了糖果般的細節。從日常換到慶典，仍是那個讓人想停下目光的茜。",
-      outfit: "紫色禮服 × 糖果色配件", detail: "星形髮夾與手中的慶典甜點",
+      key: "anniversary",
+      image: "portrait-anniversary",
+      label: "糖彩慶典",
+      title: "把今天，裝飾成喜歡的顏色。",
+      date: "PUZZLE STAR / HALF ANNIVERSARY",
+      description:
+        "彩帶、星星與甜點包圍著笑容，紫色禮服也多了糖果般的細節。從日常換到慶典，仍是那個讓人想停下目光的茜。",
+      outfit: "紫色禮服 × 糖果色配件",
+      detail: "星形髮夾與手中的慶典甜點",
       alt: "黑川茜穿紫色慶典禮服，手捧半周年甜點，背景有彩帶與星星的官方插畫",
-      width: 899, height: 1221, source: "https://group.kadokawa.co.jp/information/promotional_topics/article-15579.html",
+      width: 899,
+      height: 1221,
+      source:
+        "https://group.kadokawa.co.jp/information/promotional_topics/article-15579.html",
     },
   ];
   let portraitIndex = 0;
@@ -141,13 +168,17 @@
     const art = portraitArts[portraitIndex];
     portraitRoom.dataset.portrait = art.key;
     setPortraitImage(document.getElementById("portrait-image"), art);
-    portraitRoom.querySelector(".portrait-art").setAttribute("aria-label", `放大：${art.label}，黑川茜完整肖像`);
+    portraitRoom
+      .querySelector(".portrait-art")
+      .setAttribute("aria-label", `放大：${art.label}，黑川茜完整肖像`);
     document.getElementById("portrait-room-title").textContent = art.title;
-    document.getElementById("portrait-description").textContent = art.description;
+    document.getElementById("portrait-description").textContent =
+      art.description;
     document.getElementById("portrait-outfit").textContent = art.outfit;
     document.getElementById("portrait-detail").textContent = art.detail;
     document.getElementById("portrait-source").href = art.source;
-    document.getElementById("portrait-counter").textContent = `${portraitIndex + 1} / ${portraitArts.length} · ${art.label}`;
+    document.getElementById("portrait-counter").textContent =
+      `${portraitIndex + 1} / ${portraitArts.length} · ${art.label}`;
     document.querySelectorAll("[data-portrait-choice]").forEach((button, i) => {
       button.setAttribute("aria-pressed", String(i === portraitIndex));
     });
@@ -155,41 +186,57 @@
   document.querySelectorAll("[data-portrait-choice]").forEach((button, i) => {
     button.addEventListener("click", () => choosePortrait(i));
   });
-  portraitRoom.querySelector(".portrait-choices").addEventListener("keydown", (event) => {
-    if (!event.target.matches("[data-portrait-choice]")) return;
-    const current = [...document.querySelectorAll("[data-portrait-choice]")].indexOf(event.target);
-    let next;
-    if (event.key === "ArrowLeft") next = current - 1;
-    else if (event.key === "ArrowRight") next = current + 1;
-    else if (event.key === "Home") next = 0;
-    else if (event.key === "End") next = portraitArts.length - 1;
-    else return;
-    event.preventDefault();
-    choosePortrait(next);
-    document.querySelectorAll("[data-portrait-choice]")[portraitIndex].focus({ preventScroll: true });
-  });
-  document.getElementById("portrait-previous").addEventListener("click", () => choosePortrait(portraitIndex - 1));
-  document.getElementById("portrait-next").addEventListener("click", () => choosePortrait(portraitIndex + 1));
+  portraitRoom
+    .querySelector(".portrait-choices")
+    .addEventListener("keydown", (event) => {
+      if (!event.target.matches("[data-portrait-choice]")) return;
+      const current = [
+        ...document.querySelectorAll("[data-portrait-choice]"),
+      ].indexOf(event.target);
+      let next;
+      if (event.key === "ArrowLeft") next = current - 1;
+      else if (event.key === "ArrowRight") next = current + 1;
+      else if (event.key === "Home") next = 0;
+      else if (event.key === "End") next = portraitArts.length - 1;
+      else return;
+      event.preventDefault();
+      choosePortrait(next);
+      document
+        .querySelectorAll("[data-portrait-choice]")
+        [portraitIndex].focus({ preventScroll: true });
+    });
+  document
+    .getElementById("portrait-previous")
+    .addEventListener("click", () => choosePortrait(portraitIndex - 1));
+  document
+    .getElementById("portrait-next")
+    .addEventListener("click", () => choosePortrait(portraitIndex + 1));
   choosePortrait(0);
   let portraitMode = false;
   let specialIndex = 0;
   let specialTrigger = null;
   function showSpecial() {
-    const art = portraitMode ? portraitArts[portraitIndex] : specialArts[specialIndex];
+    const art = portraitMode
+      ? portraitArts[portraitIndex]
+      : specialArts[specialIndex];
     specialViewer.dataset.art = art.key;
     const photo = document.getElementById("special-viewer-image");
     photo.src = `assets/akane/${art.image}.webp`;
     photo.alt = `黑川茜圖片：${art.title}`;
     document.getElementById("special-viewer-title").textContent = art.title;
     document.getElementById("special-viewer-date").textContent = art.date;
-    document.getElementById("special-viewer-counter").textContent =
-      portraitMode ? `肖像 ${portraitIndex + 1} / ${portraitArts.length}` : `${specialIndex + 1} / ${specialArts.length}`;
+    document.getElementById("special-viewer-counter").textContent = portraitMode
+      ? `肖像 ${portraitIndex + 1} / ${portraitArts.length}`
+      : `${specialIndex + 1} / ${specialArts.length}`;
     document.getElementById("special-viewer-source").href = art.source;
-    document.getElementById("special-viewer-source").textContent = art.sourceLabel || "官方原頁 ↗";
+    document.getElementById("special-viewer-source").textContent =
+      art.sourceLabel || "官方原頁 ↗";
   }
   function moveSpecial(direction) {
     if (portraitMode) choosePortrait(portraitIndex + direction);
-    else specialIndex = (specialIndex + direction + specialArts.length) % specialArts.length;
+    else
+      specialIndex =
+        (specialIndex + direction + specialArts.length) % specialArts.length;
     showSpecial();
   }
   document.querySelectorAll("[data-special-art]").forEach((button) => {

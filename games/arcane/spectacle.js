@@ -1,3 +1,7 @@
+/*
+ * 檔案導讀：牌陣戰鬥的視覺特效層；與主要規則 game.js 分開，方便調整動畫。
+ * 應保留暫停與減少動態處理，避免效果結束後仍有殘留繪製。
+ */
 "use strict";
 
 // Visuals have their own clock and random stream; they never alter combat rules.

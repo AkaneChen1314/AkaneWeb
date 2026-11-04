@@ -1,3 +1,7 @@
+/*
+ * 檔案導讀：星界牌陣原始碼：角色／卡牌設定 → 組隊與難度 → 戰鬥結算 → 手牌及動畫顯示。
+ * 調整玩法前先找對應資料表；只改文字與配色時優先修改 index.html、style.css。
+ */
 "use strict";
 
 const $ = (selector) => document.querySelector(selector);
@@ -16,6 +20,7 @@ const card = (id, name, type, ap, data = {}) => ({
 let viewportFrame = 0;
 let previousViewportHeight = 0;
 
+// 手機鍵盤、網址列與雙指縮放會改變可見範圍，這裡維持戰場可用高度。
 function syncViewportHeight() {
   // 雙指放大只改變可見範圍，不應把整個戰場重新壓縮。
   const viewport = window.visualViewport;
@@ -1316,6 +1321,7 @@ function chooseIntent() {
   return scaleIntent(pick(moves.slice(0, Math.min(3, moves.length))));
 }
 
+// 依目前隊伍與難度建立戰鬥；試煉接續和一般新局共用這個入口。
 function startBattle(continuingTrial = false) {
   if (
     !selectedFighter ||
@@ -1481,6 +1487,7 @@ function drawTo(amount) {
     drawOne();
 }
 
+// 把戰鬥狀態呈現在介面；卡牌與角色的計算不應只在顯示層更改。
 function renderBattle() {
   const hpRatio = player.hp / player.maxHp;
   $("#battleScreen").classList.toggle(

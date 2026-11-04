@@ -1,3 +1,7 @@
+/*
+ * 檔案導讀：圖片資料表：每筆物件是一張收藏圖片，依 season／episode／order 決定位置。
+ * id 用來辨識收藏，不要任意更換；新增素材時一併更新 assets/akane/sources.json 的來源。
+ */
 /* 三季圖庫資料。表情觀察室使用自己的照片，不在此重複展示。
  * episode 是官方累計話數；group 表示合照或小劇場。
  */
@@ -10,7 +14,8 @@ window.AkaneGalleryItems = [
     season: 1,
     episode: null,
     order: 0,
-    description: "第一季官方角色頁的完整單人立繪，收藏短髮、紫色裙裝與輕柔的手勢。",
+    description:
+      "第一季官方角色頁的完整單人立繪，收藏短髮、紫色裙裝與輕柔的手勢。",
     source: "https://ichigoproduction.com/Season1/chara/akane.html",
     width: 600,
     height: 1550,
@@ -22,7 +27,8 @@ window.AkaneGalleryItems = [
     season: 3,
     episode: 34,
     order: 4,
-    description: "黑川茜的單人近景：長髮與明亮的星形眼眸，記下個人間試鏡中的神情。",
+    description:
+      "黑川茜的單人近景：長髮與明亮的星形眼眸，記下個人間試鏡中的神情。",
     source: "https://ichigoproduction.com/Season3/story/34.html",
     width: 1200,
     height: 675,
@@ -34,7 +40,8 @@ window.AkaneGalleryItems = [
     season: 3,
     episode: null,
     order: 0,
-    description: "第三季官方單人立繪，完整欣賞黑色長裙、荷葉細節與漸層長髮；與首頁主視覺共用同一張官方素材。",
+    description:
+      "第三季官方單人立繪，完整欣賞黑色長裙、荷葉細節與漸層長髮；與首頁主視覺共用同一張官方素材。",
     source: "https://ichigoproduction.com/Season3/chara/akane.html",
     width: 500,
     height: 900,

@@ -154,7 +154,11 @@ button:focus-visible,
   height: 22%;
   border: 1px solid #96ddeb28;
   border-radius: 50%;
-  background: repeating-radial-gradient(ellipse, transparent 0 28px, #9ed9ee0d 29px 30px);
+  background: repeating-radial-gradient(
+    ellipse,
+    transparent 0 28px,
+    #9ed9ee0d 29px 30px
+  );
   box-shadow: 0 0 80px #5596d124;
   pointer-events: none;
 }
@@ -341,7 +345,7 @@ button:focus-visible,
 .fx-number {
   position: absolute;
   font:
-    900 clamp(1.3rem, 3vw, 2.6rem)/1 Arial,
+    900 clamp(1.3rem, 3vw, 2.6rem) / 1 Arial,
     "Astral Sans",
     sans-serif;
   color: #ffe6de;
@@ -412,7 +416,13 @@ button:focus-visible,
   width: min(460px, 72%);
   padding: 7px 15px;
   border-radius: 12px;
-  background: linear-gradient(90deg, transparent, #102039ed 20%, #102039ed 80%, transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #102039ed 20%,
+    #102039ed 80%,
+    transparent
+  );
   opacity: 0;
   transition:
     opacity 0.15s,
@@ -445,7 +455,13 @@ button:focus-visible,
 }
 
 .combat-caption.enemy {
-  background: linear-gradient(90deg, transparent, #321c32ed 20%, #321c32ed 80%, transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #321c32ed 20%,
+    #321c32ed 80%,
+    transparent
+  );
 }
 
 #ultimateCutin {
@@ -460,7 +476,13 @@ button:focus-visible,
   align-items: center;
   justify-content: center;
   gap: 26px;
-  background: linear-gradient(100deg, transparent, #181a3ff5 20%, #243b51f5 75%, transparent);
+  background: linear-gradient(
+    100deg,
+    transparent,
+    #181a3ff5 20%,
+    #243b51f5 75%,
+    transparent
+  );
   border-block: 1px solid #c7daba60;
   transform: translateX(-110%);
   opacity: 0;
@@ -476,7 +498,13 @@ button:focus-visible,
   width: 140px;
   object-fit: cover;
   object-position: 50% 20%;
-  mask-image: linear-gradient(90deg, transparent, #000 20%, #000 80%, transparent);
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 20%,
+    #000 80%,
+    transparent
+  );
 }
 
 #ultimateCutin small {
@@ -618,7 +646,9 @@ button:focus-visible,
     max-height: min(
       56dvh,
       410px,
-      calc(var(--app-height) - var(--battle-console) - var(--battle-header) - 60px)
+      calc(
+        var(--app-height) - var(--battle-console) - var(--battle-header) - 60px
+      )
     );
     border-radius: 14px;
     padding: 11px;

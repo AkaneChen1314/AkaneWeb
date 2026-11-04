@@ -1,3 +1,4 @@
+/* 閱讀提示：金融模擬的版面與手機尺寸；資料運算在 engine.js，畫面更新在 app.js。 */
 :root {
   color-scheme: dark;
   --bg: #0b1020;
@@ -271,7 +272,7 @@ h1 {
 .wealth-card > strong {
   display: block;
   font:
-    800 clamp(1.8rem, 2.8vw, 2.65rem)/1.2 ui-monospace,
+    800 clamp(1.8rem, 2.8vw, 2.65rem) / 1.2 ui-monospace,
     monospace;
   color: var(--yellow);
   margin: 13px 0 9px;

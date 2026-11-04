@@ -1,11 +1,15 @@
 /*
+ * 檔案導讀：閱讀順序：先看 games 設定，再看 showDetails／openGame／returnToLounge，最後看事件綁定。
+ * 遊戲卡片的名稱、介紹與操作說明集中在 games；主介面樣式主要看 ui-refresh.css 和 world.css。
+ */
+/*
  * 黑川茜遊戲館 1.2
  * 此檔負責：心情推薦、遊戲介紹、開啟遊戲、返回與暫停。
  * 遊戲本體在 games/，藍色版面在 styles.css。
  */
 "use strict";
 
-// 在這裡修改首頁遊戲說明，不必修改遊戲邏輯。
+// 這裡修改遊戲介紹視窗的內容；遊戲卡片上的文案位於 index.html。
 const games = {
   neonstrike: {
     name: "NEON STRIKE：霓光突擊",
@@ -92,6 +96,7 @@ let homeScroll = 0;
 let previousFocus = null;
 let selectedZone = "home";
 
+// 只顯示遊戲介紹；玩家按下介紹視窗中的開始按鈕後才會啟動遊戲。
 function showDetails(id, trigger) {
   const game = games[id];
   if (!game) return;
@@ -115,6 +120,7 @@ function showDetails(id, trigger) {
 }
 
 // iframe 保留在記憶體中，返回首頁不會重載遊戲。
+// 透過訊息通知 iframe 暫停或繼續，避免返回遊戲館後戰鬥與聲音仍在背景運作。
 function setPaused(frame, paused) {
   try {
     frame.contentWindow.postMessage(
@@ -129,6 +135,7 @@ function setPaused(frame, paused) {
   }
 }
 
+// 同一款遊戲的 iframe 會重用，讓玩家可以返回遊戲館後再接續原局。
 function openGame(id) {
   const game = games[id];
   if (!game) return;
@@ -140,10 +147,10 @@ function openGame(id) {
   document.body.classList.add("playing");
   document.dispatchEvent(new Event("lounge-visibility"));
   document.getElementById("player-title").textContent = game.name;
-  document.getElementById("player-version").textContent = game.version || "v1.2";
-  document.querySelector(".player-hint").textContent = id === "neonstrike"
-    ? "按暫停或 Esc 可返回遊戲館"
-    : "休息一下，隨時回來";
+  document.getElementById("player-version").textContent =
+    game.version || "v1.2";
+  document.querySelector(".player-hint").textContent =
+    id === "neonstrike" ? "按暫停或 Esc 可返回遊戲館" : "休息一下，隨時回來";
 
   frames.forEach((frame, key) => {
     frame.hidden = key !== id;
@@ -199,6 +206,7 @@ function returnToLounge() {
 }
 
 // hash 讓瀏覽器的「上一頁」也能回到遊戲館。
+// 由網址 # 後的片段選擇專區；保留段落 id 才能讓書籤和瀏覽器上一頁正常運作。
 function showZone() {
   const hash = location.hash.slice(1);
   const seasonMatch = /^season-([123])$/.exec(hash);
@@ -329,7 +337,8 @@ window.addEventListener("pageshow", syncGameVisibility);
 
 // 只推薦與標示卡片，不直接啟動遊戲；仍先顯示玩法介紹。
 const moodMessages = {
-  neonstrike: "推薦《NEON STRIKE》：用鍵盤滑鼠或手機觸控，挑選幹員與地圖，來場戰術突擊。",
+  neonstrike:
+    "推薦《NEON STRIKE》：用鍵盤滑鼠或手機觸控，挑選幹員與地圖，來場戰術突擊。",
   abyss: "推薦《深境冒險》：從第一層出發，把每次戰鬥都變成成長。",
   arcane: "推薦《星界牌陣》：觀察敵方意圖，組合屬於你的致勝戰術。",
   trader: "推薦《百億炒股人生》：試著做不同選擇，看看人生會走向哪裡。",
@@ -353,9 +362,13 @@ document.querySelectorAll("[data-mood]").forEach((button) => {
       recommendedCard.tabIndex = -1;
       recommendedCard.focus({ preventScroll: true });
       window.scrollTo({
-        top: Math.max(0, window.scrollY + recommendedCard.getBoundingClientRect().top - 24),
+        top: Math.max(
+          0,
+          window.scrollY + recommendedCard.getBoundingClientRect().top - 24,
+        ),
         behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-          ? "instant" : "smooth",
+          ? "instant"
+          : "smooth",
       });
     }
   });

@@ -1,4 +1,8 @@
 /*
+ * 檔案導讀：閱讀順序：圖片排序與季別資料 → 收藏儲存 → 圖庫渲染 → 放大視窗 → 按鈕事件。
+ * 新增圖片請改 gallery-data.js，這裡負責把資料變成可操作的介面。
+ */
+/*
  * 黑川茜專區：圖庫篩選、收藏、放大檢視與舞台光效開關。
  * 分季、集數與圖片內容在 gallery-data.js；圖片放在 assets/akane/。
  */
@@ -13,7 +17,8 @@
       a.order - b.order,
   );
   const seasonNames = { 1: "第一季", 2: "第二季", 3: "第三季" };
-  document.getElementById("gallery-total-count").textContent = galleryItems.length;
+  document.getElementById("gallery-total-count").textContent =
+    galleryItems.length;
   document.querySelectorAll("[data-season-count]").forEach((count) => {
     count.textContent = `${galleryItems.filter((item) => item.season === Number(count.dataset.seasonCount)).length} 張`;
   });

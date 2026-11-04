@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- 遊戲版面入口：此檔主要是畫面結構與文字，規則請閱讀同目錄的 JavaScript，配色則閱讀 CSS。 -->
 <html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
@@ -6,14 +7,32 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
     />
-    <meta name="theme-color" content="#080b22" />
+    <meta
+      name="theme-color"
+      content="#080b22"
+    />
     <title>蒼穹決戰：星界牌陣 1.2</title>
-    <link rel="stylesheet" href="style.css?v=1.2-mobile-r7" />
-    <link rel="stylesheet" href="responsive.css?v=1.2-mobile-r7" />
-    <link rel="stylesheet" href="spectacle.css?v=1.2-mobile-r7" />
-    <link rel="stylesheet" href="../../shared/portal.css?v=1.2" />
-    <script src="../../shared/portal.js?v=1.2"></script>
-    <link rel="stylesheet" href="../../shared/fonts.css?v=1.2" />
+    <link
+      rel="stylesheet"
+      href="style.css?v=20261104-blueworld-r15-source"
+    />
+    <link
+      rel="stylesheet"
+      href="responsive.css?v=1.2-mobile-r7"
+    />
+    <link
+      rel="stylesheet"
+      href="spectacle.css?v=20261104-blueworld-r15-source"
+    />
+    <link
+      rel="stylesheet"
+      href="../../shared/portal.css?v=1.2"
+    />
+    <script src="../../shared/portal.js?v=20261104-blueworld-r15-source"></script>
+    <link
+      rel="stylesheet"
+      href="../../shared/fonts.css?v=1.2"
+    />
   </head>
   <body>
     <div class="ambient">
@@ -22,7 +41,10 @@
       <i> </i>
     </div>
     <main id="app">
-      <section id="startScreen" class="screen active home-screen">
+      <section
+        id="startScreen"
+        class="screen active home-screen"
+      >
         <div class="home-copy">
           <span class="eyebrow"
             >XIANXIA × ARCANE CARD BATTLE · VERSION 1.2</span
@@ -35,10 +57,17 @@
             踏入劍與魔法交織的修仙界。選擇六位契約者、配置支援術式，以不同手牌、行動力與星能規則挑戰六大反派。
           </p>
           <div class="home-actions">
-            <button class="btn primary huge" id="startBtn">
+            <button
+              class="btn primary huge"
+              id="startBtn"
+            >
               進入牌陣 <span>→</span>
             </button>
-            <button class="btn ghost" id="rulesBtn">玩法說明</button>
+            <button
+              class="btn ghost"
+              id="rulesBtn"
+              >玩法說明</button
+            >
           </div>
           <div class="home-guide glass">
             <span>
@@ -72,16 +101,25 @@
         <div class="home-art">
           <div class="moon"></div>
           <div class="poster poster-back">
-            <img src="assets/lunar.webp" alt="月璃" />
+            <img
+              src="assets/lunar.webp"
+              alt="月璃"
+            />
           </div>
           <div class="poster poster-front">
-            <img src="assets/azure.webp" alt="蒼凜" />
+            <img
+              src="assets/azure.webp"
+              alt="蒼凜"
+            />
             <b>AZURE<br />OBSERVER</b>
           </div>
           <div class="floating-card">✦<small>STARFALL</small></div>
         </div>
       </section>
-      <section id="selectScreen" class="screen selection-screen">
+      <section
+        id="selectScreen"
+        class="screen selection-screen"
+      >
         <header class="topbar">
           <div>
             <span class="eyebrow">CONTRACT 01</span>
@@ -90,7 +128,11 @@
               每名角色的生命、攻防、初始星能、行動點、抽牌數、出牌上限與雙天賦皆不相同。
             </p>
           </div>
-          <button class="btn ghost" data-back="startScreen">返回首頁</button>
+          <button
+            class="btn ghost"
+            data-back="startScreen"
+            >返回首頁</button
+          >
         </header>
         <details class="stat-help">
           <summary>選角數值怎麼看？</summary>
@@ -119,18 +161,28 @@
             </span>
           </div>
         </details>
-        <div id="fighterGrid" class="fighter-grid"></div>
+        <div
+          id="fighterGrid"
+          class="fighter-grid"
+        ></div>
         <div class="dock glass">
           <div>
             <small>目前選擇</small>
             <strong id="selectedFighterName">尚未選擇</strong>
           </div>
-          <button class="btn primary" id="toSupportBtn" disabled>
+          <button
+            class="btn primary"
+            id="toSupportBtn"
+            disabled
+          >
             構築支援術式 →
           </button>
         </div>
       </section>
-      <section id="supportScreen" class="screen selection-screen">
+      <section
+        id="supportScreen"
+        class="screen selection-screen"
+      >
         <header class="topbar">
           <div>
             <span class="eyebrow">CONTRACT 02</span>
@@ -139,10 +191,17 @@
               本頁不會預先替你選擇。請親自選滿角色容量；每張牌旁會標示最推薦的職業。
             </p>
           </div>
-          <button class="btn ghost" data-back="selectScreen">返回選角</button>
+          <button
+            class="btn ghost"
+            data-back="selectScreen"
+            >返回選角</button
+          >
         </header>
         <div class="support-toolbar">
-          <div class="filter-tabs" aria-label="技能篩選">
+          <div
+            class="filter-tabs"
+            aria-label="技能篩選"
+          >
             <button
               class="selected"
               data-support-filter="all"
@@ -150,14 +209,24 @@
             >
               全部技能
             </button>
-            <button data-support-filter="recommended" aria-pressed="false">
+            <button
+              data-support-filter="recommended"
+              aria-pressed="false"
+            >
               ★ 職業推薦
             </button>
-            <button data-support-filter="selected" aria-pressed="false">
+            <button
+              data-support-filter="selected"
+              aria-pressed="false"
+            >
               已裝備
             </button>
           </div>
-          <button class="btn ghost compact" id="clearSupportsBtn">清空</button>
+          <button
+            class="btn ghost compact"
+            id="clearSupportsBtn"
+            >清空</button
+          >
         </div>
         <div
           id="supportGrid"
@@ -170,14 +239,21 @@
               <small>術式容量</small>
               <b id="supportSlotText">已選 0 / 3</b>
             </div>
-            <div id="selectedSkillChips" class="selected-skill-chips"></div>
+            <div
+              id="selectedSkillChips"
+              class="selected-skill-chips"
+            ></div>
           </div>
           <div class="dock-actions">
             <div>
               <small>選滿容量即可繼續 · 點已選技能可卸下</small>
               <strong id="selectedSupportSummary">尚未選擇</strong>
             </div>
-            <button class="btn primary" id="toChallengeBtn" disabled>
+            <button
+              class="btn primary"
+              id="toChallengeBtn"
+              disabled
+            >
               下一步 →
             </button>
           </div>
@@ -195,7 +271,10 @@
               最後再選擇戰鬥難度與反派。反派擁有各自的異常能力、招式循環和專屬場景。
             </p>
           </div>
-          <button class="btn ghost" data-back="supportScreen">
+          <button
+            class="btn ghost"
+            data-back="supportScreen"
+          >
             返回支援牌
           </button>
         </header>
@@ -211,7 +290,11 @@
                 <b>單場討伐</b>
                 <small>自由挑選反派，一場決勝。</small>
               </button>
-              <button class="mode-card" data-mode="trial" aria-pressed="false">
+              <button
+                class="mode-card"
+                data-mode="trial"
+                aria-pressed="false"
+              >
                 <b>三連戰試煉 <em>NEW</em> </b>
                 <small>生命延續 · 隨機場地 · 戰後三選一獎勵</small>
               </button>
@@ -222,18 +305,30 @@
               <span class="eyebrow">BATTLE LEVEL</span>
               <h3>選擇戰鬥難度</h3>
             </div>
-            <div id="difficultyGrid" class="difficulty-grid">
-              <button class="difficulty-card" data-difficulty="easy">
+            <div
+              id="difficultyGrid"
+              class="difficulty-grid"
+            >
+              <button
+                class="difficulty-card"
+                data-difficulty="easy"
+              >
                 <span>悠閒</span>
                 <b>簡單</b>
                 <small>敵人生命與傷害降低，適合熟悉牌組。</small>
               </button>
-              <button class="difficulty-card selected" data-difficulty="normal">
+              <button
+                class="difficulty-card selected"
+                data-difficulty="normal"
+              >
                 <span>標準</span>
                 <b>普通</b>
                 <small>推薦難度，攻防與資源壓力較均衡。</small>
               </button>
-              <button class="difficulty-card" data-difficulty="hard">
+              <button
+                class="difficulty-card"
+                data-difficulty="hard"
+              >
                 <span>深淵</span>
                 <b>困難</b>
                 <small>敵人更強且生命更多，需要精準出牌。</small>
@@ -246,7 +341,10 @@
               <h3>選擇挑戰反派</h3>
               <p>六名反派擁有不同牌路、異常能力與戰鬥背景。</p>
             </div>
-            <div id="villainGrid" class="villain-grid"></div>
+            <div
+              id="villainGrid"
+              class="villain-grid"
+            ></div>
           </div>
         </div>
         <div class="dock glass">
@@ -255,14 +353,25 @@
             <strong id="selectedBossName">尚未選擇反派</strong>
           </div>
           <div>
-            <button class="btn ghost" id="randomBossBtn">隨機反派</button>
-            <button class="btn primary" id="battleBtn" disabled>
+            <button
+              class="btn ghost"
+              id="randomBossBtn"
+              >隨機反派</button
+            >
+            <button
+              class="btn primary"
+              id="battleBtn"
+              disabled
+            >
               進入牌陣 →
             </button>
           </div>
         </div>
       </section>
-      <section id="battleScreen" class="screen battle-screen">
+      <section
+        id="battleScreen"
+        class="screen battle-screen"
+      >
         <div class="battle-bg"></div>
         <div class="battle-vignette"></div>
         <header class="battle-top glass">
@@ -270,7 +379,11 @@
             <span class="eyebrow">ASTRAL RIFT</span>
             <div class="battle-location">
               <strong id="battleTitle">第七觀測界域</strong>
-              <span id="difficultyChip" class="difficulty-chip">普通</span>
+              <span
+                id="difficultyChip"
+                class="difficulty-chip"
+                >普通</span
+              >
             </div>
           </div>
           <div class="round">
@@ -299,7 +412,10 @@
         <div class="battle-field">
           <article class="unit player-unit">
             <div class="unit-art">
-              <img id="playerPortrait" alt="玩家角色" />
+              <img
+                id="playerPortrait"
+                alt="玩家角色"
+              />
               <div class="aura"></div>
               <div class="damage-pop"></div>
             </div>
@@ -309,7 +425,11 @@
                   <small id="playerTitle"> </small>
                   <h3 id="playerName"></h3>
                 </div>
-                <span id="playerStatus" class="status">正常</span>
+                <span
+                  id="playerStatus"
+                  class="status"
+                  >正常</span
+                >
               </div>
               <div class="vital-stack">
                 <div class="vital hp-vital">
@@ -339,7 +459,10 @@
               </div>
               <div class="effects">
                 <small>目前狀態</small>
-                <div class="buff-row" id="playerBuffs"></div>
+                <div
+                  class="buff-row"
+                  id="playerBuffs"
+                ></div>
               </div>
             </div>
           </article>
@@ -371,7 +494,11 @@
           </div>
           <article class="unit enemy-unit">
             <div class="unit-art">
-              <img id="enemyPortrait" src="assets/enemy.webp" alt="獄骸" />
+              <img
+                id="enemyPortrait"
+                src="assets/enemy.webp"
+                alt="獄骸"
+              />
               <div class="aura"></div>
               <div class="damage-pop"></div>
             </div>
@@ -381,7 +508,11 @@
                   <small id="enemyTitle">天災級異相</small>
                   <h3 id="enemyName">獄骸</h3>
                 </div>
-                <span id="enemyStatus" class="status danger">侵蝕</span>
+                <span
+                  id="enemyStatus"
+                  class="status danger"
+                  >侵蝕</span
+                >
               </div>
               <div class="vital-stack single">
                 <div class="vital hp-vital">
@@ -399,7 +530,10 @@
               </div>
               <div class="effects">
                 <small>目前狀態</small>
-                <div class="buff-row" id="enemyBuffs"></div>
+                <div
+                  class="buff-row"
+                  id="enemyBuffs"
+                ></div>
               </div>
             </div>
           </article>
@@ -410,35 +544,80 @@
               <b id="apValue">3</b>
               <span>行動點</span>
             </div>
-            <div class="turn-rule" id="turnRule">本回合 0 / 4 張</div>
-            <div id="supportMini" class="support-mini"></div>
-            <button class="btn end-turn" id="endTurnBtn">結束回合</button>
+            <div
+              class="turn-rule"
+              id="turnRule"
+              >本回合 0 / 4 張</div
+            >
+            <div
+              id="supportMini"
+              class="support-mini"
+            ></div>
+            <button
+              class="btn end-turn"
+              id="endTurnBtn"
+              >結束回合</button
+            >
           </div>
-          <div id="hand" class="hand"></div>
+          <div
+            id="hand"
+            class="hand"
+          ></div>
         </div>
-        <div class="combat-caption" id="combatCaption" aria-live="polite">
+        <div
+          class="combat-caption"
+          id="combatCaption"
+          aria-live="polite"
+        >
           <small id="combatKind"> </small>
           <strong id="combatName"> </strong>
           <span id="combatOutcome"> </span>
         </div>
-        <canvas id="battleFX" aria-hidden="true"> </canvas>
-        <div id="battleFXLabels" aria-hidden="true"></div>
-        <div id="ultimateCutin" aria-hidden="true">
-          <img id="cutinPortrait" alt="" />
+        <canvas
+          id="battleFX"
+          aria-hidden="true"
+        >
+        </canvas>
+        <div
+          id="battleFXLabels"
+          aria-hidden="true"
+        ></div>
+        <div
+          id="ultimateCutin"
+          aria-hidden="true"
+        >
+          <img
+            id="cutinPortrait"
+            alt=""
+          />
           <div>
             <small>星界終式</small>
             <strong id="cutinName"> </strong>
           </div>
         </div>
-        <aside class="battle-log glass" id="logPanel" aria-label="戰鬥紀錄">
+        <aside
+          class="battle-log glass"
+          id="logPanel"
+          aria-label="戰鬥紀錄"
+        >
           <div class="log-head">
             <strong>戰鬥紀錄 <small>最新行動在上方</small> </strong>
-            <button id="closeLog" aria-label="關閉戰鬥紀錄">×</button>
+            <button
+              id="closeLog"
+              aria-label="關閉戰鬥紀錄"
+              >×</button
+            >
           </div>
-          <div id="battleLog" tabindex="0"></div>
+          <div
+            id="battleLog"
+            tabindex="0"
+          ></div>
         </aside>
       </section>
-      <section id="rewardScreen" class="screen selection-screen reward-screen">
+      <section
+        id="rewardScreen"
+        class="screen selection-screen reward-screen"
+      >
         <header class="topbar">
           <div>
             <span class="eyebrow">TRIAL REWARD</span>
@@ -447,39 +626,78 @@
           </div>
         </header>
         <div class="reward-content scroll-region">
-          <div id="trialProgress" class="trial-progress glass"></div>
-          <div id="rewardGrid" class="reward-grid"></div>
+          <div
+            id="trialProgress"
+            class="trial-progress glass"
+          ></div>
+          <div
+            id="rewardGrid"
+            class="reward-grid"
+          ></div>
         </div>
         <div class="dock glass">
           <div>
             <small>戰後獎勵</small>
             <strong id="rewardSummary">請選擇一項獎勵</strong>
           </div>
-          <button class="btn primary" id="nextTrialBtn" disabled>
+          <button
+            class="btn primary"
+            id="nextTrialBtn"
+            disabled
+          >
             繼續試煉 →
           </button>
         </div>
       </section>
-      <section id="resultScreen" class="screen result-screen">
+      <section
+        id="resultScreen"
+        class="screen result-screen"
+      >
         <div class="result-art">
-          <img id="resultPortrait" alt="結果角色" />
+          <img
+            id="resultPortrait"
+            alt="結果角色"
+          />
         </div>
         <div class="result-card glass">
           <span class="eyebrow">BATTLE RESULT</span>
-          <div id="resultRank" class="rank">S</div>
+          <div
+            id="resultRank"
+            class="rank"
+            >S</div
+          >
           <h1 id="resultTitle">界域淨化完成</h1>
           <p id="resultText"></p>
-          <div id="resultStats" class="result-stats"></div>
+          <div
+            id="resultStats"
+            class="result-stats"
+          ></div>
           <div class="home-actions">
-            <button class="btn primary" id="againBtn">再次挑戰</button>
-            <button class="btn ghost" id="homeBtn">返回首頁</button>
+            <button
+              class="btn primary"
+              id="againBtn"
+              >再次挑戰</button
+            >
+            <button
+              class="btn ghost"
+              id="homeBtn"
+              >返回首頁</button
+            >
           </div>
         </div>
       </section>
     </main>
-    <div class="modal" id="rulesModal" aria-hidden="true">
+    <div
+      class="modal"
+      id="rulesModal"
+      aria-hidden="true"
+    >
       <div class="modal-card rules-book glass">
-        <button class="modal-x" id="closeRules">×</button>
+        <button
+          class="modal-x"
+          id="closeRules"
+          >×</button
+        >
         <span class="eyebrow">COMPLETE GUIDE</span>
         <h2>星界牌陣完整玩法</h2>
         <div class="trial-guide">
@@ -570,24 +788,41 @@
         </div>
       </div>
     </div>
-    <div class="modal" id="cardDetailModal" aria-hidden="true">
+    <div
+      class="modal"
+      id="cardDetailModal"
+      aria-hidden="true"
+    >
       <div
         class="modal-card glass card-detail"
         role="dialog"
         aria-modal="true"
         aria-labelledby="cardDetailName"
       >
-        <button class="modal-x" id="closeCardDetail" aria-label="關閉卡牌說明">
+        <button
+          class="modal-x"
+          id="closeCardDetail"
+          aria-label="關閉卡牌說明"
+        >
           ×
         </button>
         <span class="eyebrow">CARD GUIDE</span>
         <h2 id="cardDetailName"></h2>
         <div id="cardDetailBody"></div>
-        <button class="btn primary" id="playDetailCard">使用這張牌</button>
+        <button
+          class="btn primary"
+          id="playDetailCard"
+          >使用這張牌</button
+        >
       </div>
     </div>
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="spectacle.js?v=1.2-mobile-r7"></script>
-    <script src="game.js?v=1.2-mobile-r7"></script>
+    <div
+      class="toast"
+      id="toast"
+      role="status"
+      aria-live="polite"
+    ></div>
+    <script src="spectacle.js?v=20261104-blueworld-r15-source"></script>
+    <script src="game.js?v=20261104-blueworld-r15-source"></script>
   </body>
 </html>
