@@ -157,6 +157,8 @@ export function createDistrictBuilder(ctx) {
           segments,
           1,
           options.open === true,
+          options.thetaStart ?? 0,
+          options.thetaLength ?? Math.PI * 2,
         ),
         material,
         matrix,
@@ -219,6 +221,14 @@ export function createDistrictBuilder(ctx) {
 
   function collider(x, y, z, sx, sy, sz, rot = 0) {
     ctx.registerCollisionBox(x, y, z, sx, sy, sz, rot);
+  }
+  /**
+   * Climbable ladder. (climbX, climbZ) is where the climber's body hangs,
+   * (nx, nz) points away from the structure, and (exitX, exitZ) is where the
+   * player steps off at height `top`.
+   */
+  function ladder(spec) {
+    ctx.ladders?.push({ bottom: 0, ...spec });
   }
   function light(x, y, z, color, intensity, distance) {
     lights.push({ x, y, z, color, intensity, distance });
@@ -374,6 +384,7 @@ export function createDistrictBuilder(ctx) {
     addInstance,
     frame,
     collider,
+    ladder,
     light,
     pool,
     paint,
@@ -788,8 +799,15 @@ export function watchtower(kit, b, x, z, rot = 0, accent = 0xff4b5c) {
     for (const [lx, lz, sx, sz] of [[0, -1.3, 2.6, 0.08], [0, 1.3, 2.6, 0.08], [-1.3, 0, 0.08, 2.6], [1.3, 0, 0.08, 2.6]])
       b.box(f.x(lx, lz), y, f.z(lx, lz), sx, 0.08, sz, steel, { rot, collide: false, solid: true });
   b.box(f.x(0, 0), top + 0.1, f.z(0, 0), 3.4, 0.2, 3.4, deck, { rot });
-  for (const [lx, lz, sx, sz] of [[0, -1.65, 3.4, 0.08], [0, 1.65, 3.4, 0.08], [-1.65, 0, 0.08, 3.4], [1.65, 0, 0.08, 3.4]])
-    b.box(f.x(lx, lz), top + 0.75, f.z(lx, lz), sx, 1.1, sz, steel, { rot, collide: false, solid: true });
+  // Solid railings keep players on the deck; the ladder side has a gap.
+  for (const [lx, lz, sx, sz] of [
+    [0, -1.65, 3.4, 0.08],
+    [-1.05, 1.65, 1.3, 0.08],
+    [1.05, 1.65, 1.3, 0.08],
+    [-1.65, 0, 0.08, 3.4],
+    [1.65, 0, 0.08, 3.4],
+  ])
+    b.box(f.x(lx, lz), top + 0.75, f.z(lx, lz), sx, 1.1, sz, steel, { rot });
   for (const [lx, lz] of [[-1.6, -1.6], [1.6, -1.6], [-1.6, 1.6], [1.6, 1.6]])
     b.box(f.x(lx, lz), top + 1.3, f.z(lx, lz), 0.1, 2.2, 0.1, steel, { rot, collide: false, solid: true });
   b.box(f.x(0, 0), top + 2.45, f.z(0, 0), 3.8, 0.18, 3.8, roof, { rot, collide: false, solid: true });
@@ -799,6 +817,18 @@ export function watchtower(kit, b, x, z, rot = 0, accent = 0xff4b5c) {
     b.box(f.x(s, 1.42), top / 2, f.z(s, 1.42), 0.05, top, 0.05, steel, { rot, collide: false, solid: true });
   for (let y = 0.35; y < top; y += 0.38)
     b.box(f.x(0, 1.42), y, f.z(0, 1.42), 0.5, 0.04, 0.04, steel, { rot, collide: false, solid: true, shadow: false });
+  // Hand rails above the deck so the ladder visibly continues to the top.
+  for (const s of [-0.25, 0.25])
+    b.box(f.x(s, 1.42), top + 0.6, f.z(s, 1.42), 0.05, 0.8, 0.05, steel, { rot, collide: false, solid: true, shadow: false });
+  kit.ladder({
+    climbX: f.x(0, 1.86),
+    climbZ: f.z(0, 1.86),
+    nx: Math.sin(rot),
+    nz: Math.cos(rot),
+    top: top + 0.2,
+    exitX: f.x(0, 0.8),
+    exitZ: f.z(0, 0.8),
+  });
   kit.light(f.x(0, 0), top + 2.1, f.z(0, 0), 0xffe0a8, 4, 14);
   kit.pool(x, z, 5, 0xffd8a0, 0.8);
 }
@@ -849,12 +879,47 @@ export function storageTank(kit, b, x, z, radius, height, color = 0x7d8a8f) {
   b.cylinder(x, height / 2, z, radius, height, body, { segments: 28 });
   for (let y = 1.2; y < height; y += 2.2)
     b.cylinder(x, y, z, radius + 0.04, 0.14, band, { segments: 28, collide: false, solid: true, shadow: false });
-  b.cylinder(x, height + 0.35, z, 0.3, 0.7, band, { segments: 18, top: radius * 0.98, collide: false, solid: true });
+  b.cylinder(x, height + 0.04, z, radius + 0.02, 0.08, band, { segments: 28, collide: false, solid: true, shadow: false });
+  b.box(x - radius * 0.35, height + 0.35, z, 0.6, 0.6, 0.6, band, { collide: false, solid: true });
   for (let y = 0.5; y < height; y += 0.42)
     b.box(x + radius + 0.12, y, z, 0.05, 0.04, 0.55, rail, { collide: false, solid: true, shadow: false });
   for (const s of [-0.27, 0.27])
     b.box(x + radius + 0.12, height / 2, z + s, 0.05, height, 0.05, rail, { collide: false, solid: true, shadow: false });
-  b.cylinder(x, height + 0.6, z, radius + 0.08, 0.6, rail, { segments: 28, open: true, collide: false, solid: false, shadow: false });
+  // Railing ring around the roof, open where the ladder arrives (+x side).
+  b.cylinder(x, height + 0.6, z, radius + 0.08, 0.6, rail, {
+    segments: 28,
+    open: true,
+    collide: false,
+    solid: false,
+    shadow: false,
+    thetaStart: Math.PI / 2 + 0.3,
+    thetaLength: Math.PI * 2 - 0.6,
+  });
+  // Matching solid railing segments (overhead, so the walking grid is unaffected).
+  const ring = radius + 0.06,
+    segments = 18;
+  for (let i = 0; i < segments; i++) {
+    const a = ((i + 0.5) / segments) * Math.PI * 2;
+    if (Math.abs(Math.atan2(Math.sin(a), Math.cos(a))) < 0.3) continue;
+    kit.collider(
+      x + Math.cos(a) * ring,
+      height + 0.5,
+      z + Math.sin(a) * ring,
+      0.08,
+      1,
+      (Math.PI * 2 * ring) / segments + 0.05,
+      -a,
+    );
+  }
+  kit.ladder({
+    climbX: x + radius + 0.56,
+    climbZ: z,
+    nx: 1,
+    nz: 0,
+    top: height,
+    exitX: x + radius - 0.8,
+    exitZ: z,
+  });
 }
 
 /** Diesel generator skid. */

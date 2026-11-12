@@ -551,6 +551,10 @@ let navGrid = null,
 const enemyFlashLights = [];
 const worldMeshes = [];
 const collisionBoxes = [];
+// 可攀爬的梯子（由 district-maps.js 的瞭望塔與儲槽登記）。
+const ladders = [];
+const CLIMB_SPEED = 2.4;
+let climbing = null;
 const tracers = [];
 const particles = [];
 const explosions = [];
@@ -1005,6 +1009,8 @@ function buildSelectedArena(index) {
   for (const material of materials) material.dispose();
   for (const texture of textures) texture.dispose();
   collisionBoxes.length = 0;
+  ladders.length = 0;
+  climbing = null;
   worldMeshes.length = 0;
   pickups.length = 0;
   explosiveBarrels.length = 0;
@@ -1435,6 +1441,7 @@ function districtContext() {
     scene,
     worldMeshes,
     collisionBoxes,
+    ladders,
     registerCollisionBox,
     roundCollider,
     createContainer,
@@ -4956,6 +4963,7 @@ function startGame() {
   headshotKills = 0;
   bestStreak = 0;
   damageTaken = 0;
+  climbing = null;
   lastZoneName = "";
   threatMode = "";
   if (enemies.length === 0) spawnMissionWave(0);
@@ -5470,6 +5478,16 @@ function updatePlayer(dt, time) {
   const speed = (sprinting ? operator.sprintSpeed : operator.moveSpeed) * boost;
   const sin = Math.sin(yaw.rotation.y),
     cos = Math.cos(yaw.rotation.y);
+  // On a ladder the climb replaces walking and gravity for this step.
+  if (!updateLadder(dt, mx, mz, time)) movePlayerBody(dt, mx, mz, sin, cos, speed);
+
+  const bob = grounded
+    ? Math.sin(time * 0.012 * (sprinting ? 1.6 : 1)) * playerMoving
+    : 0;
+  finishPlayerUpdate(dt, time, bob, sprinting);
+}
+
+function movePlayerBody(dt, mx, mz, sin, cos, speed) {
   const dx = (mx * cos + mz * sin) * speed * dt;
   const dz = (-mx * sin + mz * cos) * speed * dt;
   const previousX = yaw.position.x,
@@ -5552,10 +5570,101 @@ function updatePlayer(dt, time) {
     verticalVelocity = 0;
     grounded = true;
   }
+}
 
-  const bob = grounded
-    ? Math.sin(time * 0.012 * (sprinting ? 1.6 : 1)) * playerMoving
-    : 0;
+// 梯子：走向梯子（W）自動抓住；W 往上、S 往下、空白鍵放手；到頂自動踏上平台，
+// 在平台上往梯子方向倒退或走出缺口則抓住梯子往下爬。
+function updateLadder(dt, mx, mz, time) {
+  if (gameState !== "playing") return false;
+  const sin = Math.sin(yaw.rotation.y),
+    cos = Math.cos(yaw.rotation.y),
+    wx = mx * cos + mz * sin,
+    wz = -mx * sin + mz * cos,
+    feet = yaw.position.y - eyeHeight;
+  if (!climbing) {
+    if (!ladders.length || Math.hypot(wx, wz) < 0.3) return false;
+    for (const ladder of ladders) {
+      const toward = -(wx * ladder.nx + wz * ladder.nz);
+      if (
+        feet >= ladder.bottom - 0.3 &&
+        feet < ladder.top - 0.6 &&
+        toward > 0.5 &&
+        Math.hypot(
+          yaw.position.x - ladder.climbX,
+          yaw.position.z - ladder.climbZ,
+        ) < 0.8
+      ) {
+        climbing = ladder;
+        break;
+      }
+      if (
+        Math.abs(feet - ladder.top) < 0.3 &&
+        -toward > 0.5 &&
+        Math.hypot(yaw.position.x - ladder.exitX, yaw.position.z - ladder.exitZ) <
+          1
+      ) {
+        climbing = ladder;
+        yaw.position.y = ladder.top - 0.35 + eyeHeight;
+        break;
+      }
+    }
+    if (!climbing) return false;
+    verticalVelocity = 0;
+  }
+  const ladder = climbing;
+  grounded = false;
+  playerMoving = 0;
+  verticalVelocity = 0;
+  const hold = Math.min(1, dt * 14);
+  yaw.position.x += (ladder.climbX - yaw.position.x) * hold;
+  yaw.position.z += (ladder.climbZ - yaw.position.z) * hold;
+  if (jumpBuffer > 0) {
+    // Let go and drop away from the structure.
+    jumpBuffer = 0;
+    climbing = null;
+    const x = yaw.position.x + ladder.nx * 0.4,
+      z = yaw.position.z + ladder.nz * 0.4;
+    if (!isPositionBlocked(x, z)) {
+      yaw.position.x = x;
+      yaw.position.z = z;
+    }
+    verticalVelocity = 2.2;
+    return true;
+  }
+  const direction = mz < -0.2 ? 1 : mz > 0.2 ? -1 : 0,
+    next = feet + direction * CLIMB_SPEED * dt;
+  if (direction > 0 && next >= ladder.top - 0.05) {
+    // Step off onto the platform when there is room to stand.
+    const x = yaw.position.x,
+      y = yaw.position.y,
+      z = yaw.position.z;
+    yaw.position.set(ladder.exitX, ladder.top + eyeHeight, ladder.exitZ);
+    if (isPositionBlocked(ladder.exitX, ladder.exitZ)) {
+      yaw.position.set(x, y, z);
+      return true;
+    }
+    climbing = null;
+    grounded = true;
+    return true;
+  }
+  if (direction < 0 && next <= ladder.bottom) {
+    yaw.position.y = ladder.bottom + eyeHeight;
+    climbing = null;
+    grounded = true;
+    return true;
+  }
+  yaw.position.y =
+    Math.max(ladder.bottom, Math.min(ladder.top - 0.05, next)) + eyeHeight;
+  // Strafing off near the foot of the ladder lets go.
+  if (Math.abs(mx) > 0.6 && next - ladder.bottom < 0.35) climbing = null;
+  if (direction && time - lastFootstep > 340) {
+    playSample(Math.random() > 0.5 ? "step0" : "step1", 0.05, 1.3);
+    lastFootstep = time;
+  }
+  return true;
+}
+
+function finishPlayerUpdate(dt, time, bob, sprinting) {
   weaponKick *= Math.pow(0.00005, dt);
   let reloadPose = 0;
   if (reloading) {
