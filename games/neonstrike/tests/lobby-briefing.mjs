@@ -102,7 +102,7 @@ const context = vm.createContext({
 });
 vm.runInContext(source, context);
 assert.equal(get("brandMapName").textContent, "EMBER FOUNDRY");
-assert.equal(get("briefSectorCount").textContent, "05");
+assert.equal(get("briefSectorCount").textContent, "11");
 assert.equal(mapCards[1].checked, true, "cards reflect the saved map");
 assert.equal(pages[0].hidden, false);
 assert.equal(pages[1].hidden, true);
@@ -126,7 +126,7 @@ assert.equal(drawer.scrolled, true, "shortcut reveals the configuration");
 get("mapSelect").value = "0";
 get("mapSelect").dispatch("change");
 assert.equal(get("brandMapName").textContent, "RUST HARBOR");
-assert.equal(get("briefSectorCount").textContent, "09");
+assert.equal(get("briefSectorCount").textContent, "15");
 assert.equal(
   mapCards[0].checked,
   true,

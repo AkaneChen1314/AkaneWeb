@@ -345,6 +345,10 @@
 .neon-touch .combat-banner {
   top: 42%;
 }
+/* Sector toast sits above the threat banner, clear of the kill notice. */
+.neon-touch .zone-toast {
+  top: 31%;
+}
 .neon-touch .reload-prompt {
   top: 56%;
   bottom: auto;

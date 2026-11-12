@@ -50,8 +50,8 @@
       card.checked = card.value === map.value;
     });
     document.getElementById("briefSectorCount").textContent = foundry
-      ? "05"
-      : "09";
+      ? "11"
+      : "15";
     document.getElementById("mapFeature").textContent = foundry
       ? "熔火工廠"
       : "大型港區";

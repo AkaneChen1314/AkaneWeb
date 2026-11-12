@@ -17,6 +17,19 @@ import {
   sweepSphereCollider,
 } from "./spatial-collision.js";
 import { createTouchControls } from "./touch-controls.js";
+import {
+  createNavGrid,
+  rasterizeColliders,
+  labelComponents,
+  componentAt,
+  nearestWalkable,
+  isWalkable,
+  lineClear,
+  findPath,
+  samplePatrolPoints,
+  randomPointNear,
+} from "./navigation.js";
+import { createHarborDistricts, createFoundryDistricts } from "./district-maps.js";
 
 const $ = (selector) => document.querySelector(selector);
 const ui = {
@@ -113,6 +126,12 @@ const ui = {
   statSpeedValue: $("#statSpeedValue"),
   statArmorValue: $("#statArmorValue"),
   statPowerValue: $("#statPowerValue"),
+  sensitivity: $("#sensitivityControl"),
+  sensitivityValue: $("#sensitivityValue"),
+  threatLabel: $("#threatLabel"),
+  zoneToast: $("#zoneToast"),
+  resultGrade: $("#resultGrade"),
+  resultTip: $("#resultTip"),
 };
 
 const weaponSkins = [
@@ -421,6 +440,8 @@ const touchCapable =
   globalThis.matchMedia?.("(any-pointer: coarse)").matches === true;
 let qualityIndex = Math.min(2, savedIndex("neonQuality", touchCapable ? 2 : 1));
 let masterVolume = Math.min(100, savedIndex("neonVolume", 72)) / 100;
+let lookSensitivity =
+  Math.max(40, Math.min(200, savedIndex("neonSensitivity", 100))) / 100;
 let scene,
   camera,
   renderer,
@@ -454,6 +475,12 @@ let lastEnemySoundAt = -Infinity,
 let shots = 0;
 let hits = 0;
 let kills = 0;
+// 結算畫面使用的戰績，以及 HUD 區域／威脅提示的上一個狀態。
+let headshotKills = 0,
+  bestStreak = 0,
+  damageTaken = 0,
+  lastZoneName = "",
+  threatMode = "";
 let health = 100;
 let armor = 50;
 let ammo = 30;
@@ -511,6 +538,16 @@ const operatorAbilities = [
   { name: "重甲防線", description: "護甲 +30 / 8 秒減傷" },
 ];
 const enemies = [];
+// 敵人導航：每張地圖建立一次格子；尋路次數依每幀預算分散，避免同時運算造成卡頓。
+const NAV_BODY_MARGIN = 0.16;
+const NAV_PATHS_PER_UPDATE = 3;
+let navGrid = null,
+  navPatrolPoints = [],
+  navPathBudget = 0,
+  navClock = 0,
+  lastEnemyContactAt = 0,
+  huntTimer = 0,
+  lastNoiseAt = -Infinity;
 const enemyFlashLights = [];
 const worldMeshes = [];
 const collisionBoxes = [];
@@ -979,11 +1016,49 @@ function buildSelectedArena(index) {
   createPickups();
   arenaObjects = scene.children.filter((child) => !existing.has(child));
   builtMap = index;
+  buildNavigation();
   if (yaw) {
     yaw.position.set(0, eyeHeight, 65);
     verticalVelocity = 0;
     grounded = true;
   }
+}
+
+function navBodyOverlap(box, x, z, radius) {
+  return bodyOverlapsCollider(box, x, z, radius, 0.22, 1.85);
+}
+
+// 將目前地圖的碰撞箱轉成敵人可走的格子，並預先挑出分散全圖的巡邏點。
+function buildNavigation() {
+  navGrid = createNavGrid({
+    half: PLAYABLE_LIMIT + 1,
+    cell: 0.5,
+    limit: PLAYABLE_LIMIT,
+  });
+  rasterizeColliders(navGrid, collisionBoxes, navBodyOverlap, [
+    0.55 + NAV_BODY_MARGIN,
+    0.34 + NAV_BODY_MARGIN,
+  ]);
+  labelComponents(navGrid);
+  navPatrolPoints = samplePatrolPoints(navGrid, 7);
+}
+
+// 爆裂桶等可破壞物移除後，只重算附近格子。
+function refreshNavigationArea(box) {
+  if (!navGrid || !box) return;
+  rasterizeColliders(
+    navGrid,
+    collisionBoxes,
+    navBodyOverlap,
+    [0.55 + NAV_BODY_MARGIN, 0.34 + NAV_BODY_MARGIN],
+    {
+      minX: box.min.x - 1.5,
+      maxX: box.max.x + 1.5,
+      minZ: box.min.z - 1.5,
+      maxZ: box.max.z + 1.5,
+    },
+  );
+  labelComponents(navGrid);
 }
 
 function createAtmosphere() {
@@ -1351,6 +1426,27 @@ function createArena() {
   createOuterDistricts();
   createHarborWayfinding();
   createPortSkyline();
+  createHarborDistricts(districtContext());
+}
+
+// 新區塊（district-maps.js）需要的場景工具；碰撞與射線目標共用本檔資料。
+function districtContext() {
+  return {
+    scene,
+    worldMeshes,
+    collisionBoxes,
+    registerCollisionBox,
+    roundCollider,
+    createContainer,
+    placeZoneSign,
+    createWallTexture,
+    paintResolution: touchCapable ? 1024 : 2048,
+    // Lamp posts are tall, so test the full pole height, not just body height.
+    isFree: (x, z, radius) =>
+      !collisionBoxes.some((box) =>
+        bodyOverlapsCollider(box, x, z, radius, 0.05, 6.6),
+      ),
+  };
 }
 
 function createFoundryArena() {
@@ -1799,6 +1895,7 @@ function createFoundryArena() {
   markings.position.y = 0.034;
   scene.add(markings);
   createFoundrySkyline();
+  createFoundryDistricts(districtContext());
 }
 
 function createFoundrySkyline() {
@@ -4051,6 +4148,15 @@ function applyWeaponSkin() {
   });
 }
 
+// 出生點若被地圖物件佔用，改用最近的可走格（且必須與主要區域相連）。
+function navSpawnPoint(point, large = false) {
+  if (!navGrid) return point;
+  const spot = nearestWalkable(navGrid, point[0], point[1], 6, large);
+  if (!spot || componentAt(navGrid, spot.x, spot.z) !== navGrid.mainComponent)
+    return point;
+  return [spot.x, spot.z];
+}
+
 function spawnEnemies(count, options = {}) {
   const colors = [
     0xb64a4f, 0xc17d3d, 0x4d79a8, 0x7853a6, 0x426d52, 0xa33f75, 0x81733c,
@@ -4080,8 +4186,10 @@ function spawnEnemies(count, options = {}) {
     // Boss arrivals favor a reachable nearby lane instead of a distant corner.
     for (let pass = 0; pass < (variant === "boss" ? 2 : 1) && !pos; pass++)
       for (let j = 0; j < enemySpawnPoints.length; j++) {
-        const candidate =
+        const candidate = navSpawnPoint(
             enemySpawnPoints[(i + offset + j) % enemySpawnPoints.length],
+            variant === "boss",
+          ),
           distance = Math.hypot(
             candidate[0] - yaw.position.x,
             candidate[1] - yaw.position.z,
@@ -4425,6 +4533,24 @@ function createEnemy(x, z, color, index, variant = "standard") {
     coverTarget: new THREE.Vector3(),
     coverTime: 0,
     coverCooldown: 0,
+    // Path following and stuck recovery (see steerEnemy).
+    path: null,
+    pathIndex: 0,
+    pathGoalX: x,
+    pathGoalZ: z,
+    pathAge: 0,
+    pathRetryAt: 0,
+    directClear: false,
+    directCheck: 0,
+    navCheckTime: 0,
+    navCheckX: x,
+    navCheckZ: z,
+    navStuck: 0,
+    hasPatrolGoal: false,
+    patrolPause: 0.3 + Math.random() * 1.6,
+    lookYaw: null,
+    searchPoint: new THREE.Vector3(x, 0, z),
+    searchSweeps: 0,
     barGroup,
     nameplate,
     fill,
@@ -4516,6 +4642,18 @@ function setGameVolume(percent) {
   applyAudioMix();
 }
 
+function setLookSensitivity(percent) {
+  const value = Number(percent);
+  const clamped = Number.isFinite(value)
+    ? Math.max(40, Math.min(200, value))
+    : 100;
+  lookSensitivity = clamped / 100;
+  if (ui.sensitivity) ui.sensitivity.value = String(clamped);
+  if (ui.sensitivityValue)
+    ui.sensitivityValue.textContent = `${lookSensitivity.toFixed(2)}×`;
+  saveChoice("neonSensitivity", Math.round(clamped));
+}
+
 function setGraphicsQuality(value) {
   const index = Number(value);
   qualityIndex =
@@ -4581,6 +4719,10 @@ function setupEvents() {
   );
   setGameVolume(Math.round(masterVolume * 100));
   ui.volume.addEventListener("input", () => setGameVolume(ui.volume.value));
+  setLookSensitivity(lookSensitivity * 100);
+  ui.sensitivity?.addEventListener("input", () =>
+    setLookSensitivity(ui.sensitivity.value),
+  );
   ui.pauseVolume.addEventListener("input", () =>
     setGameVolume(ui.pauseVolume.value),
   );
@@ -4775,6 +4917,11 @@ function resumeGame() {
 function startGame() {
   if (gameState !== "lobby") return;
   prepareSelectedMap();
+  // Compile every scene material up front so first sight of a district
+  // cannot stall a frame mid-fight.
+  try {
+    renderer.compile(scene, camera);
+  } catch {}
   activeEncounter = { settings: { ...missionSettings } };
   const operator = currentOperator(),
     mode = currentMode();
@@ -4802,6 +4949,15 @@ function startGame() {
   bossArrivalQueued = false;
   bossArrivalRemaining = 0;
   clearBossAttacks();
+  navClock = 0;
+  lastEnemyContactAt = 0;
+  lastNoiseAt = -Infinity;
+  huntTimer = 6;
+  headshotKills = 0;
+  bestStreak = 0;
+  damageTaken = 0;
+  lastZoneName = "";
+  threatMode = "";
   if (enemies.length === 0) spawnMissionWave(0);
   ui.deploy.disabled = true;
   initAudio();
@@ -4820,6 +4976,8 @@ function startGame() {
   requestLock();
   feed(`任務開始 // ${mode.label} // 敵軍 ${matchTotalEnemies}`);
   playTone(110, 0.18, "sawtooth", 0.035);
+  // Map building and shader warm-up happened before the clock started.
+  clock.getDelta();
 }
 
 function requestLock() {
@@ -5098,7 +5256,7 @@ function updateGrenadePreview(time, force = false) {
 
 function onTouchLook(dx, dy) {
   if (gameState !== "playing" || portalPaused) return;
-  const sensitivity = 1 - adsAmount * 0.32;
+  const sensitivity = (1 - adsAmount * 0.32) * lookSensitivity;
   yaw.rotation.y -= dx * 0.004 * sensitivity;
   pitch.rotation.x = Math.max(
     -1.38,
@@ -5152,7 +5310,7 @@ function onMouseMove(event) {
       !(freeLook && event.buttons & 2))
   )
     return;
-  const sensitivity = 1 - adsAmount * 0.32;
+  const sensitivity = (1 - adsAmount * 0.32) * lookSensitivity;
   yaw.rotation.y -= event.movementX * 0.00185 * sensitivity;
   pitch.rotation.x -= event.movementY * 0.00165 * sensitivity;
   pitch.rotation.x = Math.max(-1.38, Math.min(1.38, pitch.rotation.x));
@@ -5555,6 +5713,11 @@ function shoot(time) {
   ammo--;
   shots++;
   lastShot = time;
+  // Gunfire is loud: nearby patrols investigate instead of idling out of sight.
+  if (navClock - lastNoiseAt > 0.35) {
+    lastNoiseAt = navClock;
+    alertEnemiesToNoise(yaw.position.x, yaw.position.z, 36, 6);
+  }
   weaponKick = Math.min(0.65, weaponKick + 0.28);
   pitch.rotation.x = Math.min(
     1.38,
@@ -5665,7 +5828,11 @@ function explodeBarrel(barrel, source = "barrel") {
   if (source !== "grenade") center.y += 0.7;
   barrel.visible = false;
   const colliderIndex = collisionBoxes.indexOf(barrel.userData.collisionBox);
-  if (colliderIndex >= 0) collisionBoxes.splice(colliderIndex, 1);
+  if (colliderIndex >= 0) {
+    collisionBoxes.splice(colliderIndex, 1);
+    refreshNavigationArea(barrel.userData.collisionBox);
+  }
+  alertEnemiesToNoise(center.x, center.z, 46, 5);
   const worldIndex = worldMeshes.indexOf(barrel);
   if (worldIndex >= 0) worldMeshes.splice(worldIndex, 1);
   const blastDistance = center.distanceTo(yaw.position);
@@ -5893,8 +6060,9 @@ function damageEnemy(
     // Hits from outside line of sight are new information, just like losing
     // sight of a player: allow time to investigate before returning to patrol.
     if (state.state !== "ENGAGE") {
-      state.state = "SEARCH";
-      state.searchTime = 12;
+      beginSearch(enemy, yaw.position.x, yaw.position.z, 12);
+      state.patrolPause = 0;
+      lastEnemyContactAt = navClock;
     }
   }
   if (countAccuracy) hits++;
@@ -5916,6 +6084,8 @@ function killEnemy(enemy, headshot, byPlayer = true) {
     kills++;
     const now = performance.now();
     killStreak = lastKillAt && now - lastKillAt <= 15000 ? killStreak + 1 : 1;
+    bestStreak = Math.max(bestStreak, killStreak);
+    if (headshot) headshotKills++;
     lastKillAt = now;
     if (killStreak % 3 === 0) {
       health = Math.min(maxHealth, health + 12);
@@ -6634,6 +6804,13 @@ function updateEnemies(dt, time) {
   camera.getWorldPosition(tempCameraWorld);
   let nearestThreat = Infinity,
     patrolPicks = 0;
+  navClock += dt;
+  navPathBudget = NAV_PATHS_PER_UPDATE;
+  huntTimer -= dt;
+  if (huntTimer <= 0) {
+    huntTimer = 4.5 + Math.random() * 3;
+    dispatchHunters();
+  }
   let flashLightIndex = 0;
   enemyFlashLights.forEach((light) => (light.intensity = 0));
   for (const enemy of enemies) {
@@ -6699,13 +6876,24 @@ function updateEnemies(dt, time) {
     s.barGroup.visible = s.nameplate.visible =
       (canSee && distance < (boss ? 38 : 23)) || s.hitTime > 0;
     let moveX = 0,
-      moveZ = 0;
+      moveZ = 0,
+      guided = false,
+      pace = 1;
+    const frozen = s.specialWindup > 0 || (boss && s.bossRecovery > 0);
     if (canSee) {
       nearestThreat = Math.min(nearestThreat, distance);
+      lastEnemyContactAt = navClock;
       s.lastKnown.set(yaw.position.x, 0, yaw.position.z);
+      s.searchSweeps = 0;
+      s.hasPatrolGoal = false;
+      s.patrolPause = 0;
+      s.lookYaw = null;
       if (s.state !== "ENGAGE") {
         s.reaction -= dt;
-        if (s.reaction <= 0) s.state = "ENGAGE";
+        if (s.reaction <= 0) {
+          s.state = "ENGAGE";
+          callForBackup(enemy);
+        }
       }
       if (
         boss &&
@@ -6724,16 +6912,23 @@ function updateEnemies(dt, time) {
           s.bossAttackCooldown = s.bossPhase === 2 ? 7.2 : 8.5;
         } else s.bossAttackCooldown = 1;
       }
-      if (s.coverTime > 0) {
-        const dx = s.coverTarget.x - enemy.position.x,
-          dz = s.coverTarget.z - enemy.position.z,
-          dist = Math.hypot(dx, dz);
-        if (dist > 0.6) {
-          moveX = dx / dist;
-          moveZ = dz / dist;
-        } else {
+      if (frozen) {
+        // Boss wind-up and recovery hold position; no route work this frame.
+      } else if (s.coverTime > 0) {
+        const step = steerEnemy(
+          enemy,
+          s.coverTarget.x,
+          s.coverTarget.z,
+          dt,
+          0.6,
+        );
+        if (step.arrived || step.failed) {
           s.coverTime = 0;
           s.shotCooldown = Math.max(s.shotCooldown, 0.5);
+        } else {
+          moveX = step.x;
+          moveZ = step.z;
+          guided = true;
         }
       } else {
         const idealRange = boss
@@ -6744,8 +6939,19 @@ function updateEnemies(dt, time) {
               ? 10
               : 13;
         if (distance > idealRange) {
-          moveX += toPlayer.x * 0.9;
-          moveZ += toPlayer.z * 0.9;
+          // Route around low cover or corners instead of pressing into them.
+          const step = steerEnemy(
+            enemy,
+            yaw.position.x,
+            yaw.position.z,
+            dt,
+            idealRange * 0.85,
+          );
+          if (!step.arrived && !step.failed) {
+            moveX += step.x * 0.9;
+            moveZ += step.z * 0.9;
+            guided = s.path !== null;
+          }
         }
         if (
           distance < (boss ? 7 : s.role === "marksman" ? 13 : 7) ||
@@ -6793,71 +6999,121 @@ function updateEnemies(dt, time) {
         s.reaction + dt * 0.35,
       );
       if (s.state === "ENGAGE") {
+        // Lost contact: go to the last seen position, then sweep nearby corners.
         s.state = "SEARCH";
-        s.searchTime = 12;
+        s.searchTime = 14;
         s.burstShots = 0;
+        s.searchPoint.copy(s.lastKnown);
+        s.searchSweeps = 0;
+        s.directCheck = 0;
       }
       if (s.state === "SEARCH" && (s.searchTime -= dt) <= 0) {
         s.state = "PATROL";
         s.patrolTimer = 0;
         s.coverTime = 0;
+        s.hasPatrolGoal = false;
+        s.patrolPause = 0.6 + Math.random() * 0.8;
       }
-      if (s.coverTime > 0) {
-        const dx = s.coverTarget.x - enemy.position.x,
-          dz = s.coverTarget.z - enemy.position.z,
-          dist = Math.hypot(dx, dz);
-        if (dist > 0.6) {
-          moveX = dx / dist;
-          moveZ = dz / dist;
-        } else {
-          moveX = 0;
-          moveZ = 0;
+      if (frozen) {
+        // Hold during boss wind-up and recovery.
+      } else if (s.coverTime > 0) {
+        const step = steerEnemy(
+          enemy,
+          s.coverTarget.x,
+          s.coverTarget.z,
+          dt,
+          0.6,
+        );
+        if (step.failed) s.coverTime = 0;
+        else if (!step.arrived) {
+          moveX = step.x;
+          moveZ = step.z;
+          guided = true;
         }
+      } else if (s.patrolPause > 0) {
+        // Short look-around stops make patrols read as deliberate, not idle.
+        s.patrolPause -= dt;
       } else if (s.state === "SEARCH") {
-        const dx = s.lastKnown.x - enemy.position.x,
-          dz = s.lastKnown.z - enemy.position.z,
-          dist = Math.hypot(dx, dz);
-        if (dist > 0.8) {
-          moveX = dx / dist;
-          moveZ = dz / dist;
+        const step = steerEnemy(
+          enemy,
+          s.searchPoint.x,
+          s.searchPoint.z,
+          dt,
+          1.1,
+        );
+        if (step.arrived || step.failed) {
+          const next =
+            s.searchSweeps < 2 && navGrid
+              ? randomPointNear(
+                  navGrid,
+                  s.lastKnown.x,
+                  s.lastKnown.z,
+                  3,
+                  9,
+                  navComponentNear(enemy.position.x, enemy.position.z),
+                )
+              : null;
+          s.searchSweeps++;
+          if (next) {
+            s.searchPoint.set(next.x, 0, next.z);
+            s.patrolPause = 0.45 + Math.random() * 0.7;
+            s.lookYaw = enemy.rotation.y + (Math.random() - 0.5) * 2.6;
+            s.directCheck = 0;
+          } else {
+            s.state = "PATROL";
+            s.hasPatrolGoal = false;
+            s.patrolPause = 0.8 + Math.random();
+          }
         } else {
-          s.state = "PATROL";
-          s.patrolTimer = 0;
+          moveX = step.x;
+          moveZ = step.z;
+          guided = true;
         }
       } else {
         s.patrolTimer -= dt;
-        const dx = s.target.x - enemy.position.x,
-          dz = s.target.z - enemy.position.z,
-          dist = Math.hypot(dx, dz);
-        // Spread waypoint searches across frames instead of making every bot
+        // Spread waypoint choices across frames instead of making every bot
         // sample the map on the same frame after spawning.
-        if (s.patrolTimer <= 0 || (dist < 1 && !s.patrolWaiting)) {
-          if (patrolPicks < 1) {
-            pickPatrolPoint(enemy);
-            patrolPicks++;
+        if ((!s.hasPatrolGoal || s.patrolTimer <= 0) && patrolPicks < 2) {
+          pickPatrolPoint(enemy);
+          patrolPicks++;
+        }
+        if (s.hasPatrolGoal) {
+          const step = steerEnemy(enemy, s.target.x, s.target.z, dt, 1);
+          if (step.arrived) {
+            s.hasPatrolGoal = false;
+            s.patrolPause = 0.7 + Math.random() * 2.2;
+            s.lookYaw = enemy.rotation.y + (Math.random() - 0.5) * 3;
+          } else if (step.failed) s.hasPatrolGoal = false;
+          else {
+            moveX = step.x;
+            moveZ = step.z;
+            guided = true;
+            pace = 0.8;
           }
-        } else if (dist >= 1) {
-          moveX = dx / dist;
-          moveZ = dz / dist;
         }
       }
     }
-    if (s.specialWindup > 0 || (boss && s.bossRecovery > 0)) {
+    if (frozen) {
       moveX = 0;
       moveZ = 0;
     }
     const len = Math.hypot(moveX, moveZ);
-    const facing = canSee
-      ? Math.atan2(toPlayer.x, toPlayer.z)
-      : len > 0.02
-        ? Math.atan2(moveX, moveZ)
-        : enemy.rotation.y;
+    let facing = enemy.rotation.y,
+      turnRate = 5.5;
+    if (canSee) facing = Math.atan2(toPlayer.x, toPlayer.z);
+    else if (len > 0.02) {
+      facing = Math.atan2(moveX, moveZ);
+      s.lookYaw = null;
+    } else if (s.lookYaw !== null) {
+      facing = s.lookYaw;
+      turnRate = 2.2;
+    }
     enemy.rotation.y = lerpAngle(
       enemy.rotation.y,
       facing,
-      Math.min(1, dt * 5.5),
+      Math.min(1, dt * turnRate),
     );
-    if (len > 0.02) moveBot(enemy, moveX / len, moveZ / len, dt);
+    if (len > 0.02) moveBot(enemy, moveX / len, moveZ / len, dt, guided, pace);
     const stride =
       Math.sin(time * 0.009 * s.speed + s.stridePhase) *
       0.24 *
@@ -6867,9 +7123,39 @@ function updateEnemies(dt, time) {
     s.leftArm.rotation.x = -0.78 - stride * 0.18 - s.recoil * 0.4;
     s.rightArm.rotation.x = -0.78 + stride * 0.18 - s.recoil * 0.4;
   }
-  ui.combatBanner.classList.toggle("active", nearestThreat < 30);
-  if (nearestThreat < 30)
+  // 交戰（紅）優先；沒有人看見玩家、但附近有敵人在搜索時顯示琥珀色警示。
+  let searching = 0,
+    nearestSearch = Infinity;
+  if (nearestThreat >= 30)
+    for (const enemy of enemies) {
+      const s = enemy.userData.state;
+      if (!s.alive || s.state !== "SEARCH") continue;
+      const toTarget = Math.hypot(
+          s.searchPoint.x - yaw.position.x,
+          s.searchPoint.z - yaw.position.z,
+        ),
+        away = Math.hypot(
+          enemy.position.x - yaw.position.x,
+          enemy.position.z - yaw.position.z,
+        );
+      if (toTarget < 18 && away < 45) {
+        searching++;
+        nearestSearch = Math.min(nearestSearch, away);
+      }
+    }
+  const mode = nearestThreat < 30 ? "contact" : searching ? "search" : "";
+  if (mode !== threatMode) {
+    threatMode = mode;
+    ui.combatBanner.classList.toggle("active", mode !== "");
+    ui.combatBanner.classList.toggle("searching", mode === "search");
+    if (ui.threatLabel)
+      ui.threatLabel.textContent =
+        mode === "search" ? "敵軍搜索中" : "ENEMY CONTACT";
+  }
+  if (mode === "contact")
     ui.threatDistance.textContent = `${Math.round(nearestThreat)} M`;
+  else if (mode === "search")
+    ui.threatDistance.textContent = `${searching} 名 // ${Math.round(nearestSearch)} M`;
 }
 
 function seekBotCover(enemy) {
@@ -6890,6 +7176,10 @@ function seekBotCover(enemy) {
     const distance = Math.hypot(x - enemy.position.x, z - enemy.position.z);
     if (
       distance < bestDistance &&
+      (!navGrid ||
+        (isWalkable(navGrid, x, z) &&
+          componentAt(navGrid, x, z) ===
+            navComponentNear(enemy.position.x, enemy.position.z))) &&
       !isBotBlocked(x, z, enemy) &&
       !hasLineOfSight({ x, z }, yaw.position)
     ) {
@@ -6910,9 +7200,317 @@ function lerpAngle(from, to, t) {
   return from + delta * t;
 }
 
+const STEER_ARRIVED = Object.freeze({ x: 0, z: 0, arrived: true });
+const STEER_FAILED = Object.freeze({ x: 0, z: 0, failed: true });
+const STEER_WAIT = Object.freeze({ x: 0, z: 0 });
+
+// 依導航格子把敵人帶往目標：直線可走就直走，否則沿 A* 路徑；
+// 持續沒有進展時會重新尋路，連續卡住則脫困並回報失敗，讓狀態機換新目標。
+function navComponentNear(x, z) {
+  if (!navGrid) return -1;
+  const component = componentAt(navGrid, x, z);
+  if (component >= 0) return component;
+  const spot = nearestWalkable(navGrid, x, z, 2);
+  return spot ? componentAt(navGrid, spot.x, spot.z) : -1;
+}
+
+function steerEnemy(enemy, goalX, goalZ, dt, arriveRadius = 0.9) {
+  const s = enemy.userData.state,
+    px = enemy.position.x,
+    pz = enemy.position.z,
+    large = s.rank === "boss",
+    toGoal = Math.hypot(goalX - px, goalZ - pz);
+  if (toGoal <= arriveRadius) {
+    s.path = null;
+    s.navStuck = 0;
+    return STEER_ARRIVED;
+  }
+  if (!navGrid)
+    return { x: (goalX - px) / toGoal, z: (goalZ - pz) / toGoal };
+  // Progress watchdog: only counts while the bot is continuously steering.
+  if (navClock - (s.lastSteerAt ?? -1) > 0.3) {
+    s.navCheckTime = 0;
+    s.navCheckX = px;
+    s.navCheckZ = pz;
+  }
+  s.lastSteerAt = navClock;
+  s.navCheckTime += dt;
+  if (s.navCheckTime >= 1.1) {
+    const moved = Math.hypot(px - s.navCheckX, pz - s.navCheckZ);
+    s.navCheckX = px;
+    s.navCheckZ = pz;
+    s.navCheckTime = 0;
+    if (moved < Math.min(0.35, s.speed * 0.14)) {
+      s.navStuck++;
+      s.path = null;
+      s.directClear = false;
+      s.directCheck = 0;
+      if (s.navStuck >= 3) {
+        s.navStuck = 0;
+        unstickEnemy(enemy);
+        return STEER_FAILED;
+      }
+    } else s.navStuck = Math.max(0, s.navStuck - 1);
+  }
+  s.pathAge += dt;
+  s.directCheck -= dt;
+  if (
+    s.directCheck <= 0 ||
+    Math.hypot(goalX - (s.directGoalX ?? 1e9), goalZ - (s.directGoalZ ?? 1e9)) >
+      1.5
+  ) {
+    s.directClear = lineClear(navGrid, px, pz, goalX, goalZ, large);
+    s.directGoalX = goalX;
+    s.directGoalZ = goalZ;
+    s.directCheck = 0.3 + Math.random() * 0.1;
+  }
+  if (s.directClear) {
+    s.path = null;
+    return { x: (goalX - px) / toGoal, z: (goalZ - pz) / toGoal };
+  }
+  const goalMoved = Math.hypot(goalX - s.pathGoalX, goalZ - s.pathGoalZ),
+    needPath =
+      !s.path ||
+      s.pathIndex >= s.path.length ||
+      goalMoved > Math.max(1.5, toGoal * 0.25) ||
+      s.pathAge > 6;
+  if (needPath) {
+    if (navClock < s.pathRetryAt) return s.path ? followPath(s, px, pz) : STEER_FAILED;
+    if (navPathBudget <= 0) return s.path ? followPath(s, px, pz) : STEER_WAIT;
+    navPathBudget--;
+    const path =
+      findPath(navGrid, px, pz, goalX, goalZ, { large }) ||
+      (large ? findPath(navGrid, px, pz, goalX, goalZ) : null);
+    s.pathGoalX = goalX;
+    s.pathGoalZ = goalZ;
+    s.pathAge = 0;
+    s.pathIndex = 0;
+    s.path = path;
+    if (!path) {
+      s.pathRetryAt = navClock + 1.2;
+      return STEER_FAILED;
+    }
+  }
+  return followPath(s, px, pz);
+}
+
+function followPath(s, px, pz) {
+  let waypoint = s.path[s.pathIndex];
+  while (waypoint && Math.hypot(waypoint.x - px, waypoint.z - pz) < 0.55)
+    waypoint = s.path[++s.pathIndex];
+  if (!waypoint) {
+    // The goal itself may sit on top of cover; the end of the route is as
+    // close as a bot can get, so treat it as arrival rather than a failure.
+    s.path = null;
+    return STEER_ARRIVED;
+  }
+  const dx = waypoint.x - px,
+    dz = waypoint.z - pz,
+    length = Math.hypot(dx, dz) || 1;
+  return { x: dx / length, z: dz / length };
+}
+
+function unstickEnemy(enemy) {
+  const s = enemy.userData.state;
+  s.path = null;
+  s.hasPatrolGoal = false;
+  s.coverTime = 0;
+  s.avoidTime = 0;
+  s.strafe *= -1;
+  if (!navGrid) return;
+  const large = s.rank === "boss",
+    x = enemy.position.x,
+    z = enemy.position.z;
+  if (isWalkable(navGrid, x, z, large) && !isBotWorldBlocked(x, z, enemy))
+    return;
+  // Wedged against geometry: slide to the closest clear cell centre.
+  const spot =
+    nearestWalkable(navGrid, x, z, 4, large) ||
+    nearestWalkable(navGrid, x, z, 4, false);
+  if (spot && !isBotBlocked(spot.x, spot.z, enemy)) {
+    enemy.position.x = spot.x;
+    enemy.position.z = spot.z;
+  }
+}
+
+function beginSearch(enemy, x, z, duration = 12) {
+  const s = enemy.userData.state;
+  if (!s.alive || s.state === "ENGAGE") return;
+  s.state = "SEARCH";
+  s.searchTime = Math.max(s.searchTime || 0, duration);
+  s.lastKnown.set(x, 0, z);
+  s.searchPoint.set(x, 0, z);
+  s.searchSweeps = 0;
+  s.patrolPause = Math.min(s.patrolPause, 0.25);
+  s.hasPatrolGoal = false;
+  s.directCheck = 0;
+}
+
+// 槍聲與爆炸會讓範圍內未交戰的敵人前往調查。
+function alertEnemiesToNoise(x, z, radius, jitter = 4) {
+  if (gameState !== "playing") return;
+  for (const enemy of enemies) {
+    const s = enemy.userData.state;
+    if (!s.alive || s.state === "ENGAGE") continue;
+    const distance = Math.hypot(enemy.position.x - x, enemy.position.z - z);
+    if (distance > radius) continue;
+    const angle = Math.random() * Math.PI * 2,
+      offset = Math.random() * jitter * Math.min(1, distance / radius + 0.3);
+    beginSearch(
+      enemy,
+      x + Math.cos(angle) * offset,
+      z + Math.sin(angle) * offset,
+      12,
+    );
+    s.reaction = Math.min(s.reaction, s.baseReaction * 0.8);
+  }
+}
+
+// 發現玩家時呼叫附近隊友包夾。
+function callForBackup(caller) {
+  for (const enemy of enemies) {
+    if (enemy === caller) continue;
+    const s = enemy.userData.state;
+    if (!s.alive || s.state === "ENGAGE") continue;
+    if (
+      Math.hypot(
+        enemy.position.x - caller.position.x,
+        enemy.position.z - caller.position.z,
+      ) > 24
+    )
+      continue;
+    const angle = Math.random() * Math.PI * 2;
+    beginSearch(
+      enemy,
+      yaw.position.x + Math.cos(angle) * 3,
+      yaw.position.z + Math.sin(angle) * 3,
+      10,
+    );
+  }
+}
+
+// 0～1：越久沒有人看到玩家、剩下的敵人越少，巡邏就越往玩家附近收攏。
+function huntPressure() {
+  const since = navClock - lastEnemyContactAt;
+  let alive = 0;
+  for (const enemy of enemies) if (enemy.userData.state.alive) alive++;
+  let pressure = Math.max(0, Math.min(1, (since - 6) / 30));
+  if (alive <= 3) pressure = Math.max(pressure, 0.75);
+  return pressure * ([0.6, 0.85, 1][selectedDifficulty] ?? 0.85);
+}
+
+// 長時間沒有接觸時，派最近的巡邏兵到玩家「大概」的位置搜索，避免敵人永遠在遠處閒晃。
+function dispatchHunters() {
+  if (gameState !== "playing" || !yaw) return;
+  const since = navClock - lastEnemyContactAt,
+    delay = [24, 15, 9][selectedDifficulty] ?? 15;
+  if (since < delay) return;
+  let alive = 0;
+  const idle = [];
+  for (const enemy of enemies) {
+    const s = enemy.userData.state;
+    if (!s.alive) continue;
+    alive++;
+    if (s.state === "PATROL") idle.push(enemy);
+  }
+  if (!idle.length) return;
+  const distanceTo = (enemy) =>
+    Math.hypot(
+      enemy.position.x - yaw.position.x,
+      enemy.position.z - yaw.position.z,
+    );
+  idle.sort((a, b) => distanceTo(a) - distanceTo(b));
+  const count =
+    alive <= 3
+      ? idle.length
+      : Math.min(idle.length, 1 + Math.floor((since - delay) / 20), 3);
+  const uncertainty = Math.max(4, 16 - (since - delay) * 0.25);
+  for (const enemy of idle.slice(0, count)) {
+    const component = navGrid
+      ? navComponentNear(enemy.position.x, enemy.position.z)
+      : -1;
+    const spot = navGrid
+      ? randomPointNear(
+          navGrid,
+          yaw.position.x,
+          yaw.position.z,
+          0,
+          uncertainty,
+          component,
+        )
+      : { x: yaw.position.x, z: yaw.position.z };
+    if (spot) beginSearch(enemy, spot.x, spot.z, 16);
+  }
+}
+
 function pickPatrolPoint(enemy) {
   const s = enemy.userData.state;
-  // Nearby reachable destinations avoid sending idle patrols through whole buildings.
+  s.hasPatrolGoal = false;
+  if (navGrid && navPatrolPoints.length) {
+    const component = navComponentNear(enemy.position.x, enemy.position.z),
+      pressure = huntPressure();
+    let best = null,
+      bestScore = -Infinity;
+    if (component === navGrid.mainComponent)
+      for (let attempt = 0; attempt < 16; attempt++) {
+        const point =
+          navPatrolPoints[Math.floor(Math.random() * navPatrolPoints.length)];
+        const travel = Math.hypot(
+          point.x - enemy.position.x,
+          point.z - enemy.position.z,
+        );
+        if (travel < 7 || travel > 58) continue;
+        let crowd = 0;
+        for (const other of enemies) {
+          const o = other.userData.state;
+          if (
+            other !== enemy &&
+            o.alive &&
+            o.hasPatrolGoal &&
+            Math.hypot(o.target.x - point.x, o.target.z - point.z) < 9
+          )
+            crowd++;
+        }
+        const toPlayer = Math.hypot(
+          point.x - yaw.position.x,
+          point.z - yaw.position.z,
+        );
+        const score =
+          Math.random() -
+          crowd * 0.55 -
+          pressure * (toPlayer / 55) +
+          (point.open ? 0.1 : 0);
+        if (score > bestScore) {
+          bestScore = score;
+          best = point;
+        }
+      }
+    if (!best && component >= 0)
+      best = randomPointNear(
+        navGrid,
+        enemy.position.x,
+        enemy.position.z,
+        5,
+        18,
+        component,
+      );
+    if (best) {
+      s.target.set(best.x, 0, best.z);
+      s.hasPatrolGoal = true;
+      s.patrolWaiting = false;
+      s.patrolTimer =
+        8 +
+        (Math.hypot(best.x - enemy.position.x, best.z - enemy.position.z) /
+          Math.max(0.6, s.speed * 0.8)) *
+          1.7;
+      s.path = null;
+      s.directCheck = 0;
+      return;
+    }
+    s.patrolPause = 0.8;
+    return;
+  }
+  // Fallback without a navigation grid (unit tests that stub the map).
   for (let attempt = 0; attempt < 3; attempt++) {
     const angle = Math.random() * Math.PI * 2,
       distance = 4 + Math.random() * 12;
@@ -6937,21 +7535,29 @@ function pickPatrolPoint(enemy) {
       s.target.set(x, 0, z);
       s.patrolTimer = 3 + Math.random() * 5;
       s.patrolWaiting = false;
+      s.hasPatrolGoal = true;
       return;
     }
   }
   s.target.copy(enemy.position);
-  s.patrolTimer = 0.7 + Math.random() * 0.5;
+  s.patrolPause = 0.7 + Math.random() * 0.5;
   s.patrolWaiting = true;
 }
 
-function moveBot(enemy, dx, dz, dt) {
+// guided = 正沿導航路徑前進：只做局部閃避（隊友、玩家），不留下長時間的繞牆記憶。
+function moveBot(enemy, dx, dz, dt, guided = false, pace = 1) {
   const s = enemy.userData.state,
-    distance = s.speed * dt,
+    distance = s.speed * pace * dt,
     steps = Math.max(1, Math.ceil(distance / ((s.radius ?? 0.34) * 0.45))),
     step = distance / steps;
   s.avoidTime = Math.max(0, (s.avoidTime || 0) - dt);
   s.progressTime = (s.progressTime || 0) + dt;
+  if (guided) {
+    s.avoidTime = 0;
+    s.progressTime = 0;
+    s.progressX = enemy.position.x;
+    s.progressZ = enemy.position.z;
+  }
   if (s.progressTime >= 1.8) {
     // A series of tiny moves into a corner can still be a deadlock; alternate
     // the preferred side rather than repeating the same back-and-forth route.
@@ -6997,7 +7603,9 @@ function moveBot(enemy, dx, dz, dt) {
       const nx = enemy.position.x + mx * step,
         nz = enemy.position.z + mz * step;
       if (!isBotBlocked(nx, nz, enemy)) {
-        if (angle !== 0 && !avoiding) {
+        if (guided) {
+          if (angle !== 0 && angle !== Math.PI) s.avoidSide = Math.sign(angle);
+        } else if (angle !== 0 && !avoiding) {
           const worldObstacle = isBotWorldBlocked(
             enemy.position.x + dx * step,
             enemy.position.z + dz * step,
@@ -7020,11 +7628,12 @@ function moveBot(enemy, dx, dz, dt) {
     }
     if (!moved) {
       s.avoidSide = -side;
-      s.avoidX = -dz * s.avoidSide;
-      s.avoidZ = dx * s.avoidSide;
-      s.avoidTime = 1.5;
       s.strafe *= -1;
-      s.patrolTimer = 0;
+      if (!guided) {
+        s.avoidX = -dz * s.avoidSide;
+        s.avoidZ = dx * s.avoidSide;
+        s.avoidTime = 1.5;
+      }
       break;
     }
   }
@@ -7047,18 +7656,26 @@ function isBotWorldBlocked(x, z, self) {
 function isBotBlocked(x, z, self) {
   const radius = self?.userData?.state?.radius ?? 0.34;
   if (isBotWorldBlocked(x, z, self)) return true;
+  // Bodies that already overlap may always move apart; otherwise two bots
+  // pushed together (spawns, knockback) could never take a step again.
+  const from = self?.position;
+  const blocks = (ox, oz, minimum) => {
+    const next = Math.hypot(ox - x, oz - z);
+    if (next >= minimum) return false;
+    return !from || next <= Math.hypot(ox - from.x, oz - from.z) + 1e-6;
+  };
   for (const e of enemies)
     if (
       e !== self &&
       e.userData.state.alive &&
-      Math.hypot(e.position.x - x, e.position.z - z) <
-        radius + (e.userData.state.radius ?? 0.34) + 0.04
+      blocks(
+        e.position.x,
+        e.position.z,
+        radius + (e.userData.state.radius ?? 0.34) + 0.04,
+      )
     )
       return true;
-  if (
-    yaw &&
-    Math.hypot(yaw.position.x - x, yaw.position.z - z) < radius + playerRadius
-  )
+  if (yaw && blocks(yaw.position.x, yaw.position.z, radius + playerRadius))
     return true;
   return false;
 }
@@ -7174,6 +7791,8 @@ function takeDamage(amount, source) {
     armor -= absorbed;
     remaining -= absorbed;
   }
+  // Armour absorption counts as damage taken; overkill past zero does not.
+  damageTaken += Math.min(health, Math.max(0, remaining)) + (amount - remaining);
   health = Math.max(0, health - remaining);
   damageAngle =
     Math.atan2(source.x - yaw.position.x, source.z - yaw.position.z) -
@@ -7452,6 +8071,10 @@ function updateHUD() {
     tick.classList.toggle("empty", i >= ammo),
   );
   ui.health.style.color = healthRatio < 0.3 ? "var(--red)" : "";
+  ui.hud.classList.toggle(
+    "low-health",
+    gameState === "playing" && healthRatio > 0 && healthRatio < 0.3,
+  );
   updateBossHUD();
 }
 
@@ -7461,7 +8084,14 @@ function formatClock(seconds) {
 }
 
 function getZoneName(x, z) {
+  const inside = (x1, x2, z1, z2) => x >= x1 && x <= x2 && z >= z1 && z <= z2;
   if (builtMap === 1) {
+    if (inside(-52, -32, -62.5, -49.5)) return "CASTING HALL // 鑄造廠房";
+    if (inside(-48, -32, 49.5, 60.5)) return "PATTERN SHOP // 模具工坊";
+    if (inside(-11, 11, -67, -50)) return "COIL BAY // 鋼捲倉";
+    if (x > 28 && z < -48) return "COOLING TOWERS // 冷卻塔";
+    if (x > 26 && z > 48) return "SLAG YARD // 爐渣場";
+    if (x > 40 && Math.abs(z) < 11) return "ARC FURNACE // 電弧爐";
     if (Math.abs(x) < 15 && Math.abs(z) < 15) return "REACTOR // 中央反應爐";
     if (z > 40) return "SOUTH ACCESS // 南側入口";
     if (z < -40) return "NORTH WORKS // 北側工區";
@@ -7469,6 +8099,12 @@ function getZoneName(x, z) {
     if (x > 30) return "QUENCH // 東側冷卻區";
     return "FOUNDRY // 工廠走廊";
   }
+  if (inside(26, 45, 33.5, 46.5)) return "WAREHOUSE—B // 冷鏈倉庫";
+  if (inside(-7, 11, -45.5, -34.5)) return "LOADING SHED // 北側裝卸棚";
+  if (inside(-42, -28, 31, 41)) return "CREW QUARTERS // 船員宿舍";
+  if (inside(-71, -44, -68, -39)) return "STACK YARD // 西北堆場";
+  if (inside(44, 64, -62, -40)) return "ARMORY—NE // 東北軍械所";
+  if (x < -46 && z > 48) return "TANK FARM // 西南儲槽區";
   if (z < -48 && x < -6) return "DRY DOCK—07 // 北側乾船塢";
   if (z < -48) return "CONTAINER ROW // 北側貨櫃區";
   if (x > 48) return "REFINERY—E // 東側精煉區";
@@ -7506,7 +8142,25 @@ function updateMissionStatus(time, force = false) {
       `${Math.ceil(streakLeft)} 秒內擊殺 • 每 3 連殺獲得補給`;
   }
   const mode = currentMode();
-  ui.zoneName.textContent = getZoneName(yaw.position.x, yaw.position.z);
+  const zone = getZoneName(yaw.position.x, yaw.position.z);
+  if (zone !== lastZoneName) {
+    // Entering a named sector briefly announces it under the compass.
+    if (lastZoneName && ui.zoneToast) {
+      const [code, label = ""] = zone.split(" // ");
+      ui.zoneToast.querySelector("b").textContent = code;
+      ui.zoneToast.querySelector("span").textContent = label;
+      ui.zoneToast.classList.remove("visible");
+      void ui.zoneToast.offsetWidth;
+      ui.zoneToast.classList.add("visible");
+      clearTimeout(updateMissionStatus.zoneTimer);
+      updateMissionStatus.zoneTimer = setTimeout(
+        () => ui.zoneToast.classList.remove("visible"),
+        2400,
+      );
+    }
+    lastZoneName = zone;
+  }
+  ui.zoneName.textContent = zone;
   if (mode.timeLimit) {
     const seconds = (matchDeadline - time) / 1000;
     ui.missionTimer.textContent = formatClock(seconds);
@@ -7746,7 +8400,48 @@ function endGame(win) {
   const elapsed = Math.floor((performance.now() - gameStart) / 1000);
   $("#resultTime").textContent =
     `${String(Math.floor(elapsed / 60)).padStart(2, "0")}:${String(elapsed % 60).padStart(2, "0")}`;
+  $("#resultHeadshots").textContent = headshotKills;
+  $("#resultStreak").textContent = bestStreak;
+  $("#resultDamage").textContent = Math.round(damageTaken);
+  const grade = missionGrade(win, elapsed);
+  ui.resultGrade.querySelector("b").textContent = grade.letter;
+  ui.resultGrade.dataset.grade = grade.letter;
+  ui.resultTip.textContent = grade.tip;
+  ui.resultMeta.textContent = `${builtMap === 1 ? "EMBER FOUNDRY" : "RUST HARBOR"} // ${ui.resultMeta.textContent}`;
   playTone(win ? 440 : 75, 0.5, win ? "triangle" : "sawtooth", 0.06);
+}
+
+// 作戰評等：完成度為主，命中率、爆頭、承受傷害與速度加減分。
+function missionGrade(win, elapsed) {
+  const accuracy = shots ? hits / shots : 0,
+    total = Math.max(1, matchTotalEnemies),
+    completion = Math.min(1, kills / total);
+  let score = completion * 55 + (win ? 15 : 0);
+  score += Math.min(15, accuracy * 30);
+  score += Math.min(8, (headshotKills / Math.max(1, kills)) * 16);
+  score += Math.max(0, 12 - (damageTaken / Math.max(1, maxHealth)) * 4);
+  if (win) score += Math.max(0, 6 - elapsed / 60);
+  const letter =
+    score >= 92
+      ? "S"
+      : score >= 80
+        ? "A"
+        : score >= 64
+          ? "B"
+          : score >= 45
+            ? "C"
+            : "D";
+  const tip =
+    !win && completion < 0.5
+      ? "提示：敵人會循槍聲包抄，開火後換位，善用倉庫與貨櫃的門口卡位。"
+      : accuracy < 0.25
+        ? "提示：短點放比全自動掃射更準，右鍵瞄準可大幅降低散布。"
+        : damageTaken > maxHealth * 2
+          ? "提示：交火後退到掩體後方補甲，低矮掩體能擋住大部分子彈。"
+          : headshotKills < Math.ceil(kills / 4)
+            ? "提示：瞄準頭部可更快擊倒敵人，菁英與首領尤其明顯。"
+            : "表現出色！試試更高難度或首領討伐模式。";
+  return { letter, tip };
 }
 
 function initAudio() {
@@ -8304,11 +8999,16 @@ function animate(time = 0) {
   if (portalPaused || document.hidden) return;
   // A long suspended frame must not teleport the player or consume a contract.
   // The clock is still sampled on paused frames, so resuming has no catch-up loop.
-  if (gameState === "playing" && elapsed > 0.5) {
-    pauseGame("偵測到短暫卡頓，已安全暫停。可調低畫質後繼續任務。");
+  // Ordinary hitches (shader warm-up, a busy tab) are absorbed by clamping the
+  // step instead of interrupting the match; only real suspensions pause it.
+  if (gameState === "playing" && elapsed > 2.5) {
+    pauseGame("偵測到畫面長時間停頓，已安全暫停。可調低畫質後繼續任務。");
     pauseStarted -= elapsed * 1000;
+  } else if (gameState === "playing" && elapsed > 0.25) {
+    // Keep the mission clock fair: time lost to a hitch is not charged.
+    if (matchDeadline) matchDeadline += (elapsed - 0.1) * 1000;
   }
-  const dt = Math.min(elapsed, 0.5);
+  const dt = Math.min(elapsed, 0.1);
   updateRain(dt);
   if (gameState === "playing") {
     const steps = Math.max(1, Math.ceil(dt / 0.05)),

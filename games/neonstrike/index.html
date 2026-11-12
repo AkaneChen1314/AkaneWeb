@@ -19,7 +19,7 @@
     <title>NEON STRIKE // 3D 射擊競技場</title>
     <link
       rel="stylesheet"
-      href="./styles.css?v=20261104-blueworld-r15-source"
+      href="./styles.css?v=20261113-blueworld-r16-districts"
     />
     <link
       rel="stylesheet"
@@ -31,7 +31,7 @@
     />
     <link
       rel="stylesheet"
-      href="./touch.css?v=20261104-blueworld-r15-source"
+      href="./touch.css?v=20261113-blueworld-r16-districts"
     />
     <script
       defer
@@ -200,9 +200,9 @@
                   >
                   <span class="map-card-info"
                     ><small>RUST HARBOR</small><strong>暗夜港區</strong
-                    ><span>雨夜港口與貨櫃掩體，外環視野開闊。</span
+                    ><span>雨夜港口：可進入的倉庫與貨櫃堆場。</span
                     ><span class="map-card-tags"
-                      ><i>遠近交戰</i><i>09 區域</i></span
+                      ><i>室內外交戰</i><i>15 區域</i></span
                     ></span
                   >
                 </span>
@@ -220,9 +220,9 @@
                   >
                   <span class="map-card-info"
                     ><small>EMBER FOUNDRY</small><strong>熔火工廠</strong
-                    ><span>熔爐與交錯通道，適合近距離突擊。</span
+                    ><span>熔爐、冷卻塔與鑄造廠房，適合近距離突擊。</span
                     ><span class="map-card-tags"
-                      ><i>近距突擊</i><i>05 區域</i></span
+                      ><i>近距突擊</i><i>11 區域</i></span
                     ></span
                   >
                 </span>
@@ -438,7 +438,7 @@
                     ><small id="briefEnemyLabel">敵軍總數</small></div
                   >
                   <div
-                    ><strong id="briefSectorCount">09</strong
+                    ><strong id="briefSectorCount">15</strong
                     ><small>戰術區域</small></div
                   >
                   <div
@@ -575,7 +575,7 @@
 
       <footer class="lobby-footer">
         <span>MAP // MULTI-ARENA</span><span id="modeFooter">MODE // PURGE</span
-        ><span>BUILD // 7.5 VISUAL CLARITY</span>
+        ><span>BUILD // 8.0 DISTRICTS</span>
       </footer>
     </section>
 
@@ -653,9 +653,19 @@
       <div
         id="combatBanner"
         class="combat-banner"
-        ><span>⚠</span><b>ENEMY CONTACT</b
+        ><span>⚠</span><b id="threatLabel">ENEMY CONTACT</b
         ><small id="threatDistance">— M</small></div
       >
+      <div
+        id="zoneToast"
+        class="zone-toast"
+        aria-live="polite"
+        ><small>ENTERING SECTOR</small><b>—</b><span>—</span></div
+      >
+      <div
+        class="low-health-vignette"
+        aria-hidden="true"
+      ></div>
       <div
         id="pickupPrompt"
         class="pickup-prompt"
@@ -892,6 +902,12 @@
             <h3><span>04</span> 戰鬥提示</h3>
             <ul class="help-rules tips">
               <li>左上角會顯示敵軍總數、已擊殺與剩餘數。</li>
+              <li
+                >敵人會循槍聲與爆炸前來搜索；畫面上方出現琥珀色「敵軍搜索中」時，代表有人正朝你的位置靠近。</li
+              >
+              <li
+                >倉庫、宿舍與廠房都能進入；門口與貨架是很好的卡位點。暫停選單可調整視角靈敏度。</li
+              >
               <li>接近補給會自動拾取；無法使用的補給會保留。</li>
               <li>鏈網會阻擋人物與手榴彈，但子彈仍可穿過網孔。</li>
               <li>紅色油桶可被射爆並造成連鎖範圍傷害。</li>
@@ -984,6 +1000,23 @@
             ></label
           >
           <label
+            class="quality-control volume-control"
+            for="sensitivityControl"
+            ><span>視角靈敏度</span
+            ><input
+              id="sensitivityControl"
+              type="range"
+              min="40"
+              max="200"
+              step="5"
+              value="100"
+            /><output
+              id="sensitivityValue"
+              for="sensitivityControl"
+              >1.00×</output
+            ></label
+          >
+          <label
             class="quality-control"
             for="pauseQualitySelect"
             ><span>畫面品質</span
@@ -1039,12 +1072,22 @@
           class="eyebrow"
           >MISSION COMPLETE</span
         >
-        <h2 id="resultTitle">區域已肅清</h2>
-        <p
-          id="resultMeta"
-          class="result-meta"
-          >PURGE // TACTICAL // RUST HARBOR</p
-        >
+        <div class="result-head">
+          <div>
+            <h2 id="resultTitle">區域已肅清</h2>
+            <p
+              id="resultMeta"
+              class="result-meta"
+              >PURGE // TACTICAL // RUST HARBOR</p
+            >
+          </div>
+          <div
+            id="resultGrade"
+            class="result-grade"
+            aria-label="作戰評等"
+            ><small>RATING</small><b>A</b></div
+          >
+        </div>
         <div class="result-stats">
           <div><strong id="resultKills">7</strong><small>擊殺</small></div>
           <div
@@ -1053,7 +1096,21 @@
           <div
             ><strong id="resultTime">00:00</strong><small>任務時間</small></div
           >
+          <div
+            ><strong id="resultHeadshots">0</strong><small>爆頭擊殺</small></div
+          >
+          <div
+            ><strong id="resultStreak">0</strong><small>最高連殺</small></div
+          >
+          <div
+            ><strong id="resultDamage">0</strong><small>承受傷害</small></div
+          >
         </div>
+        <p
+          id="resultTip"
+          class="result-tip"
+          ></p
+        >
         <button
           id="playAgainButton"
           class="deploy-button"
@@ -1064,11 +1121,11 @@
 
     <script
       defer
-      src="./lobby.js?v=20261104-blueworld-r15-source"
+      src="./lobby.js?v=20261113-blueworld-r16-districts"
     ></script>
     <script
       defer
-      src="./browser.js?v=20261030-r13-touch"
+      src="./browser.js?v=20261113-blueworld-r16-districts"
       onerror="document.getElementById('loadError').hidden=false"
     ></script>
   </body>
