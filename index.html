@@ -17,7 +17,7 @@
     />
     <meta
       name="description"
-      content="Blue World：二次元守護者的黑川茜主題網站，官方角色圖片、角色介紹、互動圖庫，以及五款可隨時返回的小遊戲。"
+      content="Blue World：二次元守護者的黑川茜主題網站，官方角色圖片、角色介紹、互動圖庫，以及七款可隨時返回的小遊戲。"
     />
     <title>Blue World｜黑川茜的藍色世界</title>
     <!--
@@ -46,7 +46,7 @@
     />
     <meta
       property="og:description"
-      content="走進黑川茜的藍色世界：三季圖片收藏、角色故事、小小互動，還有五款自製小遊戲。"
+      content="走進黑川茜的藍色世界：三季圖片收藏、角色故事、小小互動，還有七款自製小遊戲。"
     />
     <meta
       property="og:url"
@@ -94,7 +94,7 @@
     />
     <meta
       name="twitter:description"
-      content="角色收藏與五款自製小遊戲，歡迎走進 Blue World。"
+      content="角色收藏與七款自製小遊戲，歡迎走進 Blue World。"
     />
     <meta
       name="twitter:image"
@@ -130,7 +130,7 @@
       href="archive.css?v=20261104-blueworld-r14-source"
     />
     <script
-      src="main.js?v=20261104-blueworld-r14-source"
+      src="main.js?v=20261113-r14-games"
       defer
     ></script>
     <script
@@ -175,7 +175,7 @@
     ></script>
     <meta
       name="akane-edition"
-      content="20261113-blueworld-r14-districts"
+      content="20261113-blueworld-r14-seven-games"
     />
     <script
       src="polish.js?v=20261104-blueworld-r14-source"
@@ -457,7 +457,7 @@
               <div class="gateway-copy">
                 <h3>休息一下，<br />一起去冒險。</h3>
                 <p>
-                  自製小遊戲，歡迎大家來玩！<br />五種玩法，隨時可以返回與接續。
+                  自製小遊戲，歡迎大家來玩！<br />七種玩法，隨時可以返回與接續。
                 </p>
                 <small class="game-independence-note"
                   >遊戲內容皆與黑川茜無關。</small
@@ -2113,7 +2113,7 @@
             </p>
           </div>
           <p class="games-independence-note">
-            小提醒：這五款遊戲皆為獨立自製作品，遊戲內容與黑川茜及《我推的孩子》無關。
+            小提醒：這七款遊戲皆為獨立自製作品，遊戲內容與黑川茜及《我推的孩子》無關。
           </p>
           <div class="mood-picker">
             <div class="mood-title">
@@ -2156,6 +2156,16 @@
               >
                 想來場星海突圍
               </button>
+              <button
+                data-mood="midnight"
+                aria-pressed="false"
+                >想來場格鬥對決</button
+              >
+              <button
+                data-mood="serpent"
+                aria-pressed="false"
+                >想玩貪吃蛇</button
+              >
             </div>
             <button
               id="surprise-game"
@@ -2360,6 +2370,70 @@
                 </button>
               </div>
             </article>
+            <article class="game-card midnight-card">
+              <div class="card-visual"
+                ><img
+                  src="assets/cover-midnight.png"
+                  alt="午夜擂台雨夜天台的雙人格鬥實際畫面"
+                  loading="lazy"
+                  width="1200"
+                  height="675"
+                />
+                <div
+                  class="cover-caption"
+                  aria-hidden="true"
+                  ><span>MIDNIGHT CIRCUIT</span
+                  ><small>雨夜天台，下一回合見</small></div
+                ></div
+              >
+              <div class="card-body"
+                ><div class="tags"
+                  ><span>即時格鬥</span><span>本機雙人</span></div
+                ><h3>午夜擂台：MIDNIGHT CIRCUIT</h3>
+                <p class="card-description"
+                  >選擇四名原創鬥士，組合連擊、技能與大招。單挑電腦、挑戰街機，或和朋友在同一台裝置較量。</p
+                ><p class="recommendation"
+                  ><span>適合你，如果</span>你喜歡抓準時機、近身對決與連段。</p
+                >
+                <button
+                  class="card-button"
+                  data-details="midnight"
+                  >查看玩法與開始 <span aria-hidden="true">✦</span></button
+                ></div
+              ></article
+            >
+            <article class="game-card serpent-card">
+              <div class="card-visual"
+                ><img
+                  src="assets/cover-serpent.png"
+                  alt="霓境蛇行的翡翠蛇靈盤繞於發光展示台"
+                  loading="lazy"
+                  width="820"
+                  height="300"
+                />
+                <div
+                  class="cover-caption"
+                  aria-hidden="true"
+                  ><span>NEON SERPENT</span
+                  ><small>收集微光，長成自己的冒險</small></div
+                ></div
+              >
+              <div class="card-body"
+                ><div class="tags"><span>生存進化</span><span>貪吃蛇</span></div
+                ><h3>霓境蛇行：NEON SERPENT</h3>
+                <p class="card-description"
+                  >四種蛇靈、三座戰場與六種模式。吞食成長、繞圈纏繞，再用隨機進化迎戰蟲群與首領。</p
+                ><p class="recommendation"
+                  ><span>適合你，如果</span
+                  >你喜歡貪吃蛇、收集成長或輕鬆探索。</p
+                >
+                <button
+                  class="card-button"
+                  data-details="serpent"
+                  >查看玩法與開始 <span aria-hidden="true">✦</span></button
+                ></div
+              ></article
+            >
           </div>
 
           <aside class="welcome-note">
@@ -2372,7 +2446,7 @@
             </div>
           </aside>
           <p class="section-footnote">
-            遊戲封面為情境插畫；實際玩法以介紹與遊戲畫面為準。
+            封面包含情境插畫與遊戲實景；實際玩法以介紹與遊戲畫面為準。
           </p>
         </section>
       </main>
@@ -2413,7 +2487,7 @@
         <span>✦ BLUE WORLD</span>
         <p>二次元守護者的收藏館 · 非官方粉絲主題</p>
         <a href="#sources">來源與圖片權利</a
-        ><small>Blue World · 五款獨立遊戲 · 2026.11.13 r14</small>
+        ><small>Blue World · 七款獨立遊戲 · 2026.11.13 r14</small>
       </footer>
     </div>
     <dialog

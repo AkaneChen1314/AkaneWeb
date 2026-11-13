@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" /><meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    /><meta
+      name="theme-color"
+      content="#0b1115"
+    />
+    <meta
+      name="description"
+      content="霓境蛇行：四種 3D 蛇靈、三座戰場、自動咬擊與纏繞絞殺。可離線遊玩的生存貪吃蛇。"
+    />
+    <title>霓境蛇行 — Neon Serpent</title
+    ><link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230b1115'/%3E%3Cpath d='M46 19H25a9 9 0 000 18h14a5 5 0 010 10H18' fill='none' stroke='%2387edbb' stroke-width='9' stroke-linecap='round'/%3E%3C/svg%3E"
+    /><link
+      rel="stylesheet"
+      href="styles.css?v=6.7"
+    />
+    <script
+      src="engine.js?v=6.7"
+      defer
+    ></script
+    ><script
+      src="renderer.js?v=6.7"
+      defer
+    ></script
+    ><script
+      src="guide.js?v=6.7"
+      defer
+    ></script
+    ><script
+      src="app.js?v=6.7"
+      defer
+    ></script>
+    <link
+      rel="stylesheet"
+      href="../../shared/fonts.css"
+    />
+  </head>
+  <body>
+    <svg
+      class="svg-defs"
+      aria-hidden="true"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <symbol
+          id="i-snake"
+          viewBox="0 0 24 24"
+        >
+          <path d="M19 5H9a4 4 0 0 0 0 8h6a3 3 0 0 1 0 6H4" />
+          <path d="M17 3v4M20 5h2" />
+        </symbol>
+        <symbol
+          id="i-play"
+          viewBox="0 0 24 24"
+        >
+          <path d="m9 5 10 7-10 7Z" />
+        </symbol>
+        <symbol
+          id="i-diamond"
+          viewBox="0 0 24 24"
+        >
+          <path d="m12 3 8 9-8 9-8-9Z" />
+          <path d="m12 3 3 9-3 9-3-9Z" />
+        </symbol>
+        <symbol
+          id="i-bolt"
+          viewBox="0 0 24 24"
+        >
+          <path d="m14 2-9 12h6l-1 8 9-12h-6Z" />
+        </symbol>
+        <symbol
+          id="i-hex"
+          viewBox="0 0 24 24"
+        >
+          <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9Z" />
+          <circle
+            cx="12"
+            cy="12"
+            r="3"
+          />
+        </symbol>
+        <symbol
+          id="i-trophy"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M8 3h8v7a4 4 0 0 1-8 0ZM8 5H4v3a4 4 0 0 0 4 4m8-7h4v3a4 4 0 0 1-4 4m-4 2v6m-5 1h10"
+          />
+        </symbol>
+        <symbol
+          id="i-settings"
+          viewBox="0 0 24 24"
+        >
+          <path d="M5 3v18M12 3v18M19 3v18M2 8h6m1 8h6m1-10h6" />
+          <circle
+            cx="5"
+            cy="8"
+            r="2"
+          />
+          <circle
+            cx="12"
+            cy="16"
+            r="2"
+          />
+          <circle
+            cx="19"
+            cy="6"
+            r="2"
+          />
+        </symbol>
+        <symbol
+          id="i-arrow"
+          viewBox="0 0 24 24"
+        >
+          <path d="M4 12h16m-7-7 7 7-7 7" />
+        </symbol>
+        <symbol
+          id="i-shield"
+          viewBox="0 0 24 24"
+        >
+          <path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z" />
+          <path d="m8 12 3 3 5-6" />
+        </symbol>
+        <symbol
+          id="i-close"
+          viewBox="0 0 24 24"
+        >
+          <path d="m6 6 12 12M6 18 18 6" />
+        </symbol>
+        <symbol
+          id="i-pause"
+          viewBox="0 0 24 24"
+        >
+          <path d="M8 5v14M16 5v14" />
+        </symbol>
+        <symbol
+          id="i-sound"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="m11 4-6 5H2v6h3l6 5 0-16ZM15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"
+          />
+        </symbol>
+        <symbol
+          id="i-help"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="9"
+          />
+          <path d="M9 9a3 3 0 0 1 6 0c0 2-3 2-3 5m0 3v.1" />
+        </symbol>
+        <symbol
+          id="i-target"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="7"
+          />
+          <circle
+            cx="12"
+            cy="12"
+            r="2"
+          />
+          <path d="M12 1v4m0 14v4M1 12h4m14 0h4" />
+        </symbol>
+        <symbol
+          id="i-leaf"
+          viewBox="0 0 24 24"
+        >
+          <path d="M20 3C8 2 2 8 5 16c8 5 16-1 15-13ZM4 21 16 8" />
+        </symbol>
+      </defs>
+    </svg>
+    <noscript
+      ><div class="noscript"
+        >請啟用瀏覽器的 JavaScript，即可開始遊戲。</div
+      ></noscript
+    >
+    <div
+      id="lobby"
+      class="shell"
+    >
+      <header class="topbar">
+        <a
+          class="brand"
+          href="#"
+          aria-label="霓境蛇行首頁"
+          ><span class="brand-icon"
+            ><svg><use href="#i-snake" /></svg></span
+          ><span
+            >NEON<span class="brand-light">SERPENT</span
+            ><small>霓境蛇行</small></span
+          ></a
+        >
+        <nav
+          class="main-nav"
+          aria-label="主要導覽"
+          ><button
+            class="nav-button active"
+            data-nav="lobby"
+            ><svg><use href="#i-play" /></svg>遊戲大廳</button
+          ><button
+            class="nav-button"
+            data-nav="lab"
+            ><svg><use href="#i-hex" /></svg>進化研究所</button
+          ><button
+            class="nav-button"
+            data-nav="records"
+            ><svg><use href="#i-trophy" /></svg>冒險紀錄</button
+          ></nav
+        >
+        <div class="top-actions"
+          ><span
+            class="wallet"
+            title="遊玩獲得的進化晶體"
+            ><svg><use href="#i-diamond" /></svg><b id="wallet">0</b></span
+          ><button
+            class="icon-button"
+            data-action="settings"
+            aria-label="設定"
+            ><svg><use href="#i-settings" /></svg></button
+        ></div>
+      </header>
+      <main id="main-lobby">
+        <div class="intro"
+          ><div
+            ><p class="section-label"
+              >自動咬擊、衝刺撞擊、纏繞絞殺。六種玩法，由你選擇。</p
+            ><h1>小小蛇靈，<span>無限可能。</span></h1></div
+          ><div class="intro-actions"
+            ><button
+              class="text-button"
+              data-action="help"
+              ><svg><use href="#i-help" /></svg>完整規則</button
+            ></div
+          ></div
+        >
+        <div class="rules-strip"
+          ><div
+            ><strong>三個按鍵就能玩：移動、衝刺、技能。</strong
+            ><span
+              >第一次玩？花一分鐘看遊戲說明，或直接玩八步無傷練習。</span
+            ></div
+          ><div class="strip-actions"
+            ><button
+              class="secondary-button guide-cta"
+              id="guide-button"
+              ><svg><use href="#i-help" /></svg>遊戲說明</button
+            ><button
+              class="secondary-button"
+              id="practice-button"
+              >八步無傷練習</button
+            ></div
+          ></div
+        >
+        <div class="lobby-grid">
+          <section
+            class="showcase"
+            aria-label="3D 角色預覽"
+            ><div class="showcase-top"
+              ><span class="tag">蛇靈檔案 <b id="model-number">01 / 04</b></span
+              ><span class="subtle">即時 3D 模型</span></div
+            >
+            <div
+              class="model-stage"
+              id="model-stage"
+              ><canvas
+                id="preview-canvas"
+                aria-label="可拖曳旋轉的立體蛇靈"
+              ></canvas
+              ><div
+                class="model-word"
+                id="model-word"
+                >VERDANT</div
+              ><div class="model-orbit"></div
+            ></div>
+            <div class="model-caption"
+              ><div
+                ><span
+                  class="tiny-label"
+                  id="model-class"
+                  >靈巧型 / 森林守護者</span
+                ><h2 id="model-name">翡翠</h2
+                ><p id="model-flavor"
+                  >循著微光前行，讓整座森林為你甦醒。</p
+                ></div
+              ><button
+                class="rotation-button"
+                id="rotate-model"
+                aria-label="旋轉角色模型"
+                >↻<span>旋轉模型</span></button
+              ></div
+            >
+            <div class="hero-sheet"
+              ><div class="hero-stats"
+                ><div class="character-title"
+                  ><span
+                    class="role-tag"
+                    id="role-tag"
+                    >靈巧型</span
+                  ><span>角色能力</span></div
+                ><div
+                  id="character-stats"
+                  class="stats-bars"
+                ></div
+                ><div
+                  id="character-numbers"
+                  class="hero-numbers"
+                ></div></div
+              ><div class="ability-info"
+                ><div class="ability-symbol"
+                  ><svg id="ability-icon"><use href="#i-leaf" /></svg></div
+                ><div
+                  ><span class="tiny-label">專屬技能</span
+                  ><h3 id="ability-name">森之引力 <kbd>E</kbd></h3
+                  ><p id="ability-desc">喚醒磁力場，吸收周圍的能量與晶體。</p
+                  ><ul
+                    class="ability-meta"
+                    id="ability-meta"
+                  ></ul
+                  ><p
+                    class="hero-tip"
+                    id="hero-tip"
+                  ></p></div></div
+            ></div>
+            <div
+              class="character-roster"
+              id="character-roster"
+              aria-label="選擇角色"
+            ></div
+          ></section>
+          <aside class="loadout"
+            ><div class="panel-heading"
+              ><h2>準備你的冒險</h2><span class="small-number">01</span></div
+            >
+            <div class="section-row"><h3>遊戲模式</h3><span>自由轉向</span></div
+            ><div
+              class="mode-list"
+              id="mode-list"
+            >
+              <button
+                class="mode-card selected"
+                data-mode="survival"
+                aria-pressed="true"
+                ><svg><use href="#i-shield" /></svg
+                ><span
+                  ><strong>荒野生存</strong
+                  ><small>180 秒 / 敵潮與首領</small></span
+                ><span class="radio-mark"></span
+              ></button>
+              <button
+                class="mode-card"
+                data-mode="blitz"
+                aria-pressed="false"
+                ><svg><use href="#i-bolt" /></svg
+                ><span
+                  ><strong>極速獵食</strong
+                  ><small>120 秒 / 挑戰最高分</small></span
+                ><span class="radio-mark"></span
+              ></button>
+              <button
+                class="mode-card"
+                data-mode="zen"
+                aria-pressed="false"
+                ><svg><use href="#i-leaf" /></svg
+                ><span
+                  ><strong>悠遊秘境</strong
+                  ><small>無限時間 / 不受傷害</small></span
+                ><span class="radio-mark"></span></button
+            ></div>
+            <div class="section-row"
+              ><h3>難度</h3><span id="difficulty-note"></span></div
+            ><div
+              class="difficulty-list"
+              id="difficulty-list"
+              role="group"
+              aria-label="選擇難度"
+            ></div
+            ><p
+              id="difficulty-desc"
+              class="difficulty-desc"
+            ></p>
+            <p
+              id="mode-objective"
+              class="mode-objective"
+              >目標：存活 180 秒；不必擊敗首領。</p
+            ><button
+              id="start-button"
+              class="primary-button"
+              ><svg><use href="#i-play" /></svg><span>進入秘境</span
+              ><kbd>Enter</kbd><svg><use href="#i-arrow" /></svg></button
+            ><p class="start-hint"
+              >本局結算後儲存獎勵；直接關頁不會保存當局</p
+            ></aside
+          ></div
+        >
+        <section class="world-section"
+          ><div class="section-row"
+            ><h2>選擇你的戰場 <span>三個世界，地形效果各不相同。</span></h2
+            ><span id="world-count">01 — 03</span></div
+          ><div
+            class="world-grid"
+            id="world-grid"
+          ></div
+        ></section>
+        <footer class="lobby-footer"
+          ><span
+            ><i class="keycap">滑鼠 / WASD</i> 移動
+            <i class="keycap">Space / 左鍵</i> 衝刺撞擊
+            <i class="keycap">E / 右鍵</i> 專屬技能
+            <i class="keycap">M</i> 地圖</span
+          ><span>原創建模 / 隨機進化 / 每局新冒險</span></footer
+        > </main
+      ><main
+        id="secondary-page"
+        class="hidden"
+      ></main
+    ></div>
+    <section
+      id="game-screen"
+      class="hidden"
+      aria-label="遊戲畫面"
+      ><canvas
+        id="game-canvas"
+        tabindex="0"
+        aria-label="移動滑鼠或使用 WASD 移動，按住空白鍵或滑鼠左鍵衝刺，E 或右鍵使用技能，M 開啟地圖，Escape 暫停"
+      ></canvas
+      ><canvas
+        id="fx-canvas"
+        aria-hidden="true"
+      ></canvas>
+      <div class="game-top"
+        ><div class="hud-status"
+          ><div class="hud-status-head"
+            ><span
+              id="hud-avatar"
+              class="hud-avatar"
+            ></span
+            ><div class="hud-name"
+              ><b id="hud-character"></b><small id="hud-mode"></small></div
+            ><span
+              class="hud-level"
+              id="level-label"
+              >Lv. 1</span
+            ></div
+          ><div
+            class="health-track"
+            id="health-track"
+            ><span id="health-fill"></span><b id="health-text"></b></div
+          ><div class="xp-row"
+            ><div class="xp-track"><span id="xp-fill"></span></div
+            ><small id="xp-text">進化 0%</small></div
+          ><div class="run-info"
+            ><span id="length-info">長度 14</span
+            ><span id="kills-info">擊退 0</span
+            ><span id="crystal-info">晶體 0</span
+            ><span id="combo-info"></span></div></div
+        ><div class="run-clock"
+          ><span id="wave-label">荒野生存</span><strong id="timer">03:00</strong
+          ><div
+            class="run-objective"
+            id="run-objective"
+          ></div></div
+        ><div class="game-actions"
+          ><div class="score-box"
+            ><span>本局得分</span><strong id="score">0</strong></div
+          ><button
+            class="icon-button"
+            id="game-help"
+            aria-label="本局說明（H）"
+            title="本局說明（H）"
+            ><svg><use href="#i-help" /></svg></button
+          ><button
+            class="icon-button"
+            id="pause-button"
+            aria-label="暫停遊戲（Esc）"
+            title="暫停（Esc）"
+            ><svg><use href="#i-pause" /></svg></button></div
+      ></div>
+      <div
+        id="boss-hud"
+        class="boss-hud hidden"
+        ><div class="boss-head"
+          ><b id="boss-name">首領</b><span id="boss-title"></span
+          ><small id="boss-hp"></small></div
+        ><div class="boss-bar"
+          ><i id="boss-fill"></i><s style="left:33%"></s
+          ><s style="left:66%"></s></div
+        ><div class="boss-foot"
+          ><em id="boss-phase"></em><strong id="boss-cast"></strong></div
+      ></div>
+      <div
+        id="run-banner"
+        class="run-banner"
+        aria-live="polite"
+      ></div
+      ><div
+        id="boss-intro"
+        class="boss-intro"
+        aria-live="polite"
+        ><small>首領來襲</small><strong id="boss-intro-name"></strong
+        ><span id="boss-intro-title"></span><p id="boss-intro-tip"></p></div
+      ><div
+        id="combo-meter"
+        class="combo-meter"
+        aria-hidden="true"
+        ><strong id="combo-count">0</strong><span id="combo-mult"></span><i></i
+      ></div>
+      <div
+        id="damage-notice"
+        class="damage-notice hidden"
+        role="status"
+      ></div
+      ><aside
+        id="training-coach"
+        class="training-coach hidden"
+        aria-label="新手練習任務"
+        ><div class="coach-top"
+          ><span id="coach-step"></span
+          ><button
+            id="exit-training"
+            class="text-button"
+            >離開練習</button
+          ></div
+        ><h2 id="coach-title"></h2><p id="coach-detail"></p
+        ><div class="coach-progress"><span id="coach-progress"></span></div
+        ><small id="coach-status"></small
+      ></aside>
+      <button
+        id="minimap-wrap"
+        type="button"
+        aria-label="小地圖，點一下或按 M 開啟大地圖"
+        ><canvas
+          id="minimap"
+          width="176"
+          height="176"
+        ></canvas
+        ><span class="minimap-meta"
+          ><span id="minimap-label"></span
+          ><span><kbd>M</kbd> 大地圖</span></span
+        ></button
+      >
+      <div class="game-bottom"
+        ><div
+          class="game-tips"
+          id="game-tips"
+          >滑鼠或 WASD 移動 <span>Esc 暫停</span></div
+        ><div class="dock-column"
+          ><div
+            class="hud-hint"
+            id="hud-hint"
+            aria-live="polite"
+            ><span id="protection-status"></span></div
+          ><div
+            id="buff-bar"
+            class="buff-bar"
+            aria-live="polite"
+          ></div
+          ><div class="skill-dock"
+            ><button
+              id="dash-button"
+              class="skill-button"
+              ><svg><use href="#i-bolt" /></svg><span>衝刺撞擊</span
+              ><kbd>Space／左鍵</kbd><i id="dash-fill"></i></button
+            ><button
+              id="skill-button"
+              class="skill-button special"
+              ><svg><use href="#i-leaf" /></svg
+              ><span id="skill-label">森之引力</span><kbd>E／右鍵</kbd
+              ><i id="skill-fill"></i
+              ><b id="cooldown-text"></b></button></div></div
+        ><div class="dock-spacer"></div></div
+      ><div
+        id="joystick"
+        aria-label="觸控搖桿"
+        ><span></span></div
+    ></section>
+    <div
+      id="modal-backdrop"
+      class="modal-backdrop hidden"
+      ><section
+        id="modal"
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        tabindex="-1"
+      ></section></div
+    ><div
+      id="toast"
+      role="status"
+      aria-live="polite"
+    ></div> </body
+></html>

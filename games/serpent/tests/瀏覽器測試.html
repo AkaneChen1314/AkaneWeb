@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" /><meta
+      name="viewport"
+      content="width=device-width,initial-scale=1"
+    />
+    <title>霓境蛇行 規則測試</title>
+    <style>
+      :root{color-scheme:dark;--bg:#0b1115;--text:#eef5ef;--muted:#97aaa8;--ok:#a0f0ba;--bad:#ff7a81}
+      body{margin:0;padding:24px 16px;background:var(--bg);color:var(--text);font:14px/1.6 "Segoe UI","Microsoft JhengHei",sans-serif}
+      main{max-width:860px;margin:auto}h1{font-size:22px;margin:0 0 4px}p{color:var(--muted);margin:0 0 16px}
+      #summary{font-size:18px;font-weight:700;margin:12px 0}#summary.ok{color:var(--ok)}#summary.bad{color:var(--bad)}
+      li{margin:3px 0;list-style:none}li.ok::before{content:"✓ ";color:var(--ok)}li.bad::before{content:"✗ ";color:var(--bad)}
+      ul{padding:0}h2{font-size:15px;margin:18px 0 6px;color:var(--muted)}pre{white-space:pre-wrap;color:var(--bad);margin:2px 0 8px 18px;font-size:12px}
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>霓境蛇行・規則測試</h1>
+      <p
+        >需要透過本機伺服器開啟（例如在遊戲資料夾執行
+        <code>python -m http.server 4173 --bind 127.0.0.1</code>，再開啟
+        http://127.0.0.1:4173/tests/瀏覽器測試.html）。電腦有 Node 時也可用
+        <code>node --test tests/*.test.cjs</code>。</p
+      >
+      <div id="summary">測試執行中…</div>
+      <div id="out"></div>
+    </main>
+    <script>
+      (async function () {
+        'use strict';
+        await new Promise((resolve, reject) => { const s = document.createElement('script'); s.src = '../engine.js?t=' + Date.now(); s.onload = resolve; s.onerror = reject; document.head.appendChild(s); });
+        const files = ['engine.test.cjs', 'combat.test.cjs', 'map.test.cjs', 'enemies.test.cjs'];
+        const fail = (msg) => { throw new Error(msg); };
+        const show = v => { try { return JSON.stringify(v); } catch (_) { return String(v); } };
+        function deepEqual(a, b) {
+          if (Object.is(a, b)) return true;
+          if (typeof a !== 'object' || typeof b !== 'object' || !a || !b) return false;
+          if (Array.isArray(a) !== Array.isArray(b)) return false;
+          const ka = Object.keys(a), kb = Object.keys(b);
+          if (ka.length !== kb.length) return false;
+          return ka.every(k => Object.prototype.hasOwnProperty.call(b, k) && deepEqual(a[k], b[k]));
+        }
+        const assert = {
+          ok: (v, m) => { if (!v) fail(m === undefined ? `預期為真，實際為 ${show(v)}` : String(m)); },
+          equal: (a, b, m) => { if (!Object.is(a, b)) fail(m || `預期 ${show(b)}，實際 ${show(a)}`); },
+          notEqual: (a, b, m) => { if (Object.is(a, b)) fail(m || `不應等於 ${show(b)}`); },
+          deepEqual: (a, b, m) => { if (!deepEqual(a, b)) fail(m || `預期 ${show(b)}，實際 ${show(a)}`); }
+        };
+        const results = [];
+        for (const file of files) {
+          const tests = [];
+          const test = (name, fn) => tests.push({ name, fn }); test.test = test;
+          const require = id => id === 'node:test' ? test : id === 'node:assert/strict' || id === 'node:assert' ? assert : id === '../engine.js' ? window.Serpent : fail(`未知模組 ${id}`);
+          let code = '';
+          try { code = await (await fetch(file, { cache: 'no-store' })).text(); new Function('require', 'module', 'exports', code)(require, {}, {}); }
+          catch (error) { results.push({ file, name: '載入測試檔', ok: false, error: String(error && error.stack || error) }); continue; }
+          for (const t of tests) {
+            try { t.fn(); results.push({ file, name: t.name, ok: true }); }
+            catch (error) { results.push({ file, name: t.name, ok: false, error: String(error && error.message || error) }); }
+          }
+        }
+        const failed = results.filter(r => !r.ok);
+        const summary = document.getElementById('summary');
+        summary.textContent = `${results.length - failed.length} 項通過，${failed.length} 項失敗`;
+        summary.className = failed.length ? 'bad' : 'ok';
+        document.getElementById('out').innerHTML = files.map(f => `<h2>${f}</h2><ul>${results.filter(r => r.file === f).map(r => `<li class="${r.ok ? 'ok' : 'bad'}">${r.name.replace(/</g, '&lt;')}${r.ok ? '' : `<pre>${r.error.replace(/</g, '&lt;')}</pre>`}</li>`).join('')}</ul>`).join('');
+        window.__testResults = { passed: results.length - failed.length, failed: failed.map(r => `${r.file} / ${r.name}: ${r.error}`) };
+      })();
+    </script>
+  </body>
+</html>

@@ -1,7 +1,15 @@
 Blue World 1.2 / r14｜2026-11-02～11-13 整合檔案清單
 ================================================
 
-版本辨識：20261113-blueworld-r14-districts
+版本辨識：20261113-blueworld-r14-seven-games
+
+11-13 新增兩款遊戲（同屬 r14）：
+- games/midnight/：午夜擂台；games/serpent/：霓境蛇行。自訂字體、中文導讀與可閱讀原始碼；支援遊戲館返回暫停、音訊停止及重入接續。
+- assets/cover-midnight.png、assets/cover-serpent.png：分別擷取遊戲戰場與蛇靈展示台，不使用外部圖片。
+- index.html、main.js：七款遊戲卡片、推薦定位、玩法介紹、隨機選擇與入口；桌機一主卡＋三排雙欄，手機單欄。
+- 新快取辨識 20261113-blueworld-r14-seven-games；既有霓光突擊打包資源仍沿用 districts 快取。
+- 更新 README、程式導覽、來源及測試紀錄；下方舊內容保留其當時檢查範圍。
+
 範圍：11-02首頁與可讀性、11-04原始碼排版與註解、11-13霓光突擊8.0 DISTRICTS統一記為r14。
 
 霓光突擊新增：games/neonstrike/navigation.js（導航格與A*尋路）、districts.js（區塊零件、自動補碰撞與合併繪製）、district-maps.js（兩張地圖的區塊配置）。

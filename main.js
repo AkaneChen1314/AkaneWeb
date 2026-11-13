@@ -11,6 +11,36 @@
 
 // 這裡修改遊戲介紹視窗的內容；遊戲卡片上的文案位於 index.html。
 const games = {
+  midnight: {
+    name: "午夜擂台：MIDNIGHT CIRCUIT",
+    category: "即時格鬥 / 單人與本機雙人",
+    version: "鍵盤・觸控",
+    path: "games/midnight/index.html?v=20261113-r14-games",
+    cover: "assets/cover-midnight.png",
+    description:
+      "四名原創鬥士，在雨夜天台展開對決。選擇單人對電腦、本機雙人、練習或街機挑戰，用連擊、防禦與大招拿下兩回合。",
+    steps: [
+      "選擇鬥士、對戰模式與難度，再按「開戰」。第一次可以先試練習模式。",
+      "鍵盤使用遊戲內「操作說明」的對應按鍵；手機使用戰場下方的移動與招式按鈕，也支援相容手把。",
+      "觀察距離與能量，組合輕重攻擊、兩種技能、防禦與閃避；能量蓄滿後使出大招。",
+    ],
+    note: "返回遊戲館會暫停並靜音；再次進入後按「繼續對戰」。同次開啟網頁保留對戰，重新整理會重開。本機雙人需共用同一台裝置，沒有線上連線。",
+  },
+  serpent: {
+    name: "霓境蛇行：NEON SERPENT",
+    category: "生存貪吃蛇 / 隨機進化",
+    version: "鍵鼠・觸控",
+    path: "games/serpent/index.html?v=20261113-r14-games",
+    cover: "assets/cover-serpent.png",
+    description:
+      "化身四種蛇靈，在三座戰場收集食物、成長與進化。從無傷練習、悠遊秘境到蟲群對戰與首領連戰，選擇自己的冒險節奏。",
+    steps: [
+      "在大廳選擇蛇靈、模式、難度與世界；第一次建議先玩「八步無傷練習」。",
+      "電腦用滑鼠或 WASD／方向鍵轉向，Space／Shift 衝刺、E 使用技能；手機使用左下搖桿及右側衝刺、技能鍵。",
+      "靠近敵人自動咬擊，衝刺撞擊或繞圈纏繞；收集食物並選擇進化。隨時按暫停或查看規則。",
+    ],
+    note: "返回遊戲館會暫停並靜音，重進後手動繼續。研究、晶體與紀錄儲存在同一瀏覽器及網站；本機檔案的舊存檔不會自動搬到網站。重新整理會結束當局，保留已儲存的長期進度。",
+  },
   neonstrike: {
     name: "NEON STRIKE：霓光突擊",
     category: "3D 第一人稱射擊 / 戰術任務",
@@ -337,6 +367,8 @@ window.addEventListener("pageshow", syncGameVisibility);
 
 // 只推薦與標示卡片，不直接啟動遊戲；仍先顯示玩法介紹。
 const moodMessages = {
+  midnight: "推薦《午夜擂台》：選好鬥士，來場天台格鬥對決。",
+  serpent: "推薦《霓境蛇行》：收集食物、進化蛇靈，選擇悠遊或生存挑戰。",
   neonstrike:
     "推薦《NEON STRIKE》：用鍵盤滑鼠或手機觸控，挑選幹員與地圖，來場戰術突擊。",
   abyss: "推薦《深境冒險》：從第一層出發，把每次戰鬥都變成成長。",

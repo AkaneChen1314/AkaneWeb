@@ -311,7 +311,7 @@ h2 {
 
 .game-grid {
   display: grid;
-  /* 四款遊戲使用 2 × 2；680px 以下沿用單欄，不會剩一張孤單的卡片。 */
+  /* 霓光突擊主卡由 ui-refresh.css 跨欄；其餘六款成對排列，手機改單欄。 */
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 22px;
 }

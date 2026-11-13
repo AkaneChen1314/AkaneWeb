@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <meta
+      name="theme-color"
+      content="#111016"
+    />
+    <meta
+      name="description"
+      content="選擇四名原創鬥士之一，在雨夜天台與電腦或同鍵盤的朋友對戰。"
+    />
+    <title>午夜擂台 | Midnight Circuit</title>
+    <link
+      rel="stylesheet"
+      href="styles.css?v=6"
+    />
+    <script
+      src="src/roster.js?v=6"
+      defer
+    ></script>
+    <script
+      src="src/match.js?v=6"
+      defer
+    ></script>
+    <script
+      src="src/walk-frames.js?v=6"
+      defer
+    ></script>
+    <script
+      src="src/effects.js?v=6"
+      defer
+    ></script>
+    <script
+      src="src/animation.js?v=6"
+      defer
+    ></script>
+    <script
+      src="src/renderer.js?v=6"
+      defer
+    ></script>
+    <script
+      src="src/audio.js?v=6"
+      defer
+    ></script>
+    <script
+      src="src/app.js?v=6"
+      defer
+    ></script>
+    <link
+      rel="stylesheet"
+      href="../../shared/fonts.css"
+    />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner shell">
+        <div class="wordmark">
+          <span
+            class="brand-mark"
+            aria-hidden="true"
+          ></span>
+          <div
+            ><span class="brand-name">午夜擂台</span
+            ><span
+              class="brand-en"
+              lang="en"
+              >Midnight Circuit</span
+            ></div
+          >
+        </div>
+        <div class="header-actions">
+          <button
+            type="button"
+            class="utility"
+            id="music-button"
+            aria-pressed="true"
+            >配樂開啟</button
+          >
+          <button
+            type="button"
+            class="utility"
+            id="help-button"
+            ><span
+              class="key-icon"
+              aria-hidden="true"
+            ></span
+            >操作說明</button
+          >
+          <button
+            type="button"
+            class="utility"
+            id="sound-button"
+            aria-pressed="true"
+            ><span
+              class="sound-icon"
+              aria-hidden="true"
+            ></span
+            ><span id="sound-label">音效開啟</span></button
+          >
+        </div>
+      </div>
+    </header>
+
+    <main class="shell">
+      <section
+        id="select-screen"
+        aria-labelledby="select-title"
+      >
+        <div class="select-heading">
+          <div>
+            <h1
+              id="select-title"
+              tabindex="-1"
+              >選擇鬥士</h1
+            >
+            <p>選擇你的鬥士，率先拿下兩回合。</p>
+          </div>
+          <div
+            class="segmented"
+            aria-label="對戰模式"
+            role="group"
+          >
+            <button
+              type="button"
+              data-mode="solo"
+              aria-pressed="true"
+              >單人對電腦</button
+            >
+            <button
+              type="button"
+              data-mode="versus"
+              aria-pressed="false"
+              >本機雙人</button
+            >
+            <button
+              type="button"
+              data-mode="training"
+              aria-pressed="false"
+              >練習模式</button
+            >
+            <button
+              type="button"
+              data-mode="arcade"
+              aria-pressed="false"
+              >街機挑戰</button
+            >
+          </div>
+        </div>
+
+        <article
+          id="showcase"
+          class="showcase"
+          data-fighter="thunder"
+          aria-labelledby="fighter-name"
+        >
+          <div
+            class="showcase-visual"
+            aria-hidden="true"
+          >
+            <img
+              id="fighter-art"
+              class="showcase-art"
+              src="assets/thunder.jpg"
+              width="384"
+              height="768"
+              alt=""
+            />
+          </div>
+          <div class="showcase-details">
+            <p
+              class="fighter-role"
+              id="fighter-role"
+              >突進型</p
+            >
+            <h2 id="fighter-name">雷隼</h2>
+            <p
+              class="fighter-summary"
+              id="fighter-summary"
+              >快速拉近距離，用連擊壓制對手。</p
+            >
+            <dl class="move-list">
+              <div class="move-row">
+                <kbd id="special-key">K</kbd>
+                <div
+                  ><dt
+                    ><span class="move-type">技能一</span
+                    ><strong id="special-name">雷步突拳</strong></dt
+                  ><dd id="special-description"
+                    >向前衝刺，打出一道帶電重拳。</dd
+                  ></div
+                >
+              </div>
+              <div class="move-row">
+                <kbd id="skill2-key">I</kbd>
+                <div
+                  ><dt
+                    ><span class="move-type">技能二</span
+                    ><strong id="skill2-name">雷霆升龍</strong></dt
+                  ><dd id="skill2-description">起手無敵的升空雷拳。</dd></div
+                >
+              </div>
+              <div class="move-row">
+                <kbd id="super-key">L</kbd>
+                <div
+                  ><dt
+                    ><span class="move-type">大招</span
+                    ><strong id="super-name">雷鳴連擊</strong></dt
+                  ><dd id="super-description"
+                    >以三段追擊把對手逼向場邊。</dd
+                  ></div
+                >
+              </div>
+            </dl>
+          </div>
+        </article>
+
+        <div class="roster-toolbar">
+          <h2>鬥士名單</h2>
+          <div
+            class="segmented difficulty"
+            id="difficulty"
+            aria-label="電腦難度"
+            role="group"
+          >
+            <button
+              type="button"
+              data-difficulty="easy"
+              aria-pressed="false"
+              >簡單</button
+            >
+            <button
+              type="button"
+              data-difficulty="normal"
+              aria-pressed="true"
+              >普通</button
+            >
+            <button
+              type="button"
+              data-difficulty="hard"
+              aria-pressed="false"
+              >困難</button
+            >
+          </div>
+          <div
+            class="segmented seats"
+            id="seat-picker"
+            aria-label="選擇要設定的一方"
+            role="group"
+          >
+            <button
+              type="button"
+              data-seat="0"
+              aria-pressed="true"
+              >玩家 1</button
+            >
+            <button
+              type="button"
+              data-seat="1"
+              aria-pressed="false"
+              id="opponent-seat"
+              >電腦</button
+            >
+          </div>
+        </div>
+        <div
+          class="roster"
+          id="roster"
+          aria-label="可選鬥士"
+          role="group"
+        ></div>
+        <noscript><p>啟用瀏覽器的 JavaScript 即可選角和對戰。</p></noscript>
+
+        <div class="match-bar">
+          <div
+            class="matchup"
+            aria-label="目前對戰組合"
+          >
+            <span class="matchup-player"
+              ><small>玩家 1</small
+              ><strong id="matchup-left">雷隼</strong></span
+            >
+            <span
+              class="versus-mark"
+              aria-hidden="true"
+              lang="en"
+              >VS</span
+            >
+            <span class="matchup-player"
+              ><small id="matchup-opponent">電腦</small
+              ><strong id="matchup-right">霜弦</strong></span
+            >
+          </div>
+          <button
+            type="button"
+            id="start-button"
+            class="primary"
+            disabled
+            >開戰<span
+              class="chevron"
+              aria-hidden="true"
+            ></span
+          ></button>
+        </div>
+      </section>
+
+      <section
+        id="battle-screen"
+        hidden
+        aria-labelledby="battle-title"
+      >
+        <div class="battle-heading">
+          <div
+            ><h1 id="battle-title">雨夜天台</h1
+            ><p id="battle-mode">單人對電腦</p></div
+          >
+          <button
+            type="button"
+            class="utility pause-button"
+            id="pause-button"
+            >暫停 <kbd>Esc</kbd></button
+          >
+        </div>
+        <div
+          class="arena"
+          id="arena"
+          tabindex="-1"
+          aria-label="對戰場地"
+        >
+          <canvas
+            id="fight-canvas"
+            width="1280"
+            height="720"
+            aria-label="格鬥畫面"
+            >這個遊戲需要支援 Canvas 的瀏覽器。</canvas
+          >
+          <div class="hud">
+            <div
+              class="fighter-hud"
+              id="left-hud"
+            >
+              <img
+                class="hud-portrait"
+                src="assets/thunder.jpg"
+                width="50"
+                height="50"
+                alt=""
+              />
+              <div class="hud-details">
+                <div class="hud-label"
+                  ><strong class="hud-name"></strong
+                  ><span class="hud-side">玩家 1</span></div
+                >
+                <div
+                  class="health gauge"
+                  role="meter"
+                  aria-label="玩家 1 生命"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="100"
+                  ><div class="gauge-lag"></div><div class="gauge-fill"></div
+                ></div>
+                <div class="hud-rounds"><span></span><span></span></div>
+              </div>
+            </div>
+            <div class="hud-center"
+              ><time
+                id="round-clock"
+                datetime="PT60S"
+                >60</time
+              ><span id="round-label">第 1 回合</span></div
+            >
+            <div
+              class="fighter-hud right"
+              id="right-hud"
+            >
+              <img
+                class="hud-portrait"
+                src="assets/frost.jpg"
+                width="50"
+                height="50"
+                alt=""
+              />
+              <div class="hud-details">
+                <div class="hud-label"
+                  ><strong class="hud-name"></strong
+                  ><span class="hud-side">電腦</span></div
+                >
+                <div
+                  class="health gauge"
+                  role="meter"
+                  aria-label="對手生命"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="100"
+                  ><div class="gauge-lag"></div><div class="gauge-fill"></div
+                ></div>
+                <div class="hud-rounds"><span></span><span></span></div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="announcement"
+            id="announcement"
+            role="status"
+            hidden
+            ><strong></strong><span></span
+          ></div>
+          <div class="power-hud">
+            <div
+              class="power-side"
+              id="left-power"
+            >
+              <div class="power-label"
+                ><span class="skill-status">技能就緒</span
+                ><span class="super-value">大招 32%</span></div
+              >
+              <div
+                class="gauge power-gauge"
+                role="meter"
+                aria-label="玩家 1 大招能量"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="32"
+                ><div class="gauge-fill"></div
+              ></div>
+            </div>
+            <div
+              class="power-side right"
+              id="right-power"
+            >
+              <div class="power-label"
+                ><span class="skill-status">技能就緒</span
+                ><span class="super-value">大招 32%</span></div
+              >
+              <div
+                class="gauge power-gauge"
+                role="meter"
+                aria-label="對手大招能量"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="32"
+                ><div class="gauge-fill"></div
+              ></div>
+            </div>
+          </div>
+          <div
+            id="match-result"
+            class="result-shade"
+            hidden
+          >
+            <div
+              class="result-panel"
+              aria-labelledby="result-title"
+            >
+              <p
+                id="result-score"
+                class="result-score"
+              ></p>
+              <h2
+                id="result-title"
+                tabindex="-1"
+              ></h2>
+              <div class="dialog-actions">
+                <button
+                  type="button"
+                  class="utility"
+                  id="result-back"
+                  >返回選角</button
+                >
+                <button
+                  type="button"
+                  class="primary"
+                  id="rematch-button"
+                  >再戰一場<span
+                    class="chevron"
+                    aria-hidden="true"
+                  ></span
+                ></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="battle-keys"
+          id="battle-keys"
+          aria-label="快捷鍵"
+        ></div>
+        <div
+          class="touch-controls"
+          id="touch-controls"
+          aria-label="觸控操作"
+        ></div>
+      </section>
+    </main>
+
+    <dialog
+      id="help-dialog"
+      aria-labelledby="help-title"
+    >
+      <div class="dialog-heading"
+        ><h2 id="help-title">操作說明</h2
+        ><button
+          type="button"
+          class="utility"
+          data-close="help"
+          >關閉</button
+        ></div
+      >
+      <table
+        class="key-table"
+        id="help-keys"
+        aria-label="雙方按鍵"
+      ></table>
+      <h3 class="help-subtitle">進階指令</h3>
+      <table
+        class="key-table command-table"
+        id="help-commands"
+        aria-label="進階指令"
+      ></table>
+      <ul class="help-tips">
+        <li
+          >輕攻命中後可立即接重攻，再接技能與大招。提前一小段時間按下招式也能接續出招。</li
+        >
+        <li
+          >不按方向鍵時，閃避會向後退。搭配左右鍵可朝指定方向閃開，起步時能短暫避開傷害。</li
+        >
+        <li
+          >面向對手防禦可擋住普攻。遇到地面震波可以跳起來，較高的飛行道具可以蹲下躲過。</li
+        >
+        <li
+          >每名鬥士有兩招技能（K、I），各自冷卻。技能命中後可互相接續，再接大招。大招能量會隨時間及交手累積，滿格後即可施放。</li
+        >
+        <li
+          >對手出招的瞬間按下防禦會觸發「精準防禦」：不受削血、彈開對手並獲得能量。在對手出招前搶先打中會造成「反擊」加傷。</li
+        >
+        <li>連擊越長，後續傷害會逐步遞減。兩發飛行道具相撞會互相抵銷。</li>
+        <li>練習模式中生命與能量會自動回復，適合練連段。</li>
+      </ul>
+    </dialog>
+
+    <dialog
+      id="pause-dialog"
+      aria-labelledby="pause-title"
+    >
+      <div class="dialog-heading"><h2 id="pause-title">對戰暫停</h2></div>
+      <div class="dialog-actions pause-actions">
+        <button
+          type="button"
+          class="utility"
+          id="pause-back"
+          >返回選角</button
+        >
+        <button
+          type="button"
+          class="utility"
+          id="restart-button"
+          >重打對戰</button
+        >
+        <button
+          type="button"
+          class="primary"
+          id="resume-button"
+          autofocus
+          >繼續對戰<span
+            class="chevron"
+            aria-hidden="true"
+          ></span
+        ></button>
+      </div>
+    </dialog>
+  </body>
+</html>
