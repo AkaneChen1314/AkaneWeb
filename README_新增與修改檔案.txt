@@ -1,28 +1,18 @@
-Blue World 1.2 / r15｜2026-11-04 原始碼排版與註解
+Blue World 1.2 / r14｜2026-11-02～11-13 整合檔案清單
 ================================================
 
-版本辨識：20261104-blueworld-r15-source
+版本辨識：20261113-blueworld-r14-districts
+範圍：11-02首頁與可讀性、11-04原始碼排版與註解、11-13霓光突擊8.0 DISTRICTS統一記為r14。
 
-新增：.editorconfig、.prettierrc.json、.prettierignore、程式碼閱讀指南.md。
-範圍：網站根目錄、shared與五款遊戲內的可編輯HTML、CSS、JS／MJS／CJS；包含既有測試與開發腳本的格式整理。完整修改清單可查看本次Git提交。
-註解：23個主要JavaScript模組與主要HTML／CSS新增中文閱讀提示。
-文件：VERSION.txt、三份README、程式導覽.md、測試紀錄.md。
+霓光突擊新增：games/neonstrike/navigation.js（導航格與A*尋路）、districts.js（區塊零件、自動補碰撞與合併繪製）、district-maps.js（兩張地圖的區塊配置）。
+霓光突擊修改：main.js、index.html、styles.css、touch.css、lobby.js、build.mjs（註解）、tests/lobby-briefing.mjs、README.md；browser.js以esbuild 0.28.2及build.mjs相同參數重新打包。assets/cover-art-notes.md改名為assets/封面插畫說明.md。
+排版與註解新增：.editorconfig、.prettierrc.json、.prettierignore、程式碼閱讀指南.md。
+排版範圍：網站根目錄、shared與五款遊戲內的可編輯HTML、CSS、JS／MJS／CJS；包含既有測試與開發腳本的格式整理。23個主要JavaScript模組與主要HTML／CSS新增中文閱讀提示。完整修改清單可查看Git提交。
+首頁程式：index.html、world.css、ui-refresh.css。光色切換沿用world.js、blue-world-tone-v1及既有三款光色；新增的是頁尾原生details收合界面。
+快取：網站與五款遊戲入口標記為20261104-blueworld-r14-source；霓光突擊樣式、觸控、大廳與browser.js改為20261113-blueworld-r14-districts。網站index.html的版本標記與頁尾同步為20261113-blueworld-r14-districts、2026.11.13 r14。
+版本與說明：VERSION.txt、README_先看這裡.md、README_更新說明.txt、README_新增與修改檔案.txt、程式導覽.md、程式碼閱讀指南.md、更新與測試紀錄.md（原測試紀錄.md改名）、圖片與資料來源.md。
 
-圖片、音效、字型、第三方vendor及霓光突擊browser.js不變。browser.js由build.mjs產生，遊戲原始碼的位置已在新閱讀指南說明；本次沒有變更玩法或存檔格式。
-本機檢查工具、截圖、套件暫存均不屬於發布檔案。
-
-以下為r14及更早歷史檔案清單：
-
-Blue World 1.2 / r14｜2026-11-02 首頁與可讀性檔案清單
-================================================
-
-版本辨識：20261102-blueworld-r14-refined
-範圍：首頁人物與文字重排、移除重複入口／筆記、頁尾外觀設定、三季索引與配色收整；合併r14先前的小字及點擊範圍改善。
-
-網站程式：index.html、world.css、ui-refresh.css。
-版本與說明：VERSION.txt、README_先看這裡.md、README_更新說明.txt、README_新增與修改檔案.txt、程式導覽.md、測試紀錄.md。
-
-光色切換沿用world.js、blue-world-tone-v1及既有三款光色；新增的是頁尾原生details收合界面。圖片、字型、影片、五款遊戲與存檔格式不變。不要上傳本機檢查截圖或測試暫存。
+圖片、音效、字型、影片、第三方vendor及其他四款遊戲的玩法與存檔格式不變。本機檢查工具、截圖、開發伺服器、套件暫存與esbuild執行檔都不屬於發布檔案。
 
 以下為r13歷史檔案清單：
 

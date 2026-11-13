@@ -3689,7 +3689,7 @@ kbd {
   }
 }
 
-/* ── r16 polish：敵人辨識、威脅方向與 HUD 可讀性 ── */
+/* ── 8.0 polish：敵人辨識、威脅方向與 HUD 可讀性 ── */
 .threat-ring {
   position: absolute;
   left: 50%;

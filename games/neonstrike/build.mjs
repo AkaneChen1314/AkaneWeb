@@ -1,6 +1,6 @@
 /*
  * 檔案導讀：開發用打包指令：只在霓光突擊規則或音效真的改變時重建 browser.js。
- * 單純縮排與註解不改變程式行為，本次不重新產生相同功能的發布檔。
+ * 單純縮排與註解不改變程式行為，不需要重建。
  */
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
