@@ -25,8 +25,13 @@
     />
     <title>深境冒險 1.2｜職業戰鬥 RPG</title>
     <link
+      rel="icon"
+      href="../../assets/favicon.svg"
+      type="image/svg+xml"
+    />
+    <link
       rel="stylesheet"
-      href="./style.css?v=20261104-blueworld-r14-source"
+      href="./style.css?v=20261113-blueworld-r14-abyss"
     />
     <link
       rel="stylesheet"
@@ -253,6 +258,31 @@
               class="float-layer"
               id="floatLayer"
             ></div>
+          </div>
+          <!-- 手機版角色面板在下方，這裡另顯示精簡的生命與職業資源，選技能時不必往下捲。 -->
+          <div
+            class="battle-vitals glass"
+            id="battleVitals"
+            aria-label="角色生命與資源"
+          >
+            <div class="battle-vital">
+              <div class="meter-label">
+                <span>生命</span>
+                <b id="bvHpLabel">100 / 100</b>
+              </div>
+              <div class="meter hp">
+                <i id="bvHpBar"> </i>
+              </div>
+            </div>
+            <div class="battle-vital">
+              <div class="meter-label">
+                <span id="bvResName">體力 SP</span>
+                <b id="bvResLabel">50 / 50</b>
+              </div>
+              <div class="meter energy">
+                <i id="bvResBar"> </i>
+              </div>
+            </div>
           </div>
           <div class="turn-strip glass">
             <div>
@@ -954,6 +984,6 @@
       id="globalTooltip"
       role="tooltip"
     ></div>
-    <script src="./game.js?v=20261104-blueworld-r14-source"></script>
+    <script src="./game.js?v=20261113-blueworld-r14-abyss"></script>
   </body>
 </html>

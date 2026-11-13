@@ -2543,7 +2543,10 @@ function showBossDialogue() {
     ? `第 ${S.floor} 層 · 傳說級大型 BOSS`
     : `第 ${S.floor} 層 · 深境首領`;
   $("#bossDialogueChapter").textContent = dialogue.chapter;
-  $("#bossDialogueSprite").textContent = e.i;
+  const dialogueSprite = $("#bossDialogueSprite");
+  dialogueSprite.textContent = e.i;
+  // 世界 Boss 頭像由兩個符號組成時縮小並禁止換行，第二個符號不會掉出頭像框。
+  dialogueSprite.classList.toggle("multi-glyph", glyphCount(e.i) > 1);
   $("#bossDialogueName").textContent = e.n;
   $("#bossDialogueQuote").textContent = dialogue.quote;
   $("#bossDialoguePrompt").textContent = dialogue.prompt;
@@ -4060,6 +4063,10 @@ function render() {
   $("#resourceName").textContent = c.resource;
   $("#resourceLabel").textContent = `${Math.ceil(S.res)} / ${c.maxRes}`;
   $("#resourceBar").style.width = `${(S.res / c.maxRes) * 100}%`;
+  // 手機版技能上方的精簡狀態列，與角色面板同步。
+  setMeter("bvHp", S.hp, st.maxHp);
+  $("#bvResName").textContent = c.resource;
+  setMeter("bvRes", S.res, c.maxRes);
   setMeter("xp", S.xp, S.xpNext);
   $("#xpAway").textContent = `距離升級還差 ${S.xpNext - S.xp} EXP`;
   $("#atkText").textContent = st.atk;
@@ -4134,6 +4141,16 @@ function renderRoutes() {
         : "可選擇挑戰，戰後再冷卻 3～5 區";
 }
 
+// 計算畫面上實際看到的符號數（👁️ 這類帶變體選擇符的 emoji 算一個）。
+function glyphCount(text) {
+  if (typeof Intl !== "undefined" && Intl.Segmenter)
+    return [
+      ...new Intl.Segmenter("zh-Hant", { granularity: "grapheme" }).segment(
+        String(text),
+      ),
+    ].length;
+  return Array.from(String(text).replace(/️/g, "")).length;
+}
 function setMeter(id, v, m) {
   $(`#${id}Label`).textContent = `${Math.ceil(v)} / ${m}`;
   $(`#${id}Bar`).style.width = `${clamp((v / m) * 100, 0, 100)}%`;
