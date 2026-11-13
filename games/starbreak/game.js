@@ -17,9 +17,10 @@
       icon: "⌁",
       color: "#91f5e4",
       type: "projectile",
-      interval: 0.72,
-      damage: 18,
-      speed: 570,
+      // 射速較快、單發較輕：每秒傷害略高於舊版，連射手感更密集。
+      interval: 0.42,
+      damage: 12,
+      speed: 680,
       req: "fire",
       need: 2,
       desc: "自動瞄準最近敵人；升級增加傷害、射速與穿透。",
@@ -772,7 +773,7 @@
       name: BOSSES[0],
       title: "THE RIFT DEVOURER",
       color: "#cc86ff",
-      image: "assets/boss-rift.png",
+      image: "assets/boss-rift.webp",
       desc: "扭曲航道的虛空巨獸。",
       skills: "裂隙衝鋒、連環彈環、虛空吞噬、螺旋裂流、十字裂隙",
     },
@@ -781,7 +782,7 @@
       name: BOSSES[1],
       title: "THE IRON TYRANT",
       color: "#ffb575",
-      image: "assets/boss-tyrant.png",
+      image: "assets/boss-tyrant.webp",
       desc: "以熔融反應爐驅動的重裝戰爭機器。",
       skills: "熔核齊射、天火轟炸、裝甲護衛、交錯火炮、熔核封鎖",
     },
@@ -790,7 +791,7 @@
       name: BOSSES[2],
       title: "THE NEBULA QUEEN",
       color: "#83f0f0",
-      image: "assets/boss-queen.png",
+      image: "assets/boss-queen.webp",
       desc: "冰冷而優雅的蟲群統治者。",
       skills: "蜂群召喚、結晶針雨、女皇領域、追魂針簇、冰晶螺旋",
     },
@@ -799,7 +800,7 @@
       name: BOSSES[3],
       title: "THE ETERNAL CORE",
       color: "#ff729c",
-      image: "assets/boss-core.png",
+      image: "assets/boss-core.webp",
       desc: "從永夜深處醒來的星際災厄。",
       skills: "雙旋星環、末日連鎖、奇點斬擊、反轉星潮、終焉矩陣",
     },
@@ -1586,6 +1587,8 @@
       this.zoomPulse = 0;
       this.screenPulse = 0;
       this.screenColor = "#91f5e4";
+      // 演出用的短暫停頓秒數；由畫面迴圈消耗，引擎本身不讀取。
+      this.hitStop = 0;
       this.lastImpact = -10;
       this.nextId = 1;
       this.hash = new Map();
@@ -2380,11 +2383,13 @@
       this.shake = 0;
       this.zoomPulse = 0;
       this.screenPulse = 0;
+      this.hitStop = 0;
       this.lastImpact = -10;
       this.nextId = 1;
       this.profile.runs++;
       if (!this.profile.ships.includes(shipId)) this.profile.ships.push(shipId);
-      this.spawnEnemy("scout", 400);
+      // 開場就有一小隊偵察機，第一波不必等敵人慢慢出現。
+      for (let i = 0; i < 3; i++) this.spawnEnemy("scout", 400 + i * 40);
       this.onPhase();
       return this.r;
     }
@@ -2455,6 +2460,12 @@
         angle,
         life: kind === "death" ? 0.95 : 0.6,
       });
+      // 破盾、轉階段與擊破 Boss 時短暫慢動作；由畫面迴圈消耗，引擎更新本身不讀取。
+      if (["shield", "phase", "death"].includes(kind))
+        this.hitStop = Math.max(
+          this.hitStop || 0,
+          kind === "death" ? 0.14 : 0.07,
+        );
       if (this.r.time - this.lastImpact < 0.16) return;
       this.lastImpact = this.r.time;
       this.shake = Math.max(this.shake, Math.min(14, strength));
@@ -2703,6 +2714,9 @@
       );
       p.inv = difficultyRule(r).hitInv;
       this.shake = 7;
+      // 受傷時畫面邊緣閃紅，只影響演出，不改變判定。
+      this.screenPulse = Math.max(this.screenPulse, 0.55);
+      this.screenColor = "#ff4d7a";
       this.addFx("ring", p.x, p.y, { color: "#ff709b", radius: 35 });
       this.onSound("hurt");
       if (p.hp <= 0) {
@@ -2865,10 +2879,11 @@
       if (seeded(r) < 0.025 && r.gems.length < 250)
         r.gems.push({ x: e.x + 10, y: e.y, kind: "heal", value: 10 });
       this.addFx("spark", e.x, e.y, {
-        color: e.type === "boss" ? "#ffb479" : "#bb9fff",
+        color: e.type === "boss" ? "#ffb479" : e.elite ? "#ffd48c" : "#bb9fff",
         radius: e.radius,
         life: 0.45,
       });
+      if (e.type !== "boss") this.onSound(e.elite ? "eliteKill" : "kill");
       if (this.has("nova") && seeded(r) < 0.15 && e.type !== "mini") {
         r.burns.push({
           x: e.x,
@@ -3341,8 +3356,9 @@
       if (r.spawnTimer <= 0) {
         this.spawnEnemy();
         if (r.wave >= 9 && seeded(r) < 0.4) this.spawnEnemy();
+        // 前幾波補敵稍快，畫面不會長時間空白；後段下限維持 0.25 秒。
         r.spawnTimer =
-          (Math.max(0.25, 1.15 - r.wave * 0.045) /
+          (Math.max(0.25, 0.92 - r.wave * 0.04) /
             difficultyRule(r).spawn /
             waveType(r).density /
             ENEMY_AMOUNTS[r.config.enemyAmount].rate /
@@ -3475,6 +3491,13 @@
                   ? 0.4
                   : 0,
             });
+            // 小幅擊退讓命中有重量；Boss 與已擊破的敵人不受影響。
+            if (!e.dead && e.type !== "boss") {
+              const speed = Math.hypot(b.vx, b.vy) || 1,
+                push = e.type === "tank" ? 2.5 : 6;
+              e.x = clamp(e.x + (b.vx / speed) * push, 0, 2400);
+              e.y = clamp(e.y + (b.vy / speed) * push, 0, 2400);
+            }
             b.pierce--;
             if (b.pierce <= 0) {
               b.dead = true;
@@ -3558,7 +3581,7 @@
       }
       r.caches = r.caches.filter((x) => !x.dead);
       const pickup =
-        (r.magnetPulse > 0 ? 3000 : 55) +
+        (r.magnetPulse > 0 ? 3000 : 80) +
         this.stat("magnet") * 40 +
         (r.research.magnet || 0) * 12;
       for (const g of r.gems) {
@@ -4086,7 +4109,11 @@
     canvasHeight = 0,
     canvasDpr = 0,
     touchViewScale = 1,
-    arenaObserver = null;
+    arenaObserver = null,
+    // 平滑跟隨的鏡頭中心、純演出用的碎片粒子，以及上一個畫面的秒數。
+    view = { x: 0, y: 0, ready: false },
+    debris = [],
+    frameDt = 0;
   const escapeHTML = (s) =>
     String(s).replace(
       /[&<>"']/g,
@@ -4143,9 +4170,10 @@
     try {
       const now = performance.now();
       sound.lastByType = sound.lastByType || {};
+      const quick = type === "kill" || type === "eliteKill";
       if (
         now - (sound.lastByType[type] ?? -1000) <
-        (type === "shot" ? 100 : 140)
+        (type === "shot" ? 100 : quick ? 60 : 140)
       )
         return;
       sound.lastByType[type] = now;
@@ -4165,10 +4193,12 @@
         slam: [75, 32],
         phase: [65, 180],
         shieldBreak: [1350, 110],
+        kill: [720, 190],
+        eliteKill: [560, 120],
       };
       const f = freqs[type] || [440, 660],
         heavy = ["slam", "phase", "shieldBreak"].includes(type),
-        duration = heavy ? 0.36 : 0.22;
+        duration = heavy ? 0.36 : quick ? 0.11 : 0.22;
       const voice = (from, to, gain, wave, delay = 0) => {
         const o = audioContext.createOscillator(),
           g = audioContext.createGain(),
@@ -4186,10 +4216,16 @@
       voice(
         f[0],
         f[1],
-        type === "shot" ? 0.015 : heavy ? 0.045 : 0.055,
+        type === "shot"
+          ? 0.015
+          : type === "kill"
+            ? 0.02
+            : heavy || type === "eliteKill"
+              ? 0.045
+              : 0.055,
         ["hurt", "boss", "phase"].includes(type)
           ? "sawtooth"
-          : type === "shot"
+          : type === "shot" || quick
             ? "triangle"
             : "sine",
       );
@@ -4214,7 +4250,7 @@
   // 4. 瀏覽器介面：出航設定、HUD、商城、說明與控制輸入。
   function showHome() {
     resetControls();
-    document.body?.classList.remove("wide-touch-game");
+    document.body?.classList.remove("wide-touch-game", "sb-battle");
     arenaObserver?.disconnect();
     screen = "home";
     canvas = null;
@@ -4242,14 +4278,14 @@
           </div>
           <div class="pilot-line" id="hero-plan"></div>
         </div>
-        <div class="hero-badge">ADAPTIVE ENCOUNTER · v1.2</div>
       </section>
       <div class="home-layout">
         <section class="panel flight-panel">
           <div class="panel-heading">
             <h2>出航準備</h2>
-            <span class="eyebrow">FLIGHT PLAN</span>
+            <small class="muted">選好星艦、方案與難度就能出發</small>
           </div>
+          <div class="setup-caption"><b>1 · 星艦</b></div>
           <div class="ships">
             ${SHIPS.map(
               (s) => /* HTML */ `<button
@@ -4264,6 +4300,57 @@
                   ><small>${s.desc}</small>
                 </button>`,
             ).join("")}
+          </div>
+          <div class="setup-caption">
+            <b>2 · 航行方案</b><small>想要的節奏，細項可在進階設定調整</small>
+          </div>
+          <div class="preset-row" aria-label="航行方案">
+            <button data-preset="quick">
+              <b>輕鬆出航</b><small>8 波 · 較少敵人</small></button
+            ><button data-preset="classic">
+              <b>經典遠征</b><small>16 波 · 均衡編隊</small></button
+            ><button data-preset="long">
+              <b>星海長征</b><small>32 波 · 豐富敵潮</small></button
+            ><button data-preset="boss">
+              <b>巨獸試煉</b><small>8 波 · 重盾連攻 Boss</small>
+            </button>
+          </div>
+          <div class="setup-caption">
+            <b>3 · 難度</b><small>越難晶礦越多，Boss 會依你的火力調整</small>
+          </div>
+          <div class="config-grid primary-config difficulty-config">
+            <label
+              >整體難度<select id="difficulty">
+                ${DIFFICULTIES.map(
+                  (d) =>
+                    `<option value="${d.id}">${d.name} · ${d.title}</option>`,
+                ).join("")}
+              </select></label
+            >
+          </div>
+          <div class="difficulty-info" id="difficulty-info"></div>
+          <details class="flight-more" id="flight-more">
+            <summary>
+              <span><b>進階設定</b><small id="flight-more-summary"></small></span>
+            </summary>
+            <div class="flight-more-body">
+          <div class="config-grid">
+            <label
+              >航行模式<select id="mode">
+                <option value="campaign">自訂遠征</option>
+                <option value="endless">無盡星域</option>
+                <option value="daily">每日種子遠征</option>
+              </select></label
+            ><label
+              >總波數 <span class="muted">1–80</span
+              ><input
+                type="number"
+                id="wave-count"
+                min="1"
+                max="80"
+                step="1"
+                value="${c.totalWaves}" /></label
+            >
           </div>
           <details class="loadout-config">
             <summary>
@@ -4296,46 +4383,6 @@
               >
             </div>
           </details>
-          <div class="setup-caption">
-            <b>選擇航行方案</b><small>先選喜歡的節奏，再調整細項</small>
-          </div>
-          <div class="preset-row" aria-label="航行方案">
-            <button data-preset="quick">
-              <b>輕鬆出航</b><small>8 波 · 較少敵人</small></button
-            ><button data-preset="classic">
-              <b>經典遠征</b><small>16 波 · 均衡編隊</small></button
-            ><button data-preset="long">
-              <b>星海長征</b><small>32 波 · 豐富敵潮</small></button
-            ><button data-preset="boss">
-              <b>巨獸試煉</b><small>8 波 · 重盾連攻 Boss</small>
-            </button>
-          </div>
-          <div class="config-grid primary-config">
-            <label
-              >航行模式<select id="mode">
-                <option value="campaign">自訂遠征</option>
-                <option value="endless">無盡星域</option>
-                <option value="daily">每日種子遠征</option>
-              </select></label
-            ><label
-              >總波數 <span class="muted">1–80</span
-              ><input
-                type="number"
-                id="wave-count"
-                min="1"
-                max="80"
-                step="1"
-                value="${c.totalWaves}" /></label
-            ><label
-              >整體難度<select id="difficulty">
-                ${DIFFICULTIES.map(
-                  (d) =>
-                    `<option value="${d.id}">${d.name} · ${d.title}</option>`,
-                ).join("")}
-              </select></label
-            >
-          </div>
-          <div class="difficulty-info" id="difficulty-info"></div>
           <div class="setup-caption advanced-caption">
             <b>自訂細項</b><small>點開一類調整，其他選擇會保留</small>
           </div>
@@ -4537,6 +4584,8 @@
           </details>
           <div class="plan-summary" id="plan-summary"></div>
           <p class="pilot-line" id="mode-note"></p>
+            </div>
+          </details>
         </section>
         <section class="panel hangar-panel">
           <div class="panel-heading">
@@ -4596,12 +4645,9 @@
                   .join("")
               : '<p class="muted">你的第一段航行紀錄，從這裡開始。</p>'
           }
-          <div class="base-tip">
-            <b>晶礦怎麼用？</b>
-            <p>
-              局內商城購買本局強化；結算後可在基地研究或解鎖模組。模組解鎖後可永久使用，下一次出航生效。
-            </p>
-          </div>
+          <p class="base-tip-line">
+            晶礦可在基地研究或解鎖模組，下一次出航生效。
+          </p>
           <button id="settings" class="full-width">設定與備份</button>
         </section>
       </div>
@@ -4795,6 +4841,10 @@
       `擊破 ${c.killsPerWave} 隻起${c.quotaGrowth === "rising" ? " · 逐波增加" : ""} / ${ENEMY_AMOUNTS[c.enemyAmount].name}敵潮 / ${bossText}${c.bossRule !== "none" ? ` · 倒數 ${c.bossDelay} 秒登場` : ""}`,
     );
     set(
+      "flight-more-summary",
+      `${mode === "endless" ? "無盡星域" : mode === "daily" ? "每日種子" : `${c.totalWaves} 波`} · ${WEAPONS[launchPreview(profile, SHIPS.find((x) => x.id === selectedShip), c).weapon].name} · ${ENEMY_AMOUNTS[c.enemyAmount].name}敵潮 · ${bossText}`,
+    );
+    set(
       "hero-plan",
       `${SHIPS.find((x) => x.id === selectedShip).name} · ${mode === "endless" ? "無盡遠征" : `${c.totalWaves} 波航行`} · ${names[selectedDifficulty + 1]}難度`,
     );
@@ -4874,11 +4924,13 @@
     set("loadout-cost", `代價：${build.cost}`);
     const info = document.getElementById("difficulty-info");
     info.style.setProperty("--difficulty-color", d.color);
-    info.innerHTML = /* HTML */ `<div class="difficulty-heading">
+    let difficultyHTML = /* HTML */ `<div class="difficulty-heading">
         <b>${d.name} · ${d.title}</b
         ><span>基礎晶礦 ×${d.reward.toFixed(2)}</span>
       </div>
       <p>${d.desc}</p>
+      <details class="difficulty-more">
+      <summary>查看詳細數值</summary>
       <div class="difficulty-metrics">
         <span>敵人生命 ×${d.hp.toFixed(2)}</span
         ><span>受到傷害 ×${d.damage.toFixed(2)}</span
@@ -4887,7 +4939,7 @@
         ><span>預警 ×${d.warning.toFixed(2)}</span
         ><span>波間回復 ${Math.round(d.heal * 100)}%</span>
       </div>`;
-    info.innerHTML +=
+    difficultyHTML +=
       '<p class="boss-difficulty-note">Boss 總耐久預算 ×' +
       d.bossHp.toFixed(2) +
       " · 出招 ×" +
@@ -4904,7 +4956,8 @@
       Math.round(d.bossArmor * 100) +
       "% · 接戰增援 ×" +
       d.bossPressure.toFixed(2) +
-      "（頻率／密度設定另乘）</p>";
+      "（頻率／密度設定另乘）</p></details>";
+    info.innerHTML = difficultyHTML;
     profile.lastConfig = {
       ship: selectedShip,
       mode: selectedMode,
@@ -5133,23 +5186,14 @@
     arenaObserver?.disconnect();
     screen = "game";
     const r = engine.r;
-    app.innerHTML = /* HTML */ `<div class="game-layout">
+    document.body?.classList.add("sb-battle");
+    view.ready = false;
+    debris = [];
+    // 戰場佔滿整個視窗；生命、波次與按鈕疊在畫面邊緣，側欄只在暫停時展開。
+    app.innerHTML = /* HTML */ `<div class="game-layout flight-layout" data-phase="play">
       <section class="game-main">
-        <div class="hud">
-          <div class="hud-left">
-            <div>
-              <div class="eyebrow" id="sector-label"></div>
-              <h2 id="wave-title"></h2>
-            </div>
-            <span class="timer" id="timer">00:00</span>
-          </div>
-          <div class="hud-actions">
-            <button id="pause">暫停</button
-            ><button id="return">保存離開</button>
-          </div>
-        </div>
         <div class="arena-wrap" id="arena-wrap">
-          <!-- Boss 狀態列在畫布之外，出現時縮小畫布，不覆蓋走位或攻擊預警。 -->
+          <!-- Boss 狀態列固定在戰場上緣中央，不遮住星艦所在的中央區域。 -->
           <section class="boss-hud" id="boss-hud" aria-label="Boss 戰況" hidden>
             <img id="boss-portrait" alt="Boss" />
             <div class="boss-hud-info">
@@ -5184,17 +5228,33 @@
               tabindex="0"
               aria-label="星艦戰場。WASD 或方向鍵移動，空白鍵衝刺，Q 過載；手機用左側搖桿區拖曳移動，右側按鈕可同時操作。"
             ></canvas>
-            <div class="arena-label" id="region-label"></div>
-            <div class="arena-top">
-              <div>
+            <div class="flight-top">
+              <div class="flight-vitals">
                 <div class="hp-label" id="hp-label"></div>
                 <div class="bar hpbar"><i id="hp-fill"></i></div>
+                <div class="xp-row">
+                  <span id="level-label"></span>
+                  <div class="bar"><i id="xp-fill"></i></div>
+                  <span id="xp-label"></span>
+                </div>
               </div>
-              <div class="wave-progress">
-                <small id="wave-status"></small>
-                <div class="bar"><i id="wave-fill"></i></div>
+              <div class="flight-wave">
+                <div class="eyebrow" id="sector-label"></div>
+                <div class="wave-line">
+                  <h2 id="wave-title"></h2>
+                  <span class="timer" id="timer">00:00</span>
+                </div>
+                <div class="wave-progress">
+                  <small id="wave-status"></small>
+                  <div class="bar"><i id="wave-fill"></i></div>
+                </div>
+              </div>
+              <div class="hud-actions">
+                <button id="pause" aria-label="暫停，電腦可按 P 或 Esc">暫停</button
+                ><button id="return">保存離開</button>
               </div>
             </div>
+            <div class="arena-label" id="region-label"></div>
             <div class="boss-arrival" id="boss-arrival" hidden>
               <span>威脅訊號</span><b id="boss-countdown"></b
               ><small id="boss-countdown-note"></small>
@@ -5208,7 +5268,7 @@
               ${
                 matchMedia("(pointer:coarse)").matches
                   ? "左手拖曳移動 · 右手衝刺／過載"
-                  : "WASD / 方向鍵移動 · 空白鍵衝刺 · Q 過載"
+                  : "WASD / 方向鍵移動 · 空白鍵衝刺 · Q 過載 · P 暫停"
               }
             </div>
             <div class="objective-hud">
@@ -5216,6 +5276,7 @@
               <div class="bar"><i id="objective-fill"></i></div>
             </div>
             <div class="combo-hud" id="combo-label"></div>
+            <div class="weapon-strip" id="weapon-strip" aria-label="目前武器"></div>
             <div class="game-controls">
               <button class="ability" id="dash" aria-label="衝刺，電腦按空白鍵">
                 <b>衝刺</b><small class="key-hint">SPACE</small
@@ -5227,11 +5288,6 @@
             </div>
             <div id="game-overlay"></div>
           </div>
-        </div>
-        <div class="xp-row">
-          <span id="level-label"></span>
-          <div class="bar"><i id="xp-fill"></i></div>
-          <span id="xp-label"></span>
         </div>
         <!-- 僅手機的「電腦版網站」模式使用；原本手機及鍵盤排版保持不變。 -->
         <section
@@ -5258,7 +5314,7 @@
           </div>
         </section>
       </section>
-      <aside class="game-side">
+      <aside class="game-side" aria-label="遠征詳情">
         <section class="panel">
           <div class="panel-heading">
             <h3>武器配置</h3>
@@ -5379,20 +5435,25 @@
     const uiScale = clamp(width / (window.screen?.width || shortSide), 1, 3);
     touchViewScale = uiScale;
     layout.style.setProperty("--touch-ui-scale", uiScale.toFixed(3));
-    const arena = document.getElementById("arena-wrap"),
-      xp = document.querySelector(".xp-row");
+    const arena = document.getElementById("arena-wrap");
     // 讓戰場與操作區一起填滿可見高度，不再被原本 760px 上限卡住。
     const available =
       window.innerHeight -
       arena.getBoundingClientRect().top -
       dock.getBoundingClientRect().height -
-      xp.getBoundingClientRect().height -
-      24;
+      12;
     const minHeight =
       width > window.innerHeight && window.innerHeight < 750 ? 160 : 360;
     const height = `${Math.max(minHeight, Math.floor(available))}px`;
     if (layout.style.getPropertyValue("--touch-arena-height") !== height)
       layout.style.setProperty("--touch-arena-height", height);
+  }
+  // 戰場鏡頭倍率：大螢幕放大星艦與敵人，讓畫面不再顯得很小；
+  // 手機寬度不足 600px 時略微拉遠，保留躲彈需要的視野。
+  function viewZoom(width = canvasWidth, height = canvasHeight) {
+    const base =
+      width < 600 ? 0.86 : clamp(Math.min(width, height) / 600, 1, 1.35);
+    return base * touchViewScale;
   }
   function resizeCanvas() {
     if (!canvas) return;
@@ -5404,10 +5465,11 @@
     if (!rect.width || !rect.height) return;
     const pixelWidth = Math.round(rect.width * dpr);
     const pixelHeight = Math.round(rect.height * dpr);
+    // 生成距離跟著實際可見範圍；放大鏡頭後敵人仍在畫面外出現。
     engine.viewRadius =
       Math.hypot(rect.width, rect.height) /
       2 /
-      ((rect.width < 600 ? 0.83 : 1) * touchViewScale);
+      viewZoom(rect.width, rect.height);
     // 同尺寸的 visualViewport 通知不重設畫布，避免清空／重畫造成閃爍。
     if (
       canvas.width === pixelWidth &&
@@ -5520,6 +5582,8 @@
     const r = engine.r,
       host = document.getElementById("game-overlay");
     renderedPhase = r.phase;
+    // CSS 依階段決定是否展開遠征詳情側欄（只在暫停時顯示）。
+    document.querySelector(".flight-layout")?.setAttribute("data-phase", r.phase);
     resetControls();
     let content = "";
     if (r.phase === "upgrade") {
@@ -5881,6 +5945,20 @@
       );
     }
     if (force || performance.now() - lastHud > 400) {
+      // 戰場右下的精簡武器列：圖示、等級與進化星號，詳細說明在暫停側欄。
+      const strip = document.getElementById("weapon-strip");
+      if (strip)
+        strip.innerHTML = r.weapons
+          .map(
+            (w) => /* HTML */ `<span
+              class="weapon-chip ${w.evolved ? "evolved" : ""}"
+              style="--weapon-color:${WEAPONS[w.id].color}"
+              title="${w.evolved ? WEAPONS[w.id].evo : WEAPONS[w.id].name}"
+              ><i>${WEAPONS[w.id].icon}</i
+              ><small>${w.evolved ? "★" : w.level}</small></span
+            >`,
+          )
+          .join("");
       document.getElementById("weapons").innerHTML =
         r.weapons
           .map(
@@ -6453,6 +6531,23 @@
     size: i % 7 === 0 ? 1.8 : 0.8,
     alpha: 0.2 + (i % 9) / 12,
   }));
+  // 演出用碎片粒子：只用 Math.random，不碰戰鬥亂數，也不影響命中。
+  function spawnDebris(x, y, color, count, speed, life, size) {
+    for (let i = 0; i < count && debris.length < 420; i++) {
+      const a = Math.random() * Math.PI * 2,
+        v = speed * (0.35 + Math.random() * 0.65);
+      debris.push({
+        x,
+        y,
+        vx: Math.cos(a) * v,
+        vy: Math.sin(a) * v,
+        life: life * (0.6 + Math.random() * 0.4),
+        max: life,
+        color,
+        size: size * (0.6 + Math.random() * 0.6),
+      });
+    }
+  }
   function polygon(x, y, r, n, angle = 0, fill = "#fff", stroke = null) {
     ctx.beginPath();
     for (let i = 0; i < n; i++) {
@@ -6656,12 +6751,32 @@
       quality = visual.quality;
     visual.motion = visual.motion && r.phase === "play";
     const zoom =
-      (w < 600 ? 0.83 : 1) *
-      touchViewScale *
+      viewZoom(w, h) *
       (1 +
         (visual.motion
           ? engine.zoomPulse * (quality === 2 ? 0.025 : 0.012)
           : 0));
+    const moving =
+      Math.hypot(input.x, input.y) > 0.05 || keys.size > 0 || p.dashTime > 0;
+    // 鏡頭平滑跟隨，並略微看向移動方向；減少動態時直接鎖定星艦。
+    const lead =
+        visual.motion && moving ? Math.min(80, (Math.min(w, h) / zoom) * 0.12) : 0,
+      targetX = p.x + p.dx * lead,
+      targetY = p.y + p.dy * lead;
+    if (!view.ready || !visual.motion) {
+      view.x = targetX;
+      view.y = targetY;
+      view.ready = true;
+    } else {
+      const follow = 1 - Math.exp(-frameDt * 7),
+        slackX = Math.max(0, w / 2 / zoom - 110),
+        slackY = Math.max(0, h / 2 / zoom - 110);
+      view.x += (targetX - view.x) * follow;
+      view.y += (targetY - view.y) * follow;
+      // 星艦始終留在中央附近，衝刺時不會被鏡頭甩到邊緣。
+      view.x = clamp(view.x, p.x - slackX, p.x + slackX);
+      view.y = clamp(view.y, p.y - slackY, p.y + slackY);
+    }
     ctx.save();
     ctx.fillStyle = "#080d1d";
     ctx.fillRect(0, 0, w, h);
@@ -6687,7 +6802,7 @@
       sx = Math.sin(performance.now() * 0.09) * shake;
       sy = Math.cos(performance.now() * 0.13) * shake;
     }
-    const cam = { x: p.x - w / 2 / zoom, y: p.y - h / 2 / zoom };
+    const cam = { x: view.x - w / 2 / zoom, y: view.y - h / 2 / zoom };
     ctx.translate(sx, sy);
     ctx.scale(zoom, zoom);
     ctx.translate(-cam.x, -cam.y);
@@ -6807,6 +6922,15 @@
           boss: "#fc82b2",
         },
         c = e.hit > 0 ? "#ffffff" : e.slow > 0 ? "#8dcfff" : colors[e.type];
+      // 被擊中的小怪瞬間放大一點，命中更有感覺；Boss 維持原尺寸。
+      const squash = e.type !== "boss" && e.hit > 0;
+      if (squash) {
+        const s = 1 + e.hit * 2.2;
+        ctx.save();
+        ctx.translate(e.x, e.y);
+        ctx.scale(s, s);
+        ctx.translate(-e.x, -e.y);
+      }
       if (e.type === "boss") {
         const data = BOSS_DATA[e.bossIndex],
           sprite = bossImages[e.bossIndex],
@@ -6933,6 +7057,7 @@
         polygon(e.x, e.y, e.radius, 4, t * 0.2, "#392645", c);
         polygon(e.x, e.y, e.radius * 0.48, 4, -t * 0.4, c);
       }
+      if (squash) ctx.restore();
       if (e.elite) {
         circle(
           e.x,
@@ -6978,15 +7103,23 @@
         );
       }
     }
+    // 我方子彈：較長的發光尾跡加上亮白核心，在敵群中也容易看清楚。
+    ctx.save();
+    if (quality === 2) ctx.globalCompositeOperation = "lighter";
+    ctx.lineCap = "round";
     for (const b of r.bullets) {
       ctx.strokeStyle = b.color;
-      ctx.lineWidth = b.source === "missile" ? 4 : 3;
+      ctx.globalAlpha = 0.5;
+      ctx.lineWidth = b.source === "missile" ? 6 : 5;
       ctx.beginPath();
-      ctx.moveTo(b.x - b.vx * 0.035, b.y - b.vy * 0.035);
+      ctx.moveTo(b.x - b.vx * 0.045, b.y - b.vy * 0.045);
       ctx.lineTo(b.x, b.y);
       ctx.stroke();
-      circle(b.x, b.y, b.radius, b.color);
+      ctx.globalAlpha = 1;
+      circle(b.x, b.y, b.radius + 1.5, b.color);
+      circle(b.x, b.y, Math.max(1.5, b.radius * 0.55), "#f4fffd");
     }
+    ctx.restore();
     for (const b of r.enemyBullets) {
       if (
         b.x < cam.x - 20 ||
@@ -7025,12 +7158,29 @@
         );
       }
     }
-    // 星艦中央是命中核心；朝向與尾焰提示衝刺方向。
+    // 星艦中央是命中核心；朝向與尾焰提示衝刺方向。移動時留下短尾跡粒子。
+    if (
+      moving &&
+      r.phase === "play" &&
+      quality > 0 &&
+      profile.settings.particles &&
+      frameDt > 0 &&
+      debris.length < 420
+    )
+      debris.push({
+        x: p.x - p.dx * 16 + (Math.random() - 0.5) * 6,
+        y: p.y - p.dy * 16 + (Math.random() - 0.5) * 6,
+        vx: -p.dx * 90 + (Math.random() - 0.5) * 40,
+        vy: -p.dy * 90 + (Math.random() - 0.5) * 40,
+        life: 0.32,
+        max: 0.32,
+        color: p.dashTime > 0 ? "#d9fff8" : "#7fe9df",
+        size: p.dashTime > 0 ? 3.4 : 2.4,
+      });
     ctx.save();
     ctx.translate(p.x, p.y);
     ctx.rotate(Math.atan2(p.dy, p.dx) + Math.PI / 2);
-    const moving =
-      Math.hypot(input.x, input.y) > 0.05 || keys.size > 0 || p.dashTime > 0;
+    ctx.scale(1.18, 1.18);
     if (moving) {
       ctx.beginPath();
       ctx.moveTo(-7, 15);
@@ -7046,8 +7196,13 @@
     ctx.lineTo(0, 11);
     ctx.lineTo(-16, 18);
     ctx.closePath();
+    if (quality === 2) {
+      ctx.shadowColor = "#7ff3e3";
+      ctx.shadowBlur = 16;
+    }
     ctx.fillStyle = "#c0fff0";
     ctx.fill();
+    ctx.shadowBlur = 0;
     ctx.strokeStyle = "#63cfda";
     ctx.lineWidth = 2;
     ctx.stroke();
@@ -7101,10 +7256,43 @@
         ctx.setLineDash([]);
       }
       if (f.type === "text") {
-        ctx.fillStyle = f.color;
+        // 命中時跳出一小撮火花；傷害數字先放大再回到原尺寸，暴擊更大。
+        if (!f.burst) {
+          f.burst = true;
+          if (quality === 2 && profile.settings.particles)
+            spawnDebris(
+              f.x,
+              f.y + 15,
+              f.crit ? "#ffe39a" : "#e4fbff",
+              f.crit ? 6 : 3,
+              120,
+              0.25,
+              2.2,
+            );
+        }
+        const pop = frac > 0.78 ? 1 + (frac - 0.78) * 2.2 : 1,
+          size = (f.crit ? 21 : 15) * pop,
+          ty = f.y - (1 - frac) * 28;
         ctx.textAlign = "center";
-        ctx.font = `${f.crit ? "bold 17" : "14"}px Akane Sans, system-ui`;
-        ctx.fillText(f.text, f.x, f.y - (1 - frac) * 25);
+        ctx.font = `${f.crit ? 800 : 700} ${size.toFixed(1)}px Akane Sans, system-ui`;
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "#050812cc";
+        ctx.strokeText(f.text, f.x, ty);
+        ctx.fillStyle = f.color;
+        ctx.fillText(f.text, f.x, ty);
+      }
+      if (f.type === "spark" && !f.burst) {
+        f.burst = true;
+        if (quality > 0 && profile.settings.particles)
+          spawnDebris(
+            f.x,
+            f.y,
+            f.color,
+            quality === 2 ? 14 : 7,
+            150 + f.radius * 5,
+            0.55,
+            3.2,
+          );
       }
       if (f.type === "spark" && quality > 0 && profile.settings.particles) {
         const count = quality === 2 ? 7 : 3;
@@ -7123,6 +7311,28 @@
       }
     }
     ctx.globalAlpha = 1;
+    // 更新並繪製碎片粒子；暫停或選擇畫面時停在原地。
+    if (debris.length) {
+      const step = r.phase === "play" ? frameDt : 0,
+        drag = 1 - Math.min(1, step * 4);
+      ctx.save();
+      if (quality === 2) ctx.globalCompositeOperation = "lighter";
+      for (const d of debris) {
+        d.life -= step;
+        if (d.life <= 0) continue;
+        d.x += d.vx * step;
+        d.y += d.vy * step;
+        d.vx *= drag;
+        d.vy *= drag;
+        const fade = clamp(d.life / d.max, 0, 1),
+          s = d.size * (0.5 + 0.5 * fade);
+        ctx.globalAlpha = fade;
+        ctx.fillStyle = d.color;
+        ctx.fillRect(d.x - s / 2, d.y - s / 2, s, s);
+      }
+      ctx.restore();
+      debris = debris.filter((d) => d.life > 0);
+    }
     for (const hz of r.hazards) {
       if (hz.shape === "beam") drawBeam(hz, true, quality);
       else
@@ -7156,8 +7366,8 @@
     }
     const boss = r.enemies.find((e) => e.type === "boss" && !e.dead);
     if (boss) {
-      const bx = (boss.x - p.x) * zoom + w / 2,
-        by = (boss.y - p.y) * zoom + h / 2;
+      const bx = (boss.x - view.x) * zoom + w / 2,
+        by = (boss.y - view.y) * zoom + h / 2;
       if (bx < 35 || bx > w - 35 || by < 110 || by > h - 35) {
         const dx = bx - w / 2,
           dy = by - h / 2,
@@ -7311,6 +7521,7 @@
     }
     const dt = previous ? Math.min((ts - previous) / 1000, 0.05) : 0;
     previous = ts;
+    frameDt = dt;
     if (screen === "game" && engine.r) {
       if (
         engine.r.phase === "play" &&
@@ -7319,7 +7530,12 @@
         !document.hidden
       ) {
         input = keyboardInput();
-        engine.step(dt, input);
+        // 破盾與擊破 Boss 時放慢到兩成速度約 0.1 秒，命中更有重量；
+        // 仍會推進戰鬥，玩家的移動與輸入不會在這一瞬間被吃掉。
+        if (engine.hitStop > 0) {
+          engine.hitStop = Math.max(0, engine.hitStop - dt);
+          engine.step(dt * 0.2, input);
+        } else engine.step(dt, input);
       }
       draw();
       if (ts - lastHudPaint > 100) {

@@ -1,0 +1,616 @@
+/*
+ * 閱讀提示：星夜突圍最後載入的介面層（網站 r14）。
+ * 1. 戰鬥畫面：戰場佔滿整個視窗，生命、波次、技能與武器疊在畫面四角。
+ * 2. 出航頁：先選星艦、方案與難度，其餘細項收進「進階設定」。
+ * 修改戰鬥版面請先看 .flight-layout 開頭的區塊；舊版 ui-v12～v15 的規則會被這裡覆寫。
+ */
+
+/* ── 1. 戰鬥畫面 ───────────────────────────────────────────── */
+
+body.sb-battle {
+  overflow: hidden;
+  --sb-top: 0px;
+}
+
+/* 直接開啟遊戲時上方有 46px 的「返回遊戲館」列，戰場高度要扣掉。 */
+body.sb-battle.standalone-portal-game {
+  --sb-top: 46px;
+}
+
+body.sb-battle .topbar {
+  display: none;
+}
+
+body.sb-battle main {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.flight-layout {
+  position: relative;
+  display: block;
+  height: calc(100dvh - var(--sb-top));
+  min-height: 320px;
+}
+
+.flight-layout .game-main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.flight-layout .arena-wrap,
+.flight-layout.wide-touch-layout .arena-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  height: auto;
+  max-height: none;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* 上方 HUD：左側生命與等級、中央波次、右側暫停。只有按鈕接收點擊。 */
+.flight-top {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 12px 14px 0;
+  pointer-events: none;
+}
+
+.flight-vitals,
+.flight-wave {
+  padding: 8px 12px 9px;
+  border: 1px solid #33456b80;
+  border-radius: 12px;
+  background: #070b18b8;
+  backdrop-filter: blur(6px);
+}
+
+.flight-vitals {
+  width: min(290px, 100%);
+}
+
+.flight-vitals .hp-label {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.flight-vitals .hpbar {
+  height: 10px;
+  margin-top: 4px;
+}
+
+.flight-layout .xp-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 7px 0 0;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: #c9c1ff;
+}
+
+.flight-layout .xp-row .bar {
+  flex: 1;
+  height: 5px;
+}
+
+.flight-wave {
+  min-width: 230px;
+  text-align: center;
+}
+
+.flight-wave .eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: #9fe9df;
+  white-space: nowrap;
+}
+
+.wave-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 12px;
+}
+
+.wave-line h2 {
+  margin: 1px 0 3px;
+  font-size: 17px;
+  white-space: nowrap;
+}
+
+.wave-line .timer {
+  font-size: 15px;
+  color: #cfd8ff;
+}
+
+.flight-wave .wave-progress {
+  width: auto;
+}
+
+.flight-wave .wave-progress small {
+  text-align: center;
+  margin-bottom: 3px;
+}
+
+.flight-top .hud-actions {
+  justify-self: end;
+  display: flex;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.flight-top .hud-actions button {
+  padding: 7px 12px;
+  font-size: 13px;
+  background: #101a30d9;
+  backdrop-filter: blur(6px);
+}
+
+/* 區域名稱改成中央 HUD 下方的一行小字。 */
+.flight-layout .arena-label {
+  top: 112px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  opacity: 0.75;
+  z-index: 2;
+}
+
+/* Boss 狀態列疊在上緣中央，寬度有限，不遮住中央的星艦。 */
+.flight-layout .boss-hud {
+  position: absolute;
+  top: 112px;
+  left: 50%;
+  z-index: 4;
+  width: min(560px, calc(100% - 28px));
+  height: auto;
+  flex: none;
+  transform: translateX(-50%);
+  border: 1px solid #ac496c66;
+  border-radius: 12px;
+  background: #1a1029d9;
+  backdrop-filter: blur(6px);
+}
+
+.flight-layout .boss-hud:not([hidden]) ~ .battle-field .arena-label {
+  display: none;
+}
+
+.flight-layout .boss-arrival {
+  top: 116px;
+  z-index: 3;
+}
+
+/* 左下技能、右下任務與武器列；連鎖數字在技能上方。 */
+.flight-layout .game-controls {
+  left: 14px;
+  bottom: 14px;
+  z-index: 3;
+}
+
+.flight-layout .ability {
+  min-width: 118px;
+  background: #101a30e0;
+}
+
+.flight-layout .objective-hud {
+  right: 14px;
+  bottom: 70px;
+  width: 200px;
+  z-index: 3;
+  border-radius: 10px;
+}
+
+.weapon-strip {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  z-index: 3;
+  display: flex;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.weapon-chip {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid color-mix(in srgb, var(--weapon-color) 55%, transparent);
+  border-radius: 10px;
+  background: #0a1122d9;
+  color: var(--weapon-color);
+  box-shadow: inset 0 0 14px
+    color-mix(in srgb, var(--weapon-color) 18%, transparent);
+}
+
+.weapon-chip i {
+  font-style: normal;
+  font-size: 19px;
+  line-height: 1;
+}
+
+.weapon-chip small {
+  position: absolute;
+  right: 3px;
+  bottom: 1px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #e9f1ff;
+}
+
+.weapon-chip.evolved {
+  border-color: #ffd78a;
+  box-shadow:
+    inset 0 0 14px #ffd78a33,
+    0 0 10px #ffd78a44;
+}
+
+.weapon-chip.evolved small {
+  color: #ffd78a;
+}
+
+.flight-layout .combo-hud {
+  left: 16px;
+  bottom: 80px;
+  z-index: 3;
+}
+
+/* 操作提示只在開場顯示幾秒，之後淡出，不再一直壓在戰場上。 */
+.flight-layout .floating-hint {
+  bottom: 74px;
+  z-index: 2;
+  animation: flight-hint-fade 7s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes flight-hint-fade {
+  0%,
+  72% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* 暫停時才展開遠征詳情：武器說明、遺物、晶礦與通訊紀錄。 */
+.flight-layout .game-side {
+  display: none;
+}
+
+.flight-layout[data-phase="paused"] .game-side {
+  position: absolute;
+  top: 70px;
+  right: 14px;
+  bottom: 14px;
+  z-index: 6;
+  display: flex;
+  width: min(310px, 40vw);
+  overflow: auto;
+  gap: 10px;
+}
+
+.flight-layout[data-phase="paused"] .game-side .panel {
+  margin: 0;
+  background: #0d1428f2;
+}
+
+.flight-layout[data-phase="paused"] .overlay {
+  padding-right: calc(min(310px, 40vw) + 34px);
+}
+
+.flight-layout[data-phase="paused"] .overlay-inner {
+  max-width: 460px;
+}
+
+/* 觸控搖桿區與技能按鈕保持在最上層，可同時操作。 */
+.flight-layout .joystick,
+.flight-layout .touch-move-zone {
+  z-index: 3;
+}
+
+@media (max-width: 760px) {
+  .flight-top {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 8px 8px 0;
+  }
+
+  .flight-vitals {
+    grid-row: 1;
+    width: 100%;
+    padding: 6px 9px 7px;
+  }
+
+  .flight-top .hud-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .flight-wave {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: center;
+    min-width: 0;
+    width: min(320px, 100%);
+    padding: 5px 10px 6px;
+  }
+
+  .flight-wave .eyebrow {
+    display: none;
+  }
+
+  .wave-line h2 {
+    font-size: 15px;
+  }
+
+  .flight-top .hud-actions button {
+    padding: 6px 9px;
+  }
+
+  .flight-layout .arena-label {
+    top: 154px;
+  }
+
+  .flight-layout .boss-hud {
+    top: 150px;
+  }
+
+  .flight-layout .boss-arrival {
+    top: 154px;
+  }
+
+  .weapon-strip {
+    right: 8px;
+    bottom: 8px;
+    gap: 4px;
+  }
+
+  .weapon-chip {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+  }
+
+  .weapon-chip i {
+    font-size: 16px;
+  }
+
+  .flight-layout .objective-hud {
+    right: 8px;
+    bottom: 50px;
+    width: 160px;
+  }
+
+  .flight-layout[data-phase="paused"] .game-side {
+    top: auto;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    width: auto;
+    max-height: 46%;
+  }
+
+  .flight-layout[data-phase="paused"] .overlay {
+    padding-right: 20px;
+    align-items: flex-start;
+    padding-top: 110px;
+  }
+}
+
+/* 觸控裝置：左手區拖曳移動，技能按鈕放右下；武器列與任務移到上方 HUD 下面，
+   避免和拇指重疊。 */
+@media (pointer: coarse) {
+  .flight-layout .game-controls {
+    left: auto;
+    right: 10px;
+    bottom: 12px;
+  }
+
+  .weapon-strip {
+    top: 100px;
+    bottom: auto;
+    right: 10px;
+    flex-direction: column;
+  }
+
+  .flight-layout .objective-hud {
+    top: 100px;
+    bottom: auto;
+    right: auto;
+    left: 10px;
+    width: 160px;
+  }
+}
+
+@media (pointer: coarse) and (max-width: 760px) {
+  .weapon-strip,
+  .flight-layout .objective-hud {
+    top: 178px;
+  }
+
+  /* Boss 狀態列出現時，武器列與任務再往下讓位。 */
+  .flight-layout .boss-hud:not([hidden]) ~ .battle-field .weapon-strip,
+  .flight-layout .boss-hud:not([hidden]) ~ .battle-field .objective-hud {
+    top: 250px;
+  }
+}
+
+/* Boss 狀態列精簡成兩行：名稱與血條、目前招式；接戰配置說明收進「戰況」對話框。 */
+.flight-layout .boss-hud {
+  gap: 10px;
+  padding: 7px 12px;
+  background: #160d24c4;
+}
+
+.flight-layout .boss-adaptation {
+  display: none;
+}
+
+/* ── 2. 出航頁 ─────────────────────────────────────────────── */
+
+.hero {
+  min-height: 0;
+}
+
+.hero-copy h1 {
+  font-size: clamp(38px, 5vw, 58px);
+}
+
+.flight-panel .panel-heading small {
+  font-size: 13px;
+}
+
+.flight-panel .setup-caption {
+  margin-top: 18px;
+}
+
+.flight-panel .setup-caption:first-of-type {
+  margin-top: 6px;
+}
+
+.difficulty-config {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* 難度詳細數值預設收合，只顯示名稱、晶礦倍率與一句說明。 */
+.difficulty-more {
+  margin-top: 8px;
+}
+
+.difficulty-more summary {
+  width: fit-content;
+  cursor: pointer;
+  font-size: 13px;
+  color: #9fe9df;
+  list-style: none;
+}
+
+.difficulty-more summary::-webkit-details-marker {
+  display: none;
+}
+
+.difficulty-more summary::after {
+  content: " ▾";
+}
+
+.difficulty-more[open] summary::after {
+  content: " ▴";
+}
+
+.difficulty-more .difficulty-metrics {
+  margin-top: 8px;
+}
+
+/* 進階設定：一個可展開的區塊，摘要列顯示目前的模式、武器與 Boss 規則。 */
+.flight-more {
+  margin-top: 18px;
+  border: 1px solid #32405f;
+  border-radius: 12px;
+  background: #0d1428;
+}
+
+.flight-more > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.flight-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.flight-more > summary span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.flight-more > summary small {
+  color: var(--muted);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flight-more > summary::after {
+  content: "＋";
+  flex: none;
+  color: var(--cyan);
+  font-size: 18px;
+}
+
+.flight-more[open] > summary::after {
+  content: "－";
+}
+
+.flight-more-body {
+  display: grid;
+  gap: 12px;
+  padding: 2px 16px 16px;
+  border-top: 1px solid #263452;
+}
+
+.flight-more-body > .config-grid {
+  margin-top: 12px;
+}
+
+.flight-more-body .setup-caption {
+  margin-top: 6px;
+}
+
+.base-tip-line {
+  margin: 14px 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* 星域威脅：較小的卡片，一列四張；圖片是壓縮後的 WebP。 */
+.boss-gallery-grid {
+  gap: 12px;
+}
+
+.boss-preview img {
+  height: 132px;
+  object-fit: contain;
+}
+
+@media (max-width: 760px) {
+  .boss-preview img {
+    height: 96px;
+  }
+}
+
+/* 展開進階設定時，右側基地欄保持原高度，不被拉長成空白欄。 */
+.home-layout {
+  align-items: start;
+}
+
+/* 窄螢幕上的升級、商城、結算小標允許換行，不再超出畫面右側。 */
+@media (max-width: 760px) {
+  .flight-layout .overlay .eyebrow {
+    letter-spacing: 0.12em;
+    overflow-wrap: anywhere;
+  }
+}

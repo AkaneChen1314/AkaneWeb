@@ -525,26 +525,31 @@ for (const roster of ["rift", "tyrant", "queen", "core"]) {
     engine.fx.some((f) => f.type === "shockwave" && f.style === b.bossIndex),
   );
 }
+// 第一次 scale 是戰場鏡頭；之後的 scale 屬於星艦外型與受擊縮放。
 function lastDrawScale() {
-  return drawingCalls.filter((c) => c.name === "scale").at(-1)?.args[0];
+  return drawingCalls.filter((c) => c.name === "scale")[0]?.args[0];
 }
+// 鏡頭基礎倍率依戰場短邊放大（960×650 → 650 / 600），手機寬度 600 以下為 0.86。
+const desktopZoom = 650 / 600,
+  mobileZoom = 0.86,
+  near = (a, b) => Math.abs(a - b) < 1e-9;
 engine.zoomPulse = 0.65;
 engine.screenPulse = 0.3;
 engine.shake = 14;
 sandbox.Starbreak.profile.settings.effectsLevel = "full";
 drawingCalls.length = 0;
 sandbox.frame(1200);
-assert(lastDrawScale() > 1);
+assert(lastDrawScale() > desktopZoom);
 sandbox.Starbreak.profile.settings.effectsLevel = "none";
 drawingCalls.length = 0;
 sandbox.frame(1200);
-assert.equal(lastDrawScale(), 1);
+assert(near(lastDrawScale(), desktopZoom));
 assert.equal(engine.r.enemyBullets.length > 0, true);
 viewport.reduced = true;
 sandbox.Starbreak.profile.settings.effectsLevel = "full";
 drawingCalls.length = 0;
 sandbox.frame(1200);
-assert.equal(lastDrawScale(), 1);
+assert(near(lastDrawScale(), desktopZoom));
 assert(
   drawingCalls.some((c) => c.name === "arc"),
   "basic attack geometry remains visible",
@@ -557,11 +562,11 @@ windowEvents.resize();
 sandbox.Starbreak.profile.settings.effectsLevel = "auto";
 drawingCalls.length = 0;
 sandbox.frame(1200);
-assert(lastDrawScale() > 0.83 && lastDrawScale() < 0.84);
+assert(lastDrawScale() > mobileZoom && lastDrawScale() < mobileZoom + 0.01);
 engine.pause();
 drawingCalls.length = 0;
 sandbox.frame(1200);
-assert.equal(lastDrawScale(), 0.83);
+assert(near(lastDrawScale(), mobileZoom));
 viewport.coarse = false;
 viewport.width = 960;
 windowEvents.resize();

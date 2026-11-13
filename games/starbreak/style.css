@@ -133,7 +133,7 @@ main {
 .hero-art {
   position: absolute;
   inset: 0;
-  background: url("assets/starbreak.png") center/cover;
+  background: url("assets/starbreak.webp") center/cover;
   opacity: 0.8;
 }
 .hero:after {

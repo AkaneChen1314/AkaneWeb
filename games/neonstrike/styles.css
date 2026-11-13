@@ -376,7 +376,7 @@ button {
   border: 1px solid rgba(150, 211, 221, 0.24);
   background:
     linear-gradient(0deg, rgba(3, 10, 14, 0.98), rgba(4, 12, 17, 0.1)),
-    url("./assets/harbor-cover-v1.png") center/cover;
+    url("./assets/harbor-cover-v1.webp") center/cover;
 }
 .map-preview.foundry {
   border-color: rgba(255, 162, 93, 0.45);
@@ -387,7 +387,7 @@ button {
       transparent 45%
     ),
     linear-gradient(0deg, #110c0a, rgba(42, 18, 13, 0.58)),
-    url("./assets/harbor-cover-v1.png") center/cover;
+    url("./assets/harbor-cover-v1.webp") center/cover;
 }
 .map-preview small {
   display: block;
@@ -515,7 +515,7 @@ button {
       transparent 32%,
       rgba(3, 11, 15, 0.97) 82%
     ),
-    url("./assets/harbor-cover-v1.png");
+    url("./assets/harbor-cover-v1.webp");
 }
 .foundry-card .map-card-body {
   background-image:
@@ -525,7 +525,7 @@ button {
       transparent 32%,
       rgba(16, 9, 7, 0.97) 82%
     ),
-    url("./assets/foundry-cover.png");
+    url("./assets/foundry-cover.webp");
   background-color: #693b28;
 }
 .map-card:hover .map-card-body {
@@ -857,7 +857,7 @@ button {
       rgba(3, 9, 12, 0.64) 65%
     ),
     linear-gradient(0deg, #050a0f 0%, transparent 48%, rgba(4, 8, 13, 0.16)),
-    url("./assets/harbor-cover-v1.png") 34% 50% / cover no-repeat;
+    url("./assets/harbor-cover-v1.webp") 34% 50% / cover no-repeat;
   animation: coverReveal 1.5s ease-out both;
   pointer-events: none;
 }

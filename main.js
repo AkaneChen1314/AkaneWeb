@@ -100,7 +100,7 @@ const games = {
   starbreak: {
     name: "星夜突圍：STARBREAK",
     category: "即時射擊 / 星艦生存",
-    cover: "games/starbreak/assets/starbreak.png",
+    cover: "games/starbreak/assets/starbreak.webp",
     path: "games/starbreak/index.html?v=1.2-r11-touch",
     description:
       "駕駛星艦穿越異星敵潮，武器會自動攻擊。靠走位、衝刺與過載突破包圍，搭配武器進化、研究與模組，迎戰擁有獨立本體血量及防護罩的星域 Boss。",
@@ -223,8 +223,14 @@ function returnToLounge() {
   lounge.hidden = false;
   loading.hidden = true;
   document.body.classList.remove("playing");
+  // 在畫面重繪前就回到原本的捲動位置，不會先閃出頁首再跳回去。
+  window.scrollTo({
+    top: homeScroll,
+    behavior: "instant",
+  });
   document.dispatchEvent(new Event("lounge-visibility"));
   requestAnimationFrame(() => {
+    // 背景影片等內容可能在這一幀改變高度，再對齊一次。
     window.scrollTo({
       top: homeScroll,
       behavior: "instant",

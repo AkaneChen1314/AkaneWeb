@@ -959,7 +959,8 @@ function init3D() {
   }
 
   createAtmosphere();
-  buildSelectedArena(selectedMap);
+  // 地圖改在第一次按「部署」時才建立（見 setupEvents）。大廳只顯示 2D 封面，
+  // 開啟遊戲時不必先花 2 秒建圖，網站本身也不會跟著卡住。
   createWeapon();
   createGrenadePreview();
   addAmbientDetails();
@@ -4765,7 +4766,35 @@ function setGraphicsQuality(value) {
 }
 
 function setupEvents() {
-  ui.deploy.addEventListener("click", startGame);
+  // 尚未建好所選地圖時，先把按鈕改成「建立戰場中…」並讓畫面更新，再建圖與開戰。
+  ui.deploy.addEventListener("click", () => {
+    if (gameState !== "lobby" || ui.deploy.disabled) return;
+    if (builtMap === selectedMap) {
+      startGame();
+      return;
+    }
+    const label = ui.deploy.querySelector("span"),
+      original = label?.textContent;
+    ui.deploy.disabled = true;
+    ui.deploy.setAttribute("aria-busy", "true");
+    if (label) label.textContent = "建立戰場中…";
+    let started = false;
+    const buildAndStart = () => {
+      if (started) return;
+      started = true;
+      try {
+        prepareSelectedMap();
+      } finally {
+        ui.deploy.disabled = false;
+        ui.deploy.setAttribute("aria-busy", "false");
+        if (label && original) label.textContent = original;
+      }
+      startGame();
+    };
+    // 兩個畫面後提示已顯示；分頁在背景時 requestAnimationFrame 會暫停，計時器作為備援。
+    requestAnimationFrame(() => requestAnimationFrame(buildAndStart));
+    setTimeout(buildAndStart, 150);
+  });
   const mapControl = $("#mapSelect");
   mapControl.value = String(selectedMap);
   if (typeof window !== "undefined") window.refreshLobbyMapPreview?.();
