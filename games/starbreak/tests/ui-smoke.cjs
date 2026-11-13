@@ -529,9 +529,10 @@ for (const roster of ["rift", "tyrant", "queen", "core"]) {
 function lastDrawScale() {
   return drawingCalls.filter((c) => c.name === "scale")[0]?.args[0];
 }
-// 鏡頭基礎倍率依戰場短邊放大（960×650 → 650 / 600），手機寬度 600 以下為 0.86。
+// 鏡頭基礎倍率依戰場短邊計算：960×650 → 650 / 600；手機短邊不到 600 時
+// 以 560 單位為準（390 寬 → 390 / 560），讓手機看得到更遠的敵人。
 const desktopZoom = 650 / 600,
-  mobileZoom = 0.86,
+  mobileZoom = 390 / 560,
   near = (a, b) => Math.abs(a - b) < 1e-9;
 engine.zoomPulse = 0.65;
 engine.screenPulse = 0.3;

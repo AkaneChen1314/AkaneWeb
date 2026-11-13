@@ -2499,7 +2499,8 @@
         variant = waveType(r);
       if (!type) type = pick(r, enemyPool(r));
       const angle = seeded(r) * Math.PI * 2,
-        rad = radius || Math.min(700, this.viewRadius + 90);
+        // 在可見範圍外 90 單位生成；上限 820，手機橫向拉遠鏡頭後也不會在畫面內冒出。
+        rad = radius || Math.min(820, this.viewRadius + 90);
       let x = clamp(r.p.x + Math.cos(angle) * rad, 30, 2370),
         y = clamp(r.p.y + Math.sin(angle) * rad, 30, 2370);
       if (Math.hypot(x - r.p.x, y - r.p.y) < 180) {
@@ -5451,9 +5452,14 @@
   // 戰場鏡頭倍率：大螢幕放大星艦與敵人，讓畫面不再顯得很小；
   // 手機寬度不足 600px 時略微拉遠，保留躲彈需要的視野。
   function viewZoom(width = canvasWidth, height = canvasHeight) {
-    const base =
-      width < 600 ? 0.86 : clamp(Math.min(width, height) / 600, 1, 1.35);
-    return base * touchViewScale;
+    // 以實際螢幕的短邊計算（手機「電腦版網站」要先除回縮放比例）。
+    // 手機短邊至少看到約 560 單位：直向約 0.7 倍、橫向約 0.62 倍，
+    // 敵人與彈幕來得及看見；桌機與平板依短邊放大，最多 1.35 倍。
+    const scale = touchViewScale || 1,
+      short = Math.min(width, height) / scale,
+      base =
+        short < 600 ? clamp(short / 560, 0.62, 1) : clamp(short / 600, 1, 1.35);
+    return base * scale;
   }
   function resizeCanvas() {
     if (!canvas) return;

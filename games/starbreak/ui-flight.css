@@ -614,3 +614,115 @@ body.sb-battle main {
     overflow-wrap: anywhere;
   }
 }
+
+/* 手機橫向等矮螢幕：HUD 收緊，任務移到上方角落，讓出中央戰場。 */
+@media (max-height: 500px) and (orientation: landscape) {
+  .flight-top {
+    gap: 8px;
+    padding: 6px 10px 0;
+  }
+
+  .flight-vitals {
+    width: min(230px, 100%);
+    padding: 5px 9px 6px;
+  }
+
+  .flight-vitals .hp-label {
+    font-size: 12px;
+  }
+
+  .flight-layout .xp-row {
+    margin-top: 4px;
+  }
+
+  .flight-wave {
+    min-width: 0;
+    padding: 4px 10px 5px;
+  }
+
+  .flight-wave .eyebrow {
+    display: none;
+  }
+
+  .wave-line h2 {
+    margin: 0;
+    font-size: 15px;
+  }
+
+  .flight-top .hud-actions button {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  .flight-layout .objective-hud {
+    top: 48px;
+    right: 10px;
+    bottom: auto;
+    left: auto;
+    width: 170px;
+    padding: 5px 8px;
+  }
+
+  .flight-layout .arena-label,
+  .flight-layout .boss-arrival {
+    top: 78px;
+  }
+
+  .flight-layout .boss-hud {
+    top: 74px;
+    width: min(460px, calc(100% - 380px));
+    min-width: 300px;
+  }
+
+  /* 只包住兩顆技能鈕，不橫跨底部而擋住戰場觸控。 */
+  .flight-layout .game-controls {
+    right: auto;
+    left: 10px;
+    bottom: 8px;
+  }
+
+  .flight-layout .ability {
+    min-width: 96px;
+    padding: 6px 12px;
+  }
+
+  .weapon-strip {
+    right: 10px;
+    bottom: 8px;
+  }
+
+  .weapon-chip {
+    width: 34px;
+    height: 34px;
+  }
+
+  .flight-layout .combo-hud {
+    bottom: 58px;
+  }
+}
+
+/* 觸控橫向：左下是移動區、右下是技能，武器列改成下方中央的一排。 */
+@media (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
+  .flight-layout .game-controls {
+    left: auto;
+    right: 10px;
+  }
+
+  .weapon-strip,
+  .flight-layout .boss-hud:not([hidden]) ~ .battle-field .weapon-strip {
+    top: auto;
+    right: auto;
+    bottom: 8px;
+    left: 50%;
+    flex-direction: row;
+    transform: translateX(-50%);
+  }
+
+  .flight-layout .objective-hud,
+  .flight-layout .boss-hud:not([hidden]) ~ .battle-field .objective-hud {
+    top: 74px;
+    right: auto;
+    left: 10px;
+    width: 160px;
+  }
+}
