@@ -16,7 +16,7 @@ const games = {
     category: "即時格鬥 / 單人與本機雙人",
     version: "鍵盤・觸控",
     path: "games/midnight/index.html?v=20261113-r14-games",
-    cover: "assets/cover-midnight.png",
+    cover: "assets/cover-midnight-art.webp",
     description:
       "四名原創鬥士，在雨夜天台展開對決。選擇單人對電腦、本機雙人、練習或街機挑戰，用連擊、防禦與大招拿下兩回合。",
     steps: [
@@ -31,7 +31,7 @@ const games = {
     category: "生存貪吃蛇 / 隨機進化",
     version: "鍵鼠・觸控",
     path: "games/serpent/index.html?v=20261113-r14-games",
-    cover: "assets/cover-serpent.png",
+    cover: "assets/cover-serpent-art.webp",
     description:
       "化身四種蛇靈，在三座戰場收集食物、成長與進化。從無傷練習、悠遊秘境到蟲群對戰與首領連戰，選擇自己的冒險節奏。",
     steps: [

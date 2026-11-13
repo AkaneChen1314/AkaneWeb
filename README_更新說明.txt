@@ -1,13 +1,14 @@
 Blue World 1.2｜整合更新紀錄
 
 r14｜2026-11-02～11-13 首頁可讀性、原始碼排版與NEON STRIKE 8.0 DISTRICTS
-版本辨識：20261113-blueworld-r14-seven-games
+版本辨識：20261113-blueworld-r14-seven-games-art
 
 11-13 新增兩款遊戲（同屬 r14）：
+- 同日封面追加：改用 cover-midnight-art.webp 與 cover-serpent-art.webp 兩張生成式遊戲情境插畫；每張 1672×941，保留中文標題為 HTML 文字。提示及來源見 assets/新遊戲封面生成紀錄.md。
 - games/midnight/：午夜擂台；games/serpent/：霓境蛇行。自訂字體、中文導讀與可閱讀原始碼；支援遊戲館返回暫停、音訊停止及重入接續。
 - assets/cover-midnight.png、assets/cover-serpent.png：分別擷取遊戲戰場與蛇靈展示台，不使用外部圖片。
 - index.html、main.js：七款遊戲卡片、推薦定位、玩法介紹、隨機選擇與入口；桌機一主卡＋三排雙欄，手機單欄。
-- 新快取辨識 20261113-blueworld-r14-seven-games；既有霓光突擊打包資源仍沿用 districts 快取。
+- 新快取辨識 20261113-blueworld-r14-seven-games-art；既有霓光突擊打包資源仍沿用 districts 快取。
 - 更新 README、程式導覽、來源及測試紀錄；下方舊內容保留其當時檢查範圍。
 
 11-02首頁修訂、11-04原始碼排版與11-13霓光突擊8.0統一記為r14，接續r13；公開版本仍為1.2。
