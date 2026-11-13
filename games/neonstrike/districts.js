@@ -8,10 +8,216 @@
  * 直接匯入 Three.js 並只用「THREE.名稱」存取，打包時才能去除用不到的部分。
  */
 import * as THREE from "./vendor/three.module.min.js";
+import { bodyOverlapsCollider } from "./spatial-collision.js";
+
+// Box mapping in world units keeps texture density equal on long merged walls.
+function applyWorldUV(geometry, tile) {
+  const pos = geometry.attributes.position,
+    normal = geometry.attributes.normal,
+    uv = geometry.attributes.uv;
+  if (!uv) return;
+  for (let i = 0; i < pos.count; i++) {
+    const nx = Math.abs(normal.getX(i)),
+      ny = Math.abs(normal.getY(i)),
+      nz = Math.abs(normal.getZ(i));
+    const x = pos.getX(i),
+      y = pos.getY(i),
+      z = pos.getZ(i);
+    if (ny >= nx && ny >= nz) uv.setXY(i, x / tile, z / tile);
+    else if (nx >= nz) uv.setXY(i, z / tile, y / tile);
+    else uv.setXY(i, x / tile, y / tile);
+  }
+}
+
+function mergeGeometries(items, tile) {
+  let vertices = 0,
+    indices = 0;
+  const prepared = items.map(({ geometry, transform }) => {
+    const clone = geometry.clone();
+    clone.applyMatrix4(transform);
+    if (tile) applyWorldUV(clone, tile);
+    const count = clone.attributes.position.count;
+    const index = clone.index
+      ? clone.index.array
+      : Array.from({ length: count }, (_, i) => i);
+    vertices += count;
+    indices += index.length;
+    return { clone, index };
+  });
+  const pos = new Float32Array(vertices * 3),
+    nor = new Float32Array(vertices * 3),
+    uvs = new Float32Array(vertices * 2),
+    idx = vertices > 65535 ? new Uint32Array(indices) : new Uint16Array(indices);
+  let v = 0,
+    k = 0;
+  for (const { clone, index } of prepared) {
+    const p = clone.attributes.position,
+      n = clone.attributes.normal,
+      t = clone.attributes.uv;
+    pos.set(p.array, v * 3);
+    nor.set(n.array, v * 3);
+    if (t) uvs.set(t.array, v * 2);
+    for (let i = 0; i < index.length; i++) idx[k++] = index[i] + v;
+    v += p.count;
+    clone.dispose();
+  }
+  const merged = new THREE.BufferGeometry();
+  merged.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  merged.setAttribute("normal", new THREE.BufferAttribute(nor, 3));
+  merged.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
+  merged.setIndex(new THREE.BufferAttribute(idx, 1));
+  merged.computeBoundingSphere();
+  merged.computeBoundingBox();
+  return merged;
+}
+
+function materialKey(material) {
+  return [
+    material.type,
+    material.color?.getHex(),
+    material.emissive?.getHex(),
+    material.emissiveIntensity,
+    material.roughness,
+    material.metalness,
+    material.map?.uuid,
+    material.bumpMap?.uuid,
+    material.bumpScale,
+    material.side,
+    material.opacity,
+    material.toneMapped,
+    material.vertexColors,
+    material.flatShading,
+    material.depthWrite,
+    material.depthTest,
+    material.polygonOffset,
+    material.fog,
+  ].join(",");
+}
+
+/**
+ * 靜態合批：地圖建好後，把同材質、同一 37 公尺區塊內的獨立小物件合併成一個 Mesh，
+ * 大幅減少每幀（含陰影）的繪製呼叫。只處理場景最上層、沒有名稱、子物件或特殊資料的
+ * 不透明 Mesh；會擋子彈的物件合併後仍加入 worldMeshes。回傳合併前後的數量。
+ */
+export function batchStaticMeshes({ scene, objects, worldMeshes, tile = 37 }) {
+  const solid = new Set(worldMeshes),
+    buckets = new Map(),
+    center = new THREE.Vector3();
+  for (const mesh of objects) {
+    if (
+      !mesh.isMesh ||
+      mesh.isInstancedMesh ||
+      mesh.isSkinnedMesh ||
+      mesh.parent !== scene ||
+      mesh.children.length ||
+      mesh.name ||
+      !mesh.visible ||
+      Object.keys(mesh.userData).length ||
+      mesh.layers.mask !== 1
+    )
+      continue;
+    const material = mesh.material,
+      geometry = mesh.geometry;
+    if (
+      !material ||
+      Array.isArray(material) ||
+      material.transparent ||
+      material.blending !== THREE.NormalBlending ||
+      !(material.isMeshStandardMaterial || material.isMeshBasicMaterial) ||
+      !geometry.attributes.position ||
+      !geometry.attributes.normal ||
+      !geometry.attributes.uv ||
+      geometry.attributes.position.isInterleavedBufferAttribute
+    )
+      continue;
+    mesh.updateMatrixWorld(true);
+    if (!geometry.boundingSphere) geometry.computeBoundingSphere();
+    center.copy(geometry.boundingSphere.center).applyMatrix4(mesh.matrixWorld);
+    const cell = `${Math.floor((center.x + 80) / tile)}:${Math.floor((center.z + 80) / tile)}`,
+      key = `${materialKey(material)}|${mesh.castShadow}|${mesh.receiveShadow}|${solid.has(mesh)}|${cell}`;
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key).push(mesh);
+  }
+  let before = 0,
+    after = 0;
+  const removed = new Set();
+  for (const meshes of buckets.values()) {
+    if (meshes.length < 2) continue;
+    const merged = new THREE.Mesh(
+      mergeGeometries(
+        meshes.map((mesh) => ({
+          geometry: mesh.geometry,
+          transform: mesh.matrixWorld,
+        })),
+      ),
+      meshes[0].material,
+    );
+    merged.name = "static-batch";
+    merged.castShadow = meshes[0].castShadow;
+    merged.receiveShadow = meshes[0].receiveShadow;
+    merged.matrixAutoUpdate = false;
+    merged.updateMatrix();
+    scene.add(merged);
+    if (solid.has(meshes[0])) worldMeshes.push(merged);
+    for (const mesh of meshes) {
+      scene.remove(mesh);
+      removed.add(mesh);
+    }
+    before += meshes.length;
+    after++;
+  }
+  if (removed.size) {
+    for (let i = worldMeshes.length - 1; i >= 0; i--)
+      if (removed.has(worldMeshes[i])) worldMeshes.splice(i, 1);
+    // Free GPU buffers that nothing on screen uses any more.
+    const live = new Set();
+    scene.traverse((object) => {
+      if (object.geometry) live.add(object.geometry);
+      for (const material of Array.isArray(object.material)
+        ? object.material
+        : [object.material])
+        if (material) live.add(material);
+    });
+    for (const mesh of removed) {
+      if (!live.has(mesh.geometry)) mesh.geometry.dispose();
+      if (!live.has(mesh.material)) mesh.material.dispose();
+    }
+  }
+  return { before, after };
+}
+
+/**
+ * 極小零件（螺栓、補給模型細節等）的陰影在 2048 陰影貼圖上幾乎看不見，
+ * 卻讓每次陰影更新多出上百個繪製呼叫，因此關閉它們的投影。
+ */
+export function trimTinyShadowCasters(objects, minRadius = 0.25) {
+  const sphere = new THREE.Sphere();
+  let trimmed = 0;
+  for (const root of objects)
+    root.traverse((object) => {
+      if (!object.isMesh || !object.castShadow) return;
+      const geometry = object.geometry;
+      if (!geometry.boundingSphere) geometry.computeBoundingSphere();
+      object.updateWorldMatrix(true, false);
+      sphere.copy(geometry.boundingSphere).applyMatrix4(object.matrixWorld);
+      // Instanced parts are sized by one instance, not by the whole batch.
+      if (sphere.radius < minRadius) {
+        object.castShadow = false;
+        trimmed++;
+      }
+    });
+  return trimmed;
+}
 
 export function createDistrictBuilder(ctx) {
   const materials = new Map();
   const batches = [];
+  // Every visible part, so finish() can seal the ones nothing stops you in.
+  const parts = [];
+  const record = (part) => {
+    parts.push(part);
+    ctx.debugParts?.push(part);
+  };
   const instanced = new Map();
   const paints = [];
   const lights = [];
@@ -44,67 +250,6 @@ export function createDistrictBuilder(ctx) {
     return materials.get(key);
   }
 
-  // Box mapping in world units keeps texture density equal on long merged walls.
-  function applyWorldUV(geometry, tile) {
-    const pos = geometry.attributes.position,
-      normal = geometry.attributes.normal,
-      uv = geometry.attributes.uv;
-    if (!uv) return;
-    for (let i = 0; i < pos.count; i++) {
-      const nx = Math.abs(normal.getX(i)),
-        ny = Math.abs(normal.getY(i)),
-        nz = Math.abs(normal.getZ(i));
-      const x = pos.getX(i),
-        y = pos.getY(i),
-        z = pos.getZ(i);
-      if (ny >= nx && ny >= nz) uv.setXY(i, x / tile, z / tile);
-      else if (nx >= nz) uv.setXY(i, z / tile, y / tile);
-      else uv.setXY(i, x / tile, y / tile);
-    }
-  }
-
-  function mergeGeometries(items, tile) {
-    let vertices = 0,
-      indices = 0;
-    const prepared = items.map(({ geometry, transform }) => {
-      const clone = geometry.clone();
-      clone.applyMatrix4(transform);
-      if (tile) applyWorldUV(clone, tile);
-      const count = clone.attributes.position.count;
-      const index = clone.index
-        ? clone.index.array
-        : Array.from({ length: count }, (_, i) => i);
-      vertices += count;
-      indices += index.length;
-      return { clone, index };
-    });
-    const pos = new Float32Array(vertices * 3),
-      nor = new Float32Array(vertices * 3),
-      uvs = new Float32Array(vertices * 2),
-      idx = vertices > 65535 ? new Uint32Array(indices) : new Uint16Array(indices);
-    let v = 0,
-      k = 0;
-    for (const { clone, index } of prepared) {
-      const p = clone.attributes.position,
-        n = clone.attributes.normal,
-        t = clone.attributes.uv;
-      pos.set(p.array, v * 3);
-      nor.set(n.array, v * 3);
-      if (t) uvs.set(t.array, v * 2);
-      for (let i = 0; i < index.length; i++) idx[k++] = index[i] + v;
-      v += p.count;
-      clone.dispose();
-    }
-    const merged = new THREE.BufferGeometry();
-    merged.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    merged.setAttribute("normal", new THREE.BufferAttribute(nor, 3));
-    merged.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
-    merged.setIndex(new THREE.BufferAttribute(idx, 1));
-    merged.computeBoundingSphere();
-    merged.computeBoundingBox();
-    return merged;
-  }
-
   /** A named group of static parts merged per material when finished. */
   class Batch {
     constructor(name) {
@@ -134,6 +279,19 @@ export function createDistrictBuilder(ctx) {
         options.shadow !== false,
       );
       if (collide) ctx.registerCollisionBox(x, y, z, sx, sy, sz, rot);
+      record({
+        shape: "box",
+        batch: this.name,
+        x,
+        y,
+        z,
+        sx,
+        sy,
+        sz,
+        rot,
+        collide,
+        visibleSolid: !material.transparent && material.visible !== false,
+      });
     }
     /** Vertical cylinder; collide adds a round collider. axis "x"/"z" lays it down (decor). */
     cylinder(x, y, z, radius, height, material, options = {}) {
@@ -165,18 +323,38 @@ export function createDistrictBuilder(ctx) {
         options.solid ?? (collide || options.solid === true),
         options.shadow !== false,
       );
-      if (collide)
+      record({
+        shape: "cylinder",
+        batch: this.name,
+        axis,
+        x,
+        y,
+        z,
+        radius: Math.max(radius, options.top ?? radius),
+        height,
+        rot: options.rot || 0,
+        collide: collide || options.collideAlong === true,
+        visibleSolid: !material.transparent && options.open !== true,
+      });
+      // Lying pipes and rollers get an oriented box along their axis.
+      if (options.collideAlong && axis !== "y") {
+        const rot = (options.rot || 0) + (axis === "z" ? Math.PI / 2 : 0);
+        ctx.registerCollisionBox(x, y, z, height, radius * 2, radius * 2, rot);
+      }
+      if (collide) {
+        const r = options.colliderRadius ?? radius;
         ctx.collisionBoxes.push(
           ctx.roundCollider(
             new THREE.Box3(
-              new THREE.Vector3(x - radius, y - height / 2, z - radius),
-              new THREE.Vector3(x + radius, y + height / 2, z + radius),
+              new THREE.Vector3(x - r, y - height / 2, z - r),
+              new THREE.Vector3(x + r, y + height / 2, z + r),
             ),
             x,
             z,
-            radius,
+            r,
           ),
         );
+      }
     }
     /** Arbitrary decor geometry with a full transform. */
     shape(geometry, material, transform, options = {}) {
@@ -222,6 +400,19 @@ export function createDistrictBuilder(ctx) {
   function collider(x, y, z, sx, sy, sz, rot = 0) {
     ctx.registerCollisionBox(x, y, z, sx, sy, sz, rot);
   }
+  function roundCollider(x, z, radius, y0, y1) {
+    ctx.collisionBoxes.push(
+      ctx.roundCollider(
+        new THREE.Box3(
+          new THREE.Vector3(x - radius, y0, z - radius),
+          new THREE.Vector3(x + radius, y1, z + radius),
+        ),
+        x,
+        z,
+        radius,
+      ),
+    );
+  }
   /**
    * Climbable ladder. (climbX, climbZ) is where the climber's body hangs,
    * (nx, nz) points away from the structure, and (exitX, exitZ) is where the
@@ -240,7 +431,77 @@ export function createDistrictBuilder(ctx) {
     paints.push(draw);
   }
 
+  // 自動補碰撞：看得到、會擋子彈的零件，若內部沒有任何碰撞就補上同形狀的碰撞，
+  // 避免「看得到卻穿得過」。細桿、梯級、肋條、玻璃等細小裝飾不處理。
+  function samplePoints(part) {
+    const points = [];
+    if (part.shape === "box") {
+      const c = Math.cos(part.rot),
+        s = Math.sin(part.rot);
+      for (const u of [-0.3, 0, 0.3])
+        for (const v of [-0.3, 0, 0.3])
+          for (const w of [-0.3, 0, 0.3]) {
+            const lx = u * part.sx,
+              lz = w * part.sz;
+            points.push([part.x + lx * c + lz * s, part.y + v * part.sy, part.z - lx * s + lz * c]);
+          }
+    } else if (part.axis === "y") {
+      for (const v of [-0.3, 0, 0.3]) {
+        points.push([part.x, part.y + v * part.height, part.z]);
+        for (const a of [0, 1.57, 3.14, 4.71])
+          points.push([part.x + Math.cos(a) * part.radius * 0.5, part.y + v * part.height, part.z + Math.sin(a) * part.radius * 0.5]);
+      }
+    } else {
+      const rot = part.rot + (part.axis === "z" ? Math.PI / 2 : 0),
+        c = Math.cos(rot),
+        s = Math.sin(rot);
+      for (const u of [-0.4, -0.2, 0, 0.2, 0.4])
+        points.push([part.x + u * part.height * c, part.y, part.z - u * part.height * s]);
+    }
+    return points;
+  }
+  function sealUncoveredParts() {
+    const cell = 4,
+      grid = new Map(),
+      key = (i, j) => i * 4096 + j;
+    for (const box of ctx.collisionBoxes)
+      for (let i = Math.floor(box.min.x / cell); i <= Math.floor(box.max.x / cell); i++)
+        for (let j = Math.floor(box.min.z / cell); j <= Math.floor(box.max.z / cell); j++) {
+          const k = key(i, j);
+          if (!grid.has(k)) grid.set(k, []);
+          grid.get(k).push(box);
+        }
+    const covered = (x, y, z) =>
+      (grid.get(key(Math.floor(x / cell), Math.floor(z / cell))) || []).some((box) =>
+        bodyOverlapsCollider(box, x, z, 0.03, y - 0.03, y + 0.03),
+      );
+    let sealed = 0;
+    for (const part of parts) {
+      if (part.collide || !part.visibleSolid) continue;
+      if (part.shape === "box") {
+        const dims = [part.sx, part.sy, part.sz].sort((a, b) => b - a);
+        if (dims[2] < 0.05 || dims[1] < 0.2) continue;
+      } else if (part.radius < 0.1) continue;
+      let open = 0,
+        count = 0;
+      for (const [x, y, z] of samplePoints(part)) {
+        if (Math.max(Math.abs(x), Math.abs(z)) > 73) continue;
+        count++;
+        if (!covered(x, y, z)) open++;
+      }
+      if (!count || open < Math.max(2, count * 0.3)) continue;
+      if (part.shape === "box")
+        ctx.registerCollisionBox(part.x, part.y, part.z, part.sx, part.sy, part.sz, part.rot);
+      else if (part.axis === "y") roundCollider(part.x, part.z, part.radius, part.y - part.height / 2, part.y + part.height / 2);
+      else
+        ctx.registerCollisionBox(part.x, part.y, part.z, part.height, part.radius * 2, part.radius * 2, part.rot + (part.axis === "z" ? Math.PI / 2 : 0));
+      sealed++;
+    }
+    return sealed;
+  }
+
   function finish(options = {}) {
+    sealUncoveredParts();
     for (const batch of batches)
       for (const bucket of batch.buckets.values()) {
         const tile = bucket.material.userData.worldTile;
@@ -384,6 +645,7 @@ export function createDistrictBuilder(ctx) {
     addInstance,
     frame,
     collider,
+    roundCollider,
     ladder,
     light,
     pool,
@@ -531,9 +793,34 @@ export function warehouse(kit, options) {
     if (!blocked("e", lz))
       detail.box(f.x(w / 2 + 0.03, lz), h / 2 + 0.25, f.z(w / 2 + 0.03, lz), 0.06, h - 0.9, 0.07, rib, { rot, collide: false, shadow: false });
   }
-  // Base plinth band.
-  detail.box(f.x(0, -d / 2 - 0.05), 0.3, f.z(0, -d / 2 - 0.05), w + 0.1, 0.6, 0.06, trim, { rot, collide: false, shadow: false });
-  detail.box(f.x(0, d / 2 + 0.05), 0.3, f.z(0, d / 2 + 0.05), w + 0.1, 0.6, 0.06, trim, { rot, collide: false, shadow: false });
+  // Base plinth band on every face, interrupted at each doorway so nothing
+  // dark spans the threshold.
+  const plinth = (side, from, to) => {
+    const spans = openings[side]
+      .map((o) => [o.at - o.width / 2, o.at + o.width / 2])
+      .sort((a, c) => a[0] - c[0]);
+    let cursor = from;
+    const piece = (a, c) => {
+      if (c - a < 0.05) return;
+      const mid = (a + c) / 2;
+      if (side === "n" || side === "s") {
+        const lz = side === "n" ? -d / 2 - 0.05 : d / 2 + 0.05;
+        detail.box(f.x(mid, lz), 0.3, f.z(mid, lz), c - a, 0.6, 0.08, trim, { rot, shadow: false });
+      } else {
+        const lx = side === "w" ? -w / 2 - 0.05 : w / 2 + 0.05;
+        detail.box(f.x(lx, mid), 0.3, f.z(lx, mid), 0.08, 0.6, c - a, trim, { rot, shadow: false });
+      }
+    };
+    for (const [a, c] of spans) {
+      piece(cursor, a);
+      cursor = c;
+    }
+    piece(cursor, to);
+  };
+  plinth("n", -w / 2 - 0.09, w / 2 + 0.09);
+  plinth("s", -w / 2 - 0.09, w / 2 + 0.09);
+  plinth("w", -d / 2 - 0.01, d / 2 + 0.01);
+  plinth("e", -d / 2 - 0.01, d / 2 + 0.01);
   // Lit clerestory windows on the long faces.
   const windowMat = kit.glow(`window-${palette.window ?? 0x9fe4ff}`, palette.window ?? 0x9fe4ff, 0.85);
   for (let lx = -w / 2 + 2; lx <= w / 2 - 2; lx += 3.2)
@@ -591,7 +878,9 @@ export function rack(kit, b, detail, f, lx, lz, length, depth = 1.1, height = 3.
       kit.standard("cargo-c", 0x3f5e4b, 0.8, 0.05),
     ];
   const sub = kit.frame(f.x(lx, lz), f.z(lx, lz), f.rot + rot);
-  kit.collider(sub.x(0, 0), height / 2, sub.z(0, 0), length, height, depth, sub.rot);
+  // Cargo on the third shelf can stand taller than a low rack frame.
+  const colliderHeight = Math.max(height, 3.25);
+  kit.collider(sub.x(0, 0), colliderHeight / 2, sub.z(0, 0), length, colliderHeight, depth, sub.rot);
   const bays = Math.max(1, Math.round(length / 2.7));
   for (let i = 0; i <= bays; i++) {
     const px = -length / 2 + (i * length) / bays;
@@ -616,11 +905,12 @@ export function rack(kit, b, detail, f, lx, lz, length, depth = 1.1, height = 3.
 }
 
 /** Wooden pallet stack with a shrink-wrapped load. */
-export function palletStack(kit, b, x, z, rot = 0, layers = 2, wrapped = true) {
+export function palletStack(kit, b, x, z, rot = 0, layers = 2, wrapped = true, baseY = 0) {
   const wood = kit.standard("pallet-wood", 0x7b5a3a, 0.9, 0.02),
     wrap = kit.standard("pallet-wrap", 0x9aaab0, 0.35, 0.05, { transparent: true, opacity: 0.88 });
   const f = kit.frame(x, z, rot);
-  let y = 0;
+  // baseY lets a stack stand on a raised floor (e.g. the loading dock).
+  let y = baseY;
   for (let layer = 0; layer < layers; layer++) {
     for (const lz of [-0.45, 0, 0.45])
       b.box(f.x(0, lz), y + 0.05, f.z(0, lz), 1.2, 0.1, 0.12, wood, { rot, collide: false, solid: true });
@@ -631,7 +921,7 @@ export function palletStack(kit, b, x, z, rot = 0, layers = 2, wrapped = true) {
       y += 0.8;
     }
   }
-  kit.collider(f.x(0, 0), y / 2, f.z(0, 0), 1.2, y, 1.0, rot);
+  kit.collider(f.x(0, 0), (baseY + y) / 2, f.z(0, 0), 1.2, y - baseY, 1.0, rot);
 }
 
 /** Box truck or semi cab + trailer, parked; colliders on cab and cargo body. */
@@ -654,7 +944,10 @@ export function truck(kit, b, x, z, rot, color = 0x9c3b31, trailer = false) {
     b.box(f.x(s, cabZ - 1.17), 0.95, f.z(s, cabZ - 1.17), 0.36, 0.18, 0.04, head, { rot, collide: false, shadow: false });
   // Cargo body / trailer.
   b.box(f.x(0, 0.3), 1.95, f.z(0, 0.3), 2.5, 2.8, cargoLength, box, { rot });
-  b.box(f.x(0, 0.3), 0.42, f.z(0, 0.3), 1.6, 0.3, cargoLength + 1.8, dark, { rot, collide: false });
+  const chassisStart = cabZ - 0.8,
+    chassisEnd = 0.3 + cargoLength / 2 - 0.05,
+    chassisMid = (chassisStart + chassisEnd) / 2;
+  b.box(f.x(0, chassisMid), 0.42, f.z(0, chassisMid), 1.6, 0.3, chassisEnd - chassisStart, dark, { rot, collide: false });
   for (const s of [-1, 1]) {
     b.box(f.x(s * 1.27, 0.3), 2.75, f.z(s * 1.27, 0.3), 0.03, 0.5, cargoLength - 0.4, kit.standard(`truck-stripe-${color}`, color, 0.5, 0.3), { rot, collide: false, shadow: false });
     b.box(f.x(s * 0.95, cargoLength / 2 + 0.33), 0.9, f.z(s * 0.95, cargoLength / 2 + 0.33), 0.3, 0.14, 0.04, tail, { rot, collide: false, shadow: false });
@@ -744,7 +1037,7 @@ export function lamp(kit, b, x, z, rot = 0, color = 0xffd9a0, height = 6.2) {
     headMat = kit.glow(`lamp-head-${color}`, color);
   const f = kit.frame(x, z, rot);
   b.cylinder(x, height / 2, z, 0.09, height, pole, { segments: 8 });
-  b.box(f.x(0.75, 0), height - 0.05, f.z(0.75, 0), 1.6, 0.1, 0.1, pole, { rot, collide: false, solid: true });
+  b.box(f.x(0.75, 0), height - 0.065, f.z(0.75, 0), 1.6, 0.1, 0.11, pole, { rot, collide: false, solid: true });
   b.box(f.x(1.45, 0), height - 0.16, f.z(1.45, 0), 0.62, 0.12, 0.3, headMat, { rot, collide: false, shadow: false });
   b.box(f.x(0, 0), 0.1, f.z(0, 0), 0.42, 0.2, 0.42, pole, { rot, collide: false, solid: true });
   kit.pool(f.x(1.45, 0), f.z(1.45, 0), 4.2, color, 1);
@@ -795,7 +1088,9 @@ export function watchtower(kit, b, x, z, rot = 0, accent = 0xff4b5c) {
     top = 4.4;
   for (const [lx, lz] of [[-1.3, -1.3], [1.3, -1.3], [-1.3, 1.3], [1.3, 1.3]])
     b.box(f.x(lx, lz), top / 2, f.z(lx, lz), 0.22, top, 0.22, steel, { rot });
-  for (const y of [1.6, 3.1])
+  // Braces run above head height so walking under the deck is never blocked
+  // by (or through) a bar.
+  for (const y of [2.15, 3.45])
     for (const [lx, lz, sx, sz] of [[0, -1.3, 2.6, 0.08], [0, 1.3, 2.6, 0.08], [-1.3, 0, 0.08, 2.6], [1.3, 0, 0.08, 2.6]])
       b.box(f.x(lx, lz), y, f.z(lx, lz), sx, 0.08, sz, steel, { rot, collide: false, solid: true });
   b.box(f.x(0, 0), top + 0.1, f.z(0, 0), 3.4, 0.2, 3.4, deck, { rot });
@@ -809,7 +1104,7 @@ export function watchtower(kit, b, x, z, rot = 0, accent = 0xff4b5c) {
   ])
     b.box(f.x(lx, lz), top + 0.75, f.z(lx, lz), sx, 1.1, sz, steel, { rot });
   for (const [lx, lz] of [[-1.6, -1.6], [1.6, -1.6], [-1.6, 1.6], [1.6, 1.6]])
-    b.box(f.x(lx, lz), top + 1.3, f.z(lx, lz), 0.1, 2.2, 0.1, steel, { rot, collide: false, solid: true });
+    b.box(f.x(lx, lz), top + 1.3, f.z(lx, lz), 0.12, 2.2, 0.12, steel, { rot });
   b.box(f.x(0, 0), top + 2.45, f.z(0, 0), 3.8, 0.18, 3.8, roof, { rot, collide: false, solid: true });
   b.box(f.x(0, 0), top + 2.75, f.z(0, 0), 0.22, 0.22, 0.22, beacon, { rot, collide: false, shadow: false });
   // Ladder.
@@ -844,7 +1139,7 @@ export function gantryCrane(kit, b, x1, x2, z1, z2, height = 15) {
   for (const lz of [z1, z2]) {
     for (const lx of [x1, x2]) {
       b.box(lx, height / 2, lz, 0.9, height, 0.9, yellow);
-      b.box(lx, 0.25, lz, 1.6, 0.5, 2.4, dark, { collide: false, solid: true });
+      b.box(lx, 0.25, lz, 1.6, 0.5, 2.4, dark);
       b.cylinder(lx, 0.2, lz - 0.7, 0.28, 0.4, dark, { axis: "x", collide: false });
       b.cylinder(lx, 0.2, lz + 0.7, 0.28, 0.4, dark, { axis: "x", collide: false });
     }
@@ -856,16 +1151,19 @@ export function gantryCrane(kit, b, x1, x2, z1, z2, height = 15) {
   const midZ = (z1 + z2) / 2,
     length = Math.abs(z2 - z1);
   for (const lx of [x1 + span * 0.3, x2 - span * 0.3])
-    b.box(lx, height + 1.5, midZ, 0.9, 1.4, length + 1.1, yellow);
+    b.box(lx, height + 1.5, midZ, 0.9, 1.4, length + 1.04, yellow);
   // Trolley, operator cab, hoist cables and spreader.
   const tx = midX,
     tz = midZ - length * 0.12;
   b.box(tx, height + 2.5, tz, span * 0.5, 0.9, 3, dark, { collide: false, solid: true });
   b.box(tx + span * 0.18, height - 0.4, tz + 1.2, 2.2, 1.8, 2, kit.standard("crane-cab", 0x2f454c, 0.3, 0.6), { collide: false, solid: true });
   b.box(tx + span * 0.18, height - 0.3, tz + 2.21, 1.9, 1, 0.04, kit.glow("crane-window", 0x9fe4ff, 0.8), { collide: false, shadow: false });
+  // The spreader never hangs lower than 4.2 m, so small cranes keep it overhead.
+  const hookY = Math.max(height - 7.1, 4.2),
+    cableTop = height - 0.4;
   for (const s of [-1.2, 1.2])
-    b.box(tx + s, height - 3.4, tz, 0.05, 7.2, 0.05, cable, { collide: false, shadow: false });
-  b.box(tx, height - 7.1, tz, 3.4, 0.35, 1.2, yellow, { collide: false, solid: true });
+    b.box(tx + s, (cableTop + hookY) / 2, tz, 0.05, cableTop - hookY, 0.05, cable, { collide: false, shadow: false });
+  b.box(tx, hookY, tz, 3.4, 0.35, 1.2, yellow);
   for (const lx of [x1, x2])
     for (const lz of [z1, z2])
       b.box(lx, height + 1.35, lz, 0.25, 0.25, 0.25, beacon, { collide: false, shadow: false });
@@ -879,38 +1177,23 @@ export function storageTank(kit, b, x, z, radius, height, color = 0x7d8a8f) {
   b.cylinder(x, height / 2, z, radius, height, body, { segments: 28 });
   for (let y = 1.2; y < height; y += 2.2)
     b.cylinder(x, y, z, radius + 0.04, 0.14, band, { segments: 28, collide: false, solid: true, shadow: false });
-  b.cylinder(x, height + 0.04, z, radius + 0.02, 0.08, band, { segments: 28, collide: false, solid: true, shadow: false });
-  b.box(x - radius * 0.35, height + 0.35, z, 0.6, 0.6, 0.6, band, { collide: false, solid: true });
+  // Cap sits 12 mm above the shell top: exactly flush surfaces z-fight (flicker),
+  // and 12 mm is too little for feet to visibly sink in.
+  b.cylinder(x, height - 0.028, z, radius + 0.02, 0.08, band, { segments: 28, collide: false, solid: true, shadow: false });
+  b.box(x - radius * 0.35, height + 0.3, z, 0.6, 0.6, 0.6, band);
   for (let y = 0.5; y < height; y += 0.42)
     b.box(x + radius + 0.12, y, z, 0.05, 0.04, 0.55, rail, { collide: false, solid: true, shadow: false });
   for (const s of [-0.27, 0.27])
     b.box(x + radius + 0.12, height / 2, z + s, 0.05, height, 0.05, rail, { collide: false, solid: true, shadow: false });
-  // Railing ring around the roof, open where the ladder arrives (+x side).
-  b.cylinder(x, height + 0.6, z, radius + 0.08, 0.6, rail, {
+  // A low painted lip marks the roof edge without blocking: players may step
+  // or jump off any side (there is no fall damage).
+  b.cylinder(x, height + 0.06, z, radius + 0.05, 0.12, rail, {
     segments: 28,
     open: true,
     collide: false,
     solid: false,
     shadow: false,
-    thetaStart: Math.PI / 2 + 0.3,
-    thetaLength: Math.PI * 2 - 0.6,
   });
-  // Matching solid railing segments (overhead, so the walking grid is unaffected).
-  const ring = radius + 0.06,
-    segments = 18;
-  for (let i = 0; i < segments; i++) {
-    const a = ((i + 0.5) / segments) * Math.PI * 2;
-    if (Math.abs(Math.atan2(Math.sin(a), Math.cos(a))) < 0.3) continue;
-    kit.collider(
-      x + Math.cos(a) * ring,
-      height + 0.5,
-      z + Math.sin(a) * ring,
-      0.08,
-      1,
-      (Math.PI * 2 * ring) / segments + 0.05,
-      -a,
-    );
-  }
   kit.ladder({
     climbX: x + radius + 0.56,
     climbZ: z,
@@ -936,7 +1219,12 @@ export function generator(kit, b, x, z, rot = 0, color = 0x3a6b4f) {
   b.box(f.x(1.1, 0.66), 1.45, f.z(1.1, 0.66), 0.14, 0.06, 0.03, led, { rot, collide: false, shadow: false });
 }
 
-/** Two-level scaffold with planks; posts collide, planks are overhead/visual. */
+/**
+ * Two-level scaffold with planks. Posts, decks and the long-side guard rails
+ * collide, so the frame can't be walked through at any height. The short ends
+ * stay open: that is where players jump on and off the decks, and the space
+ * under the first deck stays walkable.
+ */
 export function scaffold(kit, b, x, z, w, d, levels = 2, rot = 0) {
   const f = kit.frame(x, z, rot),
     pipe = kit.standard("scaffold-pipe", 0x8c9599, 0.45, 0.7),
@@ -950,7 +1238,8 @@ export function scaffold(kit, b, x, z, w, d, levels = 2, rot = 0) {
     const y = level * 2;
     b.box(f.x(0, 0), y, f.z(0, 0), w, 0.06, d, plank, { rot });
     for (const lz of [-d / 2, d / 2])
-      b.box(f.x(0, lz), y + 1, f.z(0, lz), w, 0.05, 0.05, pipe, { rot, collide: false, solid: true, shadow: false });
+      b.box(f.x(0, lz), y + 1, f.z(0, lz), w, 0.05, 0.05, pipe, { rot, shadow: false });
   }
   b.box(f.x(0, d / 2 + 0.05), top / 2 + 1, f.z(0, d / 2 + 0.05), w, top - 0.2, 0.02, net, { rot, collide: false, solid: false, shadow: false });
+  kit.collider(f.x(0, d / 2 + 0.05), top / 2 + 1, f.z(0, d / 2 + 0.05), w, top - 0.2, 0.08, rot);
 }

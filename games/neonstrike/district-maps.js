@@ -146,24 +146,52 @@ export function createHarborDistricts(ctx) {
       zBack = -45.5,
       zFront = -34.5,
       h = 5.6;
-    const back = kit.frame(2, zBack + 0.2, 0);
-    wallRun(b, back, x1 - 2, x2 - 2, 0, 0.4, h, wall, [{ at: 0, width: 3, height: 3.4 }]);
-    for (const x of [x1 + 0.2, x2 - 0.2]) b.box(x, h / 2, -42.6, 0.4, h, 5.4, wall);
+    const back = kit.frame(2, zBack + 0.2, 0),
+      dockTop = 1.1,
+      rise = dockTop / 6,
+      tread = 0.34,
+      doorTop = dockTop + 3.2;
+    // Rear loading door opens at dock height (it used to start at ground level
+    // behind the dock and looked half buried).
+    wallRun(b, back, x1 - 2, -1.5, 0, 0.4, h, wall);
+    wallRun(b, back, 1.5, x2 - 2, 0, 0.4, h, wall);
+    b.box(2, dockTop / 2, zBack + 0.2, 3, dockTop, 0.4, wall);
+    b.box(2, (doorTop + h) / 2, zBack + 0.2, 3, h - doorTop, 0.4, wall);
+    for (const x of [0.42, 3.58])
+      b.box(x, (dockTop + doorTop) / 2, zBack - 0.08, 0.16, doorTop - dockTop, 0.16, hazard);
+    b.box(2, doorTop + 0.35, zBack - 0.3, 0.9, 0.14, 0.18, kit.glow("lamp-warm", 0xffe2a8), { collide: false, shadow: false });
+    kit.pool(2, zBack - 2.6, 3, 0xffd59a, 0.8);
+    // Side walls start behind the back wall so their outer faces never overlap it.
+    for (const x of [x1 + 0.2, x2 - 0.2]) b.box(x, h / 2, -42.5, 0.4, h, 5.2, wall);
     for (const x of [x1 + 0.2, -2.5, 2, 6.5, x2 - 0.2])
       b.box(x, h / 2, zFront + 0.2, 0.45, h, 0.45, steel);
     b.box((x1 + x2) / 2, h + 0.15, (zBack + zFront) / 2 + 0.5, x2 - x1 + 0.8, 0.3, zFront - zBack + 2, roof);
-    b.box((x1 + x2) / 2, h - 0.25, zFront + 0.2, x2 - x1, 0.5, 0.45, steel);
-    // Raised loading dock: players can hop up, bots treat it as cover.
-    b.box(2, 0.55, -43.85, 16, 1.1, 2.5, concrete);
-    b.box(2, 1.12, -42.58, 16, 0.06, 0.12, hazard, { collide: false });
-    for (let i = 0; i < 3; i++)
-      b.box(-5.6, 0.18 * (i + 1), -41.55 - i * 0.42, 1.4, 0.36 * (i + 1), 0.42, concrete);
-    for (const x of [-3, 0.5, 4, 7.5])
-      b.box(x, 0.35, -42.52, 0.5, 0.5, 0.18, kit.standard("bumper", 0x15191b, 0.9, 0.05), { collide: false });
-    palletStack(kit, b, -1, -44.2, 0, 2);
-    palletStack(kit, b, 0.5, -44.3, 0.08, 1);
-    palletStack(kit, b, 8.5, -44.2, 0, 2);
-    truck(kit, b, 2.6, -38.5, Math.PI / 2, 0x2f6b8a, true);
+    b.box((x1 + x2) / 2, h - 0.26, zFront + 0.2, x2 - x1, 0.5, 0.5, steel);
+    // Raised loading dock with walkable stairs at both ends (18 cm risers sit
+    // within the automatic step-up height, so no jump is needed).
+    b.box(2, dockTop / 2, -43.85, 16, dockTop, 2.5, concrete);
+    // Painted edge line (thin enough to stay decoration, so no lip to trip on).
+    b.box(2, dockTop + 0.006, -42.66, 16, 0.012, 0.12, hazard, { collide: false, shadow: false });
+    const stairs = (x, width, edgeZ, direction) => {
+      for (let i = 0; i < 6; i++) {
+        const height = rise * (i + 1),
+          z = edgeZ + direction * (tread / 2 + (5 - i) * tread);
+        b.box(x, height / 2, z, width, height, tread, concrete);
+        // Yellow nosing on the edge you step onto.
+        b.box(x, height + 0.005, z + direction * (tread / 2 - 0.04), width, 0.01, 0.06, hazard, { collide: false, shadow: false });
+      }
+    };
+    stairs(-5.3, 1.4, -42.6, 1);
+    stairs(9.3, 1.4, -42.6, 1);
+    // Outside the rear door: a landing and a matching flight down to the yard.
+    b.box(2, dockTop / 2, zBack - 0.7, 3.2, dockTop, 1.4, concrete);
+    stairs(2, 3.2, zBack - 1.4, -1);
+    for (const x of [-3, 4, 7.5])
+      b.box(x, 0.35, -42.52, 0.5, 0.5, 0.18, kit.standard("bumper", 0x15191b, 0.9, 0.05));
+    palletStack(kit, b, -1, -44.2, 0, 2, true, dockTop);
+    palletStack(kit, b, -2.6, -44.3, 0.08, 1, true, dockTop);
+    palletStack(kit, b, 6.5, -44.2, 0, 2, true, dockTop);
+    truck(kit, b, 2.6, -37.6, Math.PI / 2, 0x2f6b8a, true);
     for (const x of [-3, 2, 7]) {
       b.box(x, h - 0.08, -40, 2.6, 0.06, 0.32, kit.glow("lamp-cool", 0xdff6ff), { collide: false, shadow: false });
       kit.pool(x, -40, 3, 0xdff6ff, 0.6);
@@ -299,7 +327,7 @@ export function createHarborDistricts(ctx) {
   storageTank(kit, props, -51.5, 64.5, 2.4, 5.5, 0x8f8a7a);
   props.cylinder(-55.8, 3.2, 63, 0.16, 6, steel, { axis: "x", rot: -0.35, collide: false, solid: true });
   props.box(-64.5, 1.3, 53.5, 3, 2.6, 3, kit.standard("pump-house", 0x55636a, 0.7, 0.3));
-  props.box(-64.5, 2.7, 53.5, 3.3, 0.2, 3.3, roof, { collide: false, solid: true });
+  props.box(-64.5, 2.7, 53.5, 3.3, 0.2, 3.3, roof);
 
   // ── PUMP STATION and east utility pieces.
   warehouse(kit, {
@@ -432,7 +460,7 @@ function coolingTower(kit, b, x, z, radius, height) {
     intake = kit.standard("intake", 0x1a1c1e, 0.8, 0.2);
   const top = radius * 0.78,
     waist = radius * 0.7;
-  b.cylinder(x, height * 0.3, z, radius, height * 0.6, shell, { top: waist, segments: 28 });
+  b.cylinder(x, height * 0.3, z, radius, height * 0.6, shell, { top: waist, segments: 28, colliderRadius: radius * 0.96 });
   b.cylinder(x, height * 0.8, z, waist, height * 0.4, shell, { top, segments: 28, collide: false, solid: true });
   b.cylinder(x, height + 0.15, z, top + 0.05, 0.3, band, { segments: 28, collide: false, solid: true, open: true, shadow: false });
   b.cylinder(x, 0.9, z, radius + 0.06, 0.25, band, { segments: 28, collide: false, solid: true, shadow: false });
@@ -565,7 +593,7 @@ function arcFurnace(kit, b, x, z) {
 }
 
 /** Overhead pipe rack: columns collide, pipes are overhead. */
-function pipeRack(kit, b, x1, x2, z, height = 4.6) {
+function pipeRack(kit, b, x1, x2, z, height = 4.6, walkway = false) {
   const steel = kit.standard("rack-steel", 0x3d3936, 0.55, 0.6),
     pipes = [
       kit.standard("pipe-copper", 0x9b6a45, 0.45, 0.7),
@@ -574,11 +602,34 @@ function pipeRack(kit, b, x1, x2, z, height = 4.6) {
     ];
   for (let x = x1; x <= x2 + 0.01; x += 6) {
     for (const s of [-0.9, 0.9]) b.box(x, height / 2, z + s, 0.3, height, 0.3, steel);
-    b.box(x, height, z, 0.3, 0.3, 2.1, steel, { collide: false, solid: true });
+    b.box(x, height, z, 0.32, 0.3, 2.14, steel, { collide: false, solid: true });
   }
   [-0.55, 0, 0.55].forEach((s, i) =>
     b.cylinder((x1 + x2) / 2, height + 0.32, z + s, i === 1 ? 0.22 : 0.15, x2 - x1 + 1, pipes[i], { axis: "x", collide: false, solid: true, segments: 10 }),
   );
+  if (!walkway) return;
+  // Maintenance catwalk over the pipes, reached by a ladder at the west end
+  // (or a running jump from the sorter roof).
+  const grate = kit.standard("rack-grate", 0x4a4541, 0.7, 0.55),
+    deckTop = height + 0.66,
+    mid = (x1 + x2) / 2;
+  b.box(mid, deckTop - 0.04, z, x2 - x1 + 0.6, 0.08, 1.9, grate);
+  for (const s of [-0.97, 0.97])
+    b.box(mid, deckTop - 0.1, z + s, x2 - x1 + 0.6, 0.14, 0.06, kit.standard("hazard-yellow", 0xd8b52a, 0.55, 0.2), { collide: false, shadow: false });
+  const lx = x1 - 0.35;
+  for (const s of [-0.25, 0.25])
+    b.box(lx, deckTop / 2 + 0.3, z + s, 0.05, deckTop + 0.6, 0.05, steel, { collide: false, solid: true, shadow: false });
+  for (let y = 0.35; y < deckTop; y += 0.38)
+    b.box(lx, y, z, 0.04, 0.04, 0.5, steel, { collide: false, solid: true, shadow: false });
+  kit.ladder({
+    climbX: x1 - 0.79,
+    climbZ: z,
+    nx: -1,
+    nz: 0,
+    top: deckTop,
+    exitX: x1 + 0.7,
+    exitZ: z,
+  });
 }
 
 export function createFoundryDistricts(ctx) {
@@ -675,7 +726,6 @@ export function createFoundryDistricts(ctx) {
   props.box(41, 0.45, -46, 0.4, 0.9, 4.4, concrete);
   props.box(49, 0.45, -46, 0.4, 0.9, 4.4, concrete);
   props.box(45, 0.55, -46, 7.6, 0.04, 4.4, kit.glow("quench-water", 0x2fb7d6, 0.55), { collide: false, shadow: false });
-  kit.collider(45, 0.3, -46, 7.6, 0.6, 4.4, 0);
   kit.pool(45, -46, 5, 0x6fe9ff, 0.7);
   pipeRack(kit, props, 38, 62, -51.5, 5.2);
   placeZoneSign("QUENCH", "COOLING TOWERS", 45, 2.4, -41.6, 0, 0x7ce9ff);
@@ -686,7 +736,10 @@ export function createFoundryDistricts(ctx) {
     [50, 63, 3],
     [29, 64.5, 2.4],
   ]) {
-    props.cylinder(x, 0.9, z, r, 1.8, kit.standard("slag", 0x2c2826, 0.95, 0.05), { top: r * 0.25, segments: 14 });
+    props.cylinder(x, 0.9, z, r, 1.8, kit.standard("slag", 0x2c2826, 0.95, 0.05), { top: r * 0.25, segments: 14, collide: false, solid: true });
+    kit.roundCollider(x, z, r * 0.9, 0, 0.6);
+    kit.roundCollider(x, z, r * 0.65, 0.6, 1.2);
+    kit.roundCollider(x, z, r * 0.4, 1.2, 1.8);
     props.cylinder(x, 0.25, z, r * 0.95, 0.06, kit.glow("slag-glow", 0xff5a1a, 0.6), { top: r * 0.9, segments: 14, collide: false, shadow: false });
   }
   beamStack(kit, props, 47, 50.5, 0.1, 3);
@@ -697,7 +750,8 @@ export function createFoundryDistricts(ctx) {
   conveyor(kit, props, -45.4, -38, 1.5);
   props.box(-47, 1.4, 1.5, 2.8, 2.8, 2.6, kit.standard("sorter", 0x8a5a2e, 0.6, 0.45));
   props.box(-47, 1.9, 2.81, 1.2, 0.5, 0.04, kit.glow("sorter-panel", 0x58ff8a), { collide: false, shadow: false });
-  pipeRack(kit, props, -56, -38, -4, 4.6);
+  // Catwalk at 4 m: ladder at the west end, or jump across from the sorter roof.
+  pipeRack(kit, props, -56, -38, -2.6, 3.4, true);
   placeZoneSign("ASSEMBLY LINE", "WEST SORTING", -52, 2.4, 6.4, Math.PI, 0xffa343);
 
   // ── ARC FURNACE (east) with heat shields.

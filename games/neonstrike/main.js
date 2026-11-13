@@ -30,6 +30,7 @@ import {
   randomPointNear,
 } from "./navigation.js";
 import { createHarborDistricts, createFoundryDistricts } from "./district-maps.js";
+import { batchStaticMeshes, trimTinyShadowCasters } from "./districts.js";
 
 const $ = (selector) => document.querySelector(selector);
 const ui = {
@@ -132,7 +133,11 @@ const ui = {
   zoneToast: $("#zoneToast"),
   resultGrade: $("#resultGrade"),
   resultTip: $("#resultTip"),
+  threatRing: $("#threatRing"),
 };
+
+// 敵人標記配色：小地圖、頭上標記與威脅箭頭共用。一般與菁英統一紅色，只有首領為橘色。
+const RANK_COLORS = { standard: "#ff3e53", elite: "#ff3e53", boss: "#ffb44f" };
 
 const weaponSkins = [
   {
@@ -393,7 +398,9 @@ const pickupPlacements = [
   ["grenade", -39, 48],
 ];
 const ARENA_HALF = 74;
-const PLAYABLE_LIMIT = 71;
+// The perimeter walls' inner faces sit at ±73; stopping the body just
+// before them avoids an invisible strip in front of the walls.
+const PLAYABLE_LIMIT = 72.4;
 const mapDefinitions = [
   {
     id: "harbor",
@@ -555,6 +562,8 @@ const collisionBoxes = [];
 const ladders = [];
 const CLIMB_SPEED = 2.4;
 let climbing = null;
+// Camera offset that eases out step-ups/step-downs so stairs feel smooth.
+let stepViewOffset = 0;
 const tracers = [];
 const particles = [];
 const explosions = [];
@@ -1020,7 +1029,14 @@ function buildSelectedArena(index) {
   if (index === 1) createFoundryArena();
   else createArena();
   createPickups();
+  // Merge static scenery to cut draw calls (main view and shadow pass).
+  batchStaticMeshes({
+    scene,
+    objects: scene.children.filter((child) => !existing.has(child)),
+    worldMeshes,
+  });
   arenaObjects = scene.children.filter((child) => !existing.has(child));
+  trimTinyShadowCasters(arenaObjects);
   builtMap = index;
   buildNavigation();
   if (yaw) {
@@ -1282,9 +1298,11 @@ function createArena() {
   // Central warehouse ruins.
   const wallTexture = createWallTexture();
   [
-    addBox(0, 2.7, 0, 12, 5.4, 1, 0x768488),
-    addBox(-5.5, 2.7, 5.5, 1, 5.4, 12, 0x768488),
-    addBox(5.5, 2.7, -5.5, 1, 5.4, 12, 0x768488),
+    // 11.9 m keeps its end faces inside the side walls (equal faces flickered).
+    addBox(0, 2.7, 0, 11.9, 5.4, 1, 0x768488),
+    // Side walls stop 2 cm inside the middle wall: flush end faces flickered.
+    addBox(-5.5, 2.695, 5.51, 1, 5.39, 11.98, 0x768488),
+    addBox(5.5, 2.695, -5.51, 1, 5.39, 11.98, 0x768488),
   ].forEach((wall) => {
     wall.material.map = wallTexture;
     wall.material.bumpMap = wallTexture;
@@ -1381,8 +1399,8 @@ function createArena() {
     [66, 66],
   ].forEach(([x, z]) => {
     addBox(x, 4, z, 0.45, 8, 0.45, 0x252d30);
+    // Solid: the stacked container beside the north-west tower is within jump reach.
     const lamp = addBox(x, 8, z, 2.2, 0.4, 0.7, 0xd8e1cc, {
-      collidable: false,
       emissive: 0x82906b,
     });
     const light = new THREE.PointLight(0xd5ff82, 4, 18, 2);
@@ -1551,7 +1569,8 @@ function createFoundryArena() {
       marker.position.set(x, 4.85, z + 0.24);
       scene.add(marker);
     }
-    const beam = addBox(0, 5.22, z, 16.42, 0.36, 0.42, 0x453b37, {
+    // Slightly deeper and taller than the columns so no faces are flush.
+    const beam = addBox(0, 5.23, z, 16.46, 0.38, 0.46, 0x453b37, {
       metalness: 0.5,
     });
     beam.name = "foundry-portal-beam";
@@ -1581,15 +1600,16 @@ function createFoundryArena() {
   furnace.receiveShadow = true;
   scene.add(furnace);
   worldMeshes.push(furnace);
+  // The collider includes the rim bands that stand proud of the shell.
   collisionBoxes.push(
     roundCollider(
       new THREE.Box3(
-        new THREE.Vector3(-4.4, 0, -4.4),
-        new THREE.Vector3(4.4, 5.5, 4.4),
+        new THREE.Vector3(-4.56, 0, -4.56),
+        new THREE.Vector3(4.56, 5.5, 4.56),
       ),
       0,
       0,
-      4.4,
+      4.56,
     ),
   );
   for (const y of [1.2, 3.6, 5.5]) {
@@ -1930,7 +1950,7 @@ function createFoundrySkyline() {
   factory.name = "foundry-skyline";
   for (let i = 0; i < 24; i++) {
     const angle = (i * Math.PI * 2) / 24,
-      radius = 87 + (i % 3) * 4,
+      radius = skylineRadius(angle, 87 + (i % 3) * 4, 10, 7),
       height = 10 + (i % 4) * 3;
     position.set(
       Math.cos(angle) * radius,
@@ -1967,15 +1987,23 @@ function createFoundrySkyline() {
   scene.add(factory, chimneys, beacon);
 }
 
+function skylineRadius(angle, preferred, width, depth) {
+  const reach = Math.max(Math.abs(Math.cos(angle)), Math.abs(Math.sin(angle)));
+  return Math.max(preferred, (ARENA_HALF + 3 + Math.hypot(width, depth) / 2) / reach);
+}
+
 function createPortSkyline() {
   const skylineMat = mat(0x071015, 0.92, 0.1);
   for (let i = 0; i < 28; i++) {
     const angle = (i / 28) * Math.PI * 2;
-    const radius = 86 + Math.random() * 20;
     const width = 3 + Math.random() * 8;
     const height = 6 + Math.random() * 22;
+    const depth = 3 + Math.random() * 4;
+    // The arena is square, so a fixed ring cuts into its corners; push each
+    // silhouette out until its whole footprint clears the perimeter wall.
+    const radius = skylineRadius(angle, 86 + Math.random() * 20, width, depth);
     const building = new THREE.Mesh(
-      new THREE.BoxGeometry(width, height, 3 + Math.random() * 4),
+      new THREE.BoxGeometry(width, height, depth),
       skylineMat,
     );
     building.position.set(
@@ -2088,7 +2116,8 @@ function createHarborDetails() {
     post.name = "harbor-cargo-column";
     addBox(x, 0.12, -38.4, 0.75, 0.24, 0.75, 0x4a4b46, { castShadow: false });
   }
-  const cargoBeam = addBox(27, 7.15, -38.4, 12.8, 0.38, 0.45, 0x293b40, {
+  // Ends overhang the columns by 2 cm: flush end faces flickered.
+  const cargoBeam = addBox(27, 7.15, -38.4, 12.84, 0.38, 0.45, 0x293b40, {
     metalness: 0.55,
   });
   cargoBeam.name = "harbor-cargo-beam";
@@ -2411,9 +2440,10 @@ function createOuterDistricts() {
   });
   [49.5, 66.5].forEach((x) => {
     addBox(x, 2.6, 0, 0.45, 5.2, 0.45, 0x202a2f);
-    visualBox(x, 5.1, 0, 0.45, 0.45, 46, steel);
+    // A touch wider than the posts so their faces are never flush.
+    visualBox(x, 5.1, 0, 0.48, 0.45, 46, steel);
   });
-  visualBox(58, 5.1, 0, 17, 0.45, 0.55, steel);
+  visualBox(58, 5.1, 0, 17, 0.43, 0.55, steel);
   placeZoneSign(
     "REFINERY—E",
     "PRESSURIZED PROCESSING",
@@ -3091,8 +3121,10 @@ function createContainer(
   const localZ = rotation ? sx : sz;
   [-1, 1].forEach((dx) =>
     [-1, 1].forEach((dz) => {
+      // Slightly shorter than the box: taller posts overlapped a stacked
+      // container's posts, and flush tops flickered against the roof.
       const post = new THREE.Mesh(
-        new THREE.BoxGeometry(0.13, sy + 0.1, 0.13),
+        new THREE.BoxGeometry(0.13, sy - 0.02, 0.13),
         edgeMat,
       );
       post.position.set(
@@ -3271,8 +3303,10 @@ function placeZoneSign(
   } else {
     const depth = options.depth ?? 0.28;
     const spacing = options.bracketSpacing ?? 1.6;
+    // Brackets end just behind the frame's face; flush faces showed as dark
+    // flickering blobs on the printed sign.
     for (const lx of spacing === 0 ? [0] : [-spacing, spacing])
-      support(lx, y, -depth / 2, 0.22, 0.12, depth + 0.06);
+      support(lx, y, -depth / 2 - 0.015, 0.22, 0.12, depth + 0.03);
   }
   scene.add(sign);
   return sign;
@@ -3290,6 +3324,18 @@ function createInstancedProps() {
   positions.forEach((p, i) => {
     m.makeTranslation(...p);
     cones.setMatrixAt(i, m);
+    // Slim enough that the 1.35 m spacing still leaves room to walk between.
+    collisionBoxes.push(
+      roundCollider(
+        new THREE.Box3(
+          new THREE.Vector3(p[0] - 0.14, 0, p[2] - 0.14),
+          new THREE.Vector3(p[0] + 0.14, 0.6, p[2] + 0.14),
+        ),
+        p[0],
+        p[2],
+        0.14,
+      ),
+    );
   });
   cones.instanceMatrix.needsUpdate = true;
   cones.receiveShadow = true;
@@ -4492,6 +4538,14 @@ function createEnemy(x, z, color, index, variant = "standard") {
   const nameplate = createNameplate(enemyName, enemyMaxHealth);
   nameplate.position.set(0, 2.52, 0);
   root.add(nameplate);
+  // Fixed-size chevron above enemies that can see you; hidden behind cover.
+  const marker = new THREE.Sprite(enemyMarkerMaterial(rank));
+  marker.position.set(0, 3.02, 0);
+  marker.scale.set(0.032, 0.032, 1);
+  marker.renderOrder = 6;
+  marker.visible = false;
+  marker.raycast = () => {};
+  root.add(marker);
 
   root.userData.state = {
     name: enemyName,
@@ -4560,6 +4614,7 @@ function createEnemy(x, z, color, index, variant = "standard") {
     searchSweeps: 0,
     barGroup,
     nameplate,
+    marker,
     fill,
     leftLeg,
     rightLeg,
@@ -4582,6 +4637,36 @@ function createEnemy(x, z, color, index, variant = "standard") {
   );
   enemies.push(root);
   return root;
+}
+
+function enemyMarkerMaterial(rank) {
+  const cache = (enemyMarkerMaterial.cache ||= {});
+  if (!enemyMarkerMaterial.texture) {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 64;
+    const g = canvas.getContext("2d");
+    g.lineJoin = "round";
+    g.beginPath();
+    g.moveTo(8, 14);
+    g.lineTo(56, 14);
+    g.lineTo(32, 54);
+    g.closePath();
+    g.lineWidth = 8;
+    g.strokeStyle = "rgba(0,0,0,0.85)";
+    g.stroke();
+    g.fillStyle = "#ffffff";
+    g.fill();
+    enemyMarkerMaterial.texture = new THREE.CanvasTexture(canvas);
+    enemyMarkerMaterial.texture.colorSpace = THREE.SRGBColorSpace;
+  }
+  return (cache[rank] ||= new THREE.SpriteMaterial({
+    map: enemyMarkerMaterial.texture,
+    color: new THREE.Color(RANK_COLORS[rank] || RANK_COLORS.standard),
+    sizeAttenuation: false,
+    depthWrite: false,
+    transparent: true,
+    toneMapped: false,
+  }));
 }
 
 function createNameplate(name, maxHealth) {
@@ -4964,6 +5049,7 @@ function startGame() {
   bestStreak = 0;
   damageTaken = 0;
   climbing = null;
+  stepViewOffset = 0;
   lastZoneName = "";
   threatMode = "";
   if (enemies.length === 0) spawnMissionWave(0);
@@ -5503,13 +5589,17 @@ function movePlayerBody(dt, mx, mz, sin, cos, speed) {
       yaw.position.z = z;
       return;
     }
-    if (!grounded || verticalVelocity > 0) return;
-    const feet = yaw.position.y - eyeHeight;
+    // On the ground only kerbs and rails are stepped over. In the air a ledge
+    // the jump nearly cleared lifts the player onto it instead of pinning
+    // them against its side.
+    const airborne = !grounded || verticalVelocity > 0;
+    const feet = yaw.position.y - eyeHeight,
+      reach = airborne ? 0.45 : 0.22;
     let stepHeight = feet;
     for (const box of collisionBoxes)
       if (
         box.max.y > feet + 0.025 &&
-        box.max.y <= feet + 0.22 &&
+        box.max.y <= feet + reach &&
         bodyOverlapsCollider(
           box,
           x,
@@ -5526,6 +5616,9 @@ function movePlayerBody(dt, mx, mz, sin, cos, speed) {
     if (!isPositionBlocked(x, z)) {
       yaw.position.x = x;
       yaw.position.z = z;
+      if (airborne && verticalVelocity < 0) verticalVelocity = 0;
+      // The body steps up at once (for collision); the view glides after it.
+      stepViewOffset = Math.max(-0.6, stepViewOffset - (yaw.position.y - oldY));
     } else yaw.position.y = oldY;
   };
   for (let step = 0; step < moveSteps; step++) {
@@ -5538,6 +5631,8 @@ function movePlayerBody(dt, mx, mz, sin, cos, speed) {
       (speed * dt || 1),
   );
 
+  const wasGrounded = grounded,
+    risingBefore = verticalVelocity > 0;
   verticalVelocity -= 13.8 * dt;
   const previousY = yaw.position.y,
     nextY = previousY + verticalVelocity * dt;
@@ -5569,6 +5664,25 @@ function movePlayerBody(dt, mx, mz, sin, cos, speed) {
     yaw.position.y = support;
     verticalVelocity = 0;
     grounded = true;
+  } else if (wasGrounded && !risingBefore) {
+    // Walking down stairs or off a kerb: stay on the next surface below
+    // (up to 32 cm) instead of a short free fall, and ease the view down.
+    const feet = previousY - eyeHeight;
+    let below = feet <= 0.32 ? 0 : -Infinity;
+    for (const box of collisionBoxes)
+      if (
+        box.max.y <= feet + 0.015 &&
+        box.max.y >= feet - 0.32 &&
+        bodyOverlapsCollider(box, yaw.position.x, yaw.position.z, playerRadius)
+      )
+        below = Math.max(below, box.max.y);
+    if (below > -Infinity) {
+      const target = below + eyeHeight;
+      stepViewOffset = Math.min(0.6, stepViewOffset + (yaw.position.y - target));
+      yaw.position.y = target;
+      verticalVelocity = 0;
+      grounded = true;
+    }
   }
 }
 
@@ -5600,8 +5714,12 @@ function updateLadder(dt, mx, mz, time) {
       if (
         Math.abs(feet - ladder.top) < 0.3 &&
         -toward > 0.5 &&
-        Math.hypot(yaw.position.x - ladder.exitX, yaw.position.z - ladder.exitZ) <
-          1
+        grounded &&
+        // Near the top of the rungs (the platform edge), not mid-platform.
+        Math.hypot(
+          yaw.position.x - (ladder.climbX - ladder.nx * 0.44),
+          yaw.position.z - (ladder.climbZ - ladder.nz * 0.44),
+        ) < 0.85
       ) {
         climbing = ladder;
         yaw.position.y = ladder.top - 0.35 + eyeHeight;
@@ -5631,7 +5749,20 @@ function updateLadder(dt, mx, mz, time) {
     verticalVelocity = 2.2;
     return true;
   }
-  const direction = mz < -0.2 ? 1 : mz > 0.2 ? -1 : 0,
+  // Moving toward the ladder climbs, moving away descends; so walking out
+  // over the top edge goes down instead of bouncing back onto the platform.
+  // Looking along the ladder (sideways) falls back to W = up, S = down.
+  const along = -(wx * ladder.nx + wz * ladder.nz),
+    direction =
+      along > 0.35
+        ? 1
+        : along < -0.35
+          ? -1
+          : mz < -0.2
+            ? 1
+            : mz > 0.2
+              ? -1
+              : 0,
     next = feet + direction * CLIMB_SPEED * dt;
   if (direction > 0 && next >= ladder.top - 0.05) {
     // Step off onto the platform when there is room to stand.
@@ -5665,6 +5796,9 @@ function updateLadder(dt, mx, mz, time) {
 }
 
 function finishPlayerUpdate(dt, time, bob, sprinting) {
+  stepViewOffset *= Math.exp(-dt * 12);
+  if (Math.abs(stepViewOffset) < 0.002) stepViewOffset = 0;
+  pitch.position.y = stepViewOffset;
   weaponKick *= Math.pow(0.00005, dt);
   let reloadPose = 0;
   if (reloading) {
@@ -6187,6 +6321,7 @@ function damageEnemy(
 function killEnemy(enemy, headshot, byPlayer = true) {
   const state = enemy.userData.state;
   if (!state.alive) return;
+  if (state.marker) state.marker.visible = false;
   state.alive = false;
   let reward = "";
   if (byPlayer) {
@@ -6984,6 +7119,7 @@ function updateEnemies(dt, time) {
     const canSee = distance < detection && s.cachedCanSee;
     s.barGroup.visible = s.nameplate.visible =
       (canSee && distance < (boss ? 38 : 23)) || s.hitTime > 0;
+    if (s.marker) s.marker.visible = canSee || s.hitTime > 0;
     let moveX = 0,
       moveZ = 0,
       guided = false,
@@ -7265,6 +7401,41 @@ function updateEnemies(dt, time) {
     ui.threatDistance.textContent = `${Math.round(nearestThreat)} M`;
   else if (mode === "search")
     ui.threatDistance.textContent = `${searching} 名 // ${Math.round(nearestSearch)} M`;
+  updateThreatRing();
+}
+
+// 視野外正在攻擊你的敵人：在準星外圈顯示方向箭頭（最近的六名）。
+function updateThreatRing() {
+  const ring = ui.threatRing;
+  if (!ring) return;
+  if (!ring.children.length)
+    ring.replaceChildren(
+      ...Array.from({ length: 6 }, () => document.createElement("i")),
+    );
+  const sin = Math.sin(yaw.rotation.y),
+    cos = Math.cos(yaw.rotation.y),
+    threats = [];
+  for (const enemy of enemies) {
+    const s = enemy.userData.state;
+    if (!s.alive || s.state !== "ENGAGE" || !s.cachedCanSee) continue;
+    const dx = enemy.position.x - yaw.position.x,
+      dz = enemy.position.z - yaw.position.z,
+      distance = Math.hypot(dx, dz) || 1,
+      ahead = (-dx * sin - dz * cos) / distance,
+      right = (dx * cos - dz * sin) / distance,
+      angle = Math.atan2(right, ahead);
+    if (Math.abs(angle) < 0.85) continue;
+    threats.push({ angle, distance, rank: s.rank });
+  }
+  threats.sort((a, b) => a.distance - b.distance);
+  [...ring.children].forEach((arrow, index) => {
+    const threat = threats[index];
+    arrow.classList.toggle("on", Boolean(threat));
+    if (!threat) return;
+    arrow.dataset.rank = threat.rank;
+    arrow.style.transform = `rotate(${threat.angle}rad) translateY(-148px)`;
+    arrow.style.opacity = String(Math.max(0.5, 1 - threat.distance / 50));
+  });
 }
 
 function seekBotCover(enemy) {
@@ -8128,6 +8299,8 @@ function updateHUD() {
   ui.armor.textContent = Math.ceil(armor);
   ui.armorBar.style.width = `${armorRatio * 100}%`;
   ui.ammo.textContent = String(ammo).padStart(2, "0");
+  ui.hud.classList.toggle("ammo-low", ammo > 0 && ammo <= 8);
+  ui.hud.classList.toggle("ammo-empty", ammo === 0);
   ui.reserve.textContent = String(reserve).padStart(3, "0");
   const mode = currentMode(),
     configuredTotal = encounterTotal(mode),
@@ -8381,25 +8554,54 @@ function drawMinimap(time = 0) {
   ctx.fillStyle = "rgba(150,165,170,.35)";
   for (const box of collisionBoxes)
     drawMinimapCollider(ctx, box, scale, ox, oy);
+  // Symbol sizes are in on-screen pixels: k converts them to canvas pixels,
+  // so markers stay readable on the small touch-layout map too.
+  const k = c.width / Math.max(48, c.clientWidth || c.width);
+  // Player view cone under everything else.
+  const px = ox + yaw.position.x * scale,
+    py = oy + yaw.position.z * scale,
+    heading = -yaw.rotation.y - Math.PI / 2,
+    cone = ctx.createRadialGradient(px, py, 0, px, py, 36 * k);
+  cone.addColorStop(0, "rgba(200,255,46,.32)");
+  cone.addColorStop(1, "rgba(200,255,46,0)");
+  ctx.fillStyle = cone;
+  ctx.beginPath();
+  ctx.moveTo(px, py);
+  ctx.arc(px, py, 36 * k, heading - 0.62, heading + 0.62);
+  ctx.closePath();
+  ctx.fill();
+  for (const pickup of pickups) {
+    if (!pickup.active) continue;
+    const x = ox + pickup.root.position.x * scale,
+      y = oy + pickup.root.position.z * scale;
+    // One neutral style for every supply so enemies stay the only red marks.
+    ctx.fillStyle = "rgba(0,0,0,.6)";
+    ctx.fillRect(x - 2.3 * k, y - 2.3 * k, 4.6 * k, 4.6 * k);
+    ctx.fillStyle = "#cfe3d6";
+    ctx.fillRect(x - 1.5 * k, y - 1.5 * k, 3 * k, 3 * k);
+  }
+  // Enemies: one plain red dot for everyone; only the boss stands out.
+  let bossAlive = false;
   for (const enemy of enemies) {
     const state = enemy.userData.state;
     if (!state.alive) continue;
-    const x = ox + enemy.position.x * scale,
-      y = oy + enemy.position.z * scale;
-    ctx.fillStyle =
-      state.rank === "boss"
-        ? "#ffb44f"
-        : state.rank === "elite"
-          ? "#88dbff"
-          : "#ff3e53";
+    const boss = state.rank === "boss",
+      x = ox + enemy.position.x * scale,
+      y = oy + enemy.position.z * scale,
+      size = (boss ? 6 : 3.4) * k;
+    if (boss) bossAlive = true;
     ctx.beginPath();
-    if (state.rank === "boss") {
-      ctx.moveTo(x, y - 5);
-      ctx.lineTo(x + 5, y);
-      ctx.lineTo(x, y + 5);
-      ctx.lineTo(x - 5, y);
+    if (boss) {
+      ctx.moveTo(x, y - size);
+      ctx.lineTo(x + size, y);
+      ctx.lineTo(x, y + size);
+      ctx.lineTo(x - size, y);
       ctx.closePath();
-    } else ctx.arc(x, y, state.rank === "elite" ? 3.5 : 2.6, 0, Math.PI * 2);
+    } else ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.lineWidth = 1.8 * k;
+    ctx.strokeStyle = "rgba(0,0,0,.9)";
+    ctx.stroke();
+    ctx.fillStyle = boss ? RANK_COLORS.boss : RANK_COLORS.standard;
     ctx.fill();
   }
   for (const grenade of grenades) {
@@ -8444,25 +8646,56 @@ function drawMinimap(time = 0) {
       ctx.stroke();
     }
   }
-  for (const pickup of pickups) {
-    if (!pickup.active) continue;
-    ctx.fillStyle = pickup.def.map;
-    const x = ox + pickup.root.position.x * scale,
-      y = oy + pickup.root.position.z * scale;
-    ctx.fillRect(x - 1.5, y - 1.5, 3, 3);
-  }
   ctx.save();
   ctx.translate(ox + yaw.position.x * scale, oy + yaw.position.z * scale);
   ctx.rotate(-yaw.rotation.y);
   ctx.fillStyle = "#c8ff2e";
+  ctx.strokeStyle = "rgba(0,0,0,.9)";
+  ctx.lineWidth = 2 * k;
   ctx.beginPath();
-  ctx.moveTo(0, -7);
-  ctx.lineTo(5, 6);
-  ctx.lineTo(0, 3);
-  ctx.lineTo(-5, 6);
+  ctx.moveTo(0, -7 * k);
+  ctx.lineTo(5 * k, 5.8 * k);
+  ctx.lineTo(0, 3 * k);
+  ctx.lineTo(-5 * k, 5.8 * k);
   ctx.closePath();
+  ctx.stroke();
   ctx.fill();
   ctx.restore();
+  // Legend strip along the top edge (desktop-size maps only).
+  if (c.clientWidth < 140) {
+    ctx.strokeStyle = "rgba(255,255,255,.25)";
+    ctx.strokeRect(0.5, 0.5, c.width - 1, c.height - 1);
+    return;
+  }
+  ctx.fillStyle = "rgba(4,7,9,.78)";
+  ctx.fillRect(0, 0, c.width, 17);
+  ctx.font = "700 10px 'Noto Sans TC', sans-serif";
+  ctx.textBaseline = "middle";
+  let lx = 7;
+  for (const [rank, label] of bossAlive
+    ? [
+        ["standard", "敵軍"],
+        ["boss", "首領"],
+      ]
+    : [["standard", "敵軍"]]) {
+    ctx.fillStyle = RANK_COLORS[rank];
+    ctx.beginPath();
+    if (rank === "boss") {
+      ctx.moveTo(lx + 4, 4.5);
+      ctx.lineTo(lx + 8, 8.5);
+      ctx.lineTo(lx + 4, 12.5);
+      ctx.lineTo(lx, 8.5);
+    } else ctx.arc(lx + 4, 8.5, 3.6, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#d6dee0";
+    ctx.fillText(label, lx + 11, 9);
+    lx += 11 + ctx.measureText(label).width + 9;
+  }
+  ctx.fillStyle = "#cfe3d6";
+  ctx.fillRect(lx, 5.5, 6, 6);
+  ctx.fillStyle = "#d6dee0";
+  ctx.fillText("補給", lx + 9, 9);
   ctx.strokeStyle = "rgba(255,255,255,.25)";
   ctx.strokeRect(0.5, 0.5, c.width - 1, c.height - 1);
 }

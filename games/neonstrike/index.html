@@ -19,7 +19,7 @@
     <title>NEON STRIKE // 3D 射擊競技場</title>
     <link
       rel="stylesheet"
-      href="./styles.css?v=20261113-blueworld-r16-districts"
+      href="./styles.css?v=20261113-blueworld-r16-scaffold"
     />
     <link
       rel="stylesheet"
@@ -636,8 +636,8 @@
       >
       <canvas
         id="minimap"
-        width="180"
-        height="180"
+        width="260"
+        height="260"
         aria-label="戰術小地圖"
       ></canvas>
 
@@ -664,6 +664,11 @@
       >
       <div
         class="low-health-vignette"
+        aria-hidden="true"
+      ></div>
+      <div
+        id="threatRing"
+        class="threat-ring"
         aria-hidden="true"
       ></div>
       <div
@@ -909,7 +914,10 @@
                 >倉庫、宿舍與廠房都能進入；門口與貨架是很好的卡位點。暫停選單可調整視角靈敏度。</li
               >
               <li
-                >港區瞭望塔與儲槽的梯子可以攀爬：走向梯子自動抓住，W 往上、S 往下、空白鍵放手；在平台上朝梯子缺口倒退即可往下爬。</li
+                >小地圖：紅點為敵軍，首領戰時首領以橘色菱形標示，淺色小方塊為補給。準星外圈的紅色箭頭指向視野外正在攻擊你的敵人。</li
+              >
+              <li
+                >港區瞭望塔與儲槽的梯子可以攀爬：走向梯子自動抓住，朝梯子移動往上、遠離梯子往下，空白鍵放手；在平台上走向梯子即可往下爬。儲槽頂可從任何邊緣跳下或跳到另一座儲槽，瞭望塔欄杆可跳躍翻越。</li
               >
               <li>接近補給會自動拾取；無法使用的補給會保留。</li>
               <li>鏈網會阻擋人物與手榴彈，但子彈仍可穿過網孔。</li>
@@ -1128,7 +1136,7 @@
     ></script>
     <script
       defer
-      src="./browser.js?v=20261113-blueworld-r16-ladders"
+      src="./browser.js?v=20261113-blueworld-r16-scaffold"
       onerror="document.getElementById('loadError').hidden=false"
     ></script>
   </body>
