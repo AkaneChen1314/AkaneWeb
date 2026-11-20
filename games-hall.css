@@ -1,0 +1,521 @@
+/*
+ * 小遊戲專區（遊戲館）r14 改版
+ * 只作用在 #games 之內，不影響首頁與黑川茜專區。
+ * 版面：專區標題 → 「今天想玩什麼？」篩選列（.hall-toolbar）→ 遊戲卡片牆（.hall-grid，每張一樣大）。
+ * 篩選、最後一排置中與「遊玩中」標記由 main.js 的「遊戲館互動」區塊控制。
+ * 本檔在 ui-refresh.css 之後載入，選擇器都以 #games 開頭，用來蓋過舊版卡片樣式。
+ */
+
+#games {
+  --hall-accent: var(--world-light, #79d5ff);
+  --hall-accent-2: var(--world-second, #a294fa);
+  --hall-line: #84c4e838;
+  --hall-line-strong: #9fdcf48c;
+  --hall-glass: linear-gradient(140deg, #16305099, #0b1b33cc);
+  --hall-new: linear-gradient(100deg, #ffe08a, #ff9ac8);
+  --hall-radius: 24px;
+}
+
+/* ---------- 專區標題 ---------- */
+#games .hall-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 24px 40px;
+  padding-top: 38px;
+}
+
+#games .hall-title h2 {
+  margin: 4px 0 2px;
+  font-size: clamp(30px, 3.4vw, 42px);
+  line-height: 1.25;
+}
+
+#games .hall-title .games-welcome {
+  margin: 0;
+}
+
+#games .hall-lead {
+  margin: 8px 0 0;
+  max-width: 34em;
+  color: var(--ui-muted, #c3d5e4);
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+#games .hall-stats {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#games .hall-stats li {
+  display: grid;
+  min-width: 108px;
+  padding: 12px 16px;
+  border: 1px solid var(--hall-line);
+  border-radius: 18px;
+  background: var(--hall-glass);
+  box-shadow: inset 0 1px 0 #e3f5ff14;
+}
+
+#games .hall-stats b {
+  font-family: var(--ui-latin-font, inherit);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #fff;
+  text-shadow: 0 0 22px color-mix(in srgb, var(--hall-accent) 55%, transparent);
+}
+
+#games .hall-stats span {
+  font-size: 13px;
+  color: var(--ui-muted, #c3d5e4);
+}
+
+#games .games-independence-note {
+  display: inline-block;
+  margin: 18px 0 22px;
+  padding: 6px 14px;
+  border: 1px solid var(--hall-line);
+  border-radius: 999px;
+  background: #0b1d3399;
+}
+
+/* ---------- 心情篩選列 ---------- */
+#games .hall-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--hall-line);
+  border-radius: 22px;
+  background: linear-gradient(115deg, #536caf22, #40778e12);
+  box-shadow: inset 0 1px 0 #dff3ff12;
+}
+
+#games .hall-toolbar-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#games .hall-toolbar-title > span {
+  color: #8cd4ff;
+  font-size: 26px;
+}
+
+#games .hall-toolbar-title strong {
+  display: block;
+  font-size: 15px;
+}
+
+#games .hall-toolbar-title small {
+  display: block;
+  font-size: 13px;
+  color: var(--ui-muted, #c3d5e4);
+}
+
+#games .hall-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+#games .hall-filters button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 7px 10px 7px 16px;
+  border: 1px solid #4f7898;
+  border-radius: 999px;
+  background: #122e4acc;
+  color: #d3e7f6;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+#games .hall-filters button span {
+  min-width: 24px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #ffffff1a;
+  font-size: 12px;
+  line-height: 22px;
+  text-align: center;
+}
+
+#games .hall-filters button:hover {
+  border-color: #9adff0;
+  color: #fff;
+}
+
+#games .hall-filters button[aria-pressed="true"] {
+  border-color: #a4e8f3;
+  background: linear-gradient(115deg, #2c6f8c, #3f5fae);
+  color: #fff;
+}
+
+#games .hall-filters button[aria-pressed="true"] span {
+  background: #ffffff33;
+}
+
+#games .hall-filters button:focus-visible,
+#games .surprise-button:focus-visible {
+  outline: 3px solid var(--ui-focus-ring, #8de8f4);
+  outline-offset: 2px;
+}
+
+#games .hall-toolbar .surprise-button {
+  flex-shrink: 0;
+  min-height: 42px;
+  border: 1px solid #ffd99a66;
+  border-radius: 999px;
+  background: #3a2a1a66;
+  color: #ffe3b0;
+}
+
+#games .hall-toolbar .surprise-button:hover {
+  background: #5a3e2299;
+  color: #fff;
+}
+
+#games .mood-result {
+  margin: 12px 6px 20px;
+}
+
+/* ---------- 遊戲卡片牆 ----------
+   每張卡片一樣大：一排三張（六條格線、每張佔兩條），每一排一樣高。
+   最後一排不滿三張時，main.js 會在卡片加上 tail-* 讓它們置中。 */
+#games .hall-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 22px;
+  align-items: stretch;
+}
+
+#games .hall-grid > .hall-card {
+  grid-column: span 2;
+}
+
+#games .hall-grid > .hall-card.tail3-one {
+  grid-column: 3 / span 2;
+}
+
+#games .hall-grid > .hall-card.tail3-two {
+  grid-column: 2 / span 2;
+}
+
+#games .hall-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--hall-line);
+  border-radius: var(--hall-radius);
+  background: linear-gradient(155deg, #142b49f0, #0a1a30fa);
+  box-shadow: 0 18px 44px #030c1938;
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+  animation: hall-fade-in 380ms ease both;
+}
+
+/* 舊版把霓光突擊做成整排主卡（ui-refresh.css 的 .neonstrike-card），在卡片牆裡改回一般卡片。 */
+#games .hall-grid > .hall-card {
+  display: flex;
+  grid-template-columns: none;
+}
+
+#games .hall-grid > .hall-card[hidden] {
+  display: none;
+}
+
+#games .hall-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--hall-line-strong);
+  box-shadow:
+    0 22px 50px #020a1866,
+    0 0 0 1px #8fd8ff1f;
+}
+
+#games .hall-card.is-new {
+  border-color: #ffd7a04d;
+}
+
+#games .hall-cover {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #0d203a;
+}
+
+#games .hall-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(0deg, #071629e6 0%, #07162900 55%);
+}
+
+#games .hall-cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 600ms ease;
+}
+
+#games .hall-card:hover .hall-cover img {
+  transform: scale(1.05);
+}
+
+#games .hall-cover .cover-caption {
+  left: 18px;
+  right: 16px;
+  bottom: 14px;
+}
+
+#games .hall-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 2;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--hall-new);
+  color: #2a1530;
+  font-family: var(--ui-latin-font, inherit);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  line-height: 1.7;
+  box-shadow: 0 0 18px #ffb6d066;
+}
+
+#games .hall-running {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border: 1px solid #8ff0c066;
+  border-radius: 999px;
+  background: #062a20d9;
+  color: #c9ffe4;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+#games .hall-running::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #5dffa8;
+  box-shadow: 0 0 8px #5dffa8;
+}
+
+#games .hall-running[hidden] {
+  display: none;
+}
+
+#games .hall-card .card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 20px 22px 22px;
+}
+
+#games .hall-card h3 {
+  font-size: 20px;
+  line-height: 1.45;
+}
+
+#games .hall-card .card-description {
+  margin: 10px 0 14px;
+}
+
+#games .hall-card .recommendation {
+  margin: auto 0 16px;
+}
+
+#games .hall-card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+#games .hall-card-foot .card-button {
+  flex: 1 1 150px;
+  max-width: 220px;
+  margin-left: auto;
+}
+
+#games .device-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 11px;
+  border: 1px solid #7fb8d84d;
+  border-radius: 999px;
+  background: #0b2038b3;
+  color: #bcd9ee;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+#games .device-chip::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--hall-accent);
+}
+
+#games .hall-empty {
+  padding: 26px;
+  border: 1px dashed var(--hall-line);
+  border-radius: 18px;
+  text-align: center;
+  color: var(--ui-muted, #c3d5e4);
+}
+
+#games .welcome-note {
+  margin-top: 34px;
+}
+
+@keyframes hall-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- 平板與電腦版網站（約 980px） ---------- */
+@media (max-width: 1100px) {
+  /* 一排兩張；最後一排只剩一張時置中 */
+  #games .hall-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  #games .hall-grid > .hall-card.tail3-one,
+  #games .hall-grid > .hall-card.tail3-two {
+    grid-column: span 2;
+  }
+
+  #games .hall-grid > .hall-card.tail2-one {
+    grid-column: 2 / span 2;
+  }
+
+}
+
+/* ---------- 手機 ---------- */
+@media (max-width: 760px) {
+  #games .hall-head {
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: 26px;
+  }
+
+  #games .hall-stats li {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 12px;
+  }
+
+  #games .hall-stats b {
+    font-size: 23px;
+  }
+
+  #games .hall-stats span {
+    font-size: 12px;
+    word-break: keep-all;
+  }
+
+  #games .hall-toolbar {
+    padding: 14px;
+  }
+
+  #games .hall-filters {
+    flex-wrap: nowrap;
+    width: 100%;
+    margin: 0 -14px;
+    padding: 2px 14px 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    box-sizing: content-box;
+  }
+
+  #games .hall-filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  #games .hall-filters button {
+    flex-shrink: 0;
+  }
+
+  #games .hall-toolbar .surprise-button {
+    width: 100%;
+  }
+
+  #games .hall-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 18px;
+  }
+
+  #games .hall-grid > .hall-card,
+  #games .hall-grid > .hall-card.tail3-one,
+  #games .hall-grid > .hall-card.tail3-two,
+  #games .hall-grid > .hall-card.tail2-one {
+    grid-column: auto;
+  }
+
+  #games .hall-card .card-body {
+    padding: 18px;
+  }
+
+  #games .hall-card-foot .card-button {
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #games .hall-card {
+    animation: none;
+  }
+
+  #games .hall-card,
+  #games .hall-cover img {
+    transition: none;
+  }
+
+  #games .hall-card:hover {
+    transform: none;
+  }
+
+  #games .hall-card:hover .hall-cover img {
+    transform: none;
+  }
+}

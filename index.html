@@ -17,7 +17,7 @@
     />
     <meta
       name="description"
-      content="Blue World：二次元守護者的黑川茜主題網站，官方角色圖片、角色介紹、互動圖庫，以及七款可隨時返回的小遊戲。"
+      content="Blue World：二次元守護者的黑川茜主題網站，官方角色圖片、角色介紹、互動圖庫，以及十款可隨時返回的小遊戲。"
     />
     <title>Blue World｜黑川茜的藍色世界</title>
     <!--
@@ -46,7 +46,7 @@
     />
     <meta
       property="og:description"
-      content="走進黑川茜的藍色世界：三季圖片收藏、角色故事、小小互動，還有七款自製小遊戲。"
+      content="走進黑川茜的藍色世界：三季圖片收藏、角色故事、小小互動，還有十款自製小遊戲。"
     />
     <meta
       property="og:url"
@@ -94,7 +94,7 @@
     />
     <meta
       name="twitter:description"
-      content="角色收藏與七款自製小遊戲，歡迎走進 Blue World。"
+      content="角色收藏與十款自製小遊戲，歡迎走進 Blue World。"
     />
     <meta
       name="twitter:image"
@@ -130,7 +130,7 @@
       href="archive.css?v=20261104-blueworld-r14-source"
     />
     <script
-      src="main.js?v=20261113-blueworld-r14-starbreak"
+      src="main.js?v=20261120-blueworld-r14-newgames"
       defer
     ></script>
     <script
@@ -175,7 +175,7 @@
     ></script>
     <meta
       name="akane-edition"
-      content="20261113-blueworld-r14-abyss"
+      content="20261120-blueworld-r14-newgames"
     />
     <script
       src="polish.js?v=20261104-blueworld-r14-source"
@@ -192,6 +192,10 @@
     <link
       rel="stylesheet"
       href="ui-refresh.css?v=20261104-blueworld-r14-source"
+    />
+    <link
+      rel="stylesheet"
+      href="games-hall.css?v=20261120-blueworld-r14-newgames"
     />
   </head>
   <body class="stage-on">
@@ -2096,76 +2100,77 @@
           </section>
         </section>
         <section
-          class="collection zone-panel"
+          class="collection zone-panel game-hall"
           data-zone="games"
           hidden
           id="games"
           aria-labelledby="collection-title"
         >
-          <div class="section-heading">
-            <div>
+          <!-- 小遊戲專區（r14 遊戲館改版）：樣式在 games-hall.css，篩選與最後一排置中在 main.js。 -->
+          <header class="hall-head">
+            <div class="hall-title">
               <p class="eyebrow">ZONE 02 / PLAY &amp; DISCOVER</p>
               <h2 id="collection-title">小遊戲專區</h2>
               <p class="games-welcome">自製小遊戲，歡迎大家來玩！</p>
+              <p class="hall-lead">
+                先看看玩法，再走進你的故事。隨時都能回到這裡，換個心情繼續玩。
+              </p>
             </div>
-            <p>
-              先看看玩法，再走進你的故事。<br />隨時都能回到這裡，換個心情繼續玩。
-            </p>
-          </div>
+            <ul
+              class="hall-stats"
+              aria-label="遊戲館概況"
+            >
+              <li><b>10</b><span>款自製遊戲</span></li>
+              <li><b>3</b><span>款新作上架</span></li>
+              <li><b>免</b><span>安裝，打開就玩</span></li>
+            </ul>
+          </header>
           <p class="games-independence-note">
-            小提醒：這七款遊戲皆為獨立自製作品，遊戲內容與黑川茜及《我推的孩子》無關。
+            小提醒：這十款遊戲皆為獨立自製作品，遊戲內容與黑川茜及《我推的孩子》無關。
           </p>
-          <div class="mood-picker">
-            <div class="mood-title">
+
+          <div class="hall-toolbar">
+            <div class="hall-toolbar-title">
               <span aria-hidden="true">✧</span>
               <div>
-                <strong>今天的心情是？</strong
-                ><small>讓心情替你選一段旅程</small>
+                <strong>今天想玩什麼？</strong><small>選一種心情，幫你挑出合適的遊戲</small>
               </div>
             </div>
             <div
-              class="mood-buttons"
+              class="hall-filters"
               role="group"
-              aria-label="依心情推薦遊戲"
+              aria-label="依心情篩選遊戲"
             >
               <button
-                data-mood="neonstrike"
-                aria-pressed="false"
+                data-filter="all"
+                aria-pressed="true"
               >
-                想來場戰術突襲
+                全部<span data-count="all">10</span>
               </button>
               <button
-                data-mood="abyss"
-                aria-pressed="false"
-                >想慢慢變強</button
-              >
-              <button
-                data-mood="arcane"
-                aria-pressed="false"
-                >想動動腦</button
-              >
-              <button
-                data-mood="trader"
+                data-filter="action"
                 aria-pressed="false"
               >
-                想試試另一種人生
+                想爽快開火<span data-count="action">5</span>
               </button>
               <button
-                data-mood="starbreak"
+                data-filter="brain"
                 aria-pressed="false"
               >
-                想來場星海突圍
+                想動動腦<span data-count="brain">3</span>
               </button>
               <button
-                data-mood="midnight"
+                data-filter="grow"
                 aria-pressed="false"
-                >想來場格鬥對決</button
               >
+                想慢慢變強<span data-count="grow">3</span>
+              </button>
               <button
-                data-mood="serpent"
+                data-filter="chill"
                 aria-pressed="false"
-                >想玩貪吃蛇</button
               >
+                想輕鬆玩<span data-count="chill">3</span>
+              </button>
             </div>
             <button
               id="surprise-game"
@@ -2179,12 +2184,166 @@
             class="mood-result"
             role="status"
           >
-            選擇心情，帶你看看對應的遊戲；查看玩法後再開始。NEON STRIKE
-            支援鍵盤滑鼠與手機觸控。
+            選一種心情篩選遊戲，或交給命運隨機挑一款；查看玩法後再開始。
           </p>
-          <div class="game-grid">
-            <article class="game-card neonstrike-card">
-              <div class="card-visual">
+
+          <div class="hall-grid">
+            <article
+              class="game-card hall-card aurora-card is-new"
+              data-game="aurora"
+              data-genre="action"
+            >
+              <div class="hall-cover">
+                <img
+                  src="assets/cover-aurora.webp"
+                  alt="霓虹雨夜的未來城市中，戰術幹員舉槍瞄準遠方"
+                  loading="lazy"
+                  width="1600"
+                  height="900"
+                />
+                <span class="hall-badge">NEW</span>
+                <span
+                  class="hall-running"
+                  hidden
+                  >遊玩中</span
+                >
+                <div
+                  class="cover-caption"
+                  aria-hidden="true"
+                >
+                  <span>AURORA FRONTLINE</span><small>霓虹天際，下一場交火</small>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="tags">
+                  <span>3D 第一人稱射擊</span><span>團隊對戰</span>
+                </div>
+                <h3>NEON STRIKE II：極光戰線</h3>
+                <p class="card-description">
+                  五名幹員、八把槍與專屬技能。在霓虹城市、末日廢墟、軌道環站與海底研究站，挑戰團隊死鬥、據點爭奪、生存波次與首領討伐。
+                </p>
+                <p class="recommendation">
+                  <span>適合你，如果</span>你喜歡快節奏槍戰、和電腦隊友並肩作戰，或想單挑首領。
+                </p>
+                <div class="hall-card-foot">
+                  <span
+                    class="device-chip"
+                    data-device="aurora"
+                    >鍵盤滑鼠・手機觸控</span
+                  >
+                  <button
+                    class="card-button"
+                    data-details="aurora"
+                  >
+                    查看玩法 <span aria-hidden="true">↗</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+            <article
+              class="game-card hall-card mech-card is-new"
+              data-game="mech"
+              data-genre="action"
+            >
+              <div class="hall-cover">
+                <img
+                  src="assets/cover-mech.webp"
+                  alt="黃昏廢墟中，藍白機甲以光束迎擊浮空的紫色巨眼首領"
+                  loading="lazy"
+                  width="1600"
+                  height="900"
+                />
+                <span class="hall-badge">NEW</span>
+                <span
+                  class="hall-running"
+                  hidden
+                  >遊玩中</span
+                >
+                <div
+                  class="cover-caption"
+                  aria-hidden="true"
+                >
+                  <span>STEEL WASTELAND</span><small>整備機體，迎戰巨型兵器</small>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="tags">
+                  <span>第三人稱機甲射擊</span><span>波次生存</span>
+                </div>
+                <h3>鋼鐵廢墟：機甲戰線</h3>
+                <p class="card-description">
+                  從五台機體、八種塗裝組出你的機甲，搭配主副武器、技能與小兵出擊。每波三選一強化，迎戰十隻巨型 Boss。
+                </p>
+                <p class="recommendation">
+                  <span>適合你，如果</span>你喜歡機甲組裝、火力全開與大型 Boss 戰。
+                </p>
+                <div class="hall-card-foot">
+                  <span
+                    class="device-chip"
+                    data-device="mech"
+                    >鍵盤滑鼠・手機觸控</span
+                  >
+                  <button
+                    class="card-button"
+                    data-details="mech"
+                  >
+                    查看玩法 <span aria-hidden="true">↗</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+            <article
+              class="game-card hall-card fortune-card is-new"
+              data-game="fortune"
+              data-genre="brain chill"
+            >
+              <div class="hall-cover">
+                <img
+                  src="assets/cover-fortune.webp"
+                  alt="星界塔防戰場上排列發光的防禦塔，前方漂浮著金色 777、皇冠、金幣與骰子"
+                  loading="lazy"
+                  width="1600"
+                  height="900"
+                />
+                <span class="hall-badge">NEW</span>
+                <span
+                  class="hall-running"
+                  hidden
+                  >遊玩中</span
+                >
+                <div
+                  class="cover-caption"
+                  aria-hidden="true"
+                >
+                  <span>FORTUNE SIEGE</span><small>賭一把，守住最後一波</small>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="tags"><span>塔防</span><span>賭場 Roguelike</span></div>
+                <h3>運氣戰鬥：FORTUNE SIEGE</h3>
+                <p class="card-description">
+                  在賭場贏金幣與限定塔，到商店升星、融合元素，再布陣守住 30 波。
+                </p>
+                <p class="recommendation">
+                  <span>適合你，如果</span>你喜歡塔防布陣、抽獎的刺激與越滾越強。
+                </p>
+                <div class="hall-card-foot">
+                  <span class="device-chip">滑鼠・觸控</span>
+                  <button
+                    class="card-button"
+                    data-details="fortune"
+                  >
+                    查看玩法 <span aria-hidden="true">↗</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+            <article
+              class="game-card hall-card neonstrike-card"
+              data-game="neonstrike"
+              data-genre="action"
+            >
+              <div class="hall-cover">
                 <img
                   src="games/neonstrike/assets/harbor-cover-v1.webp"
                   alt="雨夜港區中持槍的戰術幹員與青色燈光照亮的貨櫃"
@@ -2192,37 +2351,179 @@
                   width="1600"
                   height="900"
                 />
+                <span
+                  class="hall-running"
+                  hidden
+                  >遊玩中</span
+                >
                 <div
                   class="cover-caption"
                   aria-hidden="true"
                 >
-                  <span>NIGHTFALL OPERATIONS</span
-                  ><small>選擇戰場，迎戰指揮官</small>
+                  <span>NIGHTFALL OPERATIONS</span><small>選擇戰場，迎戰指揮官</small>
                 </div>
               </div>
               <div class="card-body">
-                <div class="tags">
-                  <span>新遊戲 · 3D 戰術 FPS</span>
-                  <span>鍵鼠／手機觸控</span>
-                </div>
+                <div class="tags"><span>3D 戰術 FPS</span><span>四種任務</span></div>
                 <h3>NEON STRIKE：霓光突擊</h3>
                 <p class="card-description">
-                  暗夜港區、熔火工廠，兩張戰場等你部署。選擇幹員與裝備，運用掩體、技能和手榴彈，挑戰四種任務與首領戰。
+                  暗夜港區、熔火工廠兩張戰場。選擇幹員與裝備，運用掩體、技能和手榴彈，挑戰任務與首領戰。
                 </p>
                 <p class="recommendation">
-                  <span>適合你，如果</span
-                  >你喜歡第一人稱射擊、戰術走位與自訂戰局。支援電腦鍵鼠與手機觸控，橫向視野較寬。
+                  <span>適合你，如果</span>你喜歡第一人稱射擊、戰術走位與自訂戰局。
                 </p>
-                <button
-                  class="card-button"
-                  data-details="neonstrike"
-                >
-                  查看玩法與開始 <span aria-hidden="true">↗</span>
-                </button>
+                <div class="hall-card-foot">
+                  <span class="device-chip">鍵盤滑鼠・手機觸控</span>
+                  <button
+                    class="card-button"
+                    data-details="neonstrike"
+                  >
+                    查看玩法 <span aria-hidden="true">↗</span>
+                  </button>
+                </div>
               </div>
             </article>
-            <article class="game-card abyss-card">
-              <div class="card-visual">
+            <article
+              class="game-card hall-card starbreak-card"
+              data-game="starbreak"
+              data-genre="action grow"
+            >
+              <div class="hall-cover">
+                <img
+                  src="games/starbreak/assets/starbreak.webp"
+                  alt="星艦穿越藍紫星海，迎向裂隙與兩側異星巨獸"
+                  loading="lazy"
+                  width="1600"
+                  height="900"
+                />
+                <span
+                  class="hall-running"
+                  hidden
+                  >遊玩中</span
+                >
+                <div
+                  class="cover-caption"
+                  aria-hidden="true"
+                >
+                  <span>BREAK THROUGH THE NIGHT</span><small>向星海深處，突圍而去</small>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="tags"><span>即時射擊</span><span>星艦生存</span></div>
+                <h3>星夜突圍：STARBREAK</h3>
+                <p class="card-description">
+                  武器自動開火，你負責閃避與突圍。搭配星艦、進化武器與遺物，迎戰星域 Boss。
+                </p>
+                <p class="recommendation">
+                  <span>適合你，如果</span>你喜歡即時走位、火力搭配與華麗戰鬥。
+                </p>
+                <div class="hall-card-foot">
+                  <span class="device-chip">鍵盤・觸控</span>
+                  <button
+                    class="card-button"
+                    data-details="starbreak"
+                  >
+                    查看玩法 <span aria-hidden="true">↗</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+            <article
+              class="game-card hall-card midnight-card"
+              data-game="midnight"
+              data-genre="action"
+            >
+              <div class="hall-cover">
+                <img
+                  src="assets/cover-midnight-art.webp"
+                  alt="雷隼與霜弦於雨夜天台對決的遊戲情境插畫"
+                  loading="lazy"
+                  width="1672"
+                  height="941"
+                />
+                <span
+                  class="hall-running"
+                  hidden
+                  >遊玩中</span
+                >
+                <div
+                  class="cover-caption"
+                  aria-hidden="true"
+                >
+                  <span>MIDNIGHT CIRCUIT</span><small>雨夜天台，下一回合見</small>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="tags"><span>即時格鬥</span><span>本機雙人</span></div>
+                <h3>午夜擂台：MIDNIGHT CIRCUIT</h3>
+                <p class="card-description">
+                  四名原創鬥士，組合連擊、技能與大招。單挑電腦、挑戰街機，或和朋友在同一台裝置較量。
+                </p>
+                <p class="recommendation">
+                  <span>適合你，如果</span>你喜歡抓準時機、近身對決與連段。
+                </p>
+                <div class="hall-card-foot">
+                  <span class="device-chip">鍵盤・觸控・手把</span>
+                  <button
+                    class="card-button"
+                    data-details="midnight"
+                  >
+                    查看玩法 <span aria-hidden="true">↗</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+            <article
+              class="game-card hall-card serpent-card"
+              data-game="serpent"
+              data-genre="grow chill"
+            >
+              <div class="hall-cover">
+                <img
+                  src="assets/cover-serpent-art.webp"
+                  alt="翡翠蛇靈在螢光森林收集食物與進化晶體的遊戲情境插畫"
+                  loading="lazy"
+                  width="1672"
+                  height="941"
+                />
+                <span
+                  class="hall-running"
+                  hidden
+                  >遊玩中</span
+                >
+                <div
+                  class="cover-caption"
+                  aria-hidden="true"
+                >
+                  <span>NEON SERPENT</span><small>收集微光，長成自己的冒險</small>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="tags"><span>生存進化</span><span>貪吃蛇</span></div>
+                <h3>霓境蛇行：NEON SERPENT</h3>
+                <p class="card-description">
+                  四種蛇靈、三座戰場與六種模式。吞食成長、繞圈纏繞，再用隨機進化迎戰蟲群與首領。
+                </p>
+                <p class="recommendation">
+                  <span>適合你，如果</span>你喜歡貪吃蛇、收集成長或輕鬆探索。
+                </p>
+                <div class="hall-card-foot">
+                  <span class="device-chip">鍵鼠・觸控</span>
+                  <button
+                    class="card-button"
+                    data-details="serpent"
+                  >
+                    查看玩法 <span aria-hidden="true">↗</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+            <article
+              class="game-card hall-card abyss-card"
+              data-game="abyss"
+              data-genre="grow"
+            >
+              <div class="hall-cover">
                 <img
                   src="assets/cover-abyss.webp?v=1.2-art"
                   alt="冒險者走向藍色水晶照亮的古老深境入口"
@@ -2230,6 +2531,11 @@
                   width="960"
                   height="600"
                 />
+                <span
+                  class="hall-running"
+                  hidden
+                  >遊玩中</span
+                >
                 <div
                   class="cover-caption"
                   aria-hidden="true"
@@ -2238,28 +2544,31 @@
                 </div>
               </div>
               <div class="card-body">
-                <div class="tags">
-                  <span>回合冒險</span>
-                  <span>養成 RPG</span>
-                </div>
+                <div class="tags"><span>回合冒險</span><span>養成 RPG</span></div>
                 <h3>深境冒險</h3>
                 <p class="card-description">
-                  選擇職業，收集裝備、強化技能。從第一層出發，挑戰深處的魔物與
-                  Boss。
+                  選擇職業，收集裝備、強化技能。從第一層出發，挑戰深處的魔物與 Boss。
                 </p>
                 <p class="recommendation">
                   <span>適合你，如果</span>你喜歡角色養成、刷裝備和闖關。
                 </p>
-                <button
-                  class="card-button"
-                  data-details="abyss"
-                >
-                  查看玩法與開始 <span aria-hidden="true">✦</span>
-                </button>
+                <div class="hall-card-foot">
+                  <span class="device-chip">滑鼠・觸控</span>
+                  <button
+                    class="card-button"
+                    data-details="abyss"
+                  >
+                    查看玩法 <span aria-hidden="true">↗</span>
+                  </button>
+                </div>
               </div>
             </article>
-            <article class="game-card arcane-card">
-              <div class="card-visual">
+            <article
+              class="game-card hall-card arcane-card"
+              data-game="arcane"
+              data-genre="brain"
+            >
+              <div class="hall-cover">
                 <img
                   src="assets/cover-arcane.webp?v=1.2-art"
                   alt="藍髮魔法師操控星界法陣與懸浮魔法卡牌"
@@ -2267,19 +2576,20 @@
                   width="960"
                   height="600"
                 />
+                <span
+                  class="hall-running"
+                  hidden
+                  >遊玩中</span
+                >
                 <div
                   class="cover-caption"
                   aria-hidden="true"
                 >
-                  <span>WRITTEN IN THE STARS</span
-                  ><small>以星光，寫下你的戰術</small>
+                  <span>WRITTEN IN THE STARS</span><small>以星光，寫下你的戰術</small>
                 </div>
               </div>
               <div class="card-body">
-                <div class="tags">
-                  <span>策略卡牌</span>
-                  <span>魔法對決</span>
-                </div>
+                <div class="tags"><span>策略卡牌</span><span>魔法對決</span></div>
                 <h3>蒼穹決戰：星界牌陣</h3>
                 <p class="card-description">
                   挑選契約者與支援術式，讀懂敵方意圖，在行動力與星能之間打出你的戰術。
@@ -2287,16 +2597,23 @@
                 <p class="recommendation">
                   <span>適合你，如果</span>你喜歡組牌、思考出招和華麗對決。
                 </p>
-                <button
-                  class="card-button"
-                  data-details="arcane"
-                >
-                  查看玩法與開始 <span aria-hidden="true">✦</span>
-                </button>
+                <div class="hall-card-foot">
+                  <span class="device-chip">滑鼠・觸控</span>
+                  <button
+                    class="card-button"
+                    data-details="arcane"
+                  >
+                    查看玩法 <span aria-hidden="true">↗</span>
+                  </button>
+                </div>
               </div>
             </article>
-            <article class="game-card trader-card">
-              <div class="card-visual">
+            <article
+              class="game-card hall-card trader-card"
+              data-game="trader"
+              data-genre="brain chill"
+            >
+              <div class="hall-cover">
                 <img
                   src="assets/cover-trader.webp?v=1.2-art"
                   alt="人物俯瞰夜色金融城市，窗邊有金幣與發光的行情光軌"
@@ -2304,19 +2621,20 @@
                   width="960"
                   height="600"
                 />
+                <span
+                  class="hall-running"
+                  hidden
+                  >遊玩中</span
+                >
                 <div
                   class="cover-caption"
                   aria-hidden="true"
                 >
-                  <span>A BILLION POSSIBILITIES</span
-                  ><small>財富之外，人生還有什麼？</small>
+                  <span>A BILLION POSSIBILITIES</span><small>財富之外，人生還有什麼？</small>
                 </div>
               </div>
               <div class="card-body">
-                <div class="tags">
-                  <span>人生模擬</span>
-                  <span>黑色幽默</span>
-                </div>
+                <div class="tags"><span>人生模擬</span><span>黑色幽默</span></div>
                 <h3>百億炒股人生</h3>
                 <p class="card-description">
                   帶著一百億走進虛構市場。買賣、借款、打工與休息，每個選擇都改變你的人生。
@@ -2324,129 +2642,36 @@
                 <p class="recommendation">
                   <span>適合你，如果</span>你喜歡模擬經營、荒誕故事和多種結局。
                 </p>
-                <button
-                  class="card-button"
-                  data-details="trader"
-                >
-                  查看玩法與開始 <span aria-hidden="true">✦</span>
-                </button>
-              </div>
-            </article>
-            <article class="game-card starbreak-card">
-              <div class="card-visual">
-                <img
-                  src="games/starbreak/assets/starbreak.webp"
-                  alt="星艦穿越藍紫星海，迎向裂隙與兩側異星巨獸"
-                  loading="lazy"
-                  width="1600"
-                  height="900"
-                />
-                <div
-                  class="cover-caption"
-                  aria-hidden="true"
-                >
-                  <span>BREAK THROUGH THE NIGHT</span>
-                  <small>向星海深處，突圍而去</small>
+                <div class="hall-card-foot">
+                  <span class="device-chip">滑鼠・觸控</span>
+                  <button
+                    class="card-button"
+                    data-details="trader"
+                  >
+                    查看玩法 <span aria-hidden="true">↗</span>
+                  </button>
                 </div>
               </div>
-              <div class="card-body">
-                <div class="tags">
-                  <span>即時射擊</span>
-                  <span>星艦生存</span>
-                </div>
-                <h3>星夜突圍：STARBREAK</h3>
-                <p class="card-description">
-                  武器自動開火，你負責閃避與突圍。搭配星艦、進化武器與遺物，迎戰星域
-                  Boss。
-                </p>
-                <p class="recommendation">
-                  <span>適合你，如果</span>你喜歡即時走位、火力搭配與華麗戰鬥。
-                </p>
-                <button
-                  class="card-button"
-                  data-details="starbreak"
-                >
-                  查看玩法與開始 <span aria-hidden="true">✦</span>
-                </button>
-              </div>
             </article>
-            <article class="game-card midnight-card">
-              <div class="card-visual"
-                ><img
-                  src="assets/cover-midnight-art.webp"
-                  alt="雷隼與霜弦於雨夜天台對決的遊戲情境插畫"
-                  loading="lazy"
-                  width="1672"
-                  height="941"
-                />
-                <div
-                  class="cover-caption"
-                  aria-hidden="true"
-                  ><span>MIDNIGHT CIRCUIT</span
-                  ><small>雨夜天台，下一回合見</small></div
-                ></div
-              >
-              <div class="card-body"
-                ><div class="tags"
-                  ><span>即時格鬥</span><span>本機雙人</span></div
-                ><h3>午夜擂台：MIDNIGHT CIRCUIT</h3>
-                <p class="card-description"
-                  >選擇四名原創鬥士，組合連擊、技能與大招。單挑電腦、挑戰街機，或和朋友在同一台裝置較量。</p
-                ><p class="recommendation"
-                  ><span>適合你，如果</span>你喜歡抓準時機、近身對決與連段。</p
-                >
-                <button
-                  class="card-button"
-                  data-details="midnight"
-                  >查看玩法與開始 <span aria-hidden="true">✦</span></button
-                ></div
-              ></article
-            >
-            <article class="game-card serpent-card">
-              <div class="card-visual"
-                ><img
-                  src="assets/cover-serpent-art.webp"
-                  alt="翡翠蛇靈在螢光森林收集食物與進化晶體的遊戲情境插畫"
-                  loading="lazy"
-                  width="1672"
-                  height="941"
-                />
-                <div
-                  class="cover-caption"
-                  aria-hidden="true"
-                  ><span>NEON SERPENT</span
-                  ><small>收集微光，長成自己的冒險</small></div
-                ></div
-              >
-              <div class="card-body"
-                ><div class="tags"><span>生存進化</span><span>貪吃蛇</span></div
-                ><h3>霓境蛇行：NEON SERPENT</h3>
-                <p class="card-description"
-                  >四種蛇靈、三座戰場與六種模式。吞食成長、繞圈纏繞，再用隨機進化迎戰蟲群與首領。</p
-                ><p class="recommendation"
-                  ><span>適合你，如果</span
-                  >你喜歡貪吃蛇、收集成長或輕鬆探索。</p
-                >
-                <button
-                  class="card-button"
-                  data-details="serpent"
-                  >查看玩法與開始 <span aria-hidden="true">✦</span></button
-                ></div
-              ></article
-            >
           </div>
+          <p
+            class="hall-empty"
+            hidden
+          >
+            這個心情暫時沒有對應的遊戲，換一個試試看。
+          </p>
 
           <aside class="welcome-note">
             <span aria-hidden="true">✧</span>
             <div>
               <h2>累了，就回來歇一下。</h2>
               <p>
-                遊戲上方的「返回遊戲館」會帶你回到本專區。同一次開著網頁期間，可以切換遊戲，再回來接續。
+                遊戲上方的「返回遊戲館」會帶你回到本專區。同一次開著網頁期間，可以切換遊戲，再回來接續；正在進行的遊戲會標上「遊玩中」。
               </p>
             </div>
           </aside>
           <p class="section-footnote">
-            遊戲封面為情境插畫；實際玩法以介紹與遊戲畫面為準。
+            遊戲封面為情境插畫；三款新作的封面以遊戲本身的 3D／2D 畫面構圖後調色而成，實際玩法以介紹與遊戲畫面為準。
           </p>
         </section>
       </main>
@@ -2487,7 +2712,7 @@
         <span>✦ BLUE WORLD</span>
         <p>二次元守護者的收藏館 · 非官方粉絲主題</p>
         <a href="#sources">來源與圖片權利</a
-        ><small>Blue World · 七款獨立遊戲 · 2026.11.13 r14</small>
+        ><small>Blue World · 十款獨立遊戲 · 2026.11.20 r14</small>
       </footer>
     </div>
     <dialog

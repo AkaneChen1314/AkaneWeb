@@ -1,0 +1,1718 @@
+/* ============================================================ */
+/*  鋼鐵廢墟 ─ 介面樣式 */
+/*  這個檔案只管「長什麼樣子」；區塊定義在 index.html，內容由 js/ui.js 填入 */
+/*  順序：基本設定 → 共用元件 → 載入畫面 → 機庫 → 戰鬥 HUD → 暫停與結算 */
+/* ============================================================ */
+/*  ---------- 基本設定 ---------- */
+/*  所有元素：寬高包含邊框，並清掉瀏覽器預設的間距 */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+/* 整個頁面：鋪滿視窗、不出現捲軸、深色底、不能反白選取文字 */
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #05070a;
+  color: #d7e3ea;
+  font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", "Segoe UI", sans-serif;
+  user-select: none;
+}
+/* 兩張畫布都固定鋪滿整個視窗 */
+canvas#game, canvas#overlay {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+/* 覆蓋層不攔截滑鼠（點擊會穿過去，交給底下的東西） */
+canvas#overlay {
+  pointer-events: none;
+}
+/* 加上這個類別的區塊就會隱藏 */
+.hidden {
+  display: none !important;
+}
+/* 主題變數：改這裡就能換整套介面的配色 */
+/*  --c 主色（青）  --c2 強調色（橘）  --bad 警告紅  --ok 綠  --vio 紫 */
+/*  --pn / --pn2 面板底色  --ln / --ln2 邊框線 */
+/*  --cut / --cut-s 切角形狀（面板與按鈕左下、右上被削掉一角） */
+:root {
+  --c: #4fd8ff;
+  --c2: #ffb23c;
+  --bad: #ff4a3c;
+  --ok: #6dff8a;
+  --vio: #b88cff;
+  --pn: rgba(9, 15, 22, .84);
+  --pn2: rgba(14, 24, 34, .9);
+  --ln: rgba(79, 216, 255, .26);
+  --ln2: rgba(255, 255, 255, .08);
+  --cut: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+  --cut-s: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px));
+}
+/* 捲軸：細細一條 */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ln);
+}
+
+/* ---------- 共用元件 ---------- */
+/* 面板：半透明深色底 + 切角 */
+.panel {
+  background: linear-gradient(160deg, rgba(14, 24, 34, .95), rgba(9, 15, 22, .93));
+  border: 1px solid var(--ln);
+  clip-path: var(--cut);
+  position: relative;
+}
+.panel::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 46px;
+  height: 3px;
+  background: var(--c);
+  box-shadow: 0 0 12px var(--c);
+}
+.panel::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 46px;
+  height: 3px;
+  background: var(--c2);
+  opacity: .8;
+}
+/* 面板裡的小標題列（左邊標題、右邊灰色提示） */
+.ph {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--ln2);
+}
+.ph span {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: #fff;
+}
+.ph em {
+  font-style: normal;
+  font-size: 12px;
+  color: #8fa8b6;
+  letter-spacing: 1px;
+}
+.ph.sm {
+  margin-top: 14px;
+}
+.ph.sm span {
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: var(--c);
+}
+/* 按鈕：預設是實心的主要按鈕；.ghost 是只有外框的次要按鈕 */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--c);
+  color: #021018;
+  background: var(--c);
+  font-weight: 700;
+  letter-spacing: 4px;
+  padding: 12px 18px;
+  font-size: 16px;
+  transition: .15s;
+  clip-path: var(--cut-s);
+}
+button:hover {
+  filter: brightness(1.18);
+  transform: translateY(-1px);
+}
+button.ghost {
+  background: transparent;
+  color: var(--c);
+}
+/* 按鍵標示（例如 Q、E、F） */
+kbd {
+  display: inline-block;
+  border: 1px solid var(--ln);
+  padding: 1px 7px;
+  color: var(--c);
+  font-family: inherit;
+  font-size: 12px;
+  background: rgba(0, 0, 0, .45);
+  border-radius: 3px;
+}
+/* 分段選擇鈕（難度、畫質用）；.on 是目前選中的那一格 */
+.seg {
+  display: flex;
+  gap: 3px;
+}
+.seg div {
+  padding: 4px 12px;
+  border: 1px solid var(--ln2);
+  cursor: pointer;
+  font-size: 12px;
+  color: #9fb6c2;
+  transition: .12s;
+  background: rgba(0, 0, 0, .3);
+}
+.seg div:hover {
+  border-color: var(--c);
+  color: #fff;
+}
+.seg div.on {
+  background: var(--c);
+  color: #021018;
+  font-weight: 700;
+  border-color: var(--c);
+}
+
+/* ---------- 載入畫面 ---------- */
+/* 鋪滿全畫面，標題置中 */
+#loading {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 50% 40%, #16222c, #05070a 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+.ld-box {
+  text-align: center;
+}
+.ld-box h1 {
+  font-size: 68px;
+  letter-spacing: 18px;
+  color: #fff;
+  text-shadow: 0 0 34px var(--c);
+}
+.ld-box h2 {
+  font-size: 16px;
+  letter-spacing: 14px;
+  color: var(--c);
+  margin: 6px 0 28px;
+  font-weight: 400;
+}
+/* 載入進度條（來回跑的動畫） */
+.ld-bar {
+  width: 320px;
+  height: 3px;
+  margin: 0 auto 16px;
+  background: rgba(255, 255, 255, .1);
+  overflow: hidden;
+}
+.ld-bar i {
+  display: block;
+  width: 40%;
+  height: 100%;
+  background: var(--c);
+  box-shadow: 0 0 10px var(--c);
+  animation: ld 1.1s infinite ease-in-out;
+}
+@keyframes ld {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(260%);
+  }
+}
+.ld-box p {
+  color: #8aa;
+  letter-spacing: 3px;
+  font-size: 13px;
+}
+
+/* ---------- 機庫 ---------- */
+/* 機庫的四個區塊（上、左、右、下）都用絕對定位排在畫面四周，中間留給 3D 機體 */
+#hangar {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+#hangar > * {
+  pointer-events: auto;
+}
+/* 上方列：標題、分頁、設定 */
+.hg-top {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 74px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 26px;
+  background: linear-gradient(180deg, rgba(6, 10, 15, .96), rgba(6, 10, 15, .55));
+  border-bottom: 1px solid var(--ln);
+}
+.logo {
+  flex: none;
+  line-height: 1.15;
+}
+.logo b {
+  display: block;
+  font-size: 27px;
+  letter-spacing: 8px;
+  color: #fff;
+  text-shadow: 0 0 18px var(--c);
+}
+.logo span {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--c);
+}
+/* 七個分頁按鈕；.on 是目前的分頁 */
+#tabs {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+#tabs div {
+  position: relative;
+  min-width: 94px;
+  padding: 9px 10px 10px;
+  text-align: center;
+  cursor: pointer;
+  color: #8fa8b6;
+  font-size: 14px;
+  letter-spacing: 2px;
+  transition: .14s;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, .025);
+  clip-path: var(--cut-s);
+}
+#tabs div i {
+  display: block;
+  font-style: normal;
+  font-size: 19px;
+  margin-bottom: 1px;
+  filter: grayscale(.6);
+  transition: .14s;
+}
+#tabs div small {
+  position: absolute;
+  left: 6px;
+  top: 3px;
+  font-size: 9px;
+  color: #5b7482;
+  letter-spacing: 0;
+}
+#tabs div:hover {
+  color: #fff;
+  background: rgba(79, 216, 255, .1);
+}
+#tabs div:hover i {
+  filter: none;
+}
+#tabs div.on {
+  color: #021018;
+  background: var(--c);
+  font-weight: 700;
+  box-shadow: 0 0 18px rgba(79, 216, 255, .45);
+}
+#tabs div.on i {
+  filter: none;
+}
+#tabs div.on small {
+  color: #06445a;
+}
+/* 右上角的設定區 */
+.hg-set {
+  flex: none;
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 6px 16px;
+  align-items: center;
+}
+/* 音量滑桿的外觀 */
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 120px;
+  height: 4px;
+  background: rgba(255, 255, 255, .18);
+  outline: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 16px;
+  background: var(--c);
+  border: none;
+  clip-path: polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%);
+}
+/* 暫停選單裡的音量列 */
+.volrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 8px 0;
+  font-size: 13px;
+  color: #b9c9d2;
+}
+.volrow label {
+  width: 80px;
+  text-align: left;
+  letter-spacing: 1px;
+}
+.volrow input {
+  flex: 1;
+  width: auto;
+}
+/* 機庫右上角的一列設定（標籤 + 控制項） */
+.setrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.setrow label {
+  font-size: 11px;
+  color: #7f97a3;
+  letter-spacing: 2px;
+}
+
+/* 左側面板：選項清單 */
+.hg-left {
+  position: absolute;
+  left: 22px;
+  top: 92px;
+  bottom: 22px;
+  width: clamp(330px, 27vw, 450px);
+  padding: 16px 14px 14px 16px;
+  display: flex;
+  flex-direction: column;
+}
+/* 右側面板：出擊配置、性能、詳細資料 */
+.hg-right {
+  position: absolute;
+  right: 22px;
+  top: 92px;
+  bottom: 22px;
+  width: clamp(300px, 23vw, 380px);
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.hg-right > * {
+  flex: none;
+}
+/* 多選分頁（技能／小兵）上方的已選欄：每個按鍵一格，點一下取消 */
+#picks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.pslot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  font-size: 13px;
+  color: #6f8794;
+  border: 1px dashed rgba(255, 255, 255, .2);
+  white-space: nowrap;
+}
+.pslot kbd {
+  font-size: 11px;
+  padding: 0 5px;
+}
+.pslot.on {
+  color: #fff;
+  border: 1px solid var(--c2);
+  background: rgba(255, 178, 60, .14);
+  cursor: pointer;
+}
+.pslot u {
+  text-decoration: none;
+  font-size: 11px;
+  color: #c9a36a;
+}
+.pslot.on:hover {
+  border-color: var(--bad);
+  background: rgba(255, 74, 60, .16);
+}
+.pslot.on:hover u {
+  color: var(--bad);
+}
+#pickmsg {
+  flex-basis: 100%;
+  font-style: normal;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #8fa8b6;
+}
+#picks.warn #pickmsg {
+  color: var(--c2);
+  animation: pickwarn .5s;
+}
+@keyframes pickwarn {
+  0%, 50% {
+    color: var(--bad);
+    transform: translateX(5px);
+  }
+  25%, 75% {
+    transform: translateX(-5px);
+  }
+  100% {
+    transform: none;
+  }
+}
+.ls s {
+  text-decoration: none;
+  color: var(--bad);
+}
+/* 選項清單本體（內容太多時可以上下捲動） */
+#items {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+/* 已選滿時，沒選到的卡片變暗，表示要先取消一個才能再選 */
+.card.dim {
+  opacity: .45;
+}
+.card.dim:hover {
+  opacity: .7;
+  transform: none;
+}
+/* 一張選項卡片：.on = 已選取（橘色）；滑鼠移上去會變亮並往右滑一點 */
+.card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 11px 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--ln2);
+  cursor: pointer;
+  transition: .13s;
+  position: relative;
+  background: linear-gradient(100deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .012));
+  clip-path: var(--cut-s);
+}
+.card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: transparent;
+  transition: .13s;
+}
+.card:hover {
+  border-color: var(--c);
+  background: linear-gradient(100deg, rgba(79, 216, 255, .13), rgba(79, 216, 255, .03));
+  transform: translateX(3px);
+}
+.card:hover::before {
+  background: var(--c);
+}
+.card.on {
+  border-color: var(--c2);
+  background: linear-gradient(100deg, rgba(255, 178, 60, .2), rgba(255, 178, 60, .04));
+}
+.card.on::before {
+  background: var(--c2);
+  box-shadow: 0 0 10px var(--c2);
+}
+/* 卡片右上角的小標籤（已裝備 / 按鍵 Q） */
+.card .tag {
+  position: absolute;
+  right: 10px;
+  top: 8px;
+  font-size: 11px;
+  color: #021018;
+  background: var(--c2);
+  padding: 1px 8px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+/* 卡片左邊的圖示；.sw 是塗裝用的圓形色票 */
+.card .ic {
+  width: 50px;
+  height: 50px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 27px;
+  background: rgba(0, 0, 0, .45);
+  border: 1px solid var(--ln);
+  clip-path: var(--cut-s);
+}
+.card .ic.sw {
+  border-radius: 50%;
+  clip-path: none;
+  border: 2px solid rgba(255, 255, 255, .25);
+}
+/* 卡片的文字部分：.nm 名稱、.ds 說明、.pk 機體特性 */
+.card .bd {
+  flex: 1;
+  min-width: 0;
+}
+.card .nm {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1px;
+}
+.card .nm small {
+  font-size: 11px;
+  color: var(--c);
+  margin-left: 8px;
+  font-weight: 400;
+  letter-spacing: 1px;
+}
+.card .ds {
+  font-size: 12px;
+  color: #9db0ba;
+  margin-top: 3px;
+  line-height: 1.55;
+}
+.card .pk {
+  font-size: 12px;
+  color: var(--c2);
+  margin-top: 4px;
+}
+/* 卡片底部的小型能力條 */
+.card .mb {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+.card .mb span {
+  flex: 1;
+  font-size: 10px;
+  color: #7f97a3;
+  letter-spacing: 1px;
+}
+.card .mb span b {
+  display: block;
+  height: 4px;
+  margin-top: 2px;
+  background: rgba(255, 255, 255, .09);
+}
+.card .mb span b i {
+  display: block;
+  height: 100%;
+  background: var(--c);
+}
+/* 模式卡片上的波數選項 */
+.card .opts {
+  display: flex;
+  gap: 5px;
+  margin-top: 8px;
+}
+.card .opts div {
+  padding: 4px 13px;
+  font-size: 13px;
+  border: 1px solid var(--ln);
+  color: #b9c9d2;
+  background: rgba(0, 0, 0, .35);
+  transition: .12s;
+}
+.card .opts div:hover {
+  border-color: var(--c2);
+  color: #fff;
+}
+.card .opts div.on {
+  background: var(--c2);
+  color: #021018;
+  font-weight: 700;
+  border-color: var(--c2);
+}
+
+/* 「出擊配置」的格子（兩欄；.w2 佔滿兩欄） */
+#slotsum {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.ls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--ln2);
+  background: rgba(0, 0, 0, .3);
+  cursor: pointer;
+  transition: .12s;
+  min-width: 0;
+}
+.ls:hover {
+  border-color: var(--c);
+  background: rgba(79, 216, 255, .1);
+}
+.ls.w2 {
+  grid-column: span 2;
+}
+.ls i {
+  font-style: normal;
+  font-size: 20px;
+  flex: none;
+  width: 26px;
+  text-align: center;
+}
+.ls div {
+  min-width: 0;
+}
+.ls small {
+  display: block;
+  font-size: 10px;
+  color: #7f97a3;
+  letter-spacing: 2px;
+}
+.ls b {
+  display: block;
+  font-size: 13px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ls kbd {
+  font-size: 10px;
+  padding: 0 4px;
+  margin-right: 4px;
+}
+/* 機體性能條 */
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  margin: 6px 0;
+}
+.stat label {
+  width: 38px;
+  color: #9db0ba;
+  letter-spacing: 1px;
+}
+.stat .bar {
+  flex: 1;
+  height: 7px;
+  background: rgba(255, 255, 255, .08);
+  transform: skewX(-20deg);
+}
+.stat .bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--c), #c6f6ff);
+  transition: width .25s;
+  box-shadow: 0 0 8px rgba(79, 216, 255, .5);
+}
+.stat em {
+  width: 34px;
+  text-align: right;
+  font-style: normal;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+/* 右下角的詳細資料表 */
+#detail {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #b9c9d2;
+}
+#detail b {
+  color: var(--c2);
+  font-size: 15px;
+}
+#detail .pk {
+  color: var(--c2);
+  font-size: 12px;
+  margin-top: 4px;
+}
+#detail table {
+  width: 100%;
+  margin-top: 6px;
+  border-collapse: collapse;
+}
+#detail td {
+  padding: 3px 0;
+  font-size: 12px;
+  border-bottom: 1px dashed rgba(255, 255, 255, .07);
+}
+#detail td:last-child {
+  text-align: right;
+  color: #fff;
+}
+
+/* 下方：步驟進度、模式說明、導覽按鈕 */
+.hg-bottom {
+  position: absolute;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  text-align: center;
+}
+/* 步驟進度的小橫條：.done 已完成、.cur 目前這一步 */
+#stepline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+#stepline i {
+  width: 26px;
+  height: 4px;
+  background: rgba(255, 255, 255, .16);
+}
+#stepline i.done {
+  background: var(--c);
+}
+#stepline i.cur {
+  background: var(--c2);
+  box-shadow: 0 0 8px var(--c2);
+}
+#stepline span {
+  margin-left: 10px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #cfe;
+  text-shadow: 0 1px 4px #000;
+}
+/* 模式與難度的說明文字 */
+#modeline {
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: #cfe;
+  margin-bottom: 8px;
+  text-shadow: 0 1px 4px #000;
+}
+#modeline b {
+  color: var(--c2);
+}
+/* 「上一步」與「下一步 / 出擊」按鈕 */
+.navrow {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 10px;
+}
+#prev {
+  padding: 0 16px;
+  font-size: 13px;
+  letter-spacing: 2px;
+  background: rgba(6, 12, 18, .85);
+}
+/* 大按鈕：.next = 下一步（青色）；.go = 出擊（橘色、會脈動） */
+#launch {
+  position: relative;
+  width: 300px;
+  padding: 13px 0 11px;
+  border: none;
+  font-size: 26px;
+  letter-spacing: 12px;
+  clip-path: polygon(22px 0, 100% 0, calc(100% - 22px) 100%, 0 100%);
+}
+#launch.next {
+  background: linear-gradient(90deg, #2aa8d8, #7fe6ff);
+  color: #021820;
+  letter-spacing: 8px;
+}
+#launch.go {
+  background: linear-gradient(90deg, #ff7a1e, #ffcf4a);
+  color: #1a0e00;
+  animation: pulse 2.2s infinite;
+}
+#launch small {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 3px;
+  opacity: .8;
+  margin-top: 1px;
+}
+@keyframes pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 6px rgba(255, 160, 40, .5));
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(255, 180, 60, .95));
+  }
+}
+/* 最佳紀錄 */
+#best {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #8fa8b6;
+  letter-spacing: 1px;
+  text-shadow: 0 1px 3px #000;
+}
+/* 「按住滑鼠拖曳可旋轉機體」的提示 */
+.hg-hint {
+  position: absolute;
+  left: 50%;
+  top: 100px;
+  transform: translateX(-50%);
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #6f8794;
+  pointer-events: none !important;
+}
+
+/* ---------- HUD ---------- */
+/* HUD 鋪滿全畫面但不攔截滑鼠 */
+#hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  text-shadow: 0 1px 3px #000;
+}
+/* HUD 上的小面板共用的底色 */
+.hpanel {
+  background: linear-gradient(120deg, rgba(8, 14, 20, .78), rgba(8, 14, 20, .42));
+  border: 1px solid var(--ln2);
+  border-left: 3px solid var(--c);
+  padding: 10px 14px;
+  clip-path: var(--cut-s);
+}
+/* 畫面邊緣的紅光（受傷或血量過低時由程式調整強度） */
+#vignette {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 220px 60px rgba(255, 30, 20, 0);
+  transition: box-shadow .12s;
+}
+/* 準星：四條短線 + 中心點；.enemy = 瞄到敵人時變紅 */
+#crosshair {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+}
+#crosshair i {
+  position: absolute;
+  background: var(--c);
+  box-shadow: 0 0 6px var(--c);
+}
+#crosshair i:nth-child(1) {
+  width: 2px;
+  height: 10px;
+  left: -1px;
+  top: -22px;
+}
+#crosshair i:nth-child(2) {
+  width: 2px;
+  height: 10px;
+  left: -1px;
+  top: 12px;
+}
+#crosshair i:nth-child(3) {
+  width: 10px;
+  height: 2px;
+  left: -22px;
+  top: -1px;
+}
+#crosshair i:nth-child(4) {
+  width: 10px;
+  height: 2px;
+  left: 12px;
+  top: -1px;
+}
+#crosshair b {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  left: -2px;
+  top: -2px;
+  background: #fff;
+  border-radius: 50%;
+}
+#crosshair::after {
+  content: "";
+  position: absolute;
+  left: -30px;
+  top: -30px;
+  width: 60px;
+  height: 60px;
+  border: 1px solid rgba(79, 216, 255, .25);
+  border-radius: 50%;
+}
+#crosshair.enemy i {
+  background: var(--bad);
+  box-shadow: 0 0 6px var(--bad);
+}
+#crosshair.enemy::after {
+  border-color: rgba(255, 74, 60, .6);
+}
+/* 命中標記：準星上閃一下的白色 X */
+#hitmark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  opacity: 0;
+  background:
+    linear-gradient(45deg, transparent 46%, #fff 46%, #fff 54%, transparent 54%),
+    linear-gradient(-45deg, transparent 46%, #fff 46%, #fff 54%, transparent 54%);
+}
+
+/* 左上角：模式與分數 */
+#hud-tl {
+  position: absolute;
+  left: 20px;
+  top: 18px;
+  min-width: 210px;
+}
+#modechip {
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--c);
+}
+#modechip b {
+  color: #fff;
+}
+#score {
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #cfe;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+#score b {
+  color: var(--c2);
+  font-size: 17px;
+}
+
+/* 上方中央：波次資訊 */
+#top {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+#waveinfo {
+  font-size: 24px;
+  letter-spacing: 6px;
+  font-weight: 700;
+  color: #fff;
+}
+#enemyinfo {
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: var(--c2);
+  margin-top: 2px;
+}
+/* Boss 血條 */
+#bossbar {
+  margin-top: 10px;
+  width: min(560px, 44vw);
+}
+#bossbar .bn {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+#bossname {
+  font-size: 16px;
+  letter-spacing: 3px;
+  color: #ffd0c8;
+  font-weight: 700;
+}
+#bosstitle {
+  font-style: normal;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--bad);
+}
+#bossbar .bar {
+  height: 13px;
+  background: rgba(0, 0, 0, .65);
+  border: 1px solid var(--bad);
+  margin-top: 3px;
+  position: relative;
+  transform: skewX(-20deg);
+}
+#bossbar .bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #ff2a1a, #ff9a3c);
+  box-shadow: 0 0 12px rgba(255, 60, 30, .7);
+}
+#bossbar .bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 2px), rgba(0, 0, 0, .7) calc(10% - 2px) 10%);
+}
+
+/* 右上角的小地圖：圓形畫布 + 外框 + 上方的「前」字 */
+#mapbox {
+  position: absolute;
+  right: 20px;
+  top: 18px;
+  width: 220px;
+  height: 220px;
+}
+#minimap {
+  width: 220px;
+  height: 220px;
+  background: rgba(6, 10, 14, .72);
+  border-radius: 50%;
+}
+.mapring {
+  position: absolute;
+  inset: -5px;
+  border: 2px solid var(--ln);
+  border-radius: 50%;
+  border-top-color: var(--c);
+  border-bottom-color: var(--c2);
+}
+.mapn {
+  position: absolute;
+  left: 50%;
+  top: -15px;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: var(--c);
+  letter-spacing: 1px;
+  background: #071018;
+  padding: 0 5px;
+  border: 1px solid var(--ln);
+}
+
+/* 左下角的機體狀態 */
+#vitals {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  width: 350px;
+}
+.vhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+.vhead span {
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+}
+.vhead em {
+  font-style: normal;
+  color: var(--c);
+}
+/* 大大的裝甲數字 */
+.vbig {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 2px 0 4px;
+}
+.vbig b {
+  font-size: 34px;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.vbig small {
+  font-size: 13px;
+  color: #9ab;
+}
+.vbig span {
+  margin-left: auto;
+  font-size: 14px;
+  color: #8ad8ff;
+  font-variant-numeric: tabular-nums;
+}
+/* 各種長條的共用外觀；下面依類別上色（hp 裝甲、sh 護盾、en 能量、cp 指揮點數） */
+#vitals .bar {
+  height: 9px;
+  background: rgba(0, 0, 0, .6);
+  border: 1px solid rgba(255, 255, 255, .16);
+  transform: skewX(-20deg);
+  position: relative;
+  overflow: hidden;
+}
+#vitals .bar i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  transition: width .08s;
+}
+#vitals .bar.hp {
+  height: 18px;
+  margin-top: 3px;
+}
+#vitals .bar.hp::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(5% - 2px), rgba(0, 0, 0, .55) calc(5% - 2px) 5%);
+}
+#vitals .bar.sh {
+  height: 6px;
+}
+.bar.hp i {
+  background: linear-gradient(90deg, #2fd36e, #b6ff6a);
+}
+.bar.hp.low i {
+  background: linear-gradient(90deg, #ff3a2a, #ff9a3c);
+}
+.bar.sh i {
+  background: linear-gradient(90deg, #3ca0ff, #9be2ff);
+}
+.bar.sh.gold i {
+  background: linear-gradient(90deg, #ffb020, #fff0a0);
+}
+.bar.en i {
+  background: linear-gradient(90deg, #ffb23c, #ffe98a);
+}
+.bar.cp i {
+  background: linear-gradient(90deg, #a05cff, #f0b6ff);
+}
+/* 能量與指揮點數的橫列（標籤 + 長條） */
+.vrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 11px;
+}
+.vrow label {
+  width: 30px;
+  color: #bcd;
+  letter-spacing: 1px;
+}
+.vrow .bar {
+  flex: 1;
+}
+.vrow span {
+  width: 52px;
+  text-align: right;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 下方中央：增益圖示與技能格 */
+#center-b {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+#buffs {
+  display: flex;
+  gap: 6px;
+  min-height: 30px;
+}
+/* 增益圖示：.g 綠（修復）、.b 藍（護盾）、.r 紅（火力） */
+.buff {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px 3px 6px;
+  font-size: 13px;
+  color: #fff;
+  background: rgba(8, 14, 20, .82);
+  border: 1px solid var(--c2);
+  font-variant-numeric: tabular-nums;
+  clip-path: var(--cut-s);
+}
+.buff i {
+  font-style: normal;
+  font-size: 16px;
+}
+.buff.g {
+  border-color: var(--ok);
+}
+.buff.b {
+  border-color: var(--c);
+}
+.buff.r {
+  border-color: var(--bad);
+}
+#slots {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+/* 技能 / 小兵的按鍵格：.k 按鍵、.n 名稱、.cd 冷卻遮罩、.t 冷卻秒數 */
+/*  .rdy 可以使用、.act 作用中、.no 不能使用 */
+.slot {
+  width: 68px;
+  height: 68px;
+  background: rgba(8, 14, 20, .82);
+  border: 1px solid var(--ln);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 29px;
+  overflow: hidden;
+  clip-path: var(--cut-s);
+  --p: 0;
+}
+.slot.gap {
+  margin-left: 18px;
+}
+.slot .k {
+  position: absolute;
+  left: 4px;
+  top: 2px;
+  font-size: 11px;
+  color: var(--c);
+  font-weight: 700;
+  z-index: 2;
+}
+.slot .n {
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 10px;
+  color: #cde;
+  z-index: 2;
+}
+.slot .cd {
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(rgba(0, 0, 0, .78) calc(var(--p) * 1%), transparent 0);
+}
+.slot .t {
+  position: absolute;
+  font-size: 21px;
+  font-weight: 700;
+  color: #fff;
+  z-index: 2;
+}
+.slot.rdy {
+  border-color: var(--c);
+  box-shadow: 0 0 12px rgba(79, 216, 255, .35) inset;
+}
+.slot.act {
+  border-color: var(--c2);
+  box-shadow: 0 0 16px rgba(255, 178, 60, .6) inset;
+}
+.slot.no {
+  filter: grayscale(1) brightness(.6);
+}
+
+/* 右下角的武器資訊 */
+#weap {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  width: 300px;
+  border-left: 1px solid var(--ln2);
+  border-right: 3px solid var(--c2);
+}
+/* 一列武器：按鍵提示、名稱（.tmp = 限時武器）、彈藥（.rl = 換彈中） */
+.wrow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.wrow em {
+  font-style: normal;
+  font-size: 10px;
+  color: var(--c);
+  border: 1px solid var(--ln);
+  padding: 0 5px;
+  flex: none;
+}
+.wrow .wn {
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #cde;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wrow .wn.tmp {
+  color: var(--c2);
+  font-weight: 700;
+}
+.wrow .wa {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  flex: none;
+  line-height: 1.1;
+}
+.wrow .wa small {
+  font-size: 13px;
+  color: #9ab;
+}
+.wrow .wa.rl {
+  color: var(--c2);
+  font-size: 17px;
+}
+#w-sec .wa {
+  font-size: 19px;
+}
+/* 彈藥 / 冷卻的細長條 */
+.abar {
+  height: 4px;
+  background: rgba(0, 0, 0, .6);
+  margin: 3px 0 8px;
+}
+.abar i {
+  display: block;
+  height: 100%;
+  background: var(--c);
+  width: 100%;
+}
+.abar.sec {
+  margin-bottom: 0;
+}
+.abar.sec i {
+  background: var(--c2);
+}
+
+/* 三選一強化卡片 */
+#upg {
+  position: absolute;
+  left: 50%;
+  bottom: 168px;
+  transform: translateX(-50%);
+  text-align: center;
+}
+.upt {
+  font-size: 16px;
+  letter-spacing: 6px;
+  color: var(--c2);
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+.upt em {
+  font-style: normal;
+  font-size: 12px;
+  color: #cfe;
+  margin-left: 10px;
+  letter-spacing: 1px;
+  font-weight: 400;
+}
+#upg-cards {
+  display: flex;
+  gap: 12px;
+}
+/* 一張強化卡片（出現時從下方升起） */
+.uc {
+  width: 200px;
+  padding: 12px 12px 14px;
+  background: linear-gradient(180deg, rgba(20, 30, 42, .94), rgba(8, 14, 20, .92));
+  border: 1px solid var(--c2);
+  clip-path: var(--cut);
+  animation: rise .35s backwards;
+}
+.uc:nth-child(2) {
+  animation-delay: .07s;
+}
+.uc:nth-child(3) {
+  animation-delay: .14s;
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+.uc kbd {
+  font-size: 15px;
+  padding: 1px 10px;
+  color: #021018;
+  background: var(--c2);
+  border: none;
+  font-weight: 700;
+}
+.uc i {
+  display: block;
+  font-style: normal;
+  font-size: 30px;
+  margin: 6px 0 2px;
+}
+.uc b {
+  display: block;
+  font-size: 15px;
+  color: #fff;
+  letter-spacing: 2px;
+}
+.uc span {
+  display: block;
+  font-size: 12px;
+  color: #b9c9d2;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* 畫面中央的大橫幅 */
+#banner {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 23%;
+  text-align: center;
+  font-size: 46px;
+  font-weight: 800;
+  letter-spacing: 14px;
+  color: #fff;
+  opacity: 0;
+  transition: opacity .4s;
+  text-shadow: 0 0 24px var(--c), 0 2px 6px #000;
+}
+#banner small {
+  display: block;
+  font-size: 15px;
+  letter-spacing: 4px;
+  color: var(--c2);
+  margin-top: 8px;
+  font-weight: 400;
+}
+/* 右側的道具提示卡（從右邊滑入、幾秒後淡出） */
+#toasts {
+  position: absolute;
+  right: 20px;
+  top: 262px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px 7px 10px;
+  background: rgba(8, 14, 20, .88);
+  border: 1px solid var(--c2);
+  border-right-width: 3px;
+  clip-path: var(--cut-s);
+  animation: tin 4.2s forwards;
+  max-width: 330px;
+}
+.toast i {
+  font-style: normal;
+  font-size: 24px;
+}
+.toast b {
+  display: block;
+  font-size: 14px;
+  color: #fff;
+  letter-spacing: 1px;
+}
+.toast span {
+  display: block;
+  font-size: 12px;
+  color: #cfe;
+}
+@keyframes tin {
+  0% {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  6%, 82% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+}
+/* 左側的戰鬥紀錄（每一行幾秒後淡出） */
+#log {
+  position: absolute;
+  left: 20px;
+  bottom: 236px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #cfe;
+  max-width: 420px;
+}
+#log div {
+  animation: fadeout 4s forwards;
+}
+@keyframes fadeout {
+  0%, 70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+/* 滑鼠沒有鎖定時的提示 */
+#lockhint {
+  position: absolute;
+  left: 50%;
+  top: 62%;
+  transform: translateX(-50%);
+  padding: 10px 22px;
+  background: rgba(0, 0, 0, .7);
+  border: 1px solid var(--c2);
+  color: var(--c2);
+  letter-spacing: 3px;
+}
+
+/* ---------- 暫停 / 結算 ---------- */
+/* 母艦護盾節點還在時，Boss 血條變成青色 */
+#bossbar.shielded .bar {
+  border-color: #40ffd0;
+}
+#bossbar.shielded .bar i {
+  background: linear-gradient(90deg, #1a8a80, #40ffd0);
+  box-shadow: 0 0 12px rgba(64, 255, 208, .7);
+}
+/* 鋪滿全畫面的半透明黑底，中間放一個面板 */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 5, 8, .8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+/* 暫停與結算的面板 */
+.pbox {
+  width: 540px;
+  padding: 30px 36px;
+  text-align: center;
+}
+.pbox.wide {
+  width: 620px;
+}
+.pbox h2 {
+  font-size: 36px;
+  letter-spacing: 12px;
+  color: #fff;
+  margin-bottom: 18px;
+  text-shadow: 0 0 18px var(--c);
+}
+.pbox button {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+}
+.btnrow {
+  display: flex;
+  gap: 12px;
+}
+.btnrow button {
+  flex: 1;
+}
+/* 操作說明（兩欄） */
+.keys {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px 14px;
+  text-align: left;
+  font-size: 13px;
+  color: #b9c9d2;
+  margin-bottom: 14px;
+}
+/* 結算畫面：模式名稱、成績格子、本次取得的強化 */
+#res-mode {
+  font-size: 13px;
+  letter-spacing: 4px;
+  color: var(--c);
+  margin-bottom: 6px;
+}
+#res-body {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+#res-body div {
+  padding: 10px 6px;
+  background: rgba(0, 0, 0, .35);
+  border: 1px solid var(--ln2);
+}
+#res-body small {
+  display: block;
+  font-size: 11px;
+  color: #8fa8b6;
+  letter-spacing: 2px;
+}
+#res-body b {
+  display: block;
+  font-size: 24px;
+  color: var(--c2);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+#res-ups {
+  font-size: 12px;
+  color: #9db0ba;
+  min-height: 20px;
+  line-height: 1.9;
+}
+#res-ups i {
+  font-style: normal;
+  font-size: 18px;
+  margin: 0 2px;
+}
+
+/* ---------- 手機觸控（../touch-controls.js 啟用時才會套用）---------- */
+/* HUD 疊在觸控層上面，但仍然讓手指穿過去；只有技能格、小兵格和強化卡片可以點 */
+.akane-touch #hud {
+  z-index: 6;
+}
+.akane-touch #slots .slot,
+.akane-touch #upg .uc {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.akane-touch #lockhint {
+  display: none !important;
+}
+/* 機庫、HUD、暫停與結算畫面是照電腦螢幕設計的：
+   js/touch.js 依螢幕大小算出 --ui-s／--hud-s，先用比較大的畫布排好再整個等比例縮小 */
+.akane-touch #hangar,
+.akane-touch #hud,
+.akane-touch #pause,
+.akane-touch #result {
+  inset: auto;
+  left: 0;
+  top: 0;
+  width: calc(100% / var(--ui-s, 1));
+  height: calc(100% / var(--ui-s, 1));
+  transform: scale(var(--ui-s, 1));
+  transform-origin: 0 0;
+}
+.akane-touch #hud {
+  width: calc(100% / var(--hud-s, 1));
+  height: calc(100% / var(--hud-s, 1));
+  transform: scale(var(--hud-s, 1));
+}
+/* 觸控時 HUD 讓位：左下是搖桿、右下是按鈕，所以機體狀態與武器面板改排在左上；左上角留給「暫停」 */
+.akane-touch #hud-tl { left: 86px; }
+.akane-touch #vitals { top: 92px; bottom: auto; transform: scale(0.85); transform-origin: 0 0; }
+.akane-touch #weap { left: 20px; right: auto; top: 226px; bottom: auto; transform: scale(0.85); transform-origin: 0 0; }
+.akane-touch #log { top: 330px; }
+/* 機庫可以用手指拖曳旋轉機體：不要讓瀏覽器把拖曳當成捲動 */
+.akane-touch #game { touch-action: none; }

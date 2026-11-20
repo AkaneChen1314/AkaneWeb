@@ -11,6 +11,51 @@
 
 // 這裡修改遊戲介紹視窗的內容；遊戲卡片上的文案位於 index.html。
 const games = {
+  aurora: {
+    name: "NEON STRIKE II：極光戰線",
+    category: "3D 第一人稱射擊 / 團隊對戰",
+    version: "鍵鼠・觸控",
+    path: "games/aurora/index.html?v=20261120-r14-newgames",
+    cover: "assets/cover-aurora.webp",
+    description:
+      "霓光突擊的續作。選擇五名幹員之一，帶著各自的武器與技能，在新東京、末日之城、軌道環站與海底研究站四張地圖，挑戰團隊死鬥、據點爭奪、個人亂鬥、生存波次或首領討伐。",
+    steps: [
+      "在選單依序選擇幹員、地圖、模式與難度，再按部署。第一次建議先玩團隊死鬥、新兵難度。",
+      "電腦：WASD 移動、滑鼠瞄準、左鍵射擊、右鍵開鏡；Shift 衝刺、空白鍵跳躍、C 蹲下、R 換彈、1 2 3 或滾輪換槍、Q 技能、H 醫療包、V 近戰，按住 G 預覽手榴彈、放開投擲；按住 Tab 看計分板，Esc 暫停。",
+      "手機請橫放：左半邊拖曳移動（推到底衝刺）、右半邊滑動轉視角；右側按鈕射擊、開鏡、跳、蹲、換彈、換槍，下方中間是技能、手榴彈（按住瞄準）與醫療包，左上角暫停。護盾 4 秒沒受傷會自動恢復，醫療包與補給站能幫你撐過交火。",
+    ],
+    note: "需要支援 WebGL 的瀏覽器；電腦鍵鼠操作最完整，手機建議橫向遊玩。\n返回遊戲館會暫停對戰並靜音，再次進入後按「繼續」。設定與地圖預覽保存在同一瀏覽器；重新整理會結束當局。本遊戲為獨立自製作品。",
+  },
+  mech: {
+    name: "鋼鐵廢墟：機甲戰線",
+    category: "第三人稱機甲射擊 / 波次生存",
+    version: "鍵鼠・觸控",
+    path: "games/mech/index.html?v=20261120-r14-newgames",
+    cover: "assets/cover-mech.webp",
+    description:
+      "在機庫組出你的機甲：五台機體、八種塗裝、主副武器、八種技能與五種小兵自由搭配。闖過一波波敵潮，每波三選一強化，迎戰十隻各有招式的巨型 Boss。",
+    steps: [
+      "在機庫依步驟選擇模式（戰役、無盡、Boss 連戰）、機體、塗裝、主副武器、三個技能與兩種小兵，最後按「出擊」。拖曳畫面可旋轉機體。",
+      "電腦：WASD 移動、滑鼠瞄準；左鍵主武器、右鍵副武器；Shift 推進、空白鍵噴射跳躍；Q E F 技能、1 2 派出小兵、R 換彈，Esc 暫停。",
+      "手機請橫放：左半邊拖曳移動（推到底推進）、右半邊滑動轉視角；右側按鈕主武器、副武器、噴射與換彈，直接點下方的技能格與小兵格，左上角暫停。每波結束點選一張強化卡；Boss 出招前有紅色預警。",
+    ],
+    note: "需要支援 WebGL 的瀏覽器；第一次開啟會從網路載入 3D 引擎。電腦鍵鼠操作最完整，手機建議橫向遊玩。\n返回遊戲館會暫停戰鬥並靜音，再次進入後按「繼續戰鬥」。機庫配置與最佳紀錄保存在同一瀏覽器。背景音樂為 OpenGameArt 的 CC0 曲目。",
+  },
+  fortune: {
+    name: "運氣戰鬥：FORTUNE SIEGE",
+    category: "塔防 × 賭場 / Roguelike",
+    version: "滑鼠・觸控",
+    path: "games/fortune/index.html?v=20261120-r14-newgames",
+    cover: "assets/cover-fortune.webp",
+    description:
+      "賭場、商店與戰場三個區域輪流切換。用金幣在七種賭場小遊戲贏取道具與限定塔，到商店升星與融合元素，再布陣守住 30 波敵人與首領，之後還能挑戰無盡模式。",
+    steps: [
+      "選擇地圖開始一局。上方分頁（或 Q／W／E）切換賭場、商店與戰場。",
+      "在商店買塔；兩座相同的塔可以升星，不同元素可以融合。點選備戰區的塔再點戰場空地，或直接拖曳上去。",
+      "按「開始」或空白鍵開打，1／2／3 調整戰鬥速度。敵人掉落的道具袋用滑鼠（或手指）掃過就能撿。",
+    ],
+    note: "賭場使用遊戲內的虛構金幣，各遊戲旁都公開機率表，不涉及真實金錢。畫面為 16:9 固定比例，手機請橫放。\n返回遊戲館會暫停並靜音；天賦、圖鑑與最佳紀錄保存在同一瀏覽器，重新整理會結束當局。",
+  },
   midnight: {
     name: "午夜擂台：MIDNIGHT CIRCUIT",
     category: "即時格鬥 / 單人與本機雙人",
@@ -180,7 +225,11 @@ function openGame(id) {
   document.getElementById("player-version").textContent =
     game.version || "v1.2";
   document.querySelector(".player-hint").textContent =
-    id === "neonstrike" ? "按暫停或 Esc 可返回遊戲館" : "休息一下，隨時回來";
+    id === "neonstrike"
+      ? "按暫停或 Esc 可返回遊戲館"
+      : id === "aurora" || id === "mech"
+        ? "按 Esc 放開滑鼠，就能返回遊戲館"
+        : "休息一下，隨時回來";
 
   frames.forEach((frame, key) => {
     frame.hidden = key !== id;
@@ -371,46 +420,70 @@ function syncGameVisibility() {
 document.addEventListener("visibilitychange", syncGameVisibility);
 window.addEventListener("pageshow", syncGameVisibility);
 
-// 只推薦與標示卡片，不直接啟動遊戲；仍先顯示玩法介紹。
+// ---------------- 遊戲館互動 ----------------
+// 心情篩選：卡片的 data-genre 可以有多個分類（以空白分隔）；只篩選，不直接啟動遊戲。
 const moodMessages = {
-  midnight: "推薦《午夜擂台》：選好鬥士，來場天台格鬥對決。",
-  serpent: "推薦《霓境蛇行》：收集食物、進化蛇靈，選擇悠遊或生存挑戰。",
-  neonstrike:
-    "推薦《NEON STRIKE》：用鍵盤滑鼠或手機觸控，挑選幹員與地圖，來場戰術突擊。",
-  abyss: "推薦《深境冒險》：從第一層出發，把每次戰鬥都變成成長。",
-  arcane: "推薦《星界牌陣》：觀察敵方意圖，組合屬於你的致勝戰術。",
-  trader: "推薦《百億炒股人生》：試著做不同選擇，看看人生會走向哪裡。",
-  starbreak: "推薦《星夜突圍》：駕駛星艦、閃避敵潮，組出你的星海火力。",
+  all: "十款遊戲都在這裡；選一種心情篩選，或交給命運隨機挑一款。",
+  action:
+    "想爽快開火：從第一人稱槍戰、機甲火力、星艦突圍到天台格鬥，挑一款熱血一下。",
+  brain: "想動動腦：組牌、塔防布陣或人生抉擇，慢慢想出你的最佳解。",
+  grow: "想慢慢變強：刷裝備、進化與研究，每一局都比上一局更強。",
+  chill: "想輕鬆玩：節奏自由、隨時可停，適合休息時來一局。",
 };
-document.querySelectorAll("[data-mood]").forEach((button) => {
-  button.addEventListener("click", () => {
-    const id = button.dataset.mood;
-    if (!Object.hasOwn(games, id)) return;
-    let recommendedCard = null;
-    document.querySelectorAll("[data-mood]").forEach((choice) => {
-      choice.setAttribute("aria-pressed", String(choice === button));
-    });
-    document.querySelectorAll(".game-card").forEach((card) => {
-      const recommended = card.classList.contains(`${id}-card`);
-      card.classList.toggle("recommended", recommended);
-      if (recommended) recommendedCard = card;
-    });
-    document.getElementById("mood-result").textContent = moodMessages[id];
-    if (recommendedCard) {
-      recommendedCard.tabIndex = -1;
-      recommendedCard.focus({ preventScroll: true });
-      window.scrollTo({
-        top: Math.max(
-          0,
-          window.scrollY + recommendedCard.getBoundingClientRect().top - 24,
-        ),
-        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-          ? "instant"
-          : "smooth",
-      });
-    }
+const hallCards = [...document.querySelectorAll(".hall-card")];
+const hallEmpty = document.querySelector(".hall-empty");
+
+// 卡片一樣大、一排三張（窄螢幕兩張）；最後一排不滿時標上 tail-*，由 games-hall.css 把它們排到中間。
+function centerLastRow(visibleCards) {
+  hallCards.forEach((card) => card.classList.remove("tail3-one", "tail3-two", "tail2-one"));
+  const count = visibleCards.length;
+  if (count % 3 === 1) visibleCards[count - 1].classList.add("tail3-one");
+  if (count % 3 === 2) visibleCards[count - 2].classList.add("tail3-two");
+  if (count % 2 === 1) visibleCards[count - 1].classList.add("tail2-one");
+}
+
+function applyHallFilter(filter) {
+  const visibleCards = [];
+  hallCards.forEach((card) => {
+    const genres = (card.dataset.genre || "").split(/\s+/);
+    const visible = filter === "all" || genres.includes(filter);
+    card.hidden = !visible;
+    if (visible) visibleCards.push(card);
   });
+  centerLastRow(visibleCards);
+  const shown = visibleCards.length;
+  if (hallEmpty) hallEmpty.hidden = shown > 0;
+  document.querySelectorAll("[data-filter]").forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.filter === filter));
+  });
+  document.getElementById("mood-result").textContent =
+    moodMessages[filter] || moodMessages.all;
+}
+
+// 各分類的數量由卡片計算，新增或移除遊戲時不必手動改按鈕上的數字。
+document.querySelectorAll("[data-count]").forEach((badge) => {
+  const key = badge.dataset.count;
+  badge.textContent = String(
+    hallCards.filter(
+      (card) =>
+        key === "all" || (card.dataset.genre || "").split(/\s+/).includes(key),
+    ).length,
+  );
 });
+document.querySelectorAll("[data-filter]").forEach((button) => {
+  button.addEventListener("click", () => applyHallFilter(button.dataset.filter));
+});
+centerLastRow(hallCards);
+
+// 同一次開啟網頁期間已載入的遊戲，在卡片上標示「遊玩中」。
+function markRunningGames() {
+  hallCards.forEach((card) => {
+    const badge = card.querySelector(".hall-running");
+    if (badge) badge.hidden = !frames.has(card.dataset.game);
+  });
+}
+document.addEventListener("lounge-visibility", markRunningGames);
+
 document.getElementById("surprise-game").addEventListener("click", (event) => {
   const ids = Object.keys(games);
   showDetails(ids[Math.floor(Math.random() * ids.length)], event.currentTarget);

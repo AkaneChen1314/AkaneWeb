@@ -1,0 +1,47 @@
+【如何替換成自己的背景音樂】
+
+遊戲內建一套「即時合成」的音樂（機庫、一般戰鬥、每隻 Boss 各一首），不放任何檔案也有音樂。
+把 mp3 檔放進這個 music 資料夾並照下面的檔名命名，
+再把檔名（不含 .mp3）加進 js/audio.js 裡 MUSIC 的 files 清單，遊戲就會播放：
+有列在清單裡就播檔案，沒有就用內建合成音樂。
+（Blue World 網站版只讀取清單裡的檔名，不會去試探不存在的檔案，主控台才不會出現一堆 404。
+  目前清單是 ['battle', 'battle2', 'boss', 'boss2']。）
+
+  hangar.mp3                     機庫（選裝備）畫面
+  battle.mp3 / battle2.mp3 / battle3.mp3
+                                 一般戰鬥（有多首時，每兩波換一首）
+  boss.mp3 / boss2.mp3 / boss3.mp3
+                                 Boss 戰共用（有多首時，不同 Boss 會輪流用不同首）
+  boss_<代號>.mp3                某一隻 Boss 的專屬音樂（優先於上面的共用曲）
+
+Boss 代號對照：
+  boss_colossus.mp3   巨像・毀滅者
+  boss_tempest.mp3    天災・暴風之翼
+  boss_arachne.mp3    蛛后・織網者
+  boss_citadel.mp3    鋼鐵要塞・不落城
+  boss_oculus.mp3     審判之眼・奧庫魯斯
+  boss_gemini.mp3     雙子・陰陽
+  boss_wyrm.mp3       掘地巨蟲・利維坦
+  boss_carrier.mp3    天頂母艦・方舟
+  boss_knight.mp3     斷罪劍皇・亞修拉
+  boss_omega.mp3      終焉機神・歐米茄
+
+注意事項：
+  ・音樂會自動循環播放，建議挑選「可循環（loop）」的曲子。
+  ・音量在機庫右上角或暫停選單的「音樂」滑桿調整，和音效是分開的。
+  ・想換回內建合成音樂，把對應的 mp3 刪掉，並從 files 清單移除檔名。
+  ・請使用授權允許的音樂（例如 CC0 / 公有領域）。
+
+
+【目前資料夾裡的音樂來源】
+
+以下四首都下載自 OpenGameArt.org，下載當下頁面標示的授權為 CC0（公有領域，可自由使用、不需標示作者）。
+
+  battle.mp3    Space Battle        https://opengameart.org/content/space-battle
+  battle2.mp3   The Rush            https://opengameart.org/content/the-rush
+  boss.mp3      Battle Zero         https://opengameart.org/content/battle-zero
+  boss2.mp3     Boss Battle         https://opengameart.org/content/boss-battle-3
+
+沒有下載的：
+  DELTA  https://opengameart.org/content/delta
+  這首頁面標示的授權是 CC-BY 4.0（不是 CC0），使用時必須標示作者，所以沒有放進來。

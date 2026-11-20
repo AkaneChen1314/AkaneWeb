@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="zh-Hant">
+<!--
+  NEON STRIKE II：極光戰線
+  ------------------------------------------------------------
+  這個檔案是遊戲的「骨架」：
+    1. <canvas id="game">  3D 畫面畫在這裡
+    2. <div id="hud">      戰鬥中的資訊（血量、彈藥、小地圖…）
+    3. <div id="menu">     所有選單畫面
+    4. 最底下依序載入 js/ 資料夾裡的程式
+
+  外觀全部寫在 css/style.css；這裡只定義「有哪些元素」。
+  直接雙擊這個檔案就能玩，不需要安裝任何東西。
+-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NEON STRIKE II：極光戰線</title>
+  <link rel="stylesheet" href="css/style.css?v=20261120-r14-newgames">
+  <link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../shared/portal.css?v=20261120-r14-newgames">
+  <link rel="stylesheet" href="../game-portal.css?v=20261120-r14-newgames">
+  <link rel="stylesheet" href="../touch-controls.css?v=20261120-r14-newgames">
+  <script src="../../shared/portal.js?v=20261120-r14-newgames"></script>
+
+</head>
+<body>
+  <!-- 3D 畫面 -->
+  <canvas id="game"></canvas>
+
+  <!-- ====================== 載入畫面 ====================== -->
+  <div id="loading">
+    <div class="load-logo">NEON STRIKE <span>II</span></div>
+    <div class="load-bar"><i></i></div>
+    <div id="loading-text">正在建構戰場…</div>
+  </div>
+
+  <!-- ====================== HUD（戰鬥中的畫面資訊） ====================== -->
+  <div id="hud" class="hidden">
+    <div id="low-hp"></div>            <!-- 瀕死時的紅色邊框 -->
+    <div id="scope"></div>             <!-- 狙擊鏡畫面 -->
+
+    <!-- 準星：上下左右四條線加中心點 -->
+    <div id="crosshair"><i class="t"></i><i class="b"></i><i class="l"></i><i class="r"></i><i class="dot"></i></div>
+    <div id="hitmarker"></div>         <!-- 命中標記 -->
+    <!-- 擊殺確認：準星上方短暫出現的骷髏 -->
+    <div id="kill-icon"><svg viewBox="0 0 48 48"><path fill="currentColor" d="M24 4C13 4 6 11.5 6 21c0 6 3 10.5 7 13v6h4v-4h4v4h6v-4h4v4h4v-6c4-2.5 7-7 7-13C42 11.5 35 4 24 4zm-8 22a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9zm16 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9zm-8 6-3-5h6z"/></svg></div>
+    <!-- 換彈進度：繞著準星的圓環 -->
+    <svg id="reload-ring" viewBox="0 0 60 60"><circle cx="30" cy="30" r="24"/></svg>
+    <!-- 頂部的方位羅盤 -->
+    <canvas id="compass" width="460" height="34"></canvas>
+    <div id="dmg-dirs"></div>          <!-- 受擊方向 -->
+    <div id="world-tags"></div>        <!-- 名牌、血條、傷害數字 -->
+
+    <!-- 上方：比分、計時、任務 -->
+    <div id="top-bar">
+      <div class="team left" id="team-left"></div>
+      <div class="mid">
+        <div id="timer">0:00</div>
+        <div id="race"></div>              <!-- 個人亂鬥的名次賽道 -->
+        <div id="objective"></div>
+        <div id="points"></div>
+      </div>
+      <div class="team right" id="team-right"></div>
+    </div>
+
+    <!-- 首領血條 -->
+    <div id="boss-bar">
+      <div id="boss-name"></div>
+      <div class="boss-track"><i id="boss-fill"></i><div id="boss-ticks"></div></div>
+      <div id="boss-warning"></div>
+    </div>
+
+    <!-- 左上：小地圖 -->
+    <div id="minimap-wrap"><canvas id="minimap" width="210" height="210"></canvas></div>
+
+    <!-- 右上：擊殺訊息 -->
+    <div id="killfeed"></div>
+
+    <!-- 中央提示 -->
+    <div id="announce"></div>
+    <div id="toast"></div>
+
+    <!-- 左下：生命與護甲 -->
+    <div id="vitals">
+      <div id="op-name"></div>
+      <div class="vbar hp"><b>✚</b><div class="track"><i id="hp-fill"></i></div><span id="hp-text">100</span></div>
+      <div class="vbar armor"><b>⛨</b><div class="track"><i id="armor-fill"></i></div><span id="armor-text">0</span></div>
+    </div>
+
+    <!-- 下中：技能、手榴彈、醫療包。每格由上到下：圖示 → 名稱 → 按鍵 -->
+    <div id="abilities">
+      <div class="ability" id="skill">
+        <div class="ring"></div>                 <!-- 冷卻中的遮罩 -->
+        <div class="icon" id="skill-icon"></div>  <!-- 圖示由 14-hud.js 依幹員填入 -->
+        <span class="cd" id="skill-cd"></span>   <!-- 冷卻秒數 -->
+        <em id="skill-name"></em>
+        <kbd>Q</kbd>
+      </div>
+      <div class="ability" id="nade">
+        <div class="icon" id="nade-icon"></div>
+        <b class="count" id="nade-count">0</b>
+        <em>手榴彈</em>
+        <kbd>G</kbd>
+      </div>
+      <div class="ability" id="med">
+        <div class="ring"></div>
+        <div class="icon" id="med-icon"></div>
+        <b class="count" id="med-count">0</b>
+        <em>醫療包</em>
+        <kbd>H</kbd>
+      </div>
+    </div>
+
+    <!-- 右下：武器與彈藥 -->
+    <div id="loadout">
+      <div id="reload-hint"></div>
+      <div id="ammo"><span id="ammo-mag">30</span><i>/</i><span id="ammo-reserve">90</span></div>
+      <div id="ammo-bar"><i id="ammo-fill"></i></div>  <!-- 彈匣剩餘量 -->
+      <div id="weapon-name"></div>
+      <div id="weapon-slots"></div>
+    </div>
+
+    <!-- 陣亡畫面 -->
+    <div id="death-screen">
+      <div class="death-title">陣亡</div>
+      <div id="death-by"></div>
+      <div id="death-respawn"></div>
+    </div>
+
+    <!-- 計分板（按住 Tab） -->
+    <div id="scoreboard"></div>
+  </div>
+
+  <!-- ====================== 選單 ====================== -->
+  <div id="menu">
+    <!-- 主選單 -->
+    <section class="screen" id="screen-main">
+      <div class="brand">
+        <div class="kicker">TACTICAL ARENA SHOOTER</div>
+        <h1>NEON STRIKE <span>II</span></h1>
+        <div class="tagline">極 光 戰 線</div>
+      </div>
+      <nav class="main-nav">
+        <button class="primary" data-go="setup"><b>開始作戰</b><small>選擇幹員、地圖與模式</small></button>
+        <button data-go="help"><b>操作說明</b><small>按鍵與戰鬥技巧</small></button>
+        <button data-go="settings"><b>設定</b><small>靈敏度、音量、畫質</small></button>
+      </nav>
+      <div class="foot">5 名幹員 · 4 張地圖 · 5 種模式 · 3 個首領　｜　v1.0</div>
+    </section>
+
+    <!-- 作戰準備 -->
+    <section class="screen" id="screen-setup">
+      <header class="setup-head">
+        <button class="ghost" data-go="main">← 返回</button>
+        <div id="setup-tabs">
+          <button data-tab="op"><i>01</i>幹員</button>
+          <button data-tab="map"><i>02</i>地圖</button>
+          <button data-tab="mode"><i>03</i>模式</button>
+          <button data-tab="diff"><i>04</i>難度</button>
+        </div>
+      </header>
+      <div class="setup-body">
+        <div id="setup-list"></div>
+        <div id="setup-detail"></div>
+      </div>
+      <footer class="setup-foot">
+        <div id="setup-summary"></div>
+        <button class="primary" id="deploy"><b>部署</b><small>開始對戰 ▶</small></button>
+      </footer>
+      <div id="map-loading">建構地圖中…</div>
+    </section>
+
+    <!-- 操作說明 -->
+    <section class="screen" id="screen-help">
+      <div class="panel wide">
+        <h2>操作說明</h2>
+        <div id="help-keys"></div>
+        <h3>戰鬥技巧</h3>
+        <div id="help-tips"></div>
+        <div class="panel-actions"><button class="primary" id="btn-back-help"><b>返回</b></button></div>
+      </div>
+    </section>
+
+    <!-- 設定 -->
+    <section class="screen" id="screen-settings">
+      <div class="panel">
+        <h2>設定</h2>
+        <label class="row"><span>滑鼠靈敏度</span><input type="range" id="set-sens" min="0.3" max="2.5" step="0.05"><em id="set-sens-val"></em></label>
+        <label class="row"><span>視野角度</span><input type="range" id="set-fov" min="60" max="100" step="1"><em id="set-fov-val"></em></label>
+        <label class="row"><span>主音量</span><input type="range" id="set-vol" min="0" max="1" step="0.05"><em id="set-vol-val"></em></label>
+        <label class="row"><span>音樂音量</span><input type="range" id="set-music" min="0" max="1" step="0.05"><em id="set-music-val"></em></label>
+        <div class="row"><span>畫質</span><div id="set-quality" class="seg"></div><em></em></div>
+        <p class="hint">畫面卡頓時請把畫質調成「流暢」。</p>
+        <div class="panel-actions"><button class="primary" id="btn-back-settings"><b>返回</b></button></div>
+      </div>
+    </section>
+
+    <!-- 暫停 -->
+    <section class="screen" id="screen-pause">
+      <div class="panel narrow">
+        <div class="d-kicker">PAUSED</div>
+        <h2>暫停</h2>
+        <button class="primary" id="btn-resume"><b>繼續作戰</b></button>
+        <button data-go="settings"><b>設定</b></button>
+        <button data-go="help"><b>操作說明</b></button>
+        <button id="btn-restart"><b>重新開始</b></button>
+        <button class="danger" id="btn-quit"><b>回主選單</b></button>
+      </div>
+    </section>
+
+    <!-- 生存模式：選擇強化 -->
+    <section class="screen" id="screen-perk">
+      <div class="perk-wrap">
+        <div class="d-kicker">WAVE CLEAR</div>
+        <h2 id="perk-title">波次完成</h2>
+        <p>選擇一項強化（可按 1 / 2 / 3）</p>
+        <div id="perk-list"></div>
+      </div>
+    </section>
+
+    <!-- 結算 -->
+    <section class="screen" id="screen-result">
+      <div class="panel result">
+        <div class="result-head">
+          <div>
+            <div class="d-kicker">MISSION REPORT</div>
+            <h2 id="result-title">勝利</h2>
+            <div id="result-sub"></div>
+          </div>
+          <div class="grade"><small>評等</small><span id="result-grade">A</span></div>
+        </div>
+        <div id="result-meta"></div>                <!-- 模式 · 地圖 · 難度 · 時間 -->
+        <div id="result-tabs">                      <!-- 分頁：全員戰績／我的戰績（也可按 Tab 切換） -->
+          <button data-rt="all" class="on">全員戰績</button>
+          <button data-rt="me">我的戰績</button>
+        </div>
+        <div id="result-body"></div>
+        <div class="panel-actions">
+          <button class="primary" id="btn-again"><b>再來一場</b></button>
+          <button id="btn-result-menu"><b>回主選單</b></button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ====================== 程式（順序很重要，後面的會用到前面的） ====================== -->
+  <script src="vendor/three.global.js?v=20261120-r14-newgames"></script>
+  <script src="js/00-config.js?v=20261120-r14-newgames"></script>
+  <script src="js/01-utils.js?v=20261120-r14-newgames"></script>
+  <script src="js/02-audio.js?v=20261120-r14-newgames"></script>
+  <script src="js/03-builder.js?v=20261120-r14-newgames"></script>
+  <script src="js/04-weapon-models.js?v=20261120-r14-newgames"></script>
+  <script src="js/05-character-models.js?v=20261120-r14-newgames"></script>
+  <script src="js/06-world.js?v=20261120-r14-newgames"></script>
+  <script src="js/07-maps.js?v=20261120-r14-newgames"></script>
+  <script src="js/08-effects.js?v=20261120-r14-newgames"></script>
+  <script src="js/09-combat.js?v=20261120-r14-newgames"></script>
+  <script src="js/10-actor.js?v=20261120-r14-newgames"></script>
+  <script src="js/11-ai.js?v=20261120-r14-newgames"></script>
+  <script src="js/12-boss.js?v=20261120-r14-newgames"></script>
+  <script src="js/13-modes.js?v=20261120-r14-newgames"></script>
+  <script src="js/14-hud.js?v=20261120-r14-newgames"></script>
+  <script src="js/15-menu.js?v=20261120-r14-newgames"></script>
+  <script src="js/16-main.js?v=20261120-r14-newgames"></script>
+  <script src="js/17-portal-bridge.js?v=20261120-r14-newgames"></script>
+  <script src="../touch-controls.js?v=20261120-r14-newgames"></script>
+  <script src="js/18-touch.js?v=20261120-r14-newgames"></script>
+</body>
+</html>
