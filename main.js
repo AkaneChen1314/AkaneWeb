@@ -15,7 +15,7 @@ const games = {
     name: "NEON STRIKE II：極光戰線",
     category: "3D 第一人稱射擊 / 團隊對戰",
     version: "鍵鼠・觸控",
-    path: "games/aurora/index.html?v=20261120-r14-newgames",
+    path: "games/aurora/index.html?v=20261121-r15c",
     cover: "assets/cover-aurora.webp",
     description:
       "霓光突擊的續作。選擇五名幹員之一，帶著各自的武器與技能，在新東京、末日之城、軌道環站與海底研究站四張地圖，挑戰團隊死鬥、據點爭奪、個人亂鬥、生存波次或首領討伐。",
@@ -30,7 +30,7 @@ const games = {
     name: "鋼鐵廢墟：機甲戰線",
     category: "第三人稱機甲射擊 / 波次生存",
     version: "鍵鼠・觸控",
-    path: "games/mech/index.html?v=20261120-r14-newgames",
+    path: "games/mech/index.html?v=20261121-r15c",
     cover: "assets/cover-mech.webp",
     description:
       "在機庫組出你的機甲：五台機體、八種塗裝、主副武器、八種技能與五種小兵自由搭配。闖過一波波敵潮，每波三選一強化，迎戰十隻各有招式的巨型 Boss。",
@@ -45,7 +45,7 @@ const games = {
     name: "運氣戰鬥：FORTUNE SIEGE",
     category: "塔防 × 賭場 / Roguelike",
     version: "滑鼠・觸控",
-    path: "games/fortune/index.html?v=20261120-r14-newgames",
+    path: "games/fortune/index.html?v=20261121-r15c",
     cover: "assets/cover-fortune.webp",
     description:
       "賭場、商店與戰場三個區域輪流切換。用金幣在七種賭場小遊戲贏取道具與限定塔，到商店升星與融合元素，再布陣守住 30 波敵人與首領，之後還能挑戰無盡模式。",
@@ -60,7 +60,7 @@ const games = {
     name: "午夜擂台：MIDNIGHT CIRCUIT",
     category: "即時格鬥 / 單人與本機雙人",
     version: "鍵盤・觸控",
-    path: "games/midnight/index.html?v=20261113-r14-games",
+    path: "games/midnight/index.html?v=20261121-r15c",
     cover: "assets/cover-midnight-art.webp",
     description:
       "四名原創鬥士，在雨夜天台展開對決。選擇單人對電腦、本機雙人、練習或街機挑戰，用連擊、防禦與大招拿下兩回合。",

@@ -160,13 +160,53 @@ const Tex = {
       return p;
     },
 
-    // 柏油：細顆粒
+    // 柏油：細顆粒、深淺不一的色塊、修補過的方形補丁、填縫的瀝青線與幾道細裂紋
     asphalt(T, size) {
-      return T._paint(size, (u, v) => {
-        const big = T.fbm(u, v, 3, 3, 31);
-        const grain = T.hash(Math.floor(u * size), Math.floor(v * size), 7);
-        return 0.6 + (big - 0.5) * 0.25 + (grain - 0.5) * 0.22;
+      const p = T._paint(size, (u, v) => {
+        const big = T.fbm(u, v, 3, 3, 31); // 大片的深淺
+        const mid = T.fbm(u, v, 14, 2, 37); // 中等大小的斑駁
+        const grain = T.hash(Math.floor(u * size), Math.floor(v * size), 7); // 一顆一顆的石子
+        return 0.6 + (big - 0.5) * 0.22 + (mid - 0.5) * 0.1 + (grain - 0.5) * 0.14;
       });
+      const c = p.ctx;
+      const rnd = Util.seeded(71);
+      for (let i = 0; i < 3; i++) { // 補丁：顏色略深的方塊，邊緣一圈填縫
+        const w = 70 + rnd() * 90, h = 50 + rnd() * 70;
+        const x = rnd() * (size - w), y = rnd() * (size - h);
+        c.fillStyle = `rgba(0,0,0,${0.07 + rnd() * 0.06})`;
+        c.fillRect(x, y, w, h);
+        c.strokeStyle = "rgba(0,0,0,0.3)";
+        c.lineWidth = 2;
+        c.strokeRect(x, y, w, h);
+      }
+      for (let i = 0; i < 5; i++) { // 填縫的瀝青線：彎彎曲曲的深色粗線
+        let x = rnd() * size, y = rnd() * size, a = rnd() * 6.28;
+        c.strokeStyle = "rgba(0,0,0,0.32)";
+        c.lineWidth = 2.5;
+        c.beginPath();
+        c.moveTo(x, y);
+        for (let k = 0; k < 9; k++) {
+          a += (rnd() - 0.5) * 0.7;
+          x += Math.cos(a) * 24;
+          y += Math.sin(a) * 24;
+          c.lineTo(x, y);
+        }
+        c.stroke();
+      }
+      c.strokeStyle = "rgba(0,0,0,0.22)";
+      c.lineWidth = 1;
+      for (let i = 0; i < 8; i++) { // 細裂紋
+        let x = rnd() * size, y = rnd() * size;
+        c.beginPath();
+        c.moveTo(x, y);
+        for (let k = 0; k < 6; k++) {
+          x += (rnd() - 0.5) * 40;
+          y += (rnd() - 0.5) * 40;
+          c.lineTo(x, y);
+        }
+        c.stroke();
+      }
+      return p;
     },
 
     // 金屬板：板塊分割線 + 鉚釘 + 刮痕
@@ -474,7 +514,8 @@ const Tex = {
  *  所有材質都開啟「頂點顏色」，顏色由 Builder 寫在每個零件上。
  *    paint  烤漆／塑膠      matte  布料／粗糙表面
  *    metal  裸露金屬        glow   自發光（會被泛光特效暈開）
- *    glass  半透明玻璃
+ *    glass  很淡的玻璃（槍上的鏡片、水母這類小東西）
+ *    pane   建築用的玻璃板：帶一點顏色，上面有斜向的反光條，一眼看得出那裡有玻璃
  *    ground / wall / floor / trim  有貼圖的地圖材質（每張地圖會換貼圖）
  * ============================================================ */
 const Mats = {
@@ -488,6 +529,12 @@ const Mats = {
     this.kinds.metal = std({ roughness: 0.34, metalness: 0.8 });
     // 玻璃：很淡，紅點鏡的鏡片才不會霧霧的擋住視線
     this.kinds.glass = std({ roughness: 0.05, metalness: 0.25, transparent: true, opacity: 0.14, depthWrite: false });
+    // 建築玻璃：不受燈光影響（在很暗的地圖也看得到），透明度由反光條貼圖決定，
+    // 沒有反光的地方約兩成不透明、反光條約四成。
+    this.kinds.pane = new THREE.MeshBasicMaterial({
+      vertexColors: true, transparent: true, opacity: 0.42, depthWrite: false, alphaMap: this._paneTexture(),
+    });
+    this.uvScale.pane = 3; // 反光條每 3 公尺重複一次
     // 發光材質不受燈光影響，顏色可以超過 1（越大越亮、光暈越強）
     this.kinds.glow = new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false });
     // 模型材質加上「使用痕跡」貼圖與微小的表面起伏
@@ -508,9 +555,43 @@ const Mats = {
     return this.kinds[kind] || this.kinds.paint;
   },
 
+  /* 玻璃板的透明度貼圖：底色是灰的（比較透明），上面有幾道 45 度的亮條（比較不透明）。
+   * 亮度只跟 (x + y) 有關，所以貼圖上下左右都能無縫接起來。 */
+  _paneTexture() {
+    const SIZE = 256;
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = SIZE;
+    const ctx = canvas.getContext("2d");
+    const img = ctx.createImageData(SIZE, SIZE);
+    // 每道反光條：[位置 0~1, 寬度, 亮度]。一道寬而淡，兩道細而亮
+    const streaks = [[0.3, 0.07, 0.3], [0.44, 0.012, 0.5], [0.8, 0.018, 0.32]];
+    for (let y = 0; y < SIZE; y++) {
+      for (let x = 0; x < SIZE; x++) {
+        const v = ((x + y) % SIZE) / SIZE;
+        let a = 0.46;
+        for (const [at, width, gain] of streaks) {
+          let d = Math.abs(v - at);
+          d = Math.min(d, 1 - d); // 繞一圈回來也算距離，接縫才不會斷
+          a += gain * Math.exp(-(d * d) / (width * width));
+        }
+        const g = Math.min(255, Math.round(a * 255));
+        const i = (y * SIZE + x) * 4;
+        img.data[i] = img.data[i + 1] = img.data[i + 2] = g;
+        img.data[i + 3] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    return tex;
+  },
+
   /* 套用地圖主題。theme 例如：
-   *   { ground: { tex: "asphalt", scale: 8, rough: 0.9, metal: 0 }, wall: {...}, ... } */
+   *   { ground: { tex: "asphalt", scale: 8, rough: 0.9, metal: 0 }, wall: {...}, ... }
+   * theme.pane 是玻璃板的亮度（預設 1）：玻璃不受燈光影響，所以比較暗的地圖要自己調低，
+   * 不然在夜裡或海底會像一片發白的毛玻璃。 */
   applyTheme(theme) {
+    this.kinds.pane.color.setScalar(theme.pane ?? 1);
     for (const k of ["ground", "wall", "floor", "trim"]) {
       const cfg = theme[k];
       const mat = this.kinds[k];
@@ -539,6 +620,7 @@ const Mats = {
  *    p : [x, y, z] 位置          r : [rx, ry, rz] 旋轉（弧度）
  *    s : 縮放（數字或 [x,y,z]）  c : 顏色（十六進位）
  *    m : 材質種類（預設 paint）  e : 亮度倍率（發光材質用）
+ *    ao: 底部加深的程度 0~1（牆腳比牆頂暗，像地面反射不到光的陰影）
  *
  *  push()/pop() 可以暫時移動「原點」，方便把一整組零件放到別的位置。
  * ============================================================ */
@@ -607,13 +689,23 @@ class Builder {
     const uv = geometry.attributes.uv;
     const v = Builder._v3;
 
+    // o.ao：依頂點在零件裡的高度調整亮度，最底下暗 ao、最上面不變
+    const ao = o.ao || 0;
+    let minY = 0, spanY = 1;
+    if (ao) {
+      geometry.computeBoundingBox();
+      minY = geometry.boundingBox.min.y;
+      spanY = Math.max(1e-6, geometry.boundingBox.max.y - minY);
+    }
+
     for (let i = 0; i < pos.count; i++) {
+      const shade = ao ? 1 - ao * (1 - (pos.getY(i) - minY) / spanY) : 1;
       v.fromBufferAttribute(pos, i).applyMatrix4(world);
       bucket.pos.push(v.x, v.y, v.z);
       v.fromBufferAttribute(nor, i).applyMatrix3(normalMatrix).normalize();
       bucket.nor.push(v.x, v.y, v.z);
       bucket.uv.push(uv ? uv.getX(i) : 0, uv ? uv.getY(i) : 0);
-      bucket.col.push(cr, cg, cb);
+      bucket.col.push(cr * shade, cg * shade, cb * shade);
     }
 
     // 三角形索引要加上目前已有的頂點數
@@ -633,7 +725,7 @@ class Builder {
   // 方塊。若材質有貼圖，會依實際尺寸計算貼圖座標，貼圖才不會被拉伸
   box(w, h, d, o = {}) {
     const geo = new THREE.BoxGeometry(w, h, d);
-    const scale = Mats.uvScale[o.m];
+    const scale = o.uvScale ?? Mats.uvScale[o.m]; // o.uvScale 可以讓單一零件用不同的貼圖大小
     if (scale) {
       // BoxGeometry 六個面的順序：+x -x +y -y +z -z，每面 4 個頂點
       const uv = geo.attributes.uv;
@@ -741,7 +833,7 @@ class Builder {
 
       const material = (opt.materials && opt.materials[kind]) || Mats.get(kind);
       const mesh = new THREE.Mesh(geo, material);
-      const lit = kind !== "glow" && kind !== "glass"; // 發光與玻璃不參與陰影
+      const lit = kind !== "glow" && kind !== "glass" && kind !== "pane"; // 發光與玻璃不參與陰影
       mesh.castShadow = lit && opt.cast !== false;
       mesh.receiveShadow = lit && opt.receive !== false;
       mesh.userData.kind = kind;

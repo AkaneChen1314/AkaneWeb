@@ -86,7 +86,7 @@ const Menu = {
 
   // 每拍完一張就讓瀏覽器喘口氣，避免一次拍四張讓畫面（和外面的網站）卡住
   async buildPreviews() {
-    const KEY = "previews.v6";
+    const KEY = "previews.v9";
     const saved = Util.load(KEY, null);
     if (saved && Maps.list.every((m) => saved[m.id])) {
       this.previews = saved;

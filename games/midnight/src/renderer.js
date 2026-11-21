@@ -1,3 +1,5 @@
+/* 檔案導讀：把一場對戰畫到畫布上。角色動作在 animation.js、招式特效在 effects.js，
+   這裡負責鏡頭、震動、殘影、倒影、字幕，以及把遊戲事件轉成畫面上的反應。 */
 (() => {
   const game = globalThis.Midnight;
   const { FIELD } = game;
@@ -20,8 +22,17 @@
 
   class Renderer {
     constructor(canvas) {
+      this.canvas = canvas;
       this.ctx = canvas.getContext("2d", { alpha: false });
       this.motion = matchMedia("(prefers-reduced-motion: reduce)");
+      /* 解析度倍率：遊戲內部一律用 1280×720 的座標，畫布實際的像素可以更多。
+         高解析度螢幕的電腦用 1.5 倍（1920×1080），角色與文字的邊緣比較銳利；
+         手機與平板維持 1 倍，把效能留給特效。 */
+      const dense = (window.devicePixelRatio || 1) >= 1.5;
+      const wide = window.innerWidth * (window.devicePixelRatio || 1) >= 1600;
+      const touch = matchMedia("(pointer: coarse)").matches;
+      this.spriteRes = dense && wide && !touch ? 1.5 : 1;
+      this.setScale(this.spriteRes);
       this.effects = new game.CombatEffects(this.motion);
       this.ghosts = [];
       this.reset();
@@ -30,13 +41,23 @@
         loadImage("assets/fighters.png"),
         loadImage("assets/walk.png"),
       ]).then(([stage, atlas, walkAtlas]) => {
-        this.animation = new game.FighterAnimation(atlas, walkAtlas);
+        const res = this.spriteRes;
+        this.animation = new game.FighterAnimation(atlas, walkAtlas, res);
         this.background = document.createElement("canvas");
-        this.background.width = width;
-        this.background.height = height;
-        this.background.getContext("2d").drawImage(stage, 0, 0, width, height);
+        this.background.width = width * res;
+        this.background.height = height * res;
+        const bg = this.background.getContext("2d");
+        bg.imageSmoothingQuality = "high";
+        bg.drawImage(stage, 0, 0, width * res, height * res);
         this.vignette = this.makeVignette();
       });
+    }
+
+    // 改變畫布實際的像素數（畫面跟不上時 app.js 會把它調回 1 倍）
+    setScale(scale) {
+      this.scale = scale;
+      this.canvas.width = Math.round(width * scale);
+      this.canvas.height = Math.round(height * scale);
     }
 
     makeVignette() {
@@ -137,6 +158,7 @@
             sx: -1.5,
             sy: -1.2,
           });
+          if (heavy) anim?.hurt(fighter, event.finisher ? 1 : 0.7);
           if (event.counterHit)
             this.caption(
               fighter.x,
@@ -246,6 +268,7 @@
             sy: event.heavy ? -6 : -3.6,
             sx: event.heavy ? 4 : 2.6,
           });
+          anim?.land(fighter, fighter.stun > 0);
           if (event.heavy) this.shake = Math.max(this.shake, 8);
           break;
         case "jump":
@@ -456,8 +479,9 @@
       if (!this.animation) return;
       const frozen = match.hitStop > 0;
       this.update(dt);
+      ctx.setTransform(this.scale, 0, 0, this.scale, 0, 0);
       const fighters = match.fighters.map((fighter) => {
-        const state = this.animation.update(fighter, dt, frozen);
+        const state = this.animation.update(fighter, dt, frozen, match);
         if (!frozen) this.trail(fighter, dt);
         return {
           ...fighter,
@@ -478,9 +502,11 @@
         -cam.x + Math.sin(this.time * 113) * shake,
         -cam.y + Math.cos(this.time * 91) * shake * 0.5,
       );
-      ctx.drawImage(this.background, 0, 0);
+      ctx.drawImage(this.background, 0, 0, width, height);
       this.effects.behind(ctx, fighters, match);
       for (const fighter of fighters) this.drawShadow(fighter);
+      if (!this.calm)
+        for (const fighter of fighters) this.drawReflection(fighter);
       this.drawGhosts();
       // The victim trembles during hit-stop to sell the impact.
       for (const fighter of fighters) {
@@ -514,17 +540,23 @@
       }
     }
 
+    // 腳下的影子：跟著角色的位移移動，被壓扁時變寬、跳起來時變小變淡
     drawShadow(fighter) {
       const { ctx } = this;
+      const state = fighter.animationState;
       ctx.save();
       ctx.globalAlpha = 0.72 - Math.min(0.5, fighter.y / 350);
       ctx.fillStyle = "#070911";
       ctx.beginPath();
       const lying = fighter.hp === 0 && fighter.y === 0 ? 1.5 : 1;
+      const squash = Math.max(0.85, Math.min(1.25, state.sx.x));
       ctx.ellipse(
-        fighter.x,
+        fighter.x + state.ox.x * fighter.face,
         ground + 3,
-        Math.max(20, (fighter.profile.size * 0.33 - fighter.y * 0.13) * lying),
+        Math.max(
+          20,
+          (fighter.profile.size * 0.33 - fighter.y * 0.13) * lying * squash,
+        ),
         10,
         0,
         0,
@@ -534,9 +566,29 @@
       ctx.restore();
     }
 
+    // 濕地板上的倒影：把角色上下顛倒畫在腳下，很淡、只出現在地面以下
+    drawReflection(fighter) {
+      const { ctx } = this;
+      if (fighter.y > 260) return;
+      const state = fighter.animationState;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, ground + 2, width, height - ground);
+      ctx.clip();
+      ctx.globalAlpha = 0.17 * (1 - fighter.y / 260);
+      // 以地面線為軸上下翻轉；角色離地越高，倒影離地面線越遠
+      ctx.translate(0, (ground + 4) * 2);
+      ctx.scale(1, -1);
+      const y = ground - fighter.y;
+      this.animation.transform(ctx, fighter, state, fighter.x, y);
+      this.animation.draw(ctx, fighter, state);
+      ctx.restore();
+    }
+
     drawGhosts() {
       const { ctx } = this;
       const { x: originX, y: originY } = game.FighterAnimation.ORIGIN;
+      const size = game.FighterAnimation.SIZE;
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
       for (const ghost of this.ghosts) {
@@ -545,7 +597,13 @@
         ctx.translate(ghost.x + ghost.ox * ghost.face, ghost.y + ghost.oy);
         ctx.scale(ghost.face * ghost.sx, ghost.sy);
         ctx.rotate(ghost.rot);
-        ctx.drawImage(ghost.canvas, -originX, -originY);
+        ctx.drawImage(
+          ghost.canvas,
+          -originX,
+          -originY,
+          size.width,
+          size.height,
+        );
         ctx.restore();
       }
       ctx.restore();

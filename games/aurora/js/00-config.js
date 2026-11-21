@@ -143,9 +143,10 @@ const WEAPONS = {
 };
 
 /* ---------- 3. 幹員 ----------
- *  look 是外觀設定，會交給 04-models.js 的 Models.character() 來產生模型：
+ *  look 是外觀設定，會交給 05-character-models.js 的 CharModels.create() 來產生模型：
  *    suit   衣服主色     armor  護甲色     accent 發光色
  *    helmet 頭盔樣式     bulk   體型倍率   pads / pack 是否有護肩／背包
+ *    gear   專屬配件：radio 通訊與攝影機、jets 推進器、cloak 披風、exo 外骨骼與彈鏈、bandolier 榴彈彈帶
  */
 const OPERATORS = [
   {
@@ -154,7 +155,7 @@ const OPERATORS = [
     hp: 100, armor: 50, speed: 1.0, grenades: 2,
     weapons: ["ar", "shotgun", "pistol"],
     skill: { id: "heal", name: "戰地急救", desc: "立刻回復 35 生命，接著 5 秒內持續回復共 45。", cooldown: 26, duration: 5 },
-    look: { suit: 0x2b3a4a, armor: 0x1a222b, accent: 0x35d6ff, helmet: "tactical", bulk: 1.0, pads: true, pack: true },
+    look: { suit: 0x2b3a4a, armor: 0x1a222b, accent: 0x35d6ff, helmet: "tactical", bulk: 1.0, pads: true, pack: true, gear: "radio" },
     stats: { 火力: 7, 機動: 6, 防護: 6, 射程: 6 },
   },
   {
@@ -163,7 +164,7 @@ const OPERATORS = [
     hp: 85, armor: 25, speed: 1.14, grenades: 2,
     weapons: ["smg", "plasma", "pistol"],
     skill: { id: "dash", name: "相位衝刺", desc: "朝移動方向瞬間位移，位移中不會受傷，並獲得 3 秒加速。", cooldown: 11, duration: 3 },
-    look: { suit: 0x3a2b52, armor: 0x20182e, accent: 0xb46bff, helmet: "visor", bulk: 0.92, pads: false, pack: false },
+    look: { suit: 0x3a2b52, armor: 0x20182e, accent: 0xb46bff, helmet: "visor", bulk: 0.92, pads: false, pack: false, gear: "jets" },
     stats: { 火力: 6, 機動: 10, 防護: 3, 射程: 5 },
   },
   {
@@ -172,7 +173,7 @@ const OPERATORS = [
     hp: 90, armor: 25, speed: 1.0, grenades: 1,
     weapons: ["sniper", "smg", "pistol"],
     skill: { id: "scan", name: "脈衝掃描", desc: "8 秒內透視標記所有敵人，對被標記目標的傷害提高 20%。", cooldown: 30, duration: 8 },
-    look: { suit: 0x39403a, armor: 0x222722, accent: 0x7dff9a, helmet: "hood", bulk: 0.96, pads: false, pack: true },
+    look: { suit: 0x39403a, armor: 0x222722, accent: 0x7dff9a, helmet: "hood", bulk: 0.96, pads: false, pack: true, gear: "cloak" },
     stats: { 火力: 9, 機動: 5, 防護: 3, 射程: 10 },
   },
   {
@@ -181,7 +182,7 @@ const OPERATORS = [
     hp: 130, armor: 100, speed: 0.9, grenades: 2,
     weapons: ["lmg", "launcher", "pistol"],
     skill: { id: "shield", name: "力場護盾", desc: "立刻補滿護甲，6 秒內受到的傷害降低 60%。", cooldown: 32, duration: 6 },
-    look: { suit: 0x4a3b2b, armor: 0x2b2118, accent: 0xffa23d, helmet: "heavy", bulk: 1.16, pads: true, pack: true },
+    look: { suit: 0x4a3b2b, armor: 0x2b2118, accent: 0xffa23d, helmet: "heavy", bulk: 1.16, pads: true, pack: true, gear: "exo" },
     stats: { 火力: 8, 機動: 3, 防護: 10, 射程: 6 },
   },
   {
@@ -190,7 +191,7 @@ const OPERATORS = [
     hp: 95, armor: 50, speed: 1.02, grenades: 3,
     weapons: ["plasma", "launcher", "pistol"],
     skill: { id: "strike", name: "軌道打擊", desc: "標定準星所指位置，1.4 秒後落下高能光束，造成大範圍爆炸。", cooldown: 34, duration: 0 },
-    look: { suit: 0x4a2b36, armor: 0x2a1820, accent: 0xff5a8a, helmet: "visor", bulk: 1.0, pads: true, pack: false },
+    look: { suit: 0x4a2b36, armor: 0x2a1820, accent: 0xff5a8a, helmet: "visor", bulk: 1.0, pads: true, pack: false, gear: "bandolier" },
     stats: { 火力: 10, 機動: 6, 防護: 5, 射程: 7 },
   },
 ];
@@ -221,12 +222,12 @@ const ENEMY_TYPES = {
   heavy: {
     id: "heavy", name: "重裝兵", hp: 240, armor: 100, speed: 0.72, weapon: "lmg", role: "heavy", aim: 0.9,
     score: 300, scale: 1.18,
-    look: { suit: 0x3a3030, armor: 0x1b1616, accent: 0xff3030, helmet: "heavy", bulk: 1.22, pads: true, pack: true },
+    look: { suit: 0x3a3030, armor: 0x1b1616, accent: 0xff3030, helmet: "heavy", bulk: 1.22, pads: true, pack: true, gear: "exo" },
   },
   elite: {
     id: "elite", name: "菁英獵兵", hp: 170, armor: 70, speed: 1.05, weapon: "plasma", role: "assault",
     aim: 1.3, score: 260, scale: 1.05,
-    look: { suit: 0x1c2b3d, armor: 0x101822, accent: 0x4dfcff, helmet: "visor", bulk: 1.05, pads: true, pack: true },
+    look: { suit: 0x1c2b3d, armor: 0x101822, accent: 0x4dfcff, helmet: "visor", bulk: 1.05, pads: true, pack: true, gear: "jets" },
   },
   drone: {
     id: "drone", name: "獵殺無人機", hp: 45, armor: 0, speed: 1.15, weapon: "plasma", role: "drone",

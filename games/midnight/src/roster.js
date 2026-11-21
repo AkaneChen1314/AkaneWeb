@@ -386,29 +386,51 @@
     ],
   };
 
+  /* 電腦難度（ai.js 使用）：
+       think      多久想一次：[最短, 額外的隨機範圍] 秒
+       reactTime  看到對手出招後，隔多久才反應：[最快, 最慢] 秒
+       react      注意到飛行道具、陷阱、被投與被連段的機率
+       guard      願意防禦的程度（實際防禦機率約為它的兩倍）
+       confirm    打中後接連段的機率
+       punish     看到對手揮空會懲罰的機率
+       antiAir    對手跳進來時會對空的機率
+       perfect    抓準時機打出精準防禦的機率
+       aggression 主動進攻的程度 */
   game.DIFFICULTY = {
     easy: {
       label: "簡單",
-      think: [0.26, 0.22],
-      react: 0.35,
-      guard: 0.14,
-      confirm: 0.1,
-      aggression: 0.8,
+      think: [0.32, 0.3],
+      reactTime: [0.34, 0.55],
+      react: 0.3,
+      guard: 0.09,
+      confirm: 0.08,
+      punish: 0.06,
+      antiAir: 0.08,
+      perfect: 0,
+      aggression: 0.62,
     },
     normal: {
       label: "普通",
       think: [0.14, 0.17],
+      reactTime: [0.19, 0.32],
       react: 0.72,
       guard: 0.29,
       confirm: 0.45,
+      punish: 0.5,
+      antiAir: 0.45,
+      perfect: 0.05,
       aggression: 1,
     },
     hard: {
       label: "困難",
       think: [0.07, 0.08],
+      reactTime: [0.11, 0.2],
       react: 0.9,
       guard: 0.42,
       confirm: 0.85,
+      punish: 0.85,
+      antiAir: 0.8,
+      perfect: 0.22,
       aggression: 1.15,
     },
   };

@@ -1612,6 +1612,169 @@ dialog::backdrop {
   }
 }
 
+/* ---------- r15：受擊回饋、結算戰績、觸控十字鍵、手機橫放版面 ---------- */
+
+/* 被打中時，頭像閃白、血條左右抖一下 */
+.fighter-hud.hurt .hud-portrait {
+  animation: hud-hurt 0.3s ease-out;
+}
+.fighter-hud.hurt .health {
+  animation: hud-shake 0.3s ease-out;
+}
+@keyframes hud-hurt {
+  0% {
+    filter: brightness(2.4) saturate(0.4);
+    transform: scale(1.1);
+  }
+  100% {
+    filter: none;
+    transform: none;
+  }
+}
+@keyframes hud-shake {
+  0%,
+  100% {
+    transform: none;
+  }
+  25% {
+    transform: translateX(-0.5cqw);
+  }
+  50% {
+    transform: translateX(0.4cqw);
+  }
+  75% {
+    transform: translateX(-0.2cqw);
+  }
+}
+
+/* 結算畫面的戰績表：左右是雙方的數字，中間是項目 */
+.result-stats {
+  width: 100%;
+  margin-block: 0 16px;
+  border-collapse: collapse;
+  font-size: clamp(12px, 1.6cqw, 15px);
+  font-variant-numeric: tabular-nums;
+}
+.result-stats th,
+.result-stats td {
+  padding: 3px 8px;
+  border-bottom: 1px solid var(--color-rule);
+}
+.result-stats thead th {
+  color: var(--color-ink);
+  font-weight: 700;
+}
+.result-stats tbody th {
+  color: var(--color-muted);
+  font-weight: 400;
+}
+.result-stats td[data-best="true"] {
+  color: var(--color-accent-bright);
+  font-weight: 700;
+}
+
+/* 觸控方向鍵排成十字：跳在上、蹲在下、左右在兩側 */
+.touch-group.move {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    ". jump ."
+    "left crouch right";
+}
+.touch-group.move [data-action="jump"] {
+  grid-area: jump;
+}
+.touch-group.move [data-action="left"] {
+  grid-area: left;
+}
+.touch-group.move [data-action="right"] {
+  grid-area: right;
+}
+.touch-group.move [data-action="crouch"] {
+  grid-area: crouch;
+}
+.touch-button {
+  min-height: 48px;
+}
+
+/* 手機橫放：對戰畫面佔滿整個螢幕，操作鈕半透明地疊在畫面下方兩側 */
+@media (orientation: landscape) and (max-height: 520px) {
+  body:has(#battle-screen:not([hidden])) .site-header {
+    display: none;
+  }
+  main:has(#battle-screen:not([hidden])) {
+    width: 100%;
+    padding: 0;
+  }
+  #battle-screen {
+    width: min(100vw, calc(100dvh * 1.77778));
+    margin-inline: auto;
+  }
+  /* 暫停鈕縮小，放在畫面底部正中央（左右兩組操作鈕之間） */
+  #battle-screen .battle-heading {
+    position: fixed;
+    z-index: 6;
+    bottom: 6px;
+    left: 50%;
+    margin: 0;
+    transform: translateX(-50%);
+  }
+  #battle-screen .battle-heading > div {
+    display: none;
+  }
+  #battle-screen .battle-heading button {
+    padding: 4px 12px;
+    font-size: 12px;
+    opacity: 0.75;
+  }
+  #battle-screen .battle-heading kbd {
+    display: none;
+  }
+  /* 能量條移到生命條下方，才不會被操作鈕蓋住；冷卻秒數改看按鈕上的數字 */
+  #battle-screen .power-hud {
+    top: 10.5cqw;
+    bottom: auto;
+    background: none;
+  }
+  #battle-screen .power-hud .cooldowns {
+    display: none;
+  }
+  #battle-screen .arena {
+    border: 0;
+  }
+  .touch-controls:not(:empty):has(.touch-pad:only-child) {
+    position: fixed;
+    z-index: 5;
+    inset: auto 0 0;
+    display: block;
+    margin: 0;
+    pointer-events: none;
+  }
+  .touch-controls:has(.touch-pad:only-child) .touch-pad {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    padding: 0 max(8px, env(safe-area-inset-right)) 8px
+      max(8px, env(safe-area-inset-left));
+  }
+  .touch-controls:has(.touch-pad:only-child) .touch-group {
+    gap: 6px;
+    pointer-events: auto;
+  }
+  .touch-controls:has(.touch-pad:only-child) .touch-group.move {
+    width: 168px;
+  }
+  .touch-controls:has(.touch-pad:only-child) .touch-group.actions {
+    width: 232px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .touch-controls:has(.touch-pad:only-child) .touch-button {
+    min-height: 44px;
+    font-size: 12px;
+    background: color-mix(in srgb, var(--color-paper-2) 62%, transparent);
+    backdrop-filter: blur(3px);
+  }
+}
+
 /* 網站版沿用自託管中文字型；遊戲配色與控制配置保留。 */
 :root {
   --font: "Akane Sans", sans-serif;

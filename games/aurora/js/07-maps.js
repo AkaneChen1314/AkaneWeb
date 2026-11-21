@@ -32,7 +32,10 @@ class MapKit {
 
   // 實體方塊：(x, z) 是中心、y0 是底部高度。o.ghost = true 表示只有外觀沒有碰撞
   solid(x, y0, z, w, h, d, o = {}) {
-    this.b.box(w, h, d, { p: [x, y0 + h / 2, z], c: o.c ?? this.pal.wall, m: o.m || "wall", e: o.e });
+    const m = o.m || "wall";
+    // 牆面和飾板的底部稍微加深，牆腳才有「貼著地面」的陰影感（玻璃、發光體與矮平台不加）
+    const ao = o.ao ?? ((m === "wall" || m === "trim") && h >= 1 ? 0.3 : 0);
+    this.b.box(w, h, d, { p: [x, y0 + h / 2, z], c: o.c ?? this.pal.wall, m, e: o.e, ao });
     if (!o.ghost) World.addBox(x, y0 + h / 2, z, w, h, d, { noWalk: o.noWalk });
   }
 
@@ -143,9 +146,20 @@ class MapKit {
     // 每個角落是一個「L」形：一段沿 X、一段沿 Z。沿 Z 那段扣掉轉角的 0.4 公尺，
     // 兩段才不會重疊（重疊的面在同一平面上會一閃一閃）
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      const zRun = z + sz * (d / 2 - 0.4 - (pl - 0.4) / 2); // 沿 Z 那一段的中心
       this.solid(x + sx * (w / 2 - pl / 2), h, z + sz * (d / 2 - 0.2), pl, 1.0, 0.4, { c: pal.wall2, noWalk: true });
-      this.solid(x + sx * (w / 2 - 0.2), h, z + sz * (d / 2 - 0.4 - (pl - 0.4) / 2), 0.4, 1.0, pl - 0.4, { c: pal.wall2, noWalk: true });
+      this.solid(x + sx * (w / 2 - 0.2), h, zRun, 0.4, 1.0, pl - 0.4, { c: pal.wall2, noWalk: true });
+      // 女兒牆的壓頂：兩段的高度與寬度都錯開一點，轉角處的面才不會疊在同一平面
+      this.b.box(pl + 0.06, 0.06, 0.46, {
+        p: [x + sx * (w / 2 - pl / 2), h + 1.03, z + sz * (d / 2 - 0.2)], c: pal.dark, m: "trim",
+      });
+      this.b.box(0.44, 0.05, pl - 0.4, { p: [x + sx * (w / 2 - 0.2), h + 1.025, zRun], c: pal.dark, m: "trim" });
+      // 轉角的壁柱：比牆面凸出 4 公分，從基座一路到屋簷下
+      this.b.box(0.5, h - 0.14, 0.5, {
+        p: [x + sx * (w / 2 - 0.21), (h - 0.14) / 2, z + sz * (d / 2 - 0.21)], c: pal.wall2, m: "wall", ao: 0.3,
+      });
     }
+    this.b.box(w + 0.05, 0.1, d + 0.05, { p: [x, 1.05, z], c: pal.dark, m: "trim" }); // 窗台下的腰線
     // 屋頂設備：冷氣外機
     if (w > 8 && d > 8) {
       const ax = x + (rnd() - 0.5) * (w - 7), az = z + (rnd() - 0.5) * (d - 7);
@@ -175,9 +189,18 @@ class MapKit {
           const p = f.ax === "x" ? [t, y, f.fixed] : [f.fixed, y, t];
           const size = f.ax === "x" ? [1.3, 1.0, 0.06] : [0.06, 1.0, 1.3];
           this.b.box(size[0], size[1], size[2], { p, ...opt });
-          // 窗框
-          const frame = f.ax === "x" ? [1.46, 0.08, 0.1] : [0.1, 0.08, 1.46];
-          this.b.box(frame[0], frame[1], frame[2], { p: [p[0], y - 0.55, p[2]], c: pal.dark, m: "trim" });
+          // 窗框：下緣窗台、上緣窗楣、左右邊框（每一件凸出的深度都不同，面才不會重疊）
+          const alongX = f.ax === "x";
+          const bar = (len, tall, deep, dt, dy) => {
+            const bp = alongX ? [p[0] + dt, y + dy, p[2]] : [p[0], y + dy, p[2] + dt];
+            this.b.box(alongX ? len : deep, tall, alongX ? deep : len, { p: bp, c: pal.dark, m: "trim" });
+          };
+          bar(1.46, 0.08, 0.1, 0, -0.55);
+          bar(1.42, 0.07, 0.09, 0, 0.54);
+          bar(0.07, 1.02, 0.08, -0.69, 0);
+          bar(0.07, 1.02, 0.08, 0.69, 0);
+          if (lit) bar(1.3, 0.04, 0.07, 0, 0.22); // 亮著的窗：半拉下來的百葉窗
+          else bar(0.05, 1.0, 0.075, 0, 0); // 暗著的窗：中間一條直框
         }
       }
     }
@@ -215,6 +238,16 @@ class MapKit {
       this.b.box(s + 0.02, e, e, { p: [x, y, z + sd * (s / 2 - e / 2 + 0.01)], c: dk, m: "trim" });
       this.b.box(e - 0.008, e - 0.008, s + 0.01, { p: [x + sd * (s / 2 - e / 2 + 0.01), y, z], c: dk, m: "trim" });
     }
+    // 四個側面各兩道橫板縫，其中一面貼一張淺色的貨運標籤；箱蓋上一道十字束帶
+    for (const sd of [-1, 1]) {
+      for (const fy of [0.36, 0.66]) {
+        this.b.box(s - 2 * e, 0.025, 0.012, { p: [x, y0 + s * fy, z + sd * (s / 2 + 0.004)], c: dk, m: "trim" });
+        this.b.box(0.012, 0.025, s - 2 * e, { p: [x + sd * (s / 2 + 0.004), y0 + s * fy, z], c: dk, m: "trim" });
+      }
+    }
+    this.b.box(0.012, s * 0.2, s * 0.26, { p: [x + s / 2 + 0.006, y0 + s * 0.5, z - s * 0.12], c: 0xc9c2b0, m: "matte" });
+    this.b.box(s - 2 * e, 0.012, 0.07, { p: [x, y0 + s + 0.006, z], c: dk, m: "trim" });
+    this.b.box(0.07, 0.01, s - 2 * e, { p: [x, y0 + s + 0.005, z], c: dk, m: "trim" });
     if (o.glow) this.b.box(s * 0.4, 0.06, 0.02, { p: [x, y0 + s * 0.6, z + s / 2 + 0.012], c: o.glow, m: "glow" });
   }
 
@@ -231,9 +264,21 @@ class MapKit {
     const along = dir % 2 === 0; // true = 沿 X 軸擺放
     const [w, d] = along ? [2.6, 0.6] : [0.6, 2.6];
     World.addBox(x, 0.525, z, w, 1.05, d);
-    this.b.box(w, 0.35, d, { p: [x, 0.175, z], c: 0x9a9da1, m: "wall" });
+    this.b.box(w, 0.35, d, { p: [x, 0.175, z], c: 0x9a9da1, m: "wall", ao: 0.35 });
+    // 底座與上半之間的斜肩（比底座窄、比上半寬，看起來不會像兩塊積木疊在一起）
+    this.b.box(along ? w - 0.02 : 0.47, 0.12, along ? 0.47 : d - 0.02, { p: [x, 0.4, z], c: 0xa2a5a9, m: "wall" });
     this.b.box(along ? w : 0.34, 0.7, along ? 0.34 : d, { p: [x, 0.7, z], c: 0xa9acb0, m: "wall" });
-    this.b.box(along ? w + 0.01 : 0.36, 0.14, along ? 0.36 : d + 0.01, { p: [x, 0.86, z], c: this.pal.hazard ?? 0xd9a520 }); // 警示色帶
+    // 警示色帶
+    this.b.box(along ? w + 0.01 : 0.36, 0.14, along ? 0.36 : d + 0.01, { p: [x, 0.86, z], c: this.pal.hazard ?? 0xd9a520 });
+    for (const s of [-1, 1]) {
+      // 兩面各兩顆反光片，底座兩端各一個吊掛孔
+      for (const t of [-0.7, 0.7]) {
+        const px = along ? x + t : x + s * 0.176, pz = along ? z + s * 0.176 : z + t;
+        this.b.box(along ? 0.16 : 0.012, 0.08, along ? 0.012 : 0.16, { p: [px, 0.62, pz], c: 0xff5a2a, m: "glow", e: 0.9 });
+      }
+      const hx = along ? x + s * 0.9 : x, hz = along ? z : z + s * 0.9;
+      this.b.box(along ? 0.3 : d + 0.012, 0.1, along ? d + 0.012 : 0.3, { p: [hx, 0.06, hz], c: 0x2a2c30, m: "matte" });
+    }
   }
 
   // 沙包牆：沿 dir 方向排 len 公尺
@@ -256,48 +301,56 @@ class MapKit {
     }
   }
 
-  // 貨櫃（6 × 2.6 × 2.4 公尺）；dir 偶數沿 X、奇數沿 Z；y0 > 0 可疊第二層
+  /* 貨櫃（6 × 2.6 × 2.4 公尺）；dir 偶數沿 X、奇數沿 Z；y0 > 0 可疊第二層。
+   * 疊第二層時請放在「同一個位置」（或整個落在下層上面），不要只搭一半，否則看起來會懸空。
+   * 外觀：烤漆箱體、兩個長邊的波浪板、八個角件、上下邊框、門端的兩扇門與鎖桿、側面的小編號牌。 */
   container(x, z, dir, color, y0 = 0) {
     const along = dir % 2 === 0;
     const [w, d] = along ? [6, 2.4] : [2.4, 6];
     const h = 2.6;
-    this.solid(x, y0, z, w, h, d, { c: color, m: "trim" });
+    const b = this.b;
     const dk = this.pal.dark;
-    // 四根角柱與上下邊框
+    // 波浪板的凹槽色：比箱體暗一點
+    const shade = ((((color >> 16) & 255) * 0.72) << 16) | ((((color >> 8) & 255) * 0.72) << 8) | ((color & 255) * 0.72);
+    this.solid(x, y0, z, w, h, d, { c: color, m: "paint", ao: 0.35 });
+
+    // 長邊的波浪板：一條一條凸起的直肋（只凸出 2.5 公分，不影響碰撞）
+    const len = along ? w : d;
+    for (let t = -len / 2 + 0.45; t < len / 2 - 0.3; t += 0.3) {
+      for (const s of [-1, 1]) {
+        const px = along ? x + t : x + s * (w / 2 + 0.012);
+        const pz = along ? z + s * (d / 2 + 0.012) : z + t;
+        b.box(along ? 0.14 : 0.025, h - 0.36, along ? 0.025 : 0.14, { p: [px, y0 + h / 2, pz], c: shade, m: "paint", ao: 0.3 });
+      }
+    }
+    // 四根角柱：外緣和上下框錯開 5 公釐（在同一平面疊在一起會閃爍）
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-      // 角柱外緣和上下框錯開 5 公釐（原本和框在同一平面，疊在一起會閃爍）
-      this.b.box(
-        0.17,
-        h + 0.04,
-        0.17,
-        { p: [x + sx * (w / 2 - 0.06), y0 + h / 2, z + sz * (d / 2 - 0.06)], c: dk, m: "metal" }
-      );
+      const cx = x + sx * (w / 2 - 0.06), cz = z + sz * (d / 2 - 0.06);
+      b.box(0.17, h + 0.04, 0.17, { p: [cx, y0 + h / 2, cz], c: dk, m: "metal" });
+      // 上下各一個角件（吊掛與堆疊用的方塊）
+      for (const y of [0.11, h - 0.11]) b.box(0.24, 0.2, 0.24, { p: [cx, y0 + y, cz], c: 0x8a9099, m: "metal" });
     }
     // 下框比上框窄 2 公分：疊兩層時，下層的上框和上層的下框才不會在同一平面閃爍
-    this.b.box(w + 0.04, 0.14, d + 0.04, { p: [x, y0 + 0.06, z], c: dk, m: "metal" });
-    this.b.box(w + 0.06, 0.14, d + 0.06, { p: [x, y0 + h - 0.06, z], c: dk, m: "metal" });
-    // 貨櫃門：兩道門縫與四根鎖桿（在其中一端）
+    b.box(w + 0.04, 0.14, d + 0.04, { p: [x, y0 + 0.06, z], c: dk, m: "metal" });
+    b.box(w + 0.06, 0.14, d + 0.06, { p: [x, y0 + h - 0.06, z], c: dk, m: "metal" });
+
+    // 門端：中間的門縫、四根鎖桿與把手、門框下緣的警示帶
     const ex = along ? w / 2 + 0.02 : 0, ez = along ? 0 : d / 2 + 0.02;
+    b.box(along ? 0.03 : 0.05, h - 0.3, along ? 0.05 : 0.03, { p: [x + ex, y0 + h / 2, z + ez], c: dk, m: "metal" });
     for (const t of [-0.75, -0.25, 0.25, 0.75]) {
-      this.b.cyl(
-        0.03,
-        0.03,
-        h - 0.4,
-        { p: [x + ex + (along ? 0.02 : t), y0 + h / 2, z + ez + (along ? t : 0.02)], c: 0xb0b4b8, m: "metal", seg: 6 }
-      );
+      const px = x + ex + (along ? 0.02 : t), pz = z + ez + (along ? t : 0.02);
+      b.cyl(0.03, 0.03, h - 0.4, { p: [px, y0 + h / 2, pz], c: 0xb0b4b8, m: "metal", seg: 6 });
+      b.box(along ? 0.05 : 0.22, 0.05, along ? 0.22 : 0.05, { p: [px, y0 + 1.15, pz], c: 0x8a9099, m: "metal" });
     }
-    // 側面的編號發光牌
-    this.b.box(
-      along ? 1.4 : 0.03,
-      0.3,
-      along ? 0.03 : 1.4,
-      {
-        p: [x + (along ? -1.5 : w / 2 + 0.02), y0 + h - 0.5, z + (along ? d / 2 + 0.02 : -1.5)],
-        c: this.pal.accent2,
-        m: "glow",
-        e: 0.8
-      }
-    );
+    b.box(along ? 0.03 : d - 0.3, 0.14, along ? d - 0.3 : 0.03, {
+      p: [x + ex, y0 + 0.24, z + ez], c: this.pal.hazard ?? 0xd9a520, m: "paint",
+    });
+
+    // 側面右上角的編號牌：深色底板加一小條識別燈（不再是一大塊發光的黃色）
+    const tx = x + (along ? w / 2 - 1.0 : w / 2 + 0.03), tz = z + (along ? d / 2 + 0.03 : d / 2 - 1.0);
+    b.box(along ? 1.1 : 0.03, 0.42, along ? 0.03 : 1.1, { p: [tx, y0 + h - 0.55, tz], c: 0x0c0d10 });
+    b.box(along ? 0.8 : 0.036, 0.07, along ? 0.036 : 0.8, { p: [tx, y0 + h - 0.47, tz], c: this.pal.accent2, m: "glow", e: 1.1 });
+    b.box(along ? 0.5 : 0.036, 0.05, along ? 0.036 : 0.5, { p: [tx, y0 + h - 0.62, tz], c: 0xd8dee8, m: "paint" });
   }
 
   // 柱子：方形實體 + 發光環
@@ -439,7 +492,7 @@ class MapKit {
   // 能量屏障：半透明的實體牆（擋子彈也擋人）
   energyWall(x, z, w, d, h, color) {
     World.addBox(x, h / 2, z, w, h, d, { noWalk: true });
-    this.b.box(w, h, d, { p: [x, h / 2, z], c: color, m: "glass" });
+    this.b.box(w, h, d, { p: [x, h / 2, z], c: color, m: "pane" });
     this.b.box(w + 0.1, 0.25, d + 0.1, { p: [x, 0.125, z], c: this.pal.dark, m: "metal" });
     this.b.box(w + 0.04, 0.06, d + 0.04, { p: [x, 0.28, z], c: color, m: "glow", e: 2 });
     this.b.box(w + 0.04, 0.06, d + 0.04, { p: [x, h, z], c: color, m: "glow", e: 2 });
@@ -760,7 +813,7 @@ class MapKit {
   dome(x, z, r, color) {
     const b = this.b;
     b.cyl(r, r + 0.3, 1.2, { p: [x, 0.6, z], c: this.pal.wall2, m: "metal", seg: 24 });
-    b.sphere(r * 0.98, { p: [x, 1.2, z], s: [1, 0.8, 1], c: 0x9ff4ff, m: "glass", seg: 28 });
+    b.sphere(r * 0.98, { p: [x, 1.2, z], s: [1, 0.8, 1], c: 0x9ff4ff, m: "pane", seg: 28 });
     for (let i = 0; i < 4; i++) {
       b.torus(r, 0.07, { p: [x, 1.2, z], r: [0, (i / 4) * Math.PI, 0], s: [1, 0.8, 1], c: this.pal.dark, m: "metal", seg: 28, arc: Math.PI });
     }
@@ -1034,9 +1087,18 @@ class MapKit {
   // 從上方照下來的光束（半透明的發光圓錐），亮度會慢慢起伏
   lightShaft(x, z, r, h, color) {
     const mat = new THREE.MeshBasicMaterial({
-      color, transparent: true, opacity: 0.06, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false,
+      color, transparent: true, opacity: 0.06, blending: THREE.AdditiveBlending, depthWrite: false,
+      side: THREE.DoubleSide, toneMapped: false, vertexColors: true,
     });
-    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.5, r, h, 20, 1, true), mat);
+    const geo = new THREE.CylinderGeometry(r * 0.5, r, h, 20, 1, true);
+    // 頂點顏色：上面亮、靠近海床的那一圈只剩兩成，光束才不會在地上切出一圈硬邊
+    const pos = geo.attributes.position, shade = [];
+    for (let i = 0; i < pos.count; i++) {
+      const k = pos.getY(i) > 0 ? 1 : 0.2;
+      shade.push(k, k, k);
+    }
+    geo.setAttribute("color", new THREE.Float32BufferAttribute(shade, 3));
+    const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(x, h / 2, z);
     mesh.rotation.z = (this.rnd() - 0.5) * 0.25;
     mesh.userData.ownMaterial = true;
@@ -1103,11 +1165,35 @@ class MapKit {
     const w = along ? len : width, d = along ? width : len;
     World.addBox(x, h - 0.15, z, w, 0.3, d, { noWalk: true });
     this.b.box(w, 0.3, d, { p: [x, h - 0.15, z], c: this.pal.floor, m: "floor" });
-    this.b.box(w + 0.02, 0.06, d + 0.02, { p: [x, h - 0.33, z], c: color, m: "glow", e: 1.4 }); // 橋底的光條
+    // 橋底：深色底板，兩側各一條細光條、中間一條更細的導引燈，每 4 公尺一道橫肋。
+    // （原本整片橋底都在發光，從橋下往上看是一大塊刺眼的色塊）
+    this.b.box(w + 0.02, 0.06, d + 0.02, { p: [x, h - 0.33, z], c: this.pal.dark, m: "trim" });
+    this.b.box(along ? len - 0.4 : 0.08, 0.03, along ? 0.08 : len - 0.4, {
+      p: [x, h - 0.465, z], c: color, m: "glow", e: 1.1,
+    });
+    for (const s of [-1, 1]) {
+      const off = s * (width / 2 - 0.06);
+      this.b.box(along ? len : 0.16, 0.04, along ? 0.16 : len, {
+        p: [along ? x : x + off, h - 0.37, along ? z + off : z], c: color, m: "glow", e: 1.6,
+      });
+    }
+    for (let t = -len / 2 + 2; t < len / 2; t += 4) {
+      this.b.box(along ? 0.2 : width, 0.1, along ? width : 0.2, {
+        p: [along ? x + t : x, h - 0.4, along ? z + t : z], c: this.pal.dark, m: "metal",
+      });
+    }
     for (const s of [-1, 1]) {
       const rx = along ? x : x + s * (width / 2 - 0.06), rz = along ? z + s * (width / 2 - 0.06) : z;
       World.addBox(rx, h + 0.55, rz, along ? len : 0.1, 1.1, along ? 0.1 : len, { noWalk: true });
-      this.b.box(along ? len : 0.05, 1.0, along ? 0.05 : len, { p: [rx, h + 0.5, rz], c: 0x9fd8ff, m: "glass" });
+      this.b.box(along ? len : 0.05, 1.0, along ? 0.05 : len, { p: [rx, h + 0.5, rz], c: 0x9fd8ff, m: "pane" });
+      // 每 3.8 公尺左右一根立柱，把整面玻璃分成一片一片的欄板
+      const posts = Math.max(2, Math.round(len / 3.8));
+      for (let i = 0; i <= posts; i++) {
+        const t = -len / 2 + 0.04 + (i / posts) * (len - 0.08);
+        this.b.box(0.07, 1.02, 0.07, {
+          p: [along ? x + t : rx, h + 0.51, along ? rz : z + t], c: this.pal.dark, m: "metal",
+        });
+      }
       this.b.box(along ? len : 0.1, 0.06, along ? 0.1 : len, { p: [rx, h + 1.05, rz], c: color, m: "glow", e: 1.6 });
     }
   }
@@ -1167,6 +1253,7 @@ const Maps = {
         wall: { tex: "panel", scale: 5, rough: 0.45, metal: 0.4 },
         floor: { tex: "hex", scale: 3, rough: 0.5, metal: 0.35 },
         trim: { tex: "metal", scale: 3, rough: 0.4, metal: 0.7 },
+        pane: 0.7,
       },
       pal: {
         ground: 0x262a36, wall: 0x2a3244, wall2: 0x222838, floor: 0x48526a, dark: 0x10131a,
@@ -1202,6 +1289,15 @@ const Maps = {
           b.box(4.62, 0.05, 2.02, { p: [0, 0.22, 0], c: A1, m: "glow", e: 1.6 }); // 腰線燈
           b.box(0.05, 0.12, 1.6, { p: [2.31, 0.4, 0], c: 0xfff2c4, m: "glow", e: 3 }); // 頭燈
           b.box(0.05, 0.1, 1.7, { p: [-2.31, 0.45, 0], c: 0xff2040, m: "glow", e: 3 }); // 尾燈
+          b.box(0.9, 0.035, 1.5, { p: [0.72, 1.0, 0], r: [0, 0, -0.42], c: 0x1e2a44, m: "metal" }); // 擋風玻璃的反光
+          b.box(0.5, 0.05, 1.9, { p: [-2.0, 0.78, 0], c: 0x0c1220, m: "metal" }); // 尾翼
+          for (const sz of [-1, 1]) {
+            b.box(0.5, 0.2, 0.06, { p: [-1.9, 0.68, sz * 0.86], c: 0x0c1220, m: "metal" }); // 尾翼支架
+            b.box(0.03, 0.42, 0.012, { p: [0.15, 0.4, sz * 1.004], c: 0x0c1220 }); // 車門縫
+            b.box(1.1, 0.03, 0.012, { p: [-0.42, 0.56, sz * 1.004], c: 0x0c1220 });
+            b.rbox(0.16, 0.08, 0.14, 0.03, { p: [0.95, 0.72, sz * 1.02], c: color }); // 後視鏡
+          }
+          b.box(0.6, 0.05, 0.9, { p: [-0.3, 1.12, 0], c: 0x1a1e28, m: "metal" }); // 車頂的感測器蓋
           for (const sx of [-1.5, 1.5]) for (const sz of [-0.75, 0.75]) { // 四個懸浮推進器
             b.cyl(0.28, 0.32, 0.12, { p: [sx, 0.04, sz], c: 0x1a1e28, m: "metal", seg: 12 });
             b.cyl(0.2, 0.2, 0.02, { p: [sx, -0.03, sz], c: A1, m: "glow", e: 3, seg: 12 });
@@ -1249,7 +1345,7 @@ const Maps = {
         k.solid(0, 0, 0, 7, 0.35, 7, { c: P.floor, m: "floor" }); // 光塔底座（很矮，可以直接走上去）
         k.solid(0, 0.35, 0, 2.6, 7.5, 2.6, { c: 0x141a26, m: "metal", noWalk: true });
         for (let i = 0; i < 5; i++) { // 一節一節的玻璃與發光環
-          k.b.box(3.0, 0.9, 3.0, { p: [0, 1.4 + i * 1.4, 0], c: 0x9fe8ff, m: "glass" });
+          k.b.box(3.0, 0.9, 3.0, { p: [0, 1.4 + i * 1.4, 0], c: 0x9fe8ff, m: "pane" });
           k.b.box(3.05, 0.08, 3.05, { p: [0, 1.95 + i * 1.4, 0], c: i % 2 ? A2 : A1, m: "glow", e: 2 });
         }
         k.b.cone(1.4, 3, { p: [0, 9.4, 0], c: 0x141a26, m: "metal", seg: 4 });
@@ -1545,7 +1641,7 @@ const Maps = {
         for (const [x, z, w, d] of [[0, -s + 0.5, s * 2, 1], [0, s - 0.5, s * 2, 1], [-s + 0.5, 0, 1, s * 2 - 2], [s - 0.5, 0, 1, s * 2 - 2]]) {
           World.addBox(x, 4, z, w, 8, d, { noWalk: true });
           k.b.box(w, 1.2, d, { p: [x, 0.6, z], c: P.wall, m: "wall" });
-          k.b.box(w > d ? w - 0.04 : 0.3, 6.8, w > d ? 0.3 : d - 0.04, { p: [x, 4.6, z], c: 0x9fd8ff, m: "glass" });
+          k.b.box(w > d ? w - 0.04 : 0.3, 6.8, w > d ? 0.3 : d - 0.04, { p: [x, 4.6, z], c: 0x9fd8ff, m: "pane", uvScale: 9 });
           const side = w < d; // 左右兩面的頂框稍微窄一點，四個角落才不會重疊
           k.b.box(w + (side ? 0.06 : 0.1), 0.3, d + (side ? 0 : 0.1), { p: [x, 8.1 + (side ? 0.01 : 0), z], c: P.wall2, m: "trim" });
           k.b.box(w > d ? w - 0.1 : 1.04, 0.08, w > d ? 1.04 : d - 0.1, { p: [x, 1.25, z], c: A1, m: "glow", e: 1.6 });
@@ -1579,7 +1675,7 @@ const Maps = {
         k.lights.push({ x: 3, y: 4, z: 3, color: A1, power: 80 }, { x: -3, y: 4, z: -3, color: A2, power: 60 });
         // 高台四角的矮玻璃掩體
         for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-          k.solid(sx * 4.5, 1.5, sz * 4.5, 2.4, 1.0, 0.4, { c: 0x9fe8ff, m: "glass", noWalk: true });
+          k.solid(sx * 4.5, 1.5, sz * 4.5, 2.4, 1.0, 0.4, { c: 0x9fe8ff, m: "pane", noWalk: true });
           k.b.box(2.44, 0.06, 0.44, { p: [sx * 4.5, 2.52, sz * 4.5], c: A1, m: "glow", e: 2 });
         }
 
@@ -1605,7 +1701,7 @@ const Maps = {
           World.addBox(x, 1.6, 0, 4.2, 3.2, 13, { noWalk: true });
           const b = k.b;
           b.rbox(4.2, 2.8, 12, 1.0, { p: [x, 1.8, 0], c: P.wall }); // 機身
-          b.rbox(3.0, 1.2, 3, 0.5, { p: [x, 3.3, -3.5], c: 0x10223a, m: "glass" }); // 駕駛艙玻璃
+          b.rbox(3.0, 1.2, 3, 0.5, { p: [x, 3.3, -3.5], c: 0x10223a, m: "pane" }); // 駕駛艙玻璃
           b.box(12, 0.3, 4, { p: [x, 1.6, 1.5], r: [0, 0, sx * 0.05], c: P.wall2, m: "wall" }); // 機翼
           World.addBox(x, 1.6, 1.5, 12, 0.6, 4, { noWalk: true }); // 機翼與尾翼的碰撞
           for (const wx of [-1, 1]) World.addBox(x + wx * 5.8, 2.3, 2.2, 0.4, 1.6, 2.4, { noWalk: true });
@@ -1672,6 +1768,7 @@ const Maps = {
         wall: { tex: "metal", scale: 4, rough: 0.5, metal: 0.55 },
         floor: { tex: "hex", scale: 3, rough: 0.5, metal: 0.4 },
         trim: { tex: "rust", scale: 3, rough: 0.65, metal: 0.45 },
+        pane: 0.5,
       },
       pal: {
         ground: 0x3e5a58, wall: 0x6a7880, wall2: 0x4a565e, floor: 0x5a6a72, dark: 0x121c1e,
@@ -1732,7 +1829,7 @@ const Maps = {
               const sx0 = Util.lerp(x0, x1, a), sx1 = Util.lerp(x0, x1, b);
               const w = Math.abs(sx1 - sx0), mx = (sx0 + sx1) / 2;
               World.addBox(mx, 1.6, sz * 2.4, w, 3.2, 0.2, { noWalk: true });
-              k.b.box(w, 3.0, 0.08, { p: [mx, 1.6, sz * 2.4], c: 0x9ff4ff, m: "glass" });
+              k.b.box(w, 3.0, 0.08, { p: [mx, 1.6, sz * 2.4], c: 0x9ff4ff, m: "pane" });
               k.b.box(w - 0.04, 0.25, 0.3, { p: [mx, 0.125, sz * 2.4], c: P.wall2, m: "trim" });
             }
           }
@@ -1785,12 +1882,18 @@ const Maps = {
         k.b.pop();
         for (const x of [-8, -3, 4, 9]) k.coral(x, -25.2, [AQ, 0xff5aa8, SODIUM][Math.abs(x) % 3]);
         // 南邊：沉在海底的貨櫃堆
-        k.container(-6, 27, 0, 0x6a3a2a); k.container(6, 27.5, 0, 0x2a4a5a); k.container(-3, 27, 0, 0x4a5a3a, 2.6);
+        // 左邊疊兩層（上層和下層對齊），右邊單獨一個；中間留一條通道
+        k.container(-6, 27, 0, 0x8a4a34);
+        k.container(-6, 27, 0, 0x5a7a4a, 2.6);
+        k.container(6, 27.5, 0, 0x34647a);
         k.coral(-10, 25, 0xff5aa8); k.coral(10, 30, AQ);
 
         // ---- 暗礁、礦石與照明 ----
         const rock = (x, z, r) => {
-          k.b.sphere(r, { p: [x, r * 0.55, z], s: [1.2, 0.9, 1], r: [0, k.rnd() * 3, 0], c: 0x26302e, m: "matte", seg: 8 });
+          k.b.sphere(r, { p: [x, r * 0.55, z], s: [1.2, 0.9, 1], r: [0, k.rnd() * 3, 0], c: 0x26302e, m: "matte", seg: 10 });
+          // 頂上長著一層顏色較淺的藻，旁邊靠著一顆小石頭，輪廓比較不像一顆球
+          k.b.sphere(r * 0.8, { p: [x, r * 1.02, z], s: [1.15, 0.42, 0.95], c: 0x2e4a40, m: "matte", seg: 9 });
+          k.b.sphere(r * 0.45, { p: [x + r * 0.95, r * 0.26, z + r * 0.3], s: [1.1, 0.8, 1], c: 0x222c2a, m: "matte", seg: 7 });
           World.addBox(x, r * 0.6, z, r * 2.1, r * 1.2, r * 2.0); // 碰撞範圍包住整顆礁石（它會被隨機轉向）
         };
         rock(-14, -12, 1.6); rock(14, 12, 1.6); rock(-30, 8, 1.4); rock(30, -8, 1.4);
@@ -1840,7 +1943,10 @@ const Maps = {
     // 地面：一大片薄板（頂面在 y = 0）
     const s = def.half;
     kit.b.box(s * 2 + 240, 1, s * 2 + 240, { p: [0, -0.5, 0], c: def.pal.ground, m: "ground" });
+    kit.def = def; // 細節零件要知道補給、據點與出生點的位置，才能避開它們
     def.build(kit);
+    // 大結構蓋好之後再補細節（門、管線、街道家具、海底生物…），見 07b-map-details.js
+    if (MapDetails[def.id]) MapDetails[def.id](kit);
     kit.finish(); // 碎石與海草要等所有實體都登記好，才能避開它們
     group.add(kit.b.build());
 
@@ -1867,11 +1973,14 @@ const Maps = {
       anims.push(ex.update);
     }
 
-    // 點光源（數量有限制，太多會拖慢畫面）；火光會隨機閃爍
-    for (const L of kit.lights.slice(0, 10)) {
+    // 點光源（數量有限制，太多會拖慢畫面）：最多 10 盞，從最亮的開始排，
+    // 實際點亮幾盞由畫質決定（見 applyLightBudget）；火光會隨機閃爍
+    const lights = [];
+    for (const L of kit.lights.slice().sort((a, b) => b.power - a.power).slice(0, 10)) {
       const light = new THREE.PointLight(L.color, L.power, 26, 1.8);
       light.position.set(L.x, L.y, L.z);
       group.add(light);
+      lights.push(light);
       if (L.flicker) {
         const ph = Math.random() * 10;
         anims.push((dt, t) => (light.intensity = L.power * (0.75 + Math.sin(t * 17 + ph) * 0.12 + Math.sin(t * 7.3 + ph) * 0.13)));
@@ -1892,8 +2001,18 @@ const Maps = {
     // 導航格：從兩個基地與首領出生點開始淹水
     Nav.build([def.bases[0], def.bases[1], def.bossSpawn, def.playerSpawn]);
 
-    this.runtime = { def, barrels: kit.barrels, anims, pads: kit.pads, t: 0 };
+    this.runtime = { def, barrels: kit.barrels, anims, pads: kit.pads, lights, t: 0 };
+    this.applyLightBudget();
+    Scene3D.renderer.shadowMap.needsUpdate = true; // 換了地圖，陰影馬上重畫一次
     return this.runtime;
+  },
+
+  /* 依畫質決定點亮幾盞點光源（清單已經從最亮排到最暗，所以關掉的是最不重要的）。
+   * 每多一盞燈，畫面上每個像素都要多算一次光照，對手機的影響特別大。 */
+  applyLightBudget() {
+    if (!this.runtime || !this.runtime.lights) return;
+    const max = Scene3D.QUALITY[Scene3D.quality].lights;
+    this.runtime.lights.forEach((light, i) => (light.visible = i < max));
   },
 
   // 每一幀播放地圖上的動畫（選單背景、對戰中都會呼叫）

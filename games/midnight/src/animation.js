@@ -1,3 +1,6 @@
+/* 檔案導讀：角色動畫。每個鬥士只有站立、出拳、蹲下三張圖加上八格走路，
+   其餘的動作（蓄力、受擊、落地、進場、勝利…）都靠位移、旋轉與壓扁拉長做出來，
+   再用彈簧讓每次變化帶一點餘韻，不會硬生生地切換。 */
 (() => {
   const game = globalThis.Midnight;
   const FRAME_COUNT = 8;
@@ -20,61 +23,66 @@
     s.x += s.v * dt;
   }
 
-  function poseCanvas() {
+  // res：角色圖的解析度倍率。高解析度螢幕用 1.5 倍，角色邊緣才不會糊
+  function poseCanvas(res) {
     const canvas = document.createElement("canvas");
-    canvas.width = CANVAS_W;
-    canvas.height = CANVAS_H;
+    canvas.width = Math.round(CANVAS_W * res);
+    canvas.height = Math.round(CANVAS_H * res);
     return canvas;
   }
 
+  function poseContext(canvas, res) {
+    const ctx = canvas.getContext("2d");
+    ctx.scale(res, res);
+    ctx.imageSmoothingQuality = "high";
+    return ctx;
+  }
+
   class FighterAnimation {
-    constructor(atlas, walkAtlas) {
+    constructor(atlas, walkAtlas, res = 1) {
+      this.res = res;
       this.poses = new Map();
       for (const profile of game.FIGHTERS) {
         const poses = {};
         for (const [name, frame] of Object.entries(profile.frames)) {
           const [sx, sy, sw, sh, anchor] = frame;
           const scale = profile.size / profile.frames.idle[3];
-          const canvas = poseCanvas();
-          canvas
-            .getContext("2d")
-            .drawImage(
-              atlas,
-              sx,
-              sy,
-              sw,
-              sh,
-              ORIGIN_X - anchor * scale,
-              ORIGIN_Y - sh * scale,
-              sw * scale,
-              sh * scale,
-            );
+          const canvas = poseCanvas(res);
+          poseContext(canvas, res).drawImage(
+            atlas,
+            sx,
+            sy,
+            sw,
+            sh,
+            ORIGIN_X - anchor * scale,
+            ORIGIN_Y - sh * scale,
+            sw * scale,
+            sh * scale,
+          );
           poses[name] = canvas;
         }
         const frames = game.WALK_FRAMES[game.FIGHTERS.indexOf(profile)];
         const scale =
           profile.size / Math.max(...frames.map((frame) => frame[3]));
         poses.walk = frames.map(([sx, sy, sw, sh, anchor]) => {
-          const canvas = poseCanvas();
-          canvas
-            .getContext("2d")
-            .drawImage(
-              walkAtlas,
-              sx,
-              sy,
-              sw,
-              sh,
-              ORIGIN_X - anchor * scale,
-              ORIGIN_Y - sh * scale,
-              sw * scale,
-              sh * scale,
-            );
+          const canvas = poseCanvas(res);
+          poseContext(canvas, res).drawImage(
+            walkAtlas,
+            sx,
+            sy,
+            sw,
+            sh,
+            ORIGIN_X - anchor * scale,
+            ORIGIN_Y - sh * scale,
+            sw * scale,
+            sh * scale,
+          );
           return canvas;
         });
         this.poses.set(profile.id, poses);
       }
       this.states = new WeakMap();
-      this.mix = poseCanvas();
+      this.mix = poseCanvas(res);
       this.mixContext = this.mix.getContext("2d");
       this.pool = [];
     }
@@ -98,6 +106,8 @@
           face: spring(fighter.face),
           aura: 0,
           ghostTimer: 0,
+          landT: 0, // 剛落地：短暫屈膝緩衝
+          hurt: 0, // 剛被重擊：身體縮起來的程度
         };
         this.states.set(fighter, state);
       }
@@ -113,9 +123,21 @@
       state.sy.v += sy;
     }
 
+    // 落地：短暫換成屈膝的姿勢（由 renderer 在落地事件時呼叫）
+    land(fighter, heavy = false) {
+      this.state(fighter).landT = heavy ? 0.16 : 0.09;
+    }
+
+    // 被重擊：身體縮一下（amount 0~1）
+    hurt(fighter, amount) {
+      const state = this.state(fighter);
+      state.hurt = Math.max(state.hurt, amount);
+    }
+
     // Picks exactly one sprite pose per frame. In-between looks ("half crouch", wind-up)
     // come from squash and lean transforms, never from overlaying two silhouettes.
-    targets(fighter, state) {
+    // match 可以不給（拍殘影時）；有給的話會處理進場與回合結束的姿勢。
+    targets(fighter, state, match = null) {
       const t = {
         pose: "idle",
         ox: 0,
@@ -132,6 +154,39 @@
         t.rot = fighter.y > 0 ? -1.0 : -1.45;
         t.oy = fighter.y > 0 ? 0 : 30;
         return t;
+      }
+      if (match?.phase === "intro") {
+        // 進場：從場外跑進來，到定位後煞車站穩
+        const p = clamp(match.phaseTime / 0.85, 0, 1);
+        if (p < 1) {
+          t.pose = "walk";
+          t.snapOx = -(1 - easeOut(p)) * 460;
+          t.rot = 0.12 * (1 - p);
+          t.sx = 1.04;
+          t.sy = 0.97;
+          state.gait += 0.34 * (1 - p * 0.6);
+          return t;
+        }
+        t.rot = -0.05 * clamp(1 - (match.phaseTime - 0.85) / 0.3, 0, 1);
+      }
+      const settled = match && match.phase !== "fight" && match.result;
+      if (settled && match.phaseTime > 0.55) {
+        if (match.result.winner === fighter.index) {
+          // 勝利：挺胸、原地小跳兩下後站定
+          const hop = clamp(1 - (match.phaseTime - 0.55) / 1.1, 0, 1);
+          t.oy = -Math.abs(Math.sin(state.time * 7)) * 16 * hop;
+          t.rot = -0.07;
+          t.sx = 1.03;
+          t.sy = 1.04 + Math.sin(state.time * 3) * 0.012;
+          return t;
+        }
+        if (match.result.winner !== null && !airborne) {
+          // 時間到落敗：垂頭喪氣地蹲下
+          t.pose = "crouch";
+          t.rot = 0.1;
+          t.sy = 0.97;
+          return t;
+        }
       }
       if (fighter.heldBy) {
         // Lifted off balance by a throw.
@@ -239,10 +294,27 @@
         t.sx = 1.06;
         t.sy = 0.95;
       } else if (fighter.stun > 0) {
-        t.rot = airborne ? -0.55 : -0.17;
-        t.ox = -10;
-        t.sx = 1.02;
-        t.sy = 0.95;
+        if (airborne) {
+          // 被打飛：身體跟著飛行的方向往後翻，上升時仰得多、下墜時漸漸轉正
+          t.rot = -0.6 - clamp(fighter.vy / 900, -0.45, 0.5) * 0.5;
+          t.ox = -12;
+          t.sx = 1.03;
+          t.sy = 0.96;
+        } else {
+          // 地面受擊：剛中招時仰得最多，硬直快結束時慢慢回正；重擊會整個人縮一下
+          const k = clamp(fighter.stun / 0.3, 0, 1);
+          t.rot = -0.08 - 0.13 * k;
+          t.ox = -6 - 8 * k;
+          t.sx = 1.02 + 0.03 * state.hurt;
+          t.sy = 0.96 - 0.07 * state.hurt;
+          t.oy = 5 * state.hurt;
+        }
+      } else if (state.landT > 0 && !airborne) {
+        // 落地緩衝：屈膝吸收衝擊
+        t.pose = "crouch";
+        t.fade = PUNCH_FADE;
+        t.sx = 1.04;
+        t.sy = 0.97;
       } else if (fighter.guard) {
         t.rot = -0.06;
         t.ox = -4;
@@ -266,8 +338,11 @@
         t.pose = "walk";
         t.rot = clamp(fighter.vx * fighter.face * 0.00018, -0.04, 0.05);
       } else {
+        // 待機：呼吸之外，再加上格鬥架勢的小幅前後晃動與踮步
         t.sy = 1 + Math.sin(state.time * 3.4) * 0.012;
         t.sx = 1 - Math.sin(state.time * 3.4) * 0.006;
+        t.ox = Math.sin(state.time * 1.7) * 2.5;
+        t.oy = -Math.abs(Math.sin(state.time * 3.4)) * 2.2;
       }
       return t;
     }
@@ -300,10 +375,12 @@
       return t;
     }
 
-    update(fighter, dt, frozen = false) {
+    update(fighter, dt, frozen = false, match = null) {
       const state = this.state(fighter);
       state.time += dt;
-      const t = this.targets(fighter, state);
+      state.landT = Math.max(0, state.landT - dt);
+      state.hurt = Math.max(0, state.hurt - dt * 3.5);
+      const t = this.targets(fighter, state, match);
       if (t.pose !== state.pose) {
         const intoCrouch = t.pose === "crouch" && state.pose !== "crouch";
         const outOfCrouch = state.pose === "crouch" && t.pose !== "crouch";
@@ -335,6 +412,11 @@
         stepSpring(state.face, fighter.face, 1100, 62, h);
         remaining -= h;
       }
+      // 進場的位移直接指定（彈簧會跟不上，角色會拖在後面）
+      if (t.snapOx !== undefined) {
+        state.ox.x = t.snapOx;
+        state.ox.v = 0;
+      }
       const target =
         fighter.meter >= 100 || fighter.move?.action === "super" ? 1 : 0;
       state.aura += (target - state.aura) * (1 - Math.exp(-6 * dt));
@@ -357,7 +439,7 @@
       const mix = this.mixContext;
       mix.globalAlpha = 1;
       mix.globalCompositeOperation = "source-over";
-      mix.clearRect(0, 0, CANVAS_W, CANVAS_H);
+      mix.clearRect(0, 0, this.mix.width, this.mix.height);
       const fade = single ? 1 : state.fade;
       if (fade < 1 && state.prevPose !== state.pose) {
         // Additive cross-fade of opaque pixels is an exact linear blend; it only lasts a few frames.
@@ -371,7 +453,7 @@
         mix.globalCompositeOperation = "source-atop";
         mix.globalAlpha = Math.min(1, fighter.flash / 0.12) * 0.7;
         mix.fillStyle = fighter.flashColor ?? "#ffffff";
-        mix.fillRect(0, 0, CANVAS_W, CANVAS_H);
+        mix.fillRect(0, 0, this.mix.width, this.mix.height);
       }
       mix.globalCompositeOperation = "source-over";
       mix.globalAlpha = 1;
@@ -395,23 +477,23 @@
         ctx.shadowColor = glow;
         ctx.shadowBlur = glowSize;
       }
-      ctx.drawImage(image, -ORIGIN_X, -ORIGIN_Y);
+      ctx.drawImage(image, -ORIGIN_X, -ORIGIN_Y, CANVAS_W, CANVAS_H);
       ctx.shadowBlur = 0;
     }
 
     // A tinted copy of the current pose (never a cross-fade) for afterimage trails.
     snapshot(fighter, state, color, tint = 0.55) {
       const image = this.compose(fighter, state, true);
-      const canvas = this.pool.pop() ?? poseCanvas();
+      const canvas = this.pool.pop() ?? poseCanvas(this.res);
       const c = canvas.getContext("2d");
       c.globalCompositeOperation = "source-over";
       c.globalAlpha = 1;
-      c.clearRect(0, 0, CANVAS_W, CANVAS_H);
+      c.clearRect(0, 0, canvas.width, canvas.height);
       c.drawImage(image, 0, 0);
       c.globalCompositeOperation = "source-atop";
       c.globalAlpha = tint;
       c.fillStyle = color;
-      c.fillRect(0, 0, CANVAS_W, CANVAS_H);
+      c.fillRect(0, 0, canvas.width, canvas.height);
       c.globalCompositeOperation = "source-over";
       return canvas;
     }
@@ -421,5 +503,6 @@
     }
   }
   FighterAnimation.ORIGIN = { x: ORIGIN_X, y: ORIGIN_Y };
+  FighterAnimation.SIZE = { width: CANVAS_W, height: CANVAS_H };
   game.FighterAnimation = FighterAnimation;
 })();

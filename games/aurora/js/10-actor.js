@@ -192,6 +192,7 @@ class Actor {
       deathDir: this.deathDir,
       hover: this.hover,
       fast: this.enraged,
+      idle: this.target === null, // 電腦沒有交戰目標時會東張西望（玩家沒有 target 這個欄位）
     });
   }
 

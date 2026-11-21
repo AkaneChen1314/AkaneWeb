@@ -16,6 +16,13 @@
  *
  *  「感知」與「決策」比較花時間，所以每 0.2 秒左右才做一次，
  *  而且每個 Bot 錯開時間，避免同一幀全部一起算。
+ *
+ *  團隊配合（讓電腦看起來像一支隊伍，而不是各打各的）：
+ *    - 分散火力：已經有很多隊友在打的敵人，會被排到比較後面
+ *    - 不誤擊：隊友擋在槍口前面時不開槍，改成往旁邊移一步
+ *    - 包抄：隊友已經正面牽制住目標時，突擊型會繞到側面
+ *    - 壓制：目標剛躲進掩體時，重裝型會朝他消失的位置再掃幾發
+ *    - 空檔：沒有敵人時先換好彈匣、護甲或生命不夠就去撿補給
  * ============================================================
  */
 
@@ -101,6 +108,11 @@ class Bot extends Actor {
     this.lookT = 0;
     this.crouchWant = false;
     this.grenadeCd = Util.rand(4, 10);
+    this.flankT = Util.rand(3, 8); // 下次可以包抄的倒數
+    this.flankUntil = 0; // 包抄移動進行到什麼時候（Game.time）
+    this.spotCrouch = false; // 到了這個射擊位置之後要不要蹲著打
+    this.canSuppress = false; // 目標剛躲起來，而且我還看得到他消失的位置
+    this.skipT = 0; // 下次檢查「能不能抄近路」的倒數
     this.respawnT = 0; // 重生倒數（由模式設定）
     this.corpseT = 0;
   }
@@ -154,6 +166,8 @@ class Bot extends Actor {
     this.path = null;
     this.goal = null;
     this.evadeT = 0;
+    this.flankUntil = 0;
+    this.canSuppress = false;
     this.corpseT = 0;
     this.rig.reset();
     this.rig.root.visible = true;
@@ -185,6 +199,8 @@ class Bot extends Actor {
     this.grenadeCd -= dt;
     this.goalT -= dt;
     this.lookT -= dt;
+    this.flankT -= dt;
+    this.skipT -= dt;
 
     this.thinkT -= dt;
     if (this.thinkT <= 0) {
@@ -241,8 +257,10 @@ class Bot extends Actor {
         || (a.hit.headR > 0 && World.los(eye.x, eye.y, eye.z, a.pos.x, base + a.hit.headY, a.pos.z));
       if (!seen) continue;
 
-      // 偏好原本的目標（不會一直換人打），也略微偏好玩家
-      const score = dist * (a === this.target ? 0.6 : 1) * (a.isPlayer ? 0.9 : 1);
+      // 偏好原本的目標（不會一直換人打），也略微偏好玩家；
+      // 已經有隊友在打的敵人排後面一點，火力才會分散（每多一個隊友，距離當成遠 22%）
+      const crowd = a === this.target ? 0 : Math.min(3, this.alliesTargeting(a));
+      const score = dist * (a === this.target ? 0.6 : 1) * (a.isPlayer ? 0.9 : 1) * (1 + crowd * 0.22);
       if (score < bestScore) {
         bestScore = score;
         best = a;
@@ -260,6 +278,7 @@ class Bot extends Actor {
       this.seenFor += interval;
       this.lastSeen.copy(best.pos);
       this.lastSeenTime = Game.time;
+      this.canSuppress = false;
     } else {
       this.visible = false;
       if (this.target && !this.target.alive) {
@@ -267,7 +286,21 @@ class Bot extends Actor {
         this.lastSeenTime = -99;
       }
       if (Game.time - this.lastSeenTime > 1.5) this.seenFor = 0;
+      // 壓制射擊的條件：目標剛消失不到 0.9 秒，而且我和他消失的位置之間沒有東西擋著
+      const t = this.target;
+      const aimY = t ? this.lastSeen.y + t.hit.base + t.hit.h * 0.6 : 0;
+      this.canSuppress = !!t && Game.time - this.lastSeenTime < 0.9
+        && World.los(eye.x, eye.y, eye.z, this.lastSeen.x, aimY, this.lastSeen.z);
     }
+  }
+
+  // 有幾個隊友正看著這個敵人（分散火力與決定要不要包抄時使用）
+  alliesTargeting(enemy) {
+    let n = 0;
+    for (const a of Combat.actors) {
+      if (a !== this && a.alive && a.team === this.team && a.target === enemy && a.visible) n++;
+    }
+    return n;
   }
 
   // 發現敵人時通知 22 公尺內還沒有目標的隊友
@@ -330,6 +363,9 @@ class Bot extends Actor {
     const t = this.target;
     const sinceSeen = Game.time - this.lastSeenTime;
     if (t && t.alive && (this.visible || sinceSeen < 1.2)) return this.combat(t);
+    // 沒在交戰的空檔：彈匣剩不到一半就先換好，下次遇敵才不會打到一半沒子彈
+    const ws = this.weapon;
+    if (!ws.reloading && ws.ammo < ws.magSize * 0.5 && sinceSeen > 2.5) Combat.startReload(this);
     if (sinceSeen < 9) return this.search(interval);
     this.target = null;
     this.crouchWant = false;
@@ -357,6 +393,12 @@ class Bot extends Actor {
     }
     this.crouchWant = false;
     this.maybeThrowGrenade(dist);
+
+    // 正在繞到側面：先把這段路走完（邊走還是會邊瞄準開槍）；被打到就放棄包抄
+    if (this.flankUntil > Game.time) {
+      if (!this.arrived() && Game.time - this.lastDamageTime > 0.4) return;
+      this.flankUntil = 0;
+    }
 
     // 據點模式：敵人還遠的時候邊打邊往據點推進，不要停在半路上對射
     if (Game.mode.objective && this.role !== "sniper") {
@@ -399,11 +441,47 @@ class Bot extends Actor {
       if (this.combatMoveT > 0 || Math.random() < 0.9) return;
     }
 
+    // 隊友已經從正面牽制住目標：突擊型與衝鋒型有機會繞到側面
+    if (this.tryFlank(t, dist, near, far)) return;
+
+    // 到了射擊位置而且決定蹲著打：壓低身體，比較不容易被打中
+    this.crouchWant = this.spotCrouch && this.arrived() && this.role !== "rusher" && this.role !== "drone";
+
     // 定期換一個射擊位置（走位）
     if (this.combatMoveT <= 0 || this.arrived()) {
       this.pickCombatSpot(t, dist, near, far);
-      this.combatMoveT = this.role === "sniper" ? Util.rand(2.5, 4) : this.role === "heavy" ? Util.rand(1.4, 2.4) : Util.rand(0.6, 1.5);
+      const pause = { sniper: [2.5, 4], heavy: [1.4, 2.4] }[this.role] || [0.6, 1.5];
+      this.combatMoveT = Util.rand(pause[0], pause[1]);
+      // 中距離以上有三成機率蹲著打（蹲著會在原地多待一下）
+      this.spotCrouch = dist > 10 && Math.random() < 0.3;
+      if (this.spotCrouch) this.combatMoveT += 0.8;
     }
+  }
+
+  /* 包抄：以目標為圓心，從我現在的方位轉 60～100 度，走到那個位置再打。
+   * 只有「至少一個隊友正看著同一個目標」時才做，否則等於放著目標不管。
+   * 回傳 true 表示已經開始包抄。 */
+  tryFlank(t, dist, near, far) {
+    if (this.flankT > 0 || (this.role !== "assault" && this.role !== "rusher")) return false;
+    this.flankT = Util.rand(2, 4); // 不管成不成功，過一下再考慮
+    const level = DIFFICULTIES.indexOf(Game.difficulty); // 難度越高越常包抄
+    if (dist < near || dist > far * 1.3 || Math.random() > 0.25 + level * 0.12) return false;
+    if (this.alliesTargeting(t) < 1) return false;
+
+    const side = Math.random() < 0.5 ? -1 : 1;
+    const base = Math.atan2(this.pos.z - t.pos.z, this.pos.x - t.pos.x); // 目標 → 我 的方位
+    const r = Util.clamp(dist * 0.8, near + 1, far);
+    for (const turn of [side, -side]) { // 一邊走不通就試另一邊
+      const a = base + turn * Util.rand(1.05, 1.75);
+      const p = Nav.randomNear(t.pos.x + Math.cos(a) * r, t.pos.z + Math.sin(a) * r, 0, 3, this.wide);
+      if (!p || Math.abs(p.y - this.pos.y) > 2) continue;
+      if (!this.moveTo(p.x, p.z, "run")) continue;
+      this.flankUntil = Game.time + 5;
+      this.flankT = Util.rand(9, 15);
+      this.spotCrouch = false;
+      return true;
+    }
+    return false;
   }
 
   /* 挑選射擊位置：在周圍隨機取幾個點，替每個點打分數，選最高的。
@@ -528,6 +606,14 @@ class Bot extends Actor {
   roam() {
     this.lookYaw = null;
     if (!this.goal || this.goalT <= 0 || this.arrived()) {
+      // 護甲或生命不夠、附近又剛好有補給：先繞過去撿
+      const supply = this.seekSupply();
+      if (supply) {
+        this.goal = { x: supply.x, z: supply.z, supply: true };
+        this.goalT = Util.rand(6, 9);
+        this.moveTo(supply.x, supply.z, "run");
+        return;
+      }
       this.goal = Game.mode.botGoal(this);
       this.goalT = Util.rand(8, 14);
       // 狙擊手喜歡佔領高處：有六成機率改去屋頂或平台
@@ -540,6 +626,24 @@ class Bot extends Actor {
     }
   }
 
+  // 找 26 公尺內用得到的補給：生命低於七成找醫療箱，護甲低於四成找護甲站
+  seekSupply() {
+    if (this.noPickup || this.isBoss) return null;
+    const needHp = this.hp < this.maxHp * 0.7;
+    const needArmor = this.maxArmor > 0 && this.armor < this.maxArmor * 0.4;
+    if (!needHp && !needArmor) return null;
+    let best = null, bestD = 26;
+    for (const p of Combat.pickups) {
+      if (!p.active || !((p.type === "health" && needHp) || (p.type === "armor" && needArmor))) continue;
+      const d = Util.dist2D(p.x, p.z, this.pos.x, this.pos.z);
+      if (d < bestD) {
+        bestD = d;
+        best = p;
+      }
+    }
+    return best;
+  }
+
   /* ---------- 手榴彈 ---------- */
 
   // 目標躲在牆後、距離適中時，往他最後出現的位置丟手榴彈
@@ -549,6 +653,11 @@ class Bot extends Actor {
     const hiding = !this.visible && sinceSeen > 0.8 && sinceSeen < 5;
     const level = DIFFICULTIES.indexOf(Game.difficulty); // 難度越高越愛丟
     if (!hiding || dist < 9 || dist > 26 || Math.random() > 0.12 + level * 0.1) return;
+    // 落點 6 公尺內有隊友就不丟（隊友可能正要衝進去）
+    for (const a of Combat.actors) {
+      if (a === this || !a.alive || a.team !== this.team) continue;
+      if (Util.dist2D(a.pos.x, a.pos.z, this.lastSeen.x, this.lastSeen.z) < 6) return;
+    }
 
     const eye = this.eyePos(Bot._v1);
     const yaw = Util.yawTo(this.lastSeen.x - this.pos.x, this.lastSeen.z - this.pos.z);
@@ -654,7 +763,11 @@ class Bot extends Actor {
     const t = this.target;
     this.burstPause -= dt;
     if (this.calmT > 0) this.calmT -= dt; // 首領剛召喚出的小兵：這段時間內不開槍
-    const canShoot = t && t.alive && this.visible && this.seenFor >= this.reaction && this.evadeT <= 0 && !(this.calmT > 0);
+    // 壓制射擊：目標剛躲進掩體時，重裝型（以及高難度的突擊型）會朝他消失的位置再打幾發
+    const level = DIFFICULTIES.indexOf(Game.difficulty);
+    const suppress = !this.visible && this.canSuppress && (this.role === "heavy" || (this.role === "assault" && level >= 2));
+    const sees = this.visible || suppress;
+    const canShoot = t && t.alive && sees && this.seenFor >= this.reaction && this.evadeT <= 0 && !(this.calmT > 0);
     if (!canShoot) {
       this.chargeT = 0;
       if (this.laser) this.laser.visible = false;
@@ -681,6 +794,13 @@ class Bot extends Actor {
     }
     if (ws.cooldown > 0) return;
 
+    // 隊友擋在槍口前面：不開槍，馬上往旁邊換個位置
+    if (this.allyInLine(t)) {
+      this.combatMoveT = Math.min(this.combatMoveT, 0.1);
+      this.flankUntil = 0;
+      return;
+    }
+
     const origin = this.eyePos(Bot._v1);
     const dir = Util.aimDir(this.aimYaw, this.aimPitch, Bot._v2);
     const moving = Math.hypot(this.vel.x, this.vel.z) > 1.5;
@@ -698,6 +818,25 @@ class Bot extends Actor {
         this.headAim = Math.random() < 0.18 * this.aimSkill;
       }
     }
+  }
+
+  /* 我和目標之間有沒有隊友擋著（俯視圖上，隊友離「我 → 目標」這條線不到 0.6 公尺）。
+   * 高低差超過 1.6 公尺的不算（例如我在屋頂、隊友在樓下）。 */
+  allyInLine(t) {
+    const dx = t.pos.x - this.pos.x, dz = t.pos.z - this.pos.z;
+    const len = Math.hypot(dx, dz);
+    if (len < 1.5) return false;
+    const ux = dx / len, uz = dz / len;
+    for (const a of Combat.actors) {
+      if (a === this || !a.alive || a.team !== this.team) continue;
+      const ax = a.pos.x - this.pos.x, az = a.pos.z - this.pos.z;
+      const along = ax * ux + az * uz; // 隊友沿著射線方向離我多遠
+      if (along < 0.4 || along > len - 0.3) continue;
+      if (Math.abs(ax * uz - az * ux) > 0.6 + a.radius * 0.5) continue; // 離射線太遠，不會打到
+      if (Math.abs(a.pos.y - this.pos.y) > 1.6) continue;
+      return true;
+    }
+    return false;
   }
 
   // 狙擊手的瞄準雷射（第一次使用時才建立）
@@ -790,6 +929,15 @@ class Bot extends Actor {
     }
     const wantMove = wx !== 0 || wz !== 0;
 
+    /* 抄近路：路徑是事先算好的折線，走到一半時常常已經可以直接走向「下一個」轉折點。
+     * 每 0.3 秒檢查一次，能直線走到就跳過目前這一點，路線會比較圓滑、不會貼著牆角轉直角。 */
+    if (this.skipT <= 0 && this.path && this.pathIndex + 1 < this.path.length) {
+      this.skipT = 0.3;
+      const next = this.path[this.pathIndex + 1];
+      const flat = Math.abs(next.y - this.pos.y) < 0.5;
+      if (flat && Nav.lineClear(this.pos.x, this.pos.z, next.x, next.z, this.wide)) this.pathIndex++;
+    }
+
     // 和其他角色保持距離，才不會擠成一團或卡在門口
     const personal = this.radius + 0.6;
     for (const a of Combat.actors) {
@@ -817,6 +965,11 @@ class Bot extends Actor {
       const moved = Util.dist2D(this.pos.x, this.pos.z, this.stuckPos.x, this.stuckPos.z);
       if (wantMove && moved < 0.3) {
         this.stuckCount++;
+        // 第一次卡住先跳一下：常常只是被矮碎石或台階邊緣絆住
+        if (this.stuckCount === 1 && this.onGround && this.role !== "drone" && !this.isBoss) {
+          this.vel.y = CONFIG.MOVE.jump;
+          this.onGround = false;
+        }
         if (this.stuckCount >= 3 || !this.dest) {
           this.path = null;
           this.goal = null;

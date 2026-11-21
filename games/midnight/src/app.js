@@ -15,6 +15,7 @@
     versus: "本機雙人",
     training: "練習模式",
     arcade: "街機挑戰",
+    watch: "電腦對打",
   };
   const ARCADE_LEVELS = ["easy", "normal", "hard"];
   // Multi-input commands shown in the help dialog.
@@ -117,7 +118,9 @@
           ? "木樁"
           : mode === "arcade"
             ? "街機挑戰"
-            : "電腦";
+            : mode === "watch"
+              ? "電腦 2"
+              : "電腦";
     text(get("opponent-seat"), rival);
     text(get("matchup-opponent"), rival);
     text(get("matchup-left"), selection[0].name);
@@ -135,7 +138,7 @@
         "aria-pressed",
         button.dataset.difficulty === difficulty,
       );
-    get("difficulty").hidden = mode !== "solo";
+    get("difficulty").hidden = mode !== "solo" && mode !== "watch";
 
     if (showcase.dataset.fighter !== fighter.id) {
       showcase.dataset.fighter = fighter.id;
@@ -219,9 +222,10 @@
         const button = ({ action, name }) =>
           `<button type="button" class="utility touch-button" data-action="${action}">${name}</button>`;
         const heading = index === 0 ? "玩家 1" : "玩家 2";
+        // 方向鍵排成十字（跳在上、蹲在下），手指可以在上面滑動換方向
         return `<div class="touch-pad" data-player="${index}" aria-label="${heading}" role="group">
         ${mode === "versus" ? `<p>${heading}</p>` : ""}
-        <div class="touch-group">${CONTROLS.slice(0, 4).map(button).join("")}</div>
+        <div class="touch-group move">${CONTROLS.slice(0, 4).map(button).join("")}</div>
         <div class="touch-group actions">${CONTROLS.slice(4).map(button).join("")}</div>
       </div>`;
       })
@@ -263,6 +267,7 @@
       '<img alt=""><div><small>大招發動</small><strong></strong></div><i class="cutin-streaks" aria-hidden="true"></i>';
     arena.append(cutin);
     return {
+      root: hud,
       combo,
       cutin,
       cutinRemaining: 0,
@@ -410,6 +415,7 @@
   }
 
   function playerLabel(index) {
+    if (match.demo) return index === 0 ? "電腦 1" : "電腦 2";
     return index === 0
       ? "玩家 1"
       : match.training
@@ -466,11 +472,12 @@
   function showResult() {
     audio.setBattle(false);
     const { winner } = match.result;
-    let label = match.cpu
-      ? winner === 0
-        ? "你贏了"
-        : "電腦獲勝"
-      : `${playerLabel(winner)} 獲勝`;
+    let label =
+      match.cpu && !match.demo
+        ? winner === 0
+          ? "你贏了"
+          : "電腦獲勝"
+        : `${playerLabel(winner)} 獲勝`;
     let next = "再戰一場";
     if (arcade) {
       arcade.won = winner === 0;
@@ -485,8 +492,24 @@
     text(get("result-title"), label);
     text(
       get("result-score"),
-      `回合比分 ${match.score[0]} 比 ${match.score[1]}・最高連擊 ${stats[0].maxCombo} / ${stats[1].maxCombo}`,
+      `回合比分 ${match.score[0]} 比 ${match.score[1]}`,
     );
+    // 整場的戰績：左右兩欄是雙方，中間是項目名稱
+    const [a, b] = match.stats;
+    const rows = [
+      ["造成傷害", a.damage, b.damage],
+      ["命中次數", a.hits, b.hits],
+      ["最高連擊", a.maxCombo, b.maxCombo],
+      ["精準防禦", a.perfect, b.perfect],
+      ["投技成功", a.throws, b.throws],
+    ];
+    get("result-stats").innerHTML =
+      `<thead><tr><th scope="col">${match.profiles[0].name}</th><td></td><th scope="col">${match.profiles[1].name}</th></tr></thead><tbody>${rows
+        .map(
+          ([name, left, right]) =>
+            `<tr><td data-best="${left > right}">${left}</td><th scope="row">${name}</th><td data-best="${right > left}">${right}</td></tr>`,
+        )
+        .join("")}</tbody>`;
     pauseButton.disabled = true;
     result.hidden = false;
     get("result-title").focus({ preventScroll: true });
@@ -537,6 +560,7 @@
       {
         cpu: mode !== "versus",
         training: mode === "training",
+        demo: mode === "watch",
         difficulty: level,
       },
     );
@@ -547,8 +571,8 @@
     buildBattleControls();
     text(
       get("battle-mode"),
-      mode === "solo"
-        ? `${MODE_LABEL.solo}・${DIFFICULTY[difficulty].label}`
+      mode === "solo" || mode === "watch"
+        ? `${MODE_LABEL[mode]}・${DIFFICULTY[difficulty].label}`
         : mode === "arcade"
           ? `${MODE_LABEL.arcade}・第 ${arcade.stage + 1} / ${arcade.order.length} 戰・${DIFFICULTY[level].label}`
           : MODE_LABEL[mode],
@@ -692,6 +716,13 @@
         void panel.cutin.offsetWidth;
         panel.cutin.classList.add("play");
       }
+      // 被打中：那一邊的頭像與血條閃一下、抖一下
+      if (event.type === "hit" || event.type === "armor") {
+        const root = hud[event.fighter.index].root;
+        root.classList.remove("hurt");
+        void root.offsetWidth;
+        root.classList.add("hurt");
+      }
       renderer.cue(event);
       audio.cue(event);
       if (event.type === "round") for (const panel of hud) panel.lagValue = 100;
@@ -702,6 +733,17 @@
   const STEP = 1 / 60;
   let lastTime = performance.now();
   let accumulator = 0;
+  // 畫面順不順：累計最近的幀間隔，太慢就把畫布調回 1 倍解析度
+  const pace = { sum: 0, frames: 0 };
+
+  function watchPace(dt) {
+    if (renderer.scale <= 1 || dt <= 0) return;
+    pace.sum += dt;
+    pace.frames += 1;
+    if (pace.frames < 90) return;
+    if (pace.sum / pace.frames > 0.021) renderer.setScale(1);
+    pace.sum = pace.frames = 0;
+  }
 
   function frame(now) {
     const dt = Math.max(0, Math.min(0.065, (now - lastTime) / 1000));
@@ -727,6 +769,7 @@
       renderHud(dt);
       renderAnnouncement();
       renderer.draw(match, scaled, Math.min(1, accumulator / STEP));
+      watchPace(dt);
     } else {
       accumulator = 0;
     }
@@ -808,6 +851,25 @@
     pointers.set(event.pointerId, { action, index, button });
     if (!CONTROLS.find((entry) => entry.action === action).hold)
       queued[index].push(action);
+  });
+
+  // 在方向鍵上滑動：手指移到另一顆方向鍵就換成那個方向，不必放開再按
+  touchControls.addEventListener("pointermove", (event) => {
+    const held = pointers.get(event.pointerId);
+    if (!held || !held.button.closest(".touch-group.move")) return;
+    const under = document
+      .elementFromPoint(event.clientX, event.clientY)
+      ?.closest("[data-action]");
+    if (!under || under === held.button) return;
+    if (under.closest("[data-player]") !== held.button.closest("[data-player]"))
+      return;
+    if (!under.closest(".touch-group.move")) return;
+    held.button.removeAttribute("data-held");
+    under.dataset.held = "true";
+    held.button = under;
+    held.action = under.dataset.action;
+    if (!CONTROLS.find((entry) => entry.action === held.action).hold)
+      queued[held.index].push(held.action);
   });
 
   function releasePointer(event) {

@@ -31,11 +31,24 @@ const Scene3D = {
   // 後製參數（HUD 與玩家狀態會修改它們）
   post: { bloom: 0.85, exposure: 1.0, hurt: 0, desat: 0, flash: 0, aberration: 0.0035, vignette: 0.5 },
 
+  /* 畫質設定：
+   *   msaa         反鋸齒取樣數        shadow       陰影貼圖解析度（0 = 關閉陰影）
+   *   ratio        解析度倍率上限      bloomLevels  泛光的層數
+   *   shadowEvery  每幾幀重畫一次陰影  lights       地圖上最多幾盞點光源 */
   QUALITY: {
-    high: { label: "精緻", msaa: 4, shadow: 4096, ratio: 1.5, bloomLevels: 5 }, // 陰影蓋住整張地圖，所以解析度要高一點
-    medium: { label: "均衡", msaa: 2, shadow: 1024, ratio: 1.0, bloomLevels: 4 },
-    low: { label: "流暢", msaa: 0, shadow: 0, ratio: 0.8, bloomLevels: 3 },
+    // 陰影蓋住整張地圖，所以高畫質的陰影解析度要高一點
+    high: { label: "精緻", msaa: 4, shadow: 4096, ratio: 1.5, bloomLevels: 5, shadowEvery: 2, lights: 10 },
+    medium: { label: "均衡", msaa: 2, shadow: 1024, ratio: 1.0, bloomLevels: 4, shadowEvery: 3, lights: 6 },
+    low: { label: "流暢", msaa: 0, shadow: 0, ratio: 0.8, bloomLevels: 3, shadowEvery: 3, lights: 3 },
   },
+
+  /* 動態解析度：畫面跟不上（低於約 45 幀）時自動把解析度降一級，順了再慢慢升回來。
+   *   autoScale  目前的倍率（1 = 不縮小，最低 0.55）
+   *   autoCeil   升回去的上限：如果剛升上去馬上又掉幀，就記住「這台機器只能到這裡」 */
+  autoScale: 1,
+  autoCeil: 1,
+  _auto: { last: 0, sum: 0, n: 0, smooth: 0, raisedAt: -99 },
+  frameNo: 0, // 畫了第幾幀（陰影隔幀更新用）
 
   /* ---------- 初始化 ---------- */
   init(canvas) {
@@ -78,7 +91,9 @@ const Scene3D = {
 
     this._buildSky();
     this._buildPost();
-    this.setQuality(Util.load("quality", "high"));
+    // 第一次開啟時的預設畫質：手機與平板用「均衡」，電腦用「精緻」（玩家選過之後就照玩家的）
+    const touchDevice = window.matchMedia && matchMedia("(hover: none) and (pointer: coarse)").matches;
+    this.setQuality(Util.load("quality", touchDevice ? "medium" : "high"));
     window.addEventListener("resize", () => this.resize());
   },
 
@@ -87,8 +102,12 @@ const Scene3D = {
     if (!this.QUALITY[name]) name = "high";
     this.quality = name;
     const q = this.QUALITY[name];
+    this.autoScale = this.autoCeil = 1; // 換畫質後重新評估要不要縮小解析度
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, q.ratio));
     this.renderer.shadowMap.enabled = q.shadow > 0;
+    // 陰影改成「需要時才重畫」，由 render() 每隔幾幀要求一次
+    this.renderer.shadowMap.autoUpdate = false;
+    this.renderer.shadowMap.needsUpdate = true;
     this.sun.castShadow = q.shadow > 0;
     if (q.shadow > 0) {
       this.sun.shadow.mapSize.set(q.shadow, q.shadow);
@@ -100,6 +119,7 @@ const Scene3D = {
     }
     // 陰影開關會改變材質的著色器，全部標記為需要重新編譯
     this.scene.traverse((n) => { if (n.material) n.material.needsUpdate = true; });
+    if (typeof Maps !== "undefined") Maps.applyLightBudget(); // 點光源數量跟著畫質調整
     this.resize();
     Util.save("quality", name);
   },
@@ -124,7 +144,7 @@ const Scene3D = {
   resize() {
     // 視窗搬到不同縮放比例的螢幕時，解析度也要跟著更新
     this.dpr = window.devicePixelRatio || 1;
-    this.renderer.setPixelRatio(Math.min(this.dpr, this.QUALITY[this.quality].ratio));
+    this.renderer.setPixelRatio(Math.min(this.dpr, this.QUALITY[this.quality].ratio) * this.autoScale);
     // 視窗被縮到最小時寬高會是 0；至少保留 1 像素，避免除以零與無效的畫面緩衝區
     const w = Math.max(1, window.innerWidth), h = Math.max(1, window.innerHeight);
     this.renderer.setSize(w, h, false);
@@ -291,8 +311,11 @@ const Scene3D = {
           if (uWater > 0.0) {
             vec3 deep = mix(vec3(0.0, 0.03, 0.05), vec3(0.02, 0.25, 0.3), smoothstep(-0.3, 1.0, h));
             col = mix(col, deep, uWater);
+            // 方位角在正北方會從 +π 跳到 -π：sin(az * 9) 剛好接得起來，
+            // 但雜訊不能直接拿 az 去取，要改用水平方向向量，天空才不會出現一條直的接縫
             float az = atan(d.x, d.z);
-            float rays = pow(max(0.0, sin(az * 9.0 + noise(vec2(az * 3.0, uTime * 0.2)) * 4.0)), 6.0);
+            vec2 around = normalize(d.xz + vec2(1e-4)) * 3.0;
+            float rays = pow(max(0.0, sin(az * 9.0 + noise(around + vec2(uTime * 0.2, 0.0)) * 4.0)), 6.0);
             col += vec3(0.25, 0.7, 0.75) * rays * smoothstep(0.1, 0.9, h) * 0.35 * uWater;
             vec2 wp = d.xz / max(h, 0.05) * 3.0;
             float caustic = pow(noise(wp + uTime * 0.4) * noise(wp * 1.7 - uTime * 0.3), 2.0) * 4.0;
@@ -301,10 +324,12 @@ const Scene3D = {
 
           // ---- 星雲：太空中紫藍色的雲霧 ----
           if (uNebula > 0.0) {
-            vec2 np = vec2(atan(d.x, d.z) * 1.2, d.y * 2.5);
+            // 雜訊座標直接由方向向量算出來（不用方位角），整圈天空都是連續的，
+            // 往正北方看才不會有一條左右顏色不同的直線
+            vec2 np = d.xz * 1.3 / (1.0 + abs(d.y) * 0.6) + vec2(d.y * 1.1, -d.y * 0.8);
             float n1 = fbm(np * 1.6 + vec2(0.0, uTime * 0.003));
             float n2 = fbm(np * 3.3 + 4.0);
-            float band = smoothstep(0.7, 0.0, abs(d.y - 0.15 + sin(np.x * 0.8) * 0.15));
+            float band = smoothstep(0.7, 0.0, abs(d.y - 0.15 + d.x * 0.15));
             vec3 neb = mix(vec3(0.35, 0.08, 0.55), vec3(0.05, 0.4, 0.75), n2);
             col += neb * pow(n1, 2.2) * band * 1.4 * uNebula;
           }
@@ -517,13 +542,52 @@ const Scene3D = {
     this.renderer.render(this.postScene, this.postCamera);
   },
 
+  /* 動態解析度：每一幀記下「距離上一幀多久」，每 1.5 秒看一次平均值。
+   *   平均超過 22 毫秒（不到 45 幀）→ 降一級
+   *   連續 6 秒都很順（平均低於 17.5 毫秒）→ 升一級，但不超過 autoCeil
+   * 超過 250 毫秒的間隔不算（切到別的分頁再回來、載入地圖時的停頓）。 */
+  _autoResolution() {
+    const a = this._auto;
+    const now = performance.now();
+    const gap = now - a.last;
+    a.last = now;
+    if (gap <= 0 || gap > 250) return;
+    a.sum += gap;
+    a.n++;
+    if (a.sum < 1500) return;
+    const avg = a.sum / a.n;
+    a.sum = a.n = 0;
+
+    if (avg > 22 && this.autoScale > 0.55) {
+      // 剛升上去 12 秒內又掉幀：代表升太多了，之後不再升到這一級
+      if (now - a.raisedAt < 12000) this.autoCeil = Math.max(0.55, this.autoScale - 0.1);
+      this.autoScale = Math.max(0.55, this.autoScale - 0.1);
+      a.smooth = 0;
+      this.resize();
+    } else if (avg < 17.5 && this.autoScale < this.autoCeil) {
+      a.smooth += 1.5;
+      if (a.smooth >= 6) {
+        this.autoScale = Math.min(this.autoCeil, this.autoScale + 0.1);
+        a.smooth = 0;
+        a.raisedAt = now;
+        this.resize();
+      }
+    } else {
+      a.smooth = 0;
+    }
+  },
+
   /* ---------- 每一幀的繪製 ---------- */
   render(dt, drawWeapon) {
     if ((window.devicePixelRatio || 1) !== this.dpr) this.resize(); // 螢幕縮放比例改變了
     this.time += dt;
     // 視窗被縮到最小（看不到畫面）時不用畫，也避免顯示卡一直報「緩衝區大小為 0」的警告
     if (window.innerWidth < 2 || window.innerHeight < 2) return;
+    this._autoResolution();
     const r = this.renderer;
+    // 陰影貼圖每隔幾幀才重畫一次（地圖不會動，角色的影子慢一兩幀看不出來），省下一整趟繪製
+    this.frameNo++;
+    if (this.frameNo % this.QUALITY[this.quality].shadowEvery === 0) r.shadowMap.needsUpdate = true;
     this.skyUniforms.uTime.value = this.time;
     this.sky.position.copy(this.camera.position);
 

@@ -1,3 +1,3 @@
 1.2
-Edition: 20261120-blueworld-r14-newgames
+Edition: 20261121-blueworld-r15c
 Site: Blue World

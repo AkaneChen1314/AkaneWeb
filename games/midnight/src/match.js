@@ -1,4 +1,5 @@
-/* 檔案導讀：格鬥規則與每幀模擬；角色資料在 roster.js，畫面由 renderer.js 繪製。 */
+/* 檔案導讀：格鬥規則與每幀模擬；角色資料在 roster.js，電腦的思考在 ai.js，
+   畫面由 renderer.js 繪製。 */
 (() => {
   const game = globalThis.Midnight;
   const {
@@ -143,6 +144,7 @@
       {
         cpu = true,
         training = false,
+        demo = false,
         difficulty = "normal",
         random = Math.random,
       } = {},
@@ -150,6 +152,15 @@
       this.profiles = profiles;
       this.cpu = cpu;
       this.training = training;
+      this.demo = demo; // 觀戰：兩邊都交給電腦
+      // 整場比賽的戰績（結算畫面使用）
+      this.stats = profiles.map(() => ({
+        damage: 0,
+        hits: 0,
+        maxCombo: 0,
+        perfect: 0,
+        throws: 0,
+      }));
       this.difficulty = DIFFICULTY[difficulty] ?? DIFFICULTY.normal;
       this.random = random;
       this.score = [0, 0];
@@ -169,7 +180,11 @@
       this.phaseTime = 0;
       this.hitStop = 0;
       this.result = null;
-      this.ai = { controls: EMPTY_CONTROLS, nextDecision: 0.16 };
+      // 每回合換一顆新的大腦，但保留它對對手習慣的印象
+      const previous = this.brains ?? [];
+      this.brains = this.fighters.map(
+        (_, index) => new game.Brain(this, index, previous[index]?.habits),
+      );
       if (this.training)
         for (const fighter of this.fighters) fighter.meter = 100;
       this.events.push({ type: "round", round: this.round });
@@ -223,7 +238,10 @@
       this.elapsed += dt;
       if (!this.training) this.remaining = decay(this.remaining, dt);
       if (this.cpu)
-        inputs[1] = this.training ? EMPTY_CONTROLS : this.computerControls(dt);
+        inputs[1] = this.training
+          ? EMPTY_CONTROLS
+          : this.brains[1].controls(dt);
+      if (this.demo) inputs[0] = this.brains[0].controls(dt);
       this.fighters.forEach((fighter, index) =>
         this.advanceFighter(
           fighter,
@@ -263,6 +281,7 @@
 
     settle(fighter, dt) {
       fighter.heldBy = null;
+      fighter.flash = decay(fighter.flash, dt); // 否則倒地的人會一直是整片白色
       fighter.x = stageX(fighter.x + fighter.knock * dt);
       fighter.knock *= Math.max(0, 1 - 5 * dt);
       if (fighter.y > 0 || fighter.vy > 0) {
@@ -942,6 +961,7 @@
         if (attacker.move && attacker.move.action !== "super")
           attacker.stun = Math.max(attacker.stun, 0.16);
         this.hitStop = Math.max(this.hitStop, 0.11);
+        this.stats[target.index].perfect += 1;
         this.events.push({
           type: "perfect",
           fighter: target,
@@ -1044,7 +1064,12 @@
         attacker.comboDamage =
           (continuingCombo ? attacker.comboDamage : 0) + damage;
         attacker.lastHit = this.elapsed;
+        const record = this.stats[attacker.index];
+        record.hits += 1;
+        record.maxCombo = Math.max(record.maxCombo, attacker.combo);
+        if (action === "throw") record.throws += 1;
       }
+      this.stats[attacker.index].damage += damage;
       this.events.push({
         type: blocked ? "block" : "hit",
         fighter: target,
@@ -1092,188 +1117,6 @@
       }
       if (this.result.winner !== null) this.round += 1;
       this.resetRound();
-    }
-
-    computerControls(dt) {
-      const [rival, cpu] = this.fighters;
-      const level = this.difficulty;
-      this.ai.nextDecision -= dt;
-
-      // Defensive reflexes that cut through the decision timer.
-      if (cpu.heldBy) {
-        if (!this.ai.techTried) {
-          this.ai.techTried = true;
-          if (this.random() < level.react * 0.55)
-            return { ...EMPTY_CONTROLS, actions: ["throw"] };
-        }
-        return EMPTY_CONTROLS;
-      }
-      this.ai.techTried = false;
-      if (
-        cpu.stun > 0 &&
-        cpu.meter >= BURST_COST &&
-        rival.combo >= 3 &&
-        !this.ai.burstTried
-      ) {
-        this.ai.burstTried = true;
-        if (this.random() < level.react * 0.35)
-          return { ...EMPTY_CONTROLS, actions: ["dodge"] };
-      }
-      if (cpu.stun === 0) this.ai.burstTried = false;
-
-      // Combo confirm: chain into a stronger move as soon as a hit lands.
-      if (cpu.move?.connected && !this.ai.confirmed) {
-        this.ai.confirmed = true;
-        if (this.random() < level.confirm) {
-          const chain =
-            cpu.move.action === "light"
-              ? "heavy"
-              : cpu.move.action === "heavy"
-                ? cpu.meter >= 100 && this.random() < 0.5
-                  ? "super"
-                  : this.ready(cpu, "special")
-                    ? "special"
-                    : "skill2"
-                : (cpu.move.action === "special" ||
-                      cpu.move.action === "skill2") &&
-                    cpu.meter >= 100
-                  ? "super"
-                  : null;
-          if (chain && this.ready(cpu, chain))
-            return { ...EMPTY_CONTROLS, actions: [chain] };
-        }
-      }
-      if (!cpu.move) this.ai.confirmed = false;
-
-      // Hold guard at the right height while still guarding.
-      const held = this.ai.controls;
-      if (held.guard)
-        held.crouch =
-          (rival.crouch || rival.move?.action === "sweep") && rival.y === 0;
-      if (this.ai.nextDecision > 0) return held;
-
-      const controls = {
-        direction: 0,
-        crouch: false,
-        guard: false,
-        actions: [],
-      };
-      this.ai.controls = controls;
-      const roll = this.random();
-      this.ai.nextDecision = level.think[0] + this.random() * level.think[1];
-      if (cpu.move || cpu.dodge || cpu.stun > 0) return controls;
-
-      const distance = Math.abs(rival.x - cpu.x);
-      const toward = Math.sign(rival.x - cpu.x) || cpu.face;
-      const id = cpu.profile.id;
-      const ranged = id === "frost";
-      const incoming = this.projectiles.find(
-        (shot) =>
-          shot.owner === rival &&
-          !shot.checked &&
-          (cpu.x - shot.x) * shot.direction >= 0 &&
-          Math.abs(shot.x - cpu.x) < 220,
-      );
-      const trap = this.traps.find(
-        (item) =>
-          item.owner === rival &&
-          !item.erupted &&
-          Math.abs(item.x - cpu.x) < 110,
-      );
-      const rivalStartup =
-        rival.move && rival.move.next === 0 && distance < 260;
-      const aggression = level.aggression;
-      const guardLow =
-        (rival.crouch || rival.move?.action === "sweep") && rival.y === 0;
-
-      if (trap && roll < level.react) {
-        controls.direction = Math.sign(cpu.x - trap.x) || -toward;
-        if (cpu.dodgeCooldown === 0 && roll < level.react * 0.5)
-          controls.actions.push("dodge");
-      } else if (incoming && roll < level.react) {
-        if (id === "shade" && this.ready(cpu, "skill2") && roll < 0.4)
-          controls.actions.push("skill2");
-        else if (incoming.shape === "quake") controls.actions.push("jump");
-        else if (incoming.y >= 166) controls.crouch = true;
-        else controls.guard = true;
-      } else if (
-        rival.y > 70 &&
-        distance < 230 &&
-        id === "thunder" &&
-        this.ready(cpu, "skill2") &&
-        roll < level.react
-      ) {
-        controls.actions.push("skill2");
-      } else if (rivalStartup && roll < level.guard + 0.1) {
-        if (id === "shade" && this.ready(cpu, "skill2"))
-          controls.actions.push("skill2");
-        else if (roll < level.guard * 0.4 && cpu.dodgeCooldown === 0)
-          controls.actions.push("dodge");
-        else {
-          controls.guard = true;
-          controls.crouch = guardLow;
-        }
-      } else if (rival.move && distance < 230 && roll < level.guard) {
-        if (roll < 0.12 && cpu.dodgeCooldown === 0)
-          controls.actions.push("dodge");
-        else {
-          controls.guard = true;
-          controls.crouch = guardLow;
-        }
-      } else if (
-        rival.guard &&
-        distance < 120 &&
-        roll < 0.35 + level.confirm * 0.4
-      ) {
-        controls.actions.push("throw");
-      } else if (
-        cpu.meter >= 100 &&
-        distance < (ranged ? 850 : 330) &&
-        roll > 0.42 / aggression
-      ) {
-        controls.actions.push("super");
-      } else if (
-        rival.guard &&
-        id === "lion" &&
-        distance < 330 &&
-        this.ready(cpu, "skill2") &&
-        roll > 0.4
-      ) {
-        controls.actions.push("skill2");
-      } else if (
-        ranged &&
-        this.ready(cpu, "skill2") &&
-        distance > 260 &&
-        roll > 0.7 / aggression
-      ) {
-        controls.actions.push("skill2");
-      } else if (
-        this.ready(cpu, "special") &&
-        distance < (ranged ? 900 : 346) &&
-        roll > 0.59 / aggression
-      ) {
-        controls.actions.push("special");
-      } else if (distance <= 163 && roll > 0.17 / aggression) {
-        if (roll > 0.86) {
-          controls.crouch = true;
-          controls.actions.push("heavy");
-        } else
-          controls.actions.push(
-            distance < 137 && roll < 0.66 ? "light" : "heavy",
-          );
-      } else if (distance > (ranged ? 375 : 139)) {
-        controls.direction = toward;
-        if (!ranged && distance > 330 && roll < 0.25 * aggression)
-          controls.dash = toward;
-        else if (distance > 235 && roll < 0.08) controls.actions.push("jump");
-      } else if (roll < 0.39) {
-        controls.direction = -toward;
-        if (roll < 0.1) controls.dash = -toward;
-      }
-
-      // Keep the held inputs until the next decision and deliver each press once.
-      this.ai.controls = { ...controls, actions: [], dash: 0 };
-      return controls;
     }
   }
 

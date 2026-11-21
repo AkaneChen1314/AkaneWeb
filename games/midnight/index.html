@@ -17,38 +17,42 @@
     <title>午夜擂台 | Midnight Circuit</title>
     <link
       rel="stylesheet"
-      href="styles.css?v=6"
+      href="styles.css?v=7"
     />
     <script
-      src="src/roster.js?v=6"
+      src="src/roster.js?v=7"
       defer
     ></script>
     <script
-      src="src/match.js?v=6"
+      src="src/ai.js?v=7"
       defer
     ></script>
     <script
-      src="src/walk-frames.js?v=6"
+      src="src/match.js?v=7"
       defer
     ></script>
     <script
-      src="src/effects.js?v=6"
+      src="src/walk-frames.js?v=7"
       defer
     ></script>
     <script
-      src="src/animation.js?v=6"
+      src="src/effects.js?v=7"
       defer
     ></script>
     <script
-      src="src/renderer.js?v=6"
+      src="src/animation.js?v=7"
       defer
     ></script>
     <script
-      src="src/audio.js?v=6"
+      src="src/renderer.js?v=7"
       defer
     ></script>
     <script
-      src="src/app.js?v=6"
+      src="src/audio.js?v=7"
+      defer
+    ></script>
+    <script
+      src="src/app.js?v=7"
       defer
     ></script>
     <link
@@ -148,6 +152,12 @@
               data-mode="arcade"
               aria-pressed="false"
               >街機挑戰</button
+            >
+            <button
+              type="button"
+              data-mode="watch"
+              aria-pressed="false"
+              >電腦對打</button
             >
           </div>
         </div>
@@ -465,6 +475,10 @@
                 id="result-title"
                 tabindex="-1"
               ></h2>
+              <table
+                id="result-stats"
+                class="result-stats"
+              ></table>
               <div class="dialog-actions">
                 <button
                   type="button"
