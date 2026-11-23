@@ -1,3 +1,5 @@
+/* 檔案導讀：共用的戰鬥特效——粒子、火花、衝擊波、刀光、閃電、飄雨。
+   技能與大招自己的演出在 fx.js（this.skills），這裡在適當的時機呼叫它。 */
 (() => {
   const { FIELD } = Midnight;
   const { width: W, height: H, ground: G } = FIELD;
@@ -6,7 +8,7 @@
   const rand = (min, max) => min + Math.random() * (max - min);
   const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
-  // Element palettes: main colour, hot core, secondary accent.
+  // 每位鬥士的代表色：main 主色、core 最亮的中心、alt 點綴
   const PALETTE = {
     thunder: { main: "#ffd060", core: "#fffbe6", alt: "#8fd3ff" },
     frost: { main: "#8fe6ff", core: "#f2fdff", alt: "#4aa8ff" },
@@ -24,8 +26,9 @@
     constructor(motion) {
       this.motion = motion;
       this.lights = new Map();
-      this.shotTrails = new WeakMap();
       this.rain = Array.from({ length: 120 }, () => this.raindrop(true));
+      this.skills = new Midnight.SkillFx(this);
+      this.ghost = null; // renderer.js 提供：在指定位置留下一個殘影
       this.reset();
     }
 
@@ -42,12 +45,11 @@
       this.slashes = [];
       this.bolts = [];
       this.waves = [];
-      this.spikes = [];
       this.superFlash = null;
-      this.speedLines = [];
+      this.skills.reset();
     }
 
-    // Cached radial light sprite for any colour; drawn additively it reads as glow.
+    // 一張放射狀的光暈（每種顏色只畫一次，之後重複使用）
     light(color) {
       let canvas = this.lights.get(color);
       if (!canvas) {
@@ -90,9 +92,9 @@
       );
     }
 
-    // ---------- spawning helpers ----------
+    // ---------- 產生特效的小工具 ----------
     emit(kind, x, y, options = {}) {
-      const max = this.calm ? 90 : 520;
+      const max = this.calm ? 90 : 620;
       if (this.particles.length >= max) this.particles.shift();
       const life = options.life ?? rand(0.25, 0.5);
       this.particles.push({
@@ -141,7 +143,7 @@
           size: rand(size[0], size[1]),
           color: pick(colors),
           life: rand(life[0], life[1]),
-          drag: kind === "ember" || kind === "smoke" ? 0.2 : 0.6,
+          drag: ["ember", "smoke", "puff", "mist"].includes(kind) ? 0.2 : 0.6,
         });
       }
     }
@@ -229,9 +231,10 @@
       if (this.bolts.length > 40) this.bolts.shift();
     }
 
-    // ---------- event cues ----------
+    // ---------- 遊戲事件 ----------
     cue(event) {
       const f = event.fighter;
+      this.skills.cue(event);
       switch (event.type) {
         case "attack": {
           if (!event.name || ["sweep", "throw"].includes(event.action)) break;
@@ -532,7 +535,6 @@
         case "projectile": {
           const { shot } = event;
           const p = this.palette(shot.shape === "quake" ? "lion" : "frost");
-          this.shotTrails.set(shot, { origin: shot.x, emit: 0 });
           this.burst(shot.x, G - shot.y, 12, {
             colors: [p.main, p.core],
             speed: [100, 420],
@@ -563,39 +565,6 @@
           this.wave(event.x, G - event.y, 150, WHITE, 0.4, 1, 6);
           break;
         }
-        case "erupt": {
-          const { trap } = event;
-          const p = this.palette("frost");
-          const spikes = [];
-          const count = this.calm ? 5 : 9;
-          for (let i = 0; i < count; i += 1) {
-            const dx = (i / (count - 1) - 0.5) * trap.spec.width * 1.1;
-            spikes.push({
-              dx,
-              h:
-                trap.spec.height *
-                (1 - (Math.abs(dx) / trap.spec.width) * 1.1) *
-                rand(0.75, 1.1),
-              w: rand(16, 26),
-              tilt: dx * 0.004 + rand(-0.12, 0.12),
-              delay: (Math.abs(dx) / trap.spec.width) * 0.08,
-            });
-          }
-          this.spikes.push({ x: trap.x, spikes, age: 0, life: 0.75 });
-          this.burst(trap.x, G - 20, 28, {
-            colors: [p.main, p.core, "#ffffff"],
-            kind: "shard",
-            speed: [200, 700],
-            up: 300,
-            spread: 1.6,
-            angle: -Math.PI / 2,
-            gravity: 1300,
-            size: [5, 12],
-            life: [0.4, 0.8],
-          });
-          this.wave(trap.x, G - 4, trap.spec.width, p.core, 0.45, 0.25, 6);
-          break;
-        }
         case "round-end":
           if (event.reason === "ko" && event.loser) {
             const l = event.loser;
@@ -618,7 +587,41 @@
       }));
     }
 
-    swing({ fighter: f, strike, low, high, direction, action }) {
+    /* 現在照亮場景的招式（大招、技能、剛打中的火花），沒有就回傳 null。
+       給 renderer.js 用來把角色的邊緣光染成那個顏色。 */
+    lightSource(fighters) {
+      const flash = this.superFlash;
+      if (flash)
+        return this.lightOf(
+          flash.palette.main,
+          fighters[flash.index].x,
+          1 - flash.age / flash.life,
+        );
+      const cast = this.casts.find((c) => c.ultimate) ?? this.casts[0];
+      if (cast) {
+        const caster = fighters[cast.index];
+        return this.lightOf(
+          this.palette(cast.id).main,
+          caster.x + caster.face * 50,
+          0.6 * Math.sin((cast.age / cast.life) * Math.PI),
+        );
+      }
+      const impact = this.impacts[this.impacts.length - 1];
+      if (!impact) return null;
+      const power = 0.7 * (1 - impact.age / impact.life);
+      return this.lightOf(impact.color, impact.x, power);
+    }
+
+    lightOf(color, x, power) {
+      const part = (i) => parseInt(color.slice(i, i + 2), 16) / 255;
+      return {
+        color: [part(1), part(3), part(5)],
+        x,
+        power: Math.max(0, Math.min(1, power)) * (this.calm ? 0.3 : 1),
+      };
+    }
+
+    swing({ fighter: f, strike, low, high, direction, action, path }) {
       const id = EFFECT_ID[strike.effect] ?? null;
       const p = id ? this.palette(id) : null;
       const color = action === "light" ? WHITE : p ? p.main : f.profile.color;
@@ -657,17 +660,13 @@
       }
       const big = action !== "light";
       this.slashes.push({
-        x: f.x + 30 * direction,
-        y,
-        direction,
-        radius: Math.max(70, strike.range - 30),
+        points: this.slashPoints(f, strike, path, y, direction),
         color,
         core: p ? p.core : WHITE,
-        life: big ? 0.2 : 0.13,
-        total: big ? 0.2 : 0.13,
-        thick: big ? 26 : 14,
+        life: big ? 0.24 : 0.16,
+        total: big ? 0.24 : 0.16,
+        thick: (big ? 34 : 20) * (path?.foot ? 1.2 : 1),
         double: strike.effect === "shade",
-        tilt: rand(-0.25, 0.2),
       });
       if (strike.effect === "bolt") {
         const reach = strike.range * 0.9;
@@ -694,19 +693,50 @@
       }
     }
 
-    impact({
-      type,
-      fighter,
-      attacker,
-      action,
-      height,
-      direction,
-      effect,
-      counterHit,
-      finisher,
-    }) {
+    /* 揮擊光帶的路線（場地座標）：拳腳掃過的路線，再往前延伸到招式的攻擊距離。
+       沒有骨架資料時就用一條水平的直線。 */
+    slashPoints(f, strike, path, y, direction) {
+      const local = (path?.points ?? []).map(([x, up]) => [
+        f.x + x * direction,
+        G - f.y - up,
+      ]);
+      if (local.length < 2)
+        return [
+          [f.x + 40 * direction, y],
+          [f.x + (strike.range * 0.6 + 20) * direction, y],
+          [f.x + strike.range * direction, y],
+        ];
+      const [x1, y1] = local[local.length - 1];
+      const [x0, y0] = local[local.length - 2];
+      const len = Math.hypot(x1 - x0, y1 - y0) || 1;
+      const reach = f.x + strike.range * direction;
+      const extra = Math.max(26, Math.min(95, (reach - x1) * direction));
+      // 尾端順著出招的方向，慢慢轉成往前
+      for (let i = 1; i <= 4; i += 1) {
+        const k = i / 4;
+        const dx = ((x1 - x0) / len) * (1 - k) + direction * k;
+        const dy = ((y1 - y0) / len) * (1 - k);
+        const last = local[local.length - 1];
+        local.push([last[0] + (dx * extra) / 4, last[1] + (dy * extra) / 4]);
+      }
+      return local;
+    }
+
+    impact(event) {
+      const {
+        type,
+        fighter,
+        attacker,
+        action,
+        height,
+        direction,
+        effect,
+        counterHit,
+        finisher,
+      } = event;
       const x = fighter.x - direction * 26;
       const y = G - height;
+      this.skills.hit(event, x, y);
       if (type === "block") {
         this.impacts.push({
           kind: "block",
@@ -761,6 +791,7 @@
         y,
         color: effect ? p.main : attacker.profile.color,
         size,
+        soft: Boolean(effect), // 技能另有演出，火花淡一點才看得到人
         age: 0,
         life: size > 90 ? 0.38 : 0.26,
         spikes: this.spikesFor(size > 90 ? 14 : 10),
@@ -788,10 +819,10 @@
         gravity: 800,
         size: [1.5, 4.5],
       });
-      // Element-specific debris.
+      // 各屬性的碎屑
       const id = EFFECT_ID[effect];
       if (id === "thunder") {
-        for (let i = 0; i < (size > 90 ? 4 : 2); i += 1) {
+        for (let i = 0; i < (size > 90 ? 3 : 2); i += 1) {
           const a = rand(0, TAU);
           const r = rand(70, 150);
           this.bolt(
@@ -803,16 +834,6 @@
             { life: 0.14, jag: 20, width: 2.5, branches: 1 },
           );
         }
-      } else if (id === "frost") {
-        this.burst(x, y, 14, {
-          colors: [p.main, p.core],
-          kind: "shard",
-          speed: [150, 560],
-          direction: -direction,
-          gravity: 1200,
-          size: [5, 11],
-          life: [0.35, 0.7],
-        });
       } else if (id === "lion") {
         this.burst(x, y, 12, {
           colors: [p.main, p.alt],
@@ -832,23 +853,10 @@
           size: [20, 40],
           life: [0.3, 0.55],
         });
-        this.slashes.push({
-          x: fighter.x,
-          y,
-          direction: -direction,
-          radius: 95,
-          color: p.main,
-          core: p.core,
-          life: 0.22,
-          total: 0.22,
-          thick: 20,
-          double: true,
-          tilt: rand(-1, 1),
-        });
       }
     }
 
-    // ---------- simulation ----------
+    // ---------- 每一幀的更新 ----------
     raindrop(anywhere = false) {
       return {
         x: rand(-100, W + 60),
@@ -861,19 +869,13 @@
 
     update(dt, fighters = [], match = null) {
       this.time += dt;
-      for (const collection of [
-        this.casts,
-        this.impacts,
-        this.paths,
-        this.spikes,
-      ])
+      for (const collection of [this.casts, this.impacts, this.paths])
         for (const item of collection) item.age += dt;
       for (const collection of [this.slashes, this.bolts, this.waves])
         for (const item of collection) item.life -= dt;
       this.casts = this.casts.filter((c) => c.age < c.life);
       this.impacts = this.impacts.filter((c) => c.age < c.life);
       this.paths = this.paths.filter((c) => c.age < c.life);
-      this.spikes = this.spikes.filter((c) => c.age < c.life);
       this.slashes = this.slashes.filter((c) => c.life > 0);
       this.bolts = this.bolts.filter((c) => c.life > 0);
       this.waves = this.waves.filter((c) => c.life > 0);
@@ -917,9 +919,10 @@
       }
 
       this.ambient(dt, fighters, match);
+      this.skills.update(dt, fighters, match);
     }
 
-    // Continuous emitters: casting auras, projectile trails, pending traps, full-meter sparkle.
+    // 持續冒出來的粒子：施招的氣、飛行道具的尾巴、集氣滿的光點
     ambient(dt, fighters, match) {
       if (this.calm) return;
       const chance = (rate) => Math.random() < rate * dt;
@@ -952,7 +955,14 @@
             drag: 0.5,
           });
         }
-        if (cast.id === "lion" && chance(rate)) {
+        if (cast.id === "lion") {
+          for (let n = rate * dt; n > 0; n -= 1)
+            if (Math.random() < n)
+              this.skills.fire(f.x + rand(-95, 95), G - rand(-6, 14), {
+                size: rand(14, 30) * (cast.ultimate ? 1.3 : 1),
+              });
+        }
+        if (cast.id === "lion" && chance(rate * 0.5)) {
           this.emit("ember", f.x + rand(-90, 90), G - rand(0, 40), {
             vx: rand(-40, 40),
             vy: rand(-320, -160),
@@ -1051,10 +1061,10 @@
       }
     }
 
-    // ---------- drawing ----------
-    behind(ctx, fighters, match) {
+    // ---------- 繪圖 ----------
+    behind(ctx, fighters) {
       ctx.save();
-      // Rain sits between the backdrop and the fighters.
+      // 雨畫在背景與角色之間
       ctx.strokeStyle = "#a9c2e8";
       ctx.lineCap = "round";
       for (const drop of this.rain) {
@@ -1083,13 +1093,14 @@
         ctx.globalAlpha = 1;
       }
 
+      this.skills.draw(ctx, "floor", fighters);
       ctx.globalCompositeOperation = "lighter";
       if (flash) {
         const f = fighters[flash.index];
         const progress = flash.age / flash.life;
         const cx = f.x;
         const cy = G - f.y - 130;
-        // Rotating god-rays behind the caster.
+        // 施放者背後旋轉的光芒
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(this.time * 0.8);
@@ -1112,9 +1123,8 @@
           cy,
           260 + progress * 120,
           flash.palette.main,
-          (1 - progress) * 0.9,
+          (1 - progress) * 0.5,
         );
-        this.glow(ctx, cx, cy, 120, flash.palette.core, (1 - progress) * 0.8);
       }
 
       for (const cast of this.casts) {
@@ -1154,46 +1164,12 @@
         ctx.restore();
       }
 
-      // Pending frost traps: a pulsing rune on the floor warns the target.
-      if (match) {
-        for (const trap of match.traps) {
-          if (trap.erupted) continue;
-          const progress = 1 - trap.timer / trap.total;
-          const pulse =
-            0.55 + 0.45 * Math.sin(this.time * (10 + progress * 30));
-          ctx.save();
-          ctx.translate(trap.x, G - 2);
-          ctx.scale(1, 0.25);
-          this.glow(
-            ctx,
-            0,
-            0,
-            trap.spec.width * (0.6 + progress * 0.5),
-            "#8fe6ff",
-            0.5 + pulse * 0.4,
-          );
-          ctx.strokeStyle = "#dffbff";
-          ctx.lineWidth = 4;
-          ctx.globalAlpha = 0.45 + pulse * 0.5;
-          ctx.beginPath();
-          ctx.arc(0, 0, trap.spec.width / 2, 0, TAU);
-          ctx.stroke();
-          ctx.rotate(this.time * 2);
-          ctx.beginPath();
-          for (let i = 0; i < 6; i += 1) {
-            const a = (i / 6) * TAU;
-            const r = (trap.spec.width / 2) * progress;
-            ctx.moveTo(0, 0);
-            ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-          }
-          ctx.stroke();
-          ctx.restore();
-        }
-      }
+      ctx.globalAlpha = 1;
+      this.skills.draw(ctx, "back", fighters);
       ctx.restore();
     }
 
-    // Ground sigils under an ultimate: one silhouette per fighter.
+    // 大招腳下的法陣，每位鬥士的圖案不一樣
     sigil(ctx, id, radius, progress, strength, p) {
       ctx.save();
       ctx.globalAlpha = strength * 0.8;
@@ -1238,7 +1214,7 @@
 
     front(ctx, fighters, match) {
       ctx.save();
-      // Debris and smoke read better with normal blending.
+      // 碎石與煙用一般混色才看得清楚
       for (const p of this.particles) {
         const fade = p.life / p.total;
         if (p.kind === "rock") {
@@ -1253,16 +1229,18 @@
           const r = p.size * (1.6 - fade * 0.6);
           ctx.globalAlpha = fade * 0.55;
           ctx.drawImage(this.light(p.color), p.x - r, p.y - r, r * 2, r * 2);
-        }
+        } else this.skills.drawSolid(ctx, p, fade);
       }
       ctx.globalAlpha = 1;
+      this.skills.draw(ctx, "solid", fighters);
       ctx.globalCompositeOperation = "lighter";
       const calmScale = this.calm ? 0.45 : 1;
 
       for (const cast of this.casts)
         this.drawCast(ctx, cast, fighters[cast.index], calmScale);
-      if (match) for (const shot of match.projectiles) this.drawShot(ctx, shot);
-      for (const item of this.spikes) this.drawSpikes(ctx, item);
+      if (match)
+        for (const shot of match.projectiles) this.skills.drawShot(ctx, shot);
+      this.skills.draw(ctx, "front", fighters);
 
       for (const path of this.paths) {
         const fade = 1 - path.age / path.life;
@@ -1284,9 +1262,12 @@
         const progress = 1 - w.life / w.total;
         const r =
           w.radius * (w.from + (1 - w.from) * (1 - (1 - progress) ** 3));
-        ctx.globalAlpha = (1 - progress) * calmScale;
+        // 柔邊的光環，加上一條細線當邊緣
+        const soft = (1 - progress) * calmScale * Math.min(0.6, w.width / 12);
+        this.skills.ring(ctx, w.x, w.y, r, r * w.stretch, w.color, soft);
+        ctx.globalAlpha = (1 - progress) * calmScale * 0.7;
         ctx.strokeStyle = w.color;
-        ctx.lineWidth = w.width * (1 - progress) + 0.5;
+        ctx.lineWidth = w.width * 0.6 * (1 - progress) + 0.5;
         ctx.beginPath();
         ctx.ellipse(w.x, w.y, r, r * w.stretch, 0, 0, TAU);
         ctx.stroke();
@@ -1309,6 +1290,8 @@
         } else if (p.kind === "ember") {
           ctx.globalAlpha = 1;
           this.glow(ctx, p.x, p.y, p.size * (0.6 + fade), p.color, fade);
+        } else if (p.kind === "fire" || p.kind === "mist") {
+          this.skills.drawGlow(ctx, p, fade);
         } else if (p.kind === "shard") {
           ctx.globalAlpha = Math.min(1, fade * 1.6);
           this.crystal(ctx, p.x, p.y, p.size, p.rotation, p.color);
@@ -1334,7 +1317,7 @@
         }
       }
 
-      // Speed lines rush toward the caster during the super flash.
+      // 大招定格時，往施放者收的速度線
       const flash = this.superFlash;
       if (flash && !this.calm) {
         const f = fighters[flash.index];
@@ -1366,7 +1349,7 @@
       const x = f.x + f.face * 50;
       const y = G - f.y - 140;
       ctx.globalAlpha = amount;
-      this.glow(ctx, x, y, 80 * scale, p.main, 0.7);
+      this.glow(ctx, x, y, 80 * scale, p.main, 0.45);
       if (cast.id === "frost") {
         for (let i = 0; i < 10; i += 1) {
           const angle = (i / 10) * TAU + progress * 3;
@@ -1379,35 +1362,6 @@
             angle,
             p.main,
           );
-        }
-      } else if (cast.id === "lion") {
-        for (let i = -4; i <= 4; i += 1) {
-          const px = f.x + i * 40 * scale;
-          const rise = amount * (110 - Math.abs(i) * 14) * scale;
-          this.glow(ctx, px, G - rise / 2, 50 * scale, p.main, 0.6 * amount);
-          ctx.globalAlpha = amount * 0.85;
-          ctx.fillStyle = i % 2 ? p.alt : p.main;
-          ctx.beginPath();
-          const bend = Math.sin(this.time * 9 + i) * 14;
-          ctx.moveTo(px - 16, G);
-          ctx.bezierCurveTo(
-            px - 24,
-            G - rise * 0.4,
-            px + 16 + bend,
-            G - rise * 0.65,
-            px + 7 + bend,
-            G - rise,
-          );
-          ctx.bezierCurveTo(
-            px + 35 + bend,
-            G - rise * 0.55,
-            px + 6,
-            G - rise * 0.3,
-            px + 24,
-            G,
-          );
-          ctx.closePath();
-          ctx.fill();
         }
       } else if (cast.id === "shade") {
         ctx.strokeStyle = p.main;
@@ -1448,155 +1402,49 @@
       ctx.globalAlpha = 1;
     }
 
-    drawShot(ctx, shot) {
-      const y = G - shot.y;
-      const spin = this.time * 9;
-      if (shot.shape === "ice") {
-        const p = this.palette("frost");
-        for (let i = 1; i <= 6; i += 1)
-          this.glow(
-            ctx,
-            shot.x - shot.direction * i * 22,
-            y,
-            shot.radius * (1.9 - i * 0.18),
-            p.main,
-            (1 - i / 7) * 0.5,
-          );
-        this.glow(ctx, shot.x, y, shot.radius * 3, p.main, 0.8);
-        this.glow(ctx, shot.x, y, shot.radius * 1.2, p.core, 0.9);
-        ctx.globalAlpha = 0.9;
-        for (let i = 0; i < 4; i += 1) {
-          const a = spin + (i / 4) * TAU;
-          this.crystal(
-            ctx,
-            shot.x + Math.cos(a) * shot.radius * 0.55,
-            y + Math.sin(a) * shot.radius * 0.55,
-            shot.radius * 0.6,
-            a,
-            p.alt,
-          );
-        }
-        this.crystal(
-          ctx,
-          shot.x,
-          y,
-          shot.radius * 1.45,
-          shot.direction === 1 ? 0 : Math.PI,
-          "#d8f8ff",
-          "#ffffff",
-        );
-        ctx.globalAlpha = 1;
-      } else {
-        const p = this.palette("lion");
-        const trail = this.shotTrails.get(shot);
-        const origin = trail?.origin ?? shot.x;
-        // Glowing fissure left in the floor.
-        ctx.strokeStyle = p.main;
-        ctx.lineJoin = "bevel";
-        for (let layer = 0; layer < 2; layer += 1) {
-          ctx.lineWidth = layer ? 2 : 7;
-          ctx.globalAlpha = layer ? 0.9 : 0.35;
-          ctx.beginPath();
-          const steps = Math.max(2, Math.floor(Math.abs(shot.x - origin) / 24));
-          for (let i = 0; i <= steps; i += 1) {
-            const px = origin + ((shot.x - origin) * i) / steps;
-            const py = G + 2 + Math.sin(i * 2.7 + origin) * 4;
-            if (i) ctx.lineTo(px, py);
-            else ctx.moveTo(px, py);
-          }
-          ctx.stroke();
-        }
-        ctx.globalAlpha = 1;
-        this.glow(ctx, shot.x, G - 20, 90, p.main, 0.85);
-        this.glow(ctx, shot.x, G - 10, 40, p.core, 0.9);
-        // Erupting flame tongues at the wavefront.
-        ctx.fillStyle = p.alt;
-        for (let i = -2; i <= 2; i += 1) {
-          const h =
-            (60 - Math.abs(i) * 14) *
-            (0.8 + 0.3 * Math.sin(this.time * 25 + i * 2));
-          const px = shot.x + i * 14 - shot.direction * 8;
-          ctx.globalAlpha = 0.75;
-          ctx.beginPath();
-          ctx.moveTo(px - 10, G);
-          ctx.quadraticCurveTo(
-            px + shot.direction * 4,
-            G - h * 1.1,
-            px + 10,
-            G,
-          );
-          ctx.fill();
-        }
-        ctx.globalAlpha = 1;
-      }
-    }
-
-    drawSpikes(ctx, item) {
-      const progress = item.age / item.life;
-      const p = this.palette("frost");
-      this.glow(ctx, item.x, G - 40, 160, p.main, (1 - progress) * 0.8);
-      for (const s of item.spikes) {
-        const t = Math.max(0, item.age - s.delay);
-        const grow = Math.min(1, t / 0.08);
-        const shrink = progress > 0.7 ? 1 - (progress - 0.7) / 0.3 : 1;
-        const h = s.h * grow * shrink;
-        if (h <= 1) continue;
-        ctx.save();
-        ctx.translate(item.x + s.dx, G + 4);
-        ctx.rotate(s.tilt);
-        const gradient = ctx.createLinearGradient(0, 0, 0, -h);
-        gradient.addColorStop(0, "#2c7fd0");
-        gradient.addColorStop(0.6, p.main);
-        gradient.addColorStop(1, "#ffffff");
-        ctx.globalAlpha = 0.9;
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.moveTo(-s.w / 2, 0);
-        ctx.lineTo(-s.w * 0.12, -h);
-        ctx.lineTo(s.w * 0.1, -h * 0.96);
-        ctx.lineTo(s.w / 2, 0);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-      }
-      ctx.globalAlpha = 1;
-    }
-
+    // 揮擊的光帶：沿著拳腳的路線，前面粗、後面細，尾巴很快追上來
     drawSlash(ctx, s, calmScale) {
       const progress = 1 - s.life / s.total;
-      const sweep = Math.min(1, progress / 0.45);
-      const fade = progress < 0.45 ? 1 : 1 - (progress - 0.45) / 0.55;
-      const a0 = -1.25;
-      const a1 = a0 + 2.3 * sweep;
-      const r = s.radius;
+      const fade = (1 - progress) ** 1.3 * calmScale;
+      const { points } = s;
+      const n = points.length;
+      const tail = Math.min(0.8, progress * 1.1) * (n - 1);
+      const ribbon = (thick, shift) => {
+        const left = [];
+        const right = [];
+        for (let i = 0; i < n; i += 1) {
+          const a = points[Math.max(0, i - 1)];
+          const b = points[Math.min(n - 1, i + 1)];
+          const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+          const nx = -(b[1] - a[1]) / len;
+          const ny = (b[0] - a[0]) / len;
+          const k = Math.max(0, (i - tail) / (n - 1 - tail));
+          // 從 0 慢慢變粗，到末端再收尖
+          const w = thick * k ** 0.8 * (k > 0.72 ? (1 - k) / 0.28 : 1);
+          const [x, y] = points[i];
+          const px = x + nx * shift;
+          const py = y + ny * shift;
+          left.push([px + nx * w, py + ny * w]);
+          right.push([px - nx * w, py - ny * w]);
+        }
+        ctx.beginPath();
+        for (const [x, y] of left) ctx.lineTo(x, y);
+        for (const [x, y] of right.reverse()) ctx.lineTo(x, y);
+        ctx.closePath();
+        ctx.fill();
+      };
       ctx.save();
-      ctx.translate(s.x, s.y);
-      ctx.scale(s.direction, 1);
-      ctx.rotate(s.tilt);
       for (let layer = 0; layer < (s.double ? 2 : 1); layer += 1) {
-        const rr = r * (1 - layer * 0.22);
-        const thick = s.thick * (1 - layer * 0.3);
-        ctx.globalAlpha = fade * calmScale * (layer ? 0.7 : 1);
+        const shift = layer * 20;
+        const scale = (1 - layer * 0.35) / 2;
         ctx.fillStyle = s.color;
-        ctx.beginPath();
-        ctx.arc(0, 0, rr, a0, a1);
-        ctx.arc(thick * 0.6, 0, rr - thick, a1, a0, true);
-        ctx.closePath();
-        ctx.fill();
-        ctx.globalAlpha = fade * calmScale;
+        ctx.globalAlpha = fade * 0.28;
+        ribbon(s.thick * 1.9 * scale, shift);
+        ctx.globalAlpha = fade * 0.75;
+        ribbon(s.thick * scale, shift);
         ctx.fillStyle = s.core;
-        ctx.beginPath();
-        ctx.arc(0, 0, rr, a0 + (a1 - a0) * 0.35, a1);
-        ctx.arc(
-          thick * 0.3,
-          0,
-          rr - thick * 0.35,
-          a1,
-          a0 + (a1 - a0) * 0.35,
-          true,
-        );
-        ctx.closePath();
-        ctx.fill();
+        ctx.globalAlpha = fade;
+        ribbon(s.thick * 0.45 * scale, shift);
       }
       ctx.restore();
     }
@@ -1628,7 +1476,7 @@
             b.lines[0][0][1],
             40,
             b.color,
-            fade * 0.6,
+            fade * 0.16,
           );
       }
       ctx.globalAlpha = 1;
@@ -1636,13 +1484,14 @@
 
     drawImpact(ctx, impact, calmScale) {
       const progress = impact.age / impact.life;
-      const fade = (1 - progress) ** 1.5 * calmScale;
+      const strength = impact.soft ? 0.5 : 1;
+      const fade = (1 - progress) ** 1.5 * calmScale * strength;
       const { x, y, size, color } = impact;
       ctx.globalAlpha = 1;
-      this.glow(ctx, x, y, size * (1.1 + progress * 0.6), color, fade);
-      this.glow(ctx, x, y, size * 0.45, "#fff7dc", fade);
+      this.glow(ctx, x, y, size * (1 + progress * 0.5), color, fade * 0.7);
+      this.glow(ctx, x, y, size * 0.35, "#fff7dc", fade * 0.8);
       if (impact.kind === "block") {
-        // Hexagonal barrier flash in front of the defender.
+        // 防守者面前的六角護盾
         ctx.save();
         ctx.translate(x, y);
         ctx.scale(0.45, 1);
@@ -1676,11 +1525,11 @@
           ctx.stroke();
         }
       }
-      // Classic star-shaped hit spark: sharp at birth, expanding and thinning out.
+      // 星形的打擊火花：一出現最銳利，接著擴大變淡
       const grow = 0.55 + Math.min(1, progress * 4) * 0.6;
       for (const [scale, fill, alpha] of [
         [1, color, 0.9],
-        [0.55, "#ffffff", 1],
+        [0.42, "#ffffff", 0.9],
       ]) {
         ctx.globalAlpha = fade * alpha;
         ctx.fillStyle = fill;

@@ -14,12 +14,26 @@
     BURST_COST,
   } = game;
   const GRAVITY = 1740;
-  const JUMP_SPEED = 743;
-  const PUSH_DISTANCE = 116;
-  const BUFFER_TIME = 0.23;
+  const JUMP_GRAVITY = 2120; // 自己跳的時候落得比較快，不會飄在空中
+  const JUMP_SPEED = 850;
+  const PUSH_DISTANCE = 110;
+  const BUFFER_TIME = 0.26; // 提早按的指令保留多久
   const DODGE_TIME = 0.33;
-  const PERFECT_GUARD = 0.16;
-  const DASH_WINDOW = 0.24;
+  const DODGE_CANCEL = 0.23; // 閃避到這一刻之後，就能直接出招
+  const PERFECT_GUARD = 0.14;
+  const DASH_WINDOW = 0.27;
+  const THROW_CHORD = 0.05; // 輕攻與重攻相差這麼短才算「同時按」
+  const JUGGLE_LIMIT = 4; // 同一次浮空最多再被打幾下
+  const DAMAGE_SCALE = 0.7; // 距離變長、更容易打中，單下傷害跟著調低
+  const LUNGE_SPEED = 1500; // 起手跟步最快的速度
+  const RUSH_SPEED = 1450; // 追擊衝步的速度
+  const RUSH_TIME = 0.2; // 追擊衝步最久多久
+  const AIR_ACTIVE = 0.2; // 空中的普攻，拳腳伸出去之後維持多久
+  // 兩人重疊時推開的速度：重疊越多推得越快，快分開時放慢，才不會像彈開
+  const PUSH = { rate: 14, min: 260, max: 1100 };
+  const PULL_SPEED = 1200; // 被抓住時拉到面前的速度
+  const WALL_PUSH = 0.5; // 對手貼著牆時，攻擊的人自己被震退的比例
+  const SAFE_TIME = 0.4; // 被打落地後的短暫無敵
   const TECH_WINDOW = 0.25;
   const DASH = {
     forward: { time: 0.3, from: 760, to: 300 },
@@ -93,8 +107,14 @@
       crouch: false,
       guardHeld: false,
       guardStart: -10,
+      clock: 0, // 自己的時鐘，用來比較兩個按鍵相差多久
+      blockStun: 0, // 剛擋下攻擊的短暫硬直
+      juggle: 0, // 這次浮空已經被追打幾下
+      spiked: false, // 追打到上限，正被打落地面
+      safe: 0, // 落地起身的無敵時間
       lastHurt: -10,
       prevDirection: 0,
+      heldDirection: 0,
       lastTap: { dir: 0, time: -10 },
       jumping: false,
       jumpCut: false,
@@ -116,7 +136,47 @@
     return [fighter.y + 4, fighter.y + height];
   }
 
+  // 身體的半寬：打擊只要碰到身體邊緣就算命中
+  function halfWidth(fighter) {
+    return fighter.profile.size * 0.16 + (fighter.crouch ? 8 : 0);
+  }
+
+  // 一招從站定的位置最遠打得到多遠（含前衝與跟步）；飛行道具與陷阱當成全場
+  function reachOf(spec, rushing = false) {
+    let best = 0;
+    for (const event of spec.events) {
+      if (event.projectile || event.trap) return 900;
+      best = Math.max(best, event.range ?? 0, event.grab ?? 0);
+      if (event.blink && event.blink < 9000) best = Math.max(best, event.blink);
+    }
+    const travel = spec.travel
+      ? spec.travel.speed * (spec.travel.until - (spec.travel.from ?? 0))
+      : 0;
+    const rush = rushing ? (spec.rush ?? 0) : 0;
+    return best + travel * 0.7 + (spec.step ?? 0) + rush + 38;
+  }
+
+  // 拳腳剛好碰到對手身體時，兩人中心的距離（每個人手腳長短不同）
+  function contactOf(fighter, spec) {
+    return fighter.profile.contact?.[spec.clip] ?? spec.contact ?? 0;
+  }
+
+  // 離「剛好碰得到」還差多遠；負的代表已經夠近
+  function contactGap(fighter, target, spec) {
+    const ahead = (target.x - fighter.x) * fighter.face;
+    return ahead - contactOf(fighter, spec);
+  }
+
+  // 最後一次會造成傷害的時間點（過了這一刻，這一招就只剩收招）
+  function lastHitTime(spec) {
+    let at = 0;
+    for (const event of spec.events)
+      if (event.damage || event.toss || event.grab) at = Math.max(at, event.at);
+    return at;
+  }
+
   function invulnerable(fighter) {
+    if (fighter.safe > 0) return true;
     if (fighter.dodge && fighter.dodge.elapsed < 0.205) return true;
     return within(fighter.move, "invulnerable");
   }
@@ -126,11 +186,11 @@
       fighter.buffer = fighter.buffer.filter(
         (entry) => entry.action !== action,
       );
-      fighter.buffer.push({ action, life: BUFFER_TIME });
+      fighter.buffer.push({ action, life: BUFFER_TIME, at: fighter.clock });
     }
   }
 
-  // First moment a move can hurt: used for counter-hit detection and animation timing.
+  // 這一招最早會造成傷害的時間（判斷反擊命中、電腦的反應都會用到）
   function firstActive(spec) {
     return (
       spec.events.find((event) => event.damage || event.trap || event.toss)
@@ -194,7 +254,7 @@
       return this.events.splice(0);
     }
 
-    // Real-time slow motion after a knockout; returns the simulation speed factor.
+    // K.O. 之後的慢動作：回傳現在的速度倍率
     timeScale(realDt) {
       if (this.slowMo <= 0) return 1;
       this.slowMo = decay(this.slowMo, realDt);
@@ -207,6 +267,7 @@
         fighter.previousX = fighter.x;
         fighter.previousY = fighter.y;
       }
+      for (const shot of this.projectiles) shot.previousX = shot.x;
       this.phaseTime += dt;
       if (this.phase === "intro") {
         if (this.phaseTime >= 1.55) {
@@ -222,7 +283,7 @@
         playerInputs[1] ?? EMPTY_CONTROLS,
       ];
       if (this.phase === "round-end") {
-        // The loser keeps falling and sliding; nobody can act.
+        // 輸的人繼續倒下、滑行，雙方都不能行動
         for (const fighter of this.fighters) this.settle(fighter, dt);
         if (this.phaseTime >= 2.2) this.advanceRound();
         return;
@@ -250,9 +311,9 @@
           dt,
         ),
       );
-      this.separateFighters();
+      this.separateFighters(dt);
 
-      // Collect contacts before applying damage so simultaneous attacks can trade.
+      // 先收集所有碰到的攻擊再扣血，同時打中才會互相命中
       const contacts = [];
       this.fighters.forEach((fighter, index) =>
         this.advanceAttack(fighter, this.fighters[1 - index], contacts, dt),
@@ -292,7 +353,7 @@
       }
     }
 
-    // Being held by a throw: pinned in front of the thrower until tossed or teched.
+    // 被抓住：很快拉到對方面前，直到被摔出去或拆投
     advanceHeld(fighter, dt) {
       const by = fighter.heldBy;
       if (!by.move || by.move.grabbed !== fighter) {
@@ -315,7 +376,8 @@
         this.events.push({ type: "tech", fighter, attacker: by });
         return false;
       }
-      fighter.x = stageX(by.x + by.face * 92);
+      const pull = stageX(by.x + by.face * 92) - fighter.x;
+      fighter.x += clamp(pull, -PULL_SPEED * dt, PULL_SPEED * dt);
       fighter.vx = 0;
       fighter.knock = 0;
       fighter.crouch = false;
@@ -324,89 +386,198 @@
       return true;
     }
 
+    // 對手正在出招、或飛行道具快到了，而且打得到我
+    threatened(fighter, opponent) {
+      const { move } = opponent;
+      const distance = Math.abs(opponent.x - fighter.x);
+      if (
+        move &&
+        move.action !== "throw" &&
+        move.elapsed <= lastHitTime(move.spec) + 0.05 &&
+        distance < reachOf(move.spec, Boolean(move.rush)) + 60
+      )
+        return true;
+      return this.projectiles.some(
+        (shot) =>
+          shot.owner === opponent &&
+          !shot.checked &&
+          (fighter.x - shot.x) * shot.direction >= -20 &&
+          Math.abs(fighter.x - shot.x) < shot.speed * 0.4 + 80,
+      );
+    }
+
+    // 被連段時按閃避：付出能量，強制震開對手
+    tryBurst(fighter) {
+      if (
+        fighter.stun === 0 ||
+        fighter.blockStun > 0 ||
+        fighter.meter < BURST_COST ||
+        fighter.hp <= 0 ||
+        !has(fighter, "dodge")
+      )
+        return;
+      take(fighter, "dodge");
+      fighter.meter -= BURST_COST;
+      fighter.stun = 0;
+      fighter.knock = 0;
+      fighter.dash = null;
+      fighter.move = {
+        spec: BURST,
+        action: "burst",
+        elapsed: 0,
+        next: 0,
+        armorHits: 0,
+      };
+      this.events.push({ type: "burst-start", fighter });
+    }
+
+    // 輕攻與重攻同時按 = 投技。兩個鍵要幾乎同時按下才算，
+    // 連按「輕攻、重攻」接連段時才不會誤出投技。
+    mergeThrow(fighter, grounded) {
+      if (!grounded) return;
+      const find = (action) =>
+        fighter.buffer.find((entry) => entry.action === action);
+      const heavy = find("heavy");
+      if (!heavy) return;
+      const light = find("light");
+      const together =
+        light && Math.abs(light.at - heavy.at) <= THROW_CHORD;
+      const fresh =
+        fighter.move?.action === "light" &&
+        !fighter.move.touched &&
+        fighter.move.elapsed < THROW_CHORD &&
+        heavy.at - fighter.move.pressedAt <= THROW_CHORD;
+      if (!fresh && !(together && !fighter.move)) return;
+      take(fighter, "light", "heavy");
+      fighter.buffer.unshift({
+        action: "throw",
+        life: BUFFER_TIME,
+        at: fighter.clock,
+      });
+      if (fresh) fighter.move = null;
+    }
+
+    /* 打中或被擋下之後，可以取消收招直接接下一招：
+         輕攻 → 輕攻第二、三段（第三段打中後再按輕攻，會自動接技能一）
+         弱的招式 → 強的招式（輕攻 < 重攻 < 技能 < 大招）
+       被擋下時最多只能接到重攻，技能與大招要打中才能接。 */
+    tryCancel(fighter, grounded) {
+      const { move } = fighter;
+      // 追擊衝步還沒出手：可以改成閃避或跳躍
+      if (move?.rush && (has(fighter, "dodge") || has(fighter, "jump"))) {
+        fighter.move = null;
+        return;
+      }
+      if (!move?.touched || !(move.action in RANK)) return;
+      const since = move.elapsed - firstActive(move.spec);
+      if (since < 0.035) return;
+      for (const entry of fighter.buffer) {
+        const next = entry.action;
+        if (next === "light" && move.action === "light") {
+          if (since < 0.05 || !grounded) continue;
+          const chain = move.spec.chain;
+          if (!chain && !(move.connected && this.ready(fighter, "special")))
+            continue;
+          if (!chain && move.spec !== NORMALS.light3) continue;
+          take(fighter, "light");
+          fighter.move = null;
+          fighter.crouch = false;
+          if (chain) this.begin(fighter, "light", NORMALS[chain]);
+          else this.startAction(fighter, "special", EMPTY_CONTROLS);
+          return;
+        }
+        if (!(next in RANK) || !this.ready(fighter, next)) continue;
+        const current = RANK[move.action];
+        const stronger =
+          RANK[next] > current ||
+          (RANK[next] === 2 && current === 2 && next !== move.action);
+        if (!stronger || (!move.connected && RANK[next] > 1)) continue;
+        fighter.move = null;
+        // 把這個指令排到最前面，等一下就會先執行它
+        fighter.buffer = [
+          entry,
+          ...fighter.buffer.filter((other) => other !== entry),
+        ];
+        return;
+      }
+    }
+
+    // 執行緩衝裡的指令；現在還不能做的（例如在空中按技能）先留著
+    runBuffer(fighter, controls) {
+      const waiting = [];
+      while (fighter.buffer.length && !fighter.move && !fighter.dodge) {
+        const entry = fighter.buffer.shift();
+        const done = this.startAction(
+          fighter,
+          entry.action,
+          controls,
+          entry.life,
+        );
+        if (done) {
+          if (fighter.move) fighter.move.pressedAt ??= entry.at;
+          continue;
+        }
+        waiting.push(entry);
+      }
+      fighter.buffer = [...waiting, ...fighter.buffer];
+    }
+
     advanceFighter(fighter, opponent, controls, dt) {
       fighter.specialCooldown = decay(fighter.specialCooldown, dt);
       fighter.skill2Cooldown = decay(fighter.skill2Cooldown, dt);
       fighter.dodgeCooldown = decay(fighter.dodgeCooldown, dt);
       fighter.stun = decay(fighter.stun, dt);
+      fighter.blockStun = decay(fighter.blockStun, dt);
+      fighter.safe = decay(fighter.safe, dt);
+      fighter.clock += dt;
       fighter.flash = decay(fighter.flash, dt);
       fighter.meter = Math.min(100, fighter.meter + 3.6 * dt);
       for (const entry of fighter.buffer) entry.life -= dt;
       fighter.buffer = fighter.buffer.filter((entry) => entry.life > 0);
       recordInputs(fighter, controls);
-      if (controls.guard && !fighter.guardHeld)
-        fighter.guardStart = this.elapsed;
-      fighter.guardHeld = controls.guard;
+      fighter.heldDirection = controls.direction;
       const grounded = fighter.y === 0 && fighter.vy === 0;
+      if (grounded && fighter.stun === 0) fighter.juggle = 0;
+
+      // 按住「後退」也能防禦（玩家的輸入才有，電腦一律自己決定何時防禦）
+      const back =
+        controls.direction !== 0 && controls.direction === -fighter.face;
+      const holdingBack = Boolean(controls.autoGuard && back && grounded);
+      const bracing = Boolean(controls.guard || holdingBack);
+      // 電腦的一般防禦（steady）不算精準防禦，要刻意抓時機才算
+      if (bracing && !fighter.guardHeld)
+        fighter.guardStart = controls.steady ? -10 : this.elapsed;
+      fighter.guardHeld = bracing;
 
       if (fighter.heldBy && this.advanceHeld(fighter, dt)) return;
+      this.tryBurst(fighter);
+      this.mergeThrow(fighter, grounded);
+      this.tryCancel(fighter, grounded);
 
-      // 爆氣: escape a combo while in hit-stun by paying meter.
-      if (
-        fighter.stun > 0 &&
-        has(fighter, "dodge") &&
-        fighter.meter >= BURST_COST &&
-        fighter.hp > 0
-      ) {
-        take(fighter, "dodge");
-        fighter.meter -= BURST_COST;
-        fighter.stun = 0;
-        fighter.knock = 0;
-        fighter.dash = null;
-        fighter.move = {
-          spec: BURST,
-          action: "burst",
-          elapsed: 0,
-          next: 0,
-          armorHits: 0,
-        };
-        this.events.push({ type: "burst-start", fighter });
-      }
-
-      // Light + heavy pressed together (or heavy right after a fresh light) becomes a throw.
-      const lightFresh =
-        fighter.move?.action === "light" &&
-        fighter.move.elapsed < 0.07 &&
-        !fighter.move.connected;
-      if (
-        grounded &&
-        has(fighter, "heavy") &&
-        (has(fighter, "light") || lightFresh) &&
-        (!fighter.move || lightFresh)
-      ) {
-        take(fighter, "light", "heavy");
-        fighter.buffer.unshift({ action: "throw", life: BUFFER_TIME });
-        if (lightFresh) fighter.move = null;
-      }
-
-      // A confirmed hit permits a stronger follow-up during recovery.
-      const next = fighter.buffer[0]?.action;
-      const move = fighter.move;
-      if (
-        move?.connected &&
-        next in RANK &&
-        move.action in RANK &&
-        move.elapsed >= firstActive(move.spec) + 0.035 &&
-        this.ready(fighter, next)
-      ) {
-        const current = RANK[move.action];
-        const upgrade =
-          RANK[next] > current ||
-          (RANK[next] === 2 && current === 2 && next !== move.action);
-        if (upgrade) fighter.move = null;
-      }
       fighter.walking = false;
       fighter.guard = false;
       if (!controls.guard) fighter.guardDirection = 0;
+      // 剛擋下一擊：還按著防禦的話，後續的攻擊也會繼續擋
+      if (fighter.blockStun > 0 && grounded && bracing) {
+        fighter.guard = true;
+        fighter.crouch = controls.crouch;
+      }
 
       if (fighter.dodge) {
         fighter.dodge.elapsed += dt;
-        if (fighter.dodge.elapsed >= DODGE_TIME) fighter.dodge = null;
+        const { elapsed } = fighter.dodge;
+        const wantsAct = fighter.buffer.some(
+          (entry) => entry.action !== "dodge",
+        );
+        if (elapsed >= DODGE_TIME || (elapsed >= DODGE_CANCEL && wantsAct))
+          fighter.dodge = null;
       }
       if (fighter.dash) {
         fighter.dash.elapsed += dt;
-        if (fighter.dash.elapsed >= fighter.dash.time || !grounded)
-          fighter.dash = null;
+        const { elapsed, time } = fighter.dash;
+        // 衝刺中按防禦可以提早煞車
+        const brake = controls.guard && elapsed > 0.12;
+        if (elapsed >= time || brake || !grounded) fighter.dash = null;
       }
 
       let speed = 0;
@@ -417,21 +588,23 @@
             Math.sign(opponent.x - fighter.x) ||
             fighter.face;
         fighter.crouch = grounded && controls.crouch && !fighter.dash;
-        fighter.guard = grounded && controls.guard && !fighter.dash;
-        if (fighter.guard) fighter.guardDirection = fighter.face;
+        const threatened =
+          holdingBack && this.threatened(fighter, opponent);
+        fighter.guard =
+          grounded && !fighter.dash && (controls.guard || threatened);
+        if (controls.guard && fighter.guard)
+          fighter.guardDirection = fighter.face;
         this.detectDash(fighter, controls, grounded);
-        while (fighter.buffer.length && !fighter.move && !fighter.dodge) {
-          const { action } = fighter.buffer.shift();
-          this.startAction(fighter, action, controls);
-        }
+        this.runBuffer(fighter, controls);
         const canWalk =
           !fighter.move &&
           !fighter.dodge &&
           !fighter.crouch &&
           !fighter.guard &&
           !fighter.dash;
+        const pace = grounded ? (back ? 1.02 : 1.2) : 1.14;
         speed = canWalk
-          ? controls.direction * fighter.profile.speed * (grounded ? 1.14 : 1)
+          ? controls.direction * fighter.profile.speed * pace
           : 0;
         fighter.walking = grounded && speed !== 0;
       } else {
@@ -439,28 +612,24 @@
       }
       fighter.prevDirection = controls.direction;
 
+      const airborne = fighter.y > 0 || fighter.vy > 0;
+      const airAttack = Boolean(fighter.move?.air && airborne);
       if (fighter.dodge) {
         speed =
-          fighter.dodge.direction * (fighter.dodge.elapsed < 0.19 ? 610 : 190);
+          fighter.dodge.direction * (fighter.dodge.elapsed < 0.19 ? 640 : 200);
         fighter.crouch = false;
       } else if (fighter.dash && !fighter.move) {
         const { from, to, time } = fighter.dash;
         const t = fighter.dash.elapsed / time;
         speed = fighter.dash.dir * (from + (to - from) * t * t);
+      } else if (airAttack) {
+        // 空中出招時保留跳躍的衝力，也還能微調方向
+        speed = controls.direction * fighter.profile.speed * 1.14;
       } else if (fighter.move) {
-        const { spec, elapsed } = fighter.move;
-        const travel = spec.travel;
-        if (travel && elapsed >= (travel.from ?? 0) && elapsed < travel.until)
-          speed = fighter.face * travel.speed;
-        if (fighter.move.drift && fighter.y > 0)
-          speed = fighter.face * fighter.move.drift;
-        // Momentum from a dash carries into the attack for a lunging strike.
-        if (fighter.move.carry)
-          speed +=
-            fighter.face * fighter.move.carry * Math.max(0, 1 - elapsed / 0.22);
+        speed = this.moveSpeed(fighter, opponent, dt);
       }
 
-      // Short hop: letting go of jump early cuts the rise.
+      // 小跳：提早放開跳躍鍵就跳得比較低
       if (
         fighter.jumping &&
         !fighter.jumpCut &&
@@ -472,10 +641,16 @@
       }
 
       const forceMovement =
-        fighter.dodge || fighter.move || fighter.stun > 0 || fighter.dash;
-      fighter.vx = forceMovement
-        ? speed
-        : fighter.vx + (speed - fighter.vx) * (1 - Math.exp(-32 * dt));
+        fighter.dodge ||
+        (fighter.move && !airAttack) ||
+        fighter.stun > 0 ||
+        fighter.dash;
+      if (forceMovement) fighter.vx = speed;
+      else if (airborne) {
+        // 空中：沒按方向就順著原本的衝力飛，按了才慢慢轉向
+        if (speed !== 0)
+          fighter.vx += (speed - fighter.vx) * (1 - Math.exp(-10 * dt));
+      } else fighter.vx += (speed - fighter.vx) * (1 - Math.exp(-34 * dt));
       if (Math.abs(fighter.vx) < 0.5) fighter.vx = 0;
       fighter.x = stageX(fighter.x + (fighter.vx + fighter.knock) * dt);
       if (fighter.walking || fighter.dash) {
@@ -486,17 +661,58 @@
         }
       }
       fighter.knock *= Math.max(0, 1 - 7 * dt);
-      if (fighter.y > 0 || fighter.vy > 0) {
+      if (airborne) {
+        const gravity =
+          fighter.jumping && fighter.stun === 0 ? JUMP_GRAVITY : GRAVITY;
         fighter.y = Math.max(0, fighter.y + fighter.vy * dt);
-        fighter.vy = fighter.y > 0 ? fighter.vy - GRAVITY * dt : 0;
+        fighter.vy = fighter.y > 0 ? fighter.vy - gravity * dt : 0;
         if (fighter.y === 0) {
           fighter.jumping = false;
-          this.events.push({ type: "land", fighter });
+          // 空中攻擊落地就結束，馬上能接地面的動作
+          if (fighter.move?.air) fighter.move = null;
+          const hard = fighter.spiked;
+          if (hard) {
+            fighter.spiked = false;
+            fighter.stun = Math.max(fighter.stun, 0.24);
+            fighter.safe = SAFE_TIME;
+          }
+          this.events.push({ type: "land", fighter, heavy: hard });
         }
       }
     }
 
-    // Double-tap a direction to dash forward or back-step.
+    /* 出招時的移動：追擊衝步 → 起手的跟步 → 招式本身的突進。
+       這幾種都盯著對手，停在拳腳剛好碰得到的距離，不會衝過頭。 */
+    moveSpeed(fighter, target, dt) {
+      const { move } = fighter;
+      const { spec, elapsed } = move;
+      const gap = contactGap(fighter, target, spec);
+      if (move.rush) return fighter.face * clamp(gap / dt, 0, RUSH_SPEED);
+      let speed = 0;
+      if (move.lunge > 0 && elapsed < move.lungeUntil) {
+        const left = Math.max(dt, (move.lungeUntil - elapsed) * 0.8);
+        const want = move.homing ? gap : move.lunge;
+        speed = clamp(want / left, 0, Math.min(LUNGE_SPEED, move.lunge / dt));
+        move.lunge -= speed * dt;
+      }
+      const { travel } = spec;
+      if (travel && elapsed >= (travel.from ?? 0) && elapsed < travel.until) {
+        // 在下一擊打出去之前追到對手面前
+        const next = spec.events.find((e) => e.damage && e.at > elapsed);
+        const until = Math.min(travel.until, next?.at ?? travel.until);
+        const left = Math.max(dt, (until - elapsed) * 0.85);
+        speed = travel.track
+          ? Math.max(speed, clamp(gap / left, travel.min ?? 60, travel.speed))
+          : speed + travel.speed;
+      }
+      if (move.drift && fighter.y > 0) speed = move.drift;
+      // 衝刺的衝勁會帶進招式裡，但不會一直往對手身上擠
+      if (move.carry && gap > 0)
+        speed += move.carry * Math.max(0, 1 - elapsed / 0.22);
+      return fighter.face * speed;
+    }
+
+    // 連按兩下方向：前衝或後撤
     detectDash(fighter, controls, grounded) {
       if (!grounded || fighter.crouch || fighter.guard || fighter.dash) return;
       let dir = controls.dash || 0;
@@ -531,75 +747,126 @@
       return !key || fighter[key] === 0;
     }
 
-    startAction(fighter, action, controls) {
+    // 執行一個指令。回傳 false 代表「現在還不能做，先留在緩衝裡」
+    startAction(fighter, action, controls, life = 0) {
       const grounded = fighter.y === 0 && fighter.vy === 0;
       if (action === "jump") {
-        if (grounded && !fighter.guard) {
-          fighter.vy = JUMP_SPEED;
-          fighter.jumping = true;
-          fighter.jumpCut = false;
-          fighter.crouch = false;
-          // Dash jumps keep their momentum.
-          if (fighter.dash) fighter.vx = fighter.dash.dir * 380;
-          fighter.dash = null;
-          this.events.push({ type: "jump", fighter });
-        }
-        return;
+        if (!grounded) return false;
+        fighter.vy = JUMP_SPEED;
+        fighter.jumping = true;
+        fighter.jumpCut = false;
+        fighter.crouch = false;
+        fighter.guard = false;
+        // 起跳就帶著按住的方向；衝刺跳會保留衝勁
+        const speed = fighter.profile.speed * 1.14;
+        if (fighter.dash) fighter.vx = fighter.dash.dir * 400;
+        else if (controls.direction) fighter.vx = controls.direction * speed;
+        fighter.dash = null;
+        this.events.push({ type: "jump", fighter });
+        return true;
       }
       if (action === "dodge") {
-        if (!grounded || fighter.dodgeCooldown > 0) return;
+        if (!grounded || fighter.dodgeCooldown > 0) {
+          const soon = grounded && fighter.dodgeCooldown > life;
+          if (soon) this.unavailable(fighter, "閃避冷卻中");
+          return soon;
+        }
         fighter.dodge = {
           elapsed: 0,
           direction: controls.direction || -fighter.face,
           credited: false,
         };
-        fighter.dodgeCooldown = 0.81;
+        fighter.dodgeCooldown = 0.78;
         fighter.guard = false;
         fighter.dash = null;
         this.events.push({ type: "dodge", fighter });
-        return;
+        return true;
       }
       let name = action;
-      if (action === "heavy" && fighter.crouch && grounded) name = "sweep";
-      const spec = NORMALS[name] ?? fighter.profile[name];
-      if (!spec?.events || fighter.guard || (!grounded && !spec.air)) return;
-      if (!this.ready(fighter, name)) {
-        this.events.push({
-          type: "unavailable",
-          fighter,
-          text: name === "super" ? "大招能量不足" : "技能冷卻中",
-        });
-        return;
+      if (grounded && fighter.crouch) {
+        if (action === "heavy") name = "sweep";
+        if (action === "light") name = "crouchLight";
       }
-      if (COOLDOWN_KEY[name]) fighter[COOLDOWN_KEY[name]] = spec.cooldown;
-      if (name === "super") {
+      const spec = NORMALS[name] ?? fighter.profile[name];
+      if (!spec?.events) return true;
+      if (!grounded && !spec.air) return false; // 落地後再出
+      if (!this.ready(fighter, action)) {
+        const key = COOLDOWN_KEY[action];
+        if (key && fighter[key] <= life) return false; // 快好了，等一下
+        const label = action === "super" ? "大招能量不足" : "技能冷卻中";
+        this.unavailable(fighter, label);
+        return true;
+      }
+      const kind = name === "crouchLight" ? "light" : name;
+      this.begin(fighter, kind, spec);
+      return true;
+    }
+
+    unavailable(fighter, text) {
+      this.events.push({ type: "unavailable", fighter, text });
+    }
+
+    /* 出招前的靠近方式：
+         跟步  只差一點點，起手的時候順便補上
+         衝步  再遠一些，先快速衝到面前才出手（被打中會中斷）
+       按著後退出招就站在原地，拿來牽制。 */
+    approach(fighter, target, spec) {
+      if (!spec.step || fighter.y > 0) return null;
+      const gap = contactGap(fighter, target, spec);
+      const back = fighter.heldDirection === -fighter.face;
+      if (gap <= 0 || back) return null;
+      const grab = spec.events.find((event) => event.grab);
+      const until = grab?.at ?? firstActive(spec);
+      const step = { lunge: spec.step, lungeUntil: until, homing: true };
+      if (gap <= spec.step) return step;
+      const flying = target.y > 110;
+      if (spec.rush && gap <= spec.step + spec.rush && !flying)
+        return { ...step, rush: { time: 0 } };
+      // 太遠了補不到：往前踏一步，按著前進就踏大步一點
+      const pressing = fighter.heldDirection === fighter.face;
+      return {
+        lunge: pressing ? spec.step : spec.step * 0.4,
+        lungeUntil: until,
+        homing: false,
+      };
+    }
+
+    // 開始一個招式
+    begin(fighter, action, spec) {
+      const target = this.fighters[1 - fighter.index];
+      const air = fighter.y > 0 || fighter.vy > 0;
+      // 每一招出手前都先轉向對手，換邊之後接的招式才不會打錯方向
+      fighter.face = Math.sign(target.x - fighter.x) || fighter.face;
+      if (COOLDOWN_KEY[action]) fighter[COOLDOWN_KEY[action]] = spec.cooldown;
+      if (action === "super") {
         fighter.meter = 0;
-        // Freeze both fighters for the cinematic super flash.
+        // 大招發動時雙方定格，讓演出播完
         this.hitStop = Math.max(this.hitStop, 0.42);
         this.events.push({ type: "super-flash", fighter, name: spec.name });
       }
-      const carry = fighter.dash?.forward && name !== "throw" ? 260 : 0;
+      const dashing = fighter.dash?.forward && action !== "throw";
       fighter.dash = null;
-      const lowAttack = fighter.crouch && name === "light";
-      fighter.crouch = lowAttack || name === "sweep";
+      fighter.guard = false;
+      fighter.crouch = Boolean(spec.low);
       fighter.move = {
         spec,
-        action: name,
+        action,
         elapsed: 0,
         next: 0,
-        lowAttack,
+        lowAttack: Boolean(spec.low) && action === "light",
         armorHits: 0,
-        carry,
+        carry: dashing ? 260 : 0,
+        air,
+        live: [], // 還在判定中的打擊
+        ...this.approach(fighter, target, spec),
       };
-      this.events.push({
-        type: "attack",
-        action: name,
-        fighter,
-        name: spec.name,
-      });
+      this.events.push({ type: "attack", action, fighter, name: spec.name });
+      if (fighter.move.rush) this.events.push({ type: "rush", fighter });
     }
 
-    separateFighters() {
+    /* 兩人身體重疊時推開：這一步互相靠近的量立刻抵銷（走路推不進去），
+       原本就重疊的部分（跳到頭上、穿過去）才慢慢滑開。 */
+    separateFighters(dt) {
       const [first, second] = this.fighters;
       if (
         first.dodge ||
@@ -613,19 +880,39 @@
         first.x <= second.x ? [first, second] : [second, first];
       const overlap = PUSH_DISTANCE - (right.x - left.x);
       if (overlap <= 0) return;
-      left.x = stageX(left.x - overlap / 2);
-      right.x = stageX(right.x + overlap / 2);
-      if (right.x - left.x < PUSH_DISTANCE) {
-        if (left.x === FIELD.left) right.x = left.x + PUSH_DISTANCE;
-        else left.x = right.x - PUSH_DISTANCE;
+      const before = right.x - left.x;
+      const closing = Math.max(0, right.previousX - left.previousX - before);
+      const slide = clamp(overlap * PUSH.rate, PUSH.min, PUSH.max) * dt;
+      const push = Math.min(overlap, closing + slide);
+      left.x = stageX(left.x - push / 2);
+      right.x = stageX(right.x + push / 2);
+      // 有一邊貼牆推不動，剩下的由另一邊退開
+      const rest = push - (right.x - left.x - before);
+      if (rest > 0.01) {
+        if (left.x === FIELD.left) right.x = stageX(right.x + rest);
+        else left.x = stageX(left.x - rest);
       }
     }
 
     advanceAttack(fighter, target, contacts, dt) {
       const move = fighter.move;
       if (!move) return;
-      move.elapsed += dt;
       const { spec } = move;
+      // 追擊衝步：到了面前、或衝太久還追不上，才真正出手
+      if (move.rush) {
+        move.rush.time += dt;
+        const near = contactGap(fighter, target, spec) <= spec.step * 0.6;
+        if (!near && move.rush.time < RUSH_TIME) return;
+        move.rush = null;
+      }
+      move.elapsed += dt;
+      // 上一幀揮出去、還沒碰到人的拳腳，繼續判定
+      if (move.live?.length)
+        move.live = move.live.filter(
+          (item) =>
+            move.elapsed <= item.until &&
+            !this.tryStrike(fighter, target, item.strike, move, contacts),
+        );
       while (
         move.next < spec.events.length &&
         spec.events[move.next].at <= move.elapsed + 0.000001
@@ -659,7 +946,13 @@
         } else if (event.projectile) {
           this.spawnProjectile(fighter, event, move.action);
         } else {
-          this.tryStrike(fighter, target, event, move, contacts);
+          this.swing(fighter, event, move);
+          if (!this.tryStrike(fighter, target, event, move, contacts)) {
+            const air = move.air && fighter.y > 0 && !event.launch;
+            const active = air ? AIR_ACTIVE : (event.active ?? 0.06);
+            move.live ??= [];
+            move.live.push({ strike: event, until: move.elapsed + active });
+          }
         }
       }
       if (
@@ -676,7 +969,9 @@
         target.stun === 0 &&
         !target.heldBy &&
         !invulnerable(target);
-      if (free && Math.abs(target.x - fighter.x) <= range && target.hp > 0) {
+      const reach = range + halfWidth(target);
+      const ahead = (target.x - fighter.x) * fighter.face;
+      if (free && ahead > -20 && ahead <= reach && target.hp > 0) {
         move.grabbed = target;
         target.heldBy = fighter;
         target.techTimer = TECH_WINDOW;
@@ -724,28 +1019,32 @@
       this.events.push({ type: "blink", fighter, from, to: fighter.x });
     }
 
-    tryStrike(fighter, target, strike, move, contacts) {
+    // 這一擊的判定範圍：方向、上下緣，以及要站著還是蹲著防
+    hitBox(fighter, target, strike) {
       const dx = target.x - fighter.x;
       const direction = strike.radial
         ? Math.sign(dx) || fighter.face
         : fighter.face;
-      // Lows must be blocked crouching; jump-ins must be blocked standing.
-      const kind =
-        move.lowAttack || strike.lowHit
-          ? "low"
-          : fighter.y > 30 && !strike.launch
-            ? "overhead"
-            : "mid";
-      // Jump-in normals strike downward so they can reach crouching opponents.
-      const low =
-        kind === "overhead"
-          ? fighter.y - 40
-          : fighter.y + (move.lowAttack ? 16 : strike.low);
-      const high =
-        kind === "overhead"
-          ? fighter.y + 160
-          : fighter.y + (move.lowAttack ? 104 : strike.high);
-      const [targetLow, targetHigh] = body(target);
+      // 下段要蹲著防，跳躍攻擊要站著防
+      const kind = strike.lowHit
+        ? "low"
+        : fighter.y > 30 && !strike.launch
+          ? "overhead"
+          : "mid";
+      // 跳躍攻擊往下打，碰得到蹲著的對手
+      const overhead = kind === "overhead";
+      return {
+        direction,
+        kind,
+        low: overhead ? fighter.y - 70 : fighter.y + strike.low,
+        high: overhead ? fighter.y + 160 : fighter.y + strike.high,
+      };
+    }
+
+    // 揮出去的那一刻（畫面與音效用，一擊只會有一次）
+    swing(fighter, strike, move) {
+      const target = this.fighters[1 - fighter.index];
+      const { low, high, direction } = this.hitBox(fighter, target, strike);
       this.events.push({
         type: "swing",
         fighter,
@@ -755,23 +1054,31 @@
         direction,
         action: move.action,
       });
-      const distance = dx * direction;
-      if (
-        distance >= -12 &&
-        distance <= strike.range &&
+    }
+
+    // 碰到了就記下來並回傳 true；距離算到對手身體的邊緣，不是中心點
+    tryStrike(fighter, target, strike, move, contacts) {
+      const box = this.hitBox(fighter, target, strike);
+      const { low, high, direction, kind } = box;
+      const [targetLow, targetHigh] = body(target);
+      const distance = (target.x - fighter.x) * direction;
+      const range = strike.range * (strike.radial ? 1 : fighter.profile.arm);
+      const touching =
+        distance >= -30 &&
+        distance <= range + halfWidth(target) &&
         low < targetHigh &&
-        high > targetLow
-      ) {
-        contacts.push({
-          attacker: fighter,
-          target,
-          strike,
-          direction,
-          action: move.action,
-          kind,
-          height: Math.min((low + high) / 2, targetHigh - 10),
-        });
-      }
+        high > targetLow;
+      if (!touching) return false;
+      contacts.push({
+        attacker: fighter,
+        target,
+        strike,
+        direction,
+        action: move.action,
+        kind,
+        height: Math.min((low + high) / 2, targetHigh - 10),
+      });
+      return true;
     }
 
     spawnProjectile(fighter, strike, action) {
@@ -781,6 +1088,7 @@
         strike,
         action,
         x: fighter.x + fighter.face * 68,
+        previousX: fighter.x + fighter.face * 68,
         y: fighter.y + height,
         speed,
         direction: fighter.face,
@@ -874,7 +1182,7 @@
           });
         }
       }
-      // Opposing projectiles cancel each other out.
+      // 雙方的飛行道具相撞就互相抵銷
       for (const a of this.projectiles) {
         for (const b of this.projectiles) {
           if (a.owner === b.owner || a.life <= 0 || b.life <= 0) continue;
@@ -900,6 +1208,11 @@
     applyContact(contact) {
       const { attacker, target, strike, direction, action, height } = contact;
       if (target.hp <= 0) return;
+      // 浮空追打到上限時，這一下會把人打落地面，起身有短暫無敵
+      const floating = target.y > 0 && target.stun > 0;
+      const spike =
+        floating && target.juggle >= JUGGLE_LIMIT && action !== "super";
+      if (target.safe > 0) return;
       if (invulnerable(target)) {
         if (!target.dodge?.credited) {
           target.meter = Math.min(100, target.meter + 12);
@@ -937,7 +1250,7 @@
 
       const facing =
         target.guard && target.face === -direction && !contact.unblockable;
-      // Guarding at the wrong height lets low and overhead attacks through.
+      // 防禦的高度不對，下段與中段攻擊就會打中
       const wrongHeight =
         facing &&
         ((contact.kind === "low" && !target.crouch) ||
@@ -987,13 +1300,16 @@
         !blocked && target.stun > 0 && this.elapsed - attacker.lastHit < 0.66;
       const chip =
         action === "special" || action === "skill2" || action === "super";
-      let damage = strike.damage;
-      if (blocked) damage = chip ? Math.ceil(strike.damage * 0.19) : 0;
+      const { power = 1 } = attacker.profile;
+      const { guts = 1 } = target.profile;
+      const base = strike.damage * DAMAGE_SCALE * power * guts;
+      let damage = base;
+      if (blocked) damage = chip ? Math.ceil(base * 0.19) : 0;
       else {
         if (continuingCombo)
           damage *= Math.max(
-            0.5,
-            1 - 0.07 * attacker.combo * (action === "super" ? 0.5 : 1),
+            0.42,
+            1 - 0.08 * attacker.combo * (action === "super" ? 0.5 : 1),
           );
         if (counterHit) damage *= 1.25;
         if (armored) damage *= 0.6;
@@ -1021,6 +1337,7 @@
           type: "armor",
           fighter: target,
           attacker,
+          melee: strike.range > 0 && !strike.projectile,
           action,
           height,
           direction,
@@ -1030,12 +1347,22 @@
       }
 
       target.knock =
-        (direction * strike.knock * (blocked ? 0.31 : 1)) /
+        (direction * strike.knock * (blocked ? 0.85 : 1)) /
         target.profile.weight;
+      const walled =
+        target.x <= FIELD.left + 4 || target.x >= FIELD.right - 4;
+      if (walled && !strike.projectile && attacker.y === 0)
+        attacker.knock = -direction * strike.knock * WALL_PUSH;
+      // 連擊越長，對手恢復得越快，不會有打不完的連段
+      const tired = continuingCombo
+        ? Math.max(0.4, 1 - 0.07 * Math.max(0, attacker.combo - 6))
+        : 1;
       target.stun = Math.max(
         target.stun,
-        blocked ? 0.105 : strike.stun + (counterHit ? 0.12 : 0),
+        blocked ? 0.12 : strike.stun * tired + (counterHit ? 0.12 : 0),
       );
+      if (blocked) target.blockStun = target.stun;
+      if (attacker.move && !strike.projectile) attacker.move.touched = true;
       const finisher = !blocked && strike.knock >= 300;
       const ko = target.hp <= 0;
       let stop = blocked ? 0.04 : (HIT_STOP[action] ?? 0.06);
@@ -1045,7 +1372,9 @@
       this.hitStop = Math.max(this.hitStop, stop);
 
       if (!blocked) {
-        if (attacker.move) attacker.move.connected = true;
+        if (attacker.move) attacker.move.connected = attacker.move.touched = true;
+        target.blockStun = 0;
+        if (floating) target.juggle += 1;
         // A thrower hit mid-grab lets go.
         if (target.move?.grabbed) target.move.grabbed.heldBy = null;
         target.flash = 0.12;
@@ -1057,7 +1386,10 @@
         target.heldBy = null;
         target.crouch = false;
         target.guard = false;
-        if (strike.launch) target.vy = strike.launch;
+        if (spike) {
+          target.vy = -720;
+          target.spiked = true;
+        } else if (strike.launch) target.vy = strike.launch;
         else if (target.y > 0) target.vy = Math.max(target.vy, 260);
         if (ko && !strike.launch) target.vy = 520;
         attacker.combo = continuingCombo ? attacker.combo + 1 : 1;
@@ -1074,6 +1406,7 @@
         type: blocked ? "block" : "hit",
         fighter: target,
         attacker,
+        melee: strike.range > 0 && !strike.projectile,
         action,
         height,
         direction,
@@ -1122,4 +1455,8 @@
 
   game.Match = Match;
   game.firstActive = firstActive;
+  game.reachOf = reachOf;
+  game.lastHitTime = lastHitTime;
+  game.halfWidth = halfWidth;
+  game.contactGap = contactGap;
 })();

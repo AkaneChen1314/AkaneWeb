@@ -17,42 +17,54 @@
     <title>午夜擂台 | Midnight Circuit</title>
     <link
       rel="stylesheet"
-      href="styles.css?v=7"
+      href="styles.css?v=10"
     />
     <script
-      src="src/roster.js?v=7"
+      src="src/roster.js?v=10"
       defer
     ></script>
     <script
-      src="src/ai.js?v=7"
+      src="src/ai.js?v=10"
       defer
     ></script>
     <script
-      src="src/match.js?v=7"
+      src="src/match.js?v=10"
       defer
     ></script>
     <script
-      src="src/walk-frames.js?v=7"
+      src="src/rig-data.js?v=10"
       defer
     ></script>
     <script
-      src="src/effects.js?v=7"
+      src="src/rig.js?v=10"
       defer
     ></script>
     <script
-      src="src/animation.js?v=7"
+      src="src/stage.js?v=10"
       defer
     ></script>
     <script
-      src="src/renderer.js?v=7"
+      src="src/fx.js?v=10"
       defer
     ></script>
     <script
-      src="src/audio.js?v=7"
+      src="src/effects.js?v=10"
       defer
     ></script>
     <script
-      src="src/app.js?v=7"
+      src="src/animation.js?v=10"
+      defer
+    ></script>
+    <script
+      src="src/renderer.js?v=10"
+      defer
+    ></script>
+    <script
+      src="src/audio.js?v=10"
+      defer
+    ></script>
+    <script
+      src="src/app.js?v=10"
       defer
     ></script>
     <link
@@ -195,7 +207,7 @@
             >
             <dl class="move-list">
               <div class="move-row">
-                <kbd id="special-key">K</kbd>
+                <kbd id="special-key">L</kbd>
                 <div
                   ><dt
                     ><span class="move-type">技能一</span
@@ -215,7 +227,7 @@
                 >
               </div>
               <div class="move-row">
-                <kbd id="super-key">L</kbd>
+                <kbd id="super-key">O</kbd>
                 <div
                   ><dt
                     ><span class="move-type">大招</span
@@ -426,8 +438,9 @@
               id="left-power"
             >
               <div class="power-label"
-                ><span class="skill-status">技能就緒</span
-                ><span class="super-value">大招 32%</span></div
+                ><span class="super-name"><kbd hidden>O</kbd>大招</span
+                ><span class="burst-status" data-ready="false">爆氣可用</span
+                ><span class="super-value">32%</span></div
               >
               <div
                 class="gauge power-gauge"
@@ -444,8 +457,9 @@
               id="right-power"
             >
               <div class="power-label"
-                ><span class="skill-status">技能就緒</span
-                ><span class="super-value">大招 32%</span></div
+                ><span class="super-name"><kbd hidden>O</kbd>大招</span
+                ><span class="burst-status" data-ready="false">爆氣可用</span
+                ><span class="super-value">32%</span></div
               >
               <div
                 class="gauge power-gauge"
@@ -538,22 +552,33 @@
       ></table>
       <ul class="help-tips">
         <li
-          >輕攻命中後可立即接重攻，再接技能與大招。提前一小段時間按下招式也能接續出招。</li
+          >連按輕攻會自動接成三段連擊，再按一下就接技能一。輕攻打中後也可以改按重攻、技能或大招，提早一點點按也接得上。</li
         >
         <li
-          >不按方向鍵時，閃避會向後退。搭配左右鍵可朝指定方向閃開，起步時能短暫避開傷害。</li
+          >站得有點遠也沒關係：出拳出腳時會自動往前跨一步。按住前再出重攻，打得更遠。</li
         >
         <li
-          >面向對手防禦可擋住普攻。遇到地面震波可以跳起來，較高的飛行道具可以蹲下躲過。</li
+          >按住後退，對手打過來時會自動防禦；蹲下再按住後退就是蹲防。也可以按防禦鍵站著不動擋。</li
         >
         <li
-          >每名鬥士有兩招技能（K、I），各自冷卻。技能命中後可互相接續，再接大招。大招能量會隨時間及交手累積，滿格後即可施放。</li
+          >攻擊到來的前一刻按下防禦鍵是「精準防禦」：不受削血、彈開對手並獲得能量。在對手出招前搶先打中會造成「反擊」加傷。</li
         >
         <li
-          >對手出招的瞬間按下防禦會觸發「精準防禦」：不受削血、彈開對手並獲得能量。在對手出招前搶先打中會造成「反擊」加傷。</li
+          >閃避起步時短暫無敵，不按方向會往後退，搭配左右可以朝指定方向閃開。出招途中也可以用閃避或衝刺取消。</li
         >
-        <li>連擊越長，後續傷害會逐步遞減。兩發飛行道具相撞會互相抵銷。</li>
-        <li>練習模式中生命與能量會自動回復，適合練連段。</li>
+        <li
+          >每名鬥士有兩招技能（L、I），各自冷卻。技能命中後可互相接續，再接大招（O）。大招能量會隨時間及交手累積，滿格後即可施放。</li
+        >
+        <li
+          >遇到地面震波可以跳起來，較高的飛行道具可以蹲下躲過。兩發飛行道具相撞會互相抵銷。</li
+        >
+        <li
+          >單人模式也能改用方向鍵移動，搭配 Z 輕攻、X 重攻、C 技能一、V 技能二、B
+          大招、G 投技。</li
+        >
+        <li
+          >連擊越長，後續傷害會逐步遞減。練習模式中生命與能量會自動回復，適合練連段。</li
+        >
       </ul>
     </dialog>
 

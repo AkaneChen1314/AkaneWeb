@@ -1,5 +1,6 @@
-/* 檔案導讀：把一場對戰畫到畫布上。角色動作在 animation.js、招式特效在 effects.js，
-   這裡負責鏡頭、震動、殘影、倒影、字幕，以及把遊戲事件轉成畫面上的反應。 */
+/* 檔案導讀：把一場對戰畫到畫布上。角色動作在 animation.js、背景在 stage.js、
+   招式特效在 effects.js；這裡負責鏡頭、震動、殘影、倒影、影子、字幕，
+   以及把遊戲事件轉成畫面上的反應。 */
 (() => {
   const game = globalThis.Midnight;
   const { FIELD } = game;
@@ -9,6 +10,8 @@
   const WHITE = "#fff8e4";
   const CAPTION_FONT =
     '"Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif';
+  const MAX_ZOOM = 1.4;
+  const FLOOR = ground * 0.955; // 拉近時地面在畫面上的高度（讓出下方資訊列）
   const SHAKE = { light: 3, heavy: 6, special: 8, skill2: 8, super: 9 };
 
   function loadImage(url) {
@@ -34,21 +37,19 @@
       this.spriteRes = dense && wide && !touch ? 1.5 : 1;
       this.setScale(this.spriteRes);
       this.effects = new game.CombatEffects(this.motion);
+      this.effects.ghost = (fighter, life, color, x) =>
+        this.ghost(fighter, life, color, x);
+      this.bloomLayers = this.makeBloomLayers();
+      this.lite = false; // 畫面跟不上時 app.js 會打開，省掉泛光
       this.ghosts = [];
       this.reset();
       this.ready = Promise.all([
         loadImage("assets/rooftop.jpg"),
         loadImage("assets/fighters.png"),
-        loadImage("assets/walk.png"),
-      ]).then(([stage, atlas, walkAtlas]) => {
+      ]).then(([stage, atlas]) => {
         const res = this.spriteRes;
-        this.animation = new game.FighterAnimation(atlas, walkAtlas, res);
-        this.background = document.createElement("canvas");
-        this.background.width = width * res;
-        this.background.height = height * res;
-        const bg = this.background.getContext("2d");
-        bg.imageSmoothingQuality = "high";
-        bg.drawImage(stage, 0, 0, width * res, height * res);
+        this.animation = new game.FighterAnimation(atlas, res);
+        this.stage = new game.Stage(stage);
         this.vignette = this.makeVignette();
       });
     }
@@ -80,6 +81,44 @@
       return canvas;
     }
 
+    /* 泛光用的小畫布：一張比一張小，縮小就等於模糊。 */
+    makeBloomLayers() {
+      return [4, 8, 16].map((divide) => {
+        const canvas = document.createElement("canvas");
+        canvas.width = width / divide;
+        canvas.height = height / divide;
+        return canvas.getContext("2d", { alpha: false });
+      });
+    }
+
+    /* 泛光：把整張畫面縮小，用相乘把暗的地方壓黑、只留下亮的，
+       模糊之後加回去。特效越亮，泛光越強。 */
+    bloom() {
+      if (this.calm || this.lite) return;
+      const [first, ...rest] = this.bloomLayers;
+      const { canvas } = first;
+      first.globalCompositeOperation = "copy";
+      first.drawImage(this.canvas, 0, 0, canvas.width, canvas.height);
+      first.globalCompositeOperation = "multiply";
+      first.drawImage(canvas, 0, 0);
+      let source = canvas;
+      for (const layer of rest) {
+        layer.drawImage(source, 0, 0, layer.canvas.width, layer.canvas.height);
+        source = layer.canvas;
+      }
+      const { ctx } = this;
+      const power = 0.1 + this.effects.skills.energy * 0.26;
+      ctx.save();
+      ctx.setTransform(this.scale, 0, 0, this.scale, 0, 0);
+      ctx.globalCompositeOperation = "lighter";
+      ctx.imageSmoothingQuality = "low";
+      for (const layer of this.bloomLayers.slice(1)) {
+        ctx.globalAlpha = power;
+        ctx.drawImage(layer.canvas, 0, 0, width, height);
+      }
+      ctx.restore();
+    }
+
     reset() {
       this.effects.reset();
       this.time = 0;
@@ -92,6 +131,7 @@
       this.zoomKick = 0;
       this.screenFlash = { alpha: 0, color: "#ffffff" };
       this.vignetteAlpha = 0;
+      this.stage?.reset();
     }
 
     get calm() {
@@ -110,8 +150,9 @@
 
     cue(event) {
       const { fighter } = event;
-      this.effects.cue(event);
       const anim = this.animation;
+      if (anim) this.aimEffects(event, anim);
+      this.effects.cue(event);
       switch (event.type) {
         case "round":
           this.reset();
@@ -158,7 +199,12 @@
             sx: -1.5,
             sy: -1.2,
           });
-          if (heavy) anim?.hurt(fighter, event.finisher ? 1 : 0.7);
+          anim?.hurt(
+            fighter,
+            event.finisher ? 1 : heavy ? 0.7 : 0.3,
+            (event.height - fighter.y) / fighter.profile.size,
+          );
+          anim?.flash(fighter, "#ffffff");
           if (event.counterHit)
             this.caption(
               fighter.x,
@@ -181,11 +227,11 @@
             );
           if (event.action === "throw") this.shake = Math.max(this.shake, 9);
           if (event.finisher) {
-            this.flash("#ffffff", 0.28);
+            this.flash("#ffffff", event.action === "super" ? 0.2 : 0.08);
             this.zoomKick = 0.045;
           }
           if (event.ko) {
-            this.flash("#ffffff", 0.85);
+            this.flash("#ffffff", 0.6);
             this.shake = 16;
             this.focusOn(fighter.x, ground - 150, 1.28, 1.25);
           }
@@ -221,6 +267,7 @@
             false,
           );
           anim?.kick(fighter, { ox: -120, sx: 1.2, sy: -1 });
+          anim?.flash(fighter, "#ffb08a");
           this.shake = Math.max(this.shake, 4);
           break;
         case "perfect":
@@ -282,6 +329,7 @@
           break;
         case "blink":
           this.ghost(fighter, 0.34, fighter.profile.color, event.from);
+          anim?.snapFace(fighter);
           break;
         case "evaded":
           this.caption(
@@ -306,6 +354,10 @@
           break;
         case "dash":
           anim?.kick(fighter, { sx: event.forward ? 2.2 : -1, sy: -1.4 });
+          break;
+        case "rush":
+          anim?.kick(fighter, { sx: 2.4, sy: -1.6 });
+          this.ghost(fighter, 0.2, fighter.profile.color);
           break;
         case "grab":
           anim?.kick(event.target, { ox: 160, rot: -4 });
@@ -349,6 +401,25 @@
       }
     }
 
+    // 把特效對準角色畫面上真正的拳頭與腳
+    aimEffects(event, anim) {
+      const { fighter } = event;
+      if (event.type === "swing" && !event.strike.radial) {
+        event.path = anim.swingPath(fighter, event.strike.at);
+        // 記下這一擊的高度，打中時火花才會出現在拳頭或腳的位置
+        fighter.tipHeight = null;
+        if (event.path) {
+          const { points } = event.path;
+          fighter.tipHeight = fighter.y + points[points.length - 1][1];
+        }
+      }
+      const tip = event.attacker?.tipHeight;
+      if (event.melee && tip) {
+        const top = fighter.y + fighter.profile.size * 0.88;
+        event.height = Math.max(fighter.y + 24, Math.min(top, tip));
+      }
+    }
+
     caption(x, y, text, color, size, life, style = "plain") {
       this.callouts = this.callouts.filter(
         (item) => item.text !== text || Math.abs(item.x - x) > 80,
@@ -383,11 +454,10 @@
       });
     }
 
-    // Afterimage: a tinted snapshot of the fighter's current pose.
+    // 殘影：把現在的姿勢染色存成一張圖
     ghost(fighter, life, color, x = null) {
       if (this.calm || !this.animation) return;
-      // Events fire before the next animation update; sync the pose so the snapshot
-      // shows the new action (e.g. the dodge crouch) instead of the previous stance.
+      // 事件比動畫早一步，先更新姿勢，殘影才會是新動作的樣子
       const state = this.animation.update(fighter, 0, true);
       this.ghosts.push({
         canvas: this.animation.snapshot(fighter, state, color),
@@ -395,10 +465,6 @@
         y: ground - fighter.y,
         face: fighter.face,
         ox: state.ox.x,
-        oy: state.oy.x,
-        rot: state.rot.x,
-        sx: state.sx.x,
-        sy: state.sy.x,
         life,
         total: life,
       });
@@ -412,6 +478,7 @@
       const dashing =
         fighter.dodge ||
         fighter.dash ||
+        move?.rush ||
         (travel &&
           move.elapsed >= (travel.from ?? 0) &&
           move.elapsed < travel.until) ||
@@ -430,11 +497,11 @@
       }
     }
 
-    update(dt) {
+    update(dt, real = dt) {
       this.time += dt;
       this.shake = Math.max(0, this.shake - 55 * dt);
       this.zoomKick = Math.max(0, this.zoomKick - 0.25 * dt);
-      this.screenFlash.alpha = Math.max(0, this.screenFlash.alpha - 3.2 * dt);
+      this.screenFlash.alpha = Math.max(0, this.screenFlash.alpha - 3.2 * real);
       this.vignetteAlpha = Math.max(0, this.vignetteAlpha - 1.6 * dt);
       for (const item of this.ghosts) item.life -= dt;
       for (const item of this.callouts) item.life -= dt;
@@ -446,42 +513,62 @@
       if (this.focus?.time <= 0) this.focus = null;
     }
 
+    /* 鏡頭：兩人靠近就拉近、拉開就退遠，地面固定在畫面上差不多的高度；
+       有人跳得高時往上讓一點，大招與 K.O. 則對準那一位。 */
     updateCamera(dt, fighters) {
       const cam = this.camera;
-      let target = { x: width / 2, y: height / 2, zoom: 1 + this.zoomKick };
-      if (this.calm) target.zoom = 1;
-      else if (this.focus)
+      const [a, b] = fighters;
+      let rate = 4.5;
+      let target;
+      if (this.calm) target = { x: width / 2, y: height / 2, zoom: 1 };
+      else if (this.focus) {
+        const { x, y, zoom } = this.focus;
+        target = { x, y, zoom: zoom + this.zoomKick };
+        rate = 10;
+      } else {
+        const gap = Math.abs(a.x - b.x);
+        const high = Math.max(a.y, b.y);
+        const fit = width / (gap + 470 + high * 0.6);
+        const zoom = Math.max(1, Math.min(MAX_ZOOM, fit));
         target = {
-          x: this.focus.x,
-          y: this.focus.y,
-          zoom: this.focus.zoom + this.zoomKick,
+          x: (a.x + b.x) / 2,
+          y: ground - (FLOOR - height / 2) / zoom - high * 0.3,
+          zoom: zoom + this.zoomKick,
         };
-      else {
-        // Lean slightly toward the action and tighten when fighters are close.
-        const mid = (fighters[0].x + fighters[1].x) / 2;
-        const gap = Math.abs(fighters[0].x - fighters[1].x);
-        target.zoom += Math.max(0, (420 - gap) / 420) * 0.05;
-        target.x = width / 2 + (mid - width / 2) * 0.35;
-        target.y = height / 2 + 20;
+        if (zoom < cam.zoom) rate = 7; // 快跑出畫面時退遠要快一點
       }
-      const rate = 1 - Math.exp(-(target.zoom > cam.zoom ? 10 : 4) * dt);
-      cam.zoom += (target.zoom - cam.zoom) * rate;
-      cam.x += (target.x - cam.x) * rate;
-      cam.y += (target.y - cam.y) * rate;
+      const k = 1 - Math.exp(-rate * dt);
+      cam.zoom += (target.zoom - cam.zoom) * k;
+      cam.x += (target.x - cam.x) * k;
+      cam.y += (target.y - cam.y) * k;
       const halfW = width / 2 / cam.zoom;
       const halfH = height / 2 / cam.zoom;
       cam.x = Math.min(width - halfW, Math.max(halfW, cam.x));
       cam.y = Math.min(height - halfH, Math.max(halfH, cam.y));
     }
 
-    draw(match, dt, alpha = 1) {
+    // 把畫布移到鏡頭的位置
+    aimCamera(shakeX, shakeY) {
+      const { ctx, camera } = this;
+      ctx.translate(width / 2, height / 2);
+      ctx.scale(camera.zoom, camera.zoom);
+      ctx.translate(shakeX - camera.x, shakeY - camera.y);
+    }
+
+    /* alpha 是這一格落在前後兩步規則之間的位置（0～1），step 是一步的秒數。
+       位置、出招進度與飛行道具都用它補間，畫面更新率比規則快也不會頓。
+       real 是真正過了幾秒（K.O. 慢動作時 dt 會比較小）。 */
+    draw(match, dt, alpha = 1, step = 0, real = dt) {
       const { ctx } = this;
       if (!this.animation) return;
       const frozen = match.hitStop > 0;
-      this.update(dt);
+      const lag = frozen ? 0 : (1 - alpha) * step;
+      for (const shot of match.projectiles)
+        shot.drawX = shot.previousX + (shot.x - shot.previousX) * alpha;
+      this.update(dt, real);
       ctx.setTransform(this.scale, 0, 0, this.scale, 0, 0);
       const fighters = match.fighters.map((fighter) => {
-        const state = this.animation.update(fighter, dt, frozen, match);
+        const state = this.animation.update(fighter, dt, frozen, match, lag);
         if (!frozen) this.trail(fighter, dt);
         return {
           ...fighter,
@@ -491,32 +578,34 @@
         };
       });
       this.effects.update(dt, fighters, match);
+      this.stage.update(dt, this.calm);
+      this.lightFighters(fighters);
       this.updateCamera(dt, fighters);
 
-      const cam = this.camera;
       const shake = this.calm ? 0 : this.shake;
+      const shakeX = Math.sin(this.time * 113) * shake;
+      const shakeY = Math.cos(this.time * 91) * shake * 0.5;
       ctx.save();
-      ctx.translate(width / 2, height / 2);
-      ctx.scale(cam.zoom, cam.zoom);
-      ctx.translate(
-        -cam.x + Math.sin(this.time * 113) * shake,
-        -cam.y + Math.cos(this.time * 91) * shake * 0.5,
-      );
-      ctx.drawImage(this.background, 0, 0, width, height);
-      this.effects.behind(ctx, fighters, match);
+      this.aimCamera(shakeX, shakeY);
+      this.stage.draw(ctx, this.calm);
+      this.effects.behind(ctx, fighters);
       for (const fighter of fighters) this.drawShadow(fighter);
       if (!this.calm)
         for (const fighter of fighters) this.drawReflection(fighter);
       this.drawGhosts();
-      // The victim trembles during hit-stop to sell the impact.
+      // 定格時被打的人微微顫抖，打擊感比較重
       for (const fighter of fighters) {
         const tremble =
           frozen && fighter.flash > 0 && !this.calm
-            ? Math.sin(this.time * 160) * 4
+            ? Math.sin(this.time * 160) * 5
             : 0;
         this.drawFighter(fighter, tremble);
       }
       this.effects.front(ctx, fighters, match);
+      ctx.restore();
+      this.bloom();
+      ctx.save();
+      this.aimCamera(shakeX, shakeY);
       for (const item of this.callouts) this.drawCaption(item);
       if (match.profiles[0] === match.profiles[1]) {
         this.drawMarker(fighters[0], "1P", GOLD);
@@ -524,14 +613,15 @@
       }
       ctx.restore();
 
-      if (this.vignetteAlpha > 0 || match.phase === "round-end") {
-        ctx.globalAlpha = Math.max(
-          this.vignetteAlpha,
-          match.phase === "round-end" ? 0.6 : 0,
-        );
-        ctx.drawImage(this.vignette, 0, 0);
-        ctx.globalAlpha = 1;
-      }
+      this.effects.skills.draw(ctx, "screen", fighters);
+      // 四周永遠壓暗一點點，視線會集中在中間的兩個人
+      ctx.globalAlpha = Math.max(
+        0.3,
+        this.vignetteAlpha,
+        match.phase === "round-end" ? 0.6 : 0,
+      );
+      ctx.drawImage(this.vignette, 0, 0);
+      ctx.globalAlpha = 1;
       if (this.screenFlash.alpha > 0) {
         ctx.globalAlpha = this.screenFlash.alpha;
         ctx.fillStyle = this.screenFlash.color;
@@ -540,29 +630,60 @@
       }
     }
 
-    // 腳下的影子：跟著角色的位移移動，被壓扁時變寬、跳起來時變小變淡
+    // 場景打在角色身上的光；有人放招或打中時，雙方都會被那個顏色照亮
+    lightFighters(fighters) {
+      const flash = this.effects.lightSource(fighters);
+      for (const fighter of fighters) {
+        const light = this.stage.lightAt(fighter.x);
+        if (flash) {
+          // warm 是畫面左側、cool 是畫面右側的光
+          const key = flash.x > fighter.x ? "cool" : "warm";
+          light[key] = light[key].map(
+            (value, i) => value + (flash.color[i] * 1.5 - value) * flash.power,
+          );
+        }
+        fighter.animationState.light = light;
+      }
+    }
+
+    // 腳下的影子：一大片很淡的影子，加上兩隻腳踩到的地方比較深
     drawShadow(fighter) {
       const { ctx } = this;
       const state = fighter.animationState;
+      const { size } = fighter.profile;
+      const lying = fighter.hp === 0 && fighter.y === 0 ? 1.6 : 1;
+      const x = fighter.x + state.ox.x * fighter.face;
       ctx.save();
-      ctx.globalAlpha = 0.72 - Math.min(0.5, fighter.y / 350);
-      ctx.fillStyle = "#070911";
-      ctx.beginPath();
-      const lying = fighter.hp === 0 && fighter.y === 0 ? 1.5 : 1;
-      const squash = Math.max(0.85, Math.min(1.25, state.sx.x));
-      ctx.ellipse(
-        fighter.x + state.ox.x * fighter.face,
-        ground + 3,
-        Math.max(
-          20,
-          (fighter.profile.size * 0.33 - fighter.y * 0.13) * lying * squash,
-        ),
-        10,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      ctx.fillStyle = "#05070d";
+      const wide = Math.max(26, (size * 0.36 - fighter.y * 0.12) * lying);
+      const fade = 0.5 - Math.min(0.34, fighter.y / 600);
+      for (const [scale, alpha] of [
+        [1.2, 0.35],
+        [0.95, 0.5],
+        [0.7, 0.6],
+      ]) {
+        ctx.globalAlpha = fade * alpha;
+        ctx.beginPath();
+        ctx.ellipse(x, ground + 4, wide * scale, 13 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (fighter.hp > 0)
+        for (const [fx, fy] of this.animation.feet(fighter, state)) {
+          const lift = Math.max(0, fighter.y + fy - 8);
+          if (lift > 70) continue;
+          ctx.globalAlpha = 0.6 * (1 - lift / 70);
+          ctx.beginPath();
+          ctx.ellipse(
+            x + fx * fighter.face,
+            ground + 3,
+            25 - lift * 0.12,
+            6,
+            0,
+            0,
+            Math.PI * 2,
+          );
+          ctx.fill();
+        }
       ctx.restore();
     }
 
@@ -594,9 +715,8 @@
       for (const ghost of this.ghosts) {
         ctx.save();
         ctx.globalAlpha = 0.55 * (ghost.life / ghost.total) ** 1.4;
-        ctx.translate(ghost.x + ghost.ox * ghost.face, ghost.y + ghost.oy);
-        ctx.scale(ghost.face * ghost.sx, ghost.sy);
-        ctx.rotate(ghost.rot);
+        ctx.translate(ghost.x + ghost.ox * ghost.face, ghost.y);
+        ctx.scale(ghost.face, 1);
         ctx.drawImage(
           ghost.canvas,
           -originX,
@@ -612,17 +732,16 @@
     drawFighter(fighter, tremble = 0) {
       const { ctx } = this;
       const state = fighter.animationState;
-      const bob =
-        this.calm || fighter.y > 0
-          ? 0
-          : -Math.abs(Math.sin(state.gait * 2)) * 2 * state.walk;
       ctx.save();
+      // 落地起身的短暫無敵：一閃一閃
+      if (fighter.safe > 0 && fighter.hp > 0)
+        ctx.globalAlpha = 0.6 + 0.4 * Math.sin(this.time * 48);
       this.animation.transform(
         ctx,
         fighter,
         state,
         fighter.x + tremble,
-        ground - fighter.y + bob,
+        ground - fighter.y,
       );
       let glow = null;
       let glowSize = 0;
@@ -646,7 +765,7 @@
       if (fighter.guard && fighter.hp > 0) this.drawGuard(fighter);
     }
 
-    // Guard no longer uses the crouch sprite, so show a faint barrier to keep it readable.
+    // 防禦時身前有一道淡淡的光弧，看得出正在擋
     drawGuard(fighter) {
       const { ctx } = this;
       const x = fighter.x + fighter.face * 52;

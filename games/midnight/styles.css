@@ -865,10 +865,10 @@ main:has(#battle-screen:not([hidden])) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 16px;
+  gap: 8px clamp(8px, 1.1vw, 16px);
   padding-top: 12px;
   color: var(--color-muted);
-  font-size: 13px;
+  font-size: clamp(12px, 1.25vw, 13px);
 }
 .battle-keys span {
   display: inline-flex;
@@ -1034,70 +1034,130 @@ dialog::backdrop {
   border-bottom: 2px solid var(--color-accent);
   background: linear-gradient(0deg, var(--color-scrim), transparent);
 }
+/* 下方資訊列：上面是大招能量，下面三格是技能與閃避（底色是冷卻進度） */
 .power-hud {
-  gap: 23cqw;
-  padding-bottom: 1.4cqw;
+  gap: 20cqw;
+  padding: 4.5cqw 1.6cqw 1.1cqw;
+  background: linear-gradient(0deg, var(--color-scrim), transparent);
 }
 .power-side {
-  border-inline-start: 2px solid var(--fighter-tone);
-  padding: 0.65cqw 0.8cqw;
-  background: color-mix(in srgb, var(--color-paper) 82%, transparent);
+  padding: 0;
 }
-.power-side.right {
-  border-inline-start: 0;
-  border-inline-end: 2px solid var(--fighter-tone);
+.power-label {
+  justify-content: flex-start;
+  gap: 0.8cqw;
+  margin-bottom: 0.3cqw;
+  text-shadow: 0 1px 3px var(--color-shadow);
+}
+.super-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5cqw;
+  color: var(--color-ink);
+  font-weight: 700;
+}
+.super-value {
+  margin-inline-start: auto;
+  color: var(--color-ink);
+  font-weight: 700;
+}
+.power-side.right .super-value {
+  margin-inline: 0 auto;
+}
+.burst-status {
+  padding: 0 0.5cqw;
+  border: 1px solid currentcolor;
+  color: var(--fighter-tone);
+  font-size: 0.85em;
+  transition: opacity 160ms;
+}
+.burst-status[data-ready="false"] {
+  opacity: 0;
 }
 .power-gauge {
-  height: max(6px, 1cqw);
+  position: relative;
+  height: max(7px, 1.15cqw);
+}
+/* 中間的刻度：能量過半就能爆氣 */
+.power-gauge::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 50%;
+  width: 2px;
+  background: var(--color-paper);
 }
 .power-gauge .gauge-fill {
   background: var(--fighter-tone);
 }
-.power-side[data-ready="true"] {
-  box-shadow: 0 0 16px color-mix(in srgb, var(--fighter-tone) 24%, transparent);
+.power-side[data-ready="true"] .power-gauge {
+  box-shadow: 0 0 16px color-mix(in srgb, var(--fighter-tone) 55%, transparent);
 }
-.cooldowns {
+.skills {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: 1.25fr 1.25fr 1fr;
+  gap: 0.5cqw;
+  margin-top: 0.5cqw;
+}
+.power-side.right .skills {
+  direction: rtl;
+}
+.skill-chip {
+  position: relative;
+  direction: ltr;
+  display: flex;
   align-items: center;
-  gap: 0.3cqw 0.8cqw;
-  padding-top: 0.45cqw;
-  font-size: max(9px, 1.1cqw);
+  gap: 0.45cqw;
+  min-width: 0;
+  padding: 0.32cqw 0.5cqw;
+  overflow: hidden;
+  border: 1px solid var(--color-rule);
+  background: color-mix(in srgb, var(--color-paper) 78%, transparent);
   color: var(--color-muted);
-}
-.skill2-name {
-  text-align: end;
-  color: var(--color-ink);
+  font-size: max(9px, 1.12cqw);
+  line-height: 1.35;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
-.right .skill2-name {
-  text-align: start;
+.skill-chip > * {
+  position: relative;
 }
-.dodge-status {
-  grid-column: 1 / -1;
-}
-.right .dodge-status {
-  text-align: end;
-}
-.skill-name {
-  color: var(--color-ink);
-}
-.cooldown-track {
-  height: 3px;
-  background: var(--color-rule);
-  overflow: hidden;
-}
-.cooldown-track i {
-  display: block;
-  height: 100%;
-  background: var(--fighter-tone);
+.skill-chip i {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--fighter-tone) 30%, transparent);
   transform: scaleX(var(--amount, 1));
   transform-origin: left;
 }
-.right .cooldown-track i {
-  transform-origin: right;
+.skill-chip b {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+}
+.skill-chip em {
+  margin-inline-start: auto;
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+}
+.skill-chip[data-ready="true"] {
+  border-color: color-mix(in srgb, var(--fighter-tone) 70%, transparent);
+  color: var(--color-ink);
+  animation: chip-ready 420ms var(--ease-out);
+}
+@keyframes chip-ready {
+  from {
+    box-shadow: inset 0 0 0 2px var(--fighter-tone);
+    filter: brightness(1.9);
+  }
+}
+.power-hud kbd {
+  min-width: 0;
+  padding: 0 0.42cqw;
+  border-color: color-mix(in srgb, var(--fighter-tone) 60%, transparent);
+  background: var(--color-paper);
+  color: var(--fighter-tone);
+  font-size: 0.85em;
+  line-height: 1.4;
 }
 .combo-display {
   position: absolute;
@@ -1120,7 +1180,8 @@ dialog::backdrop {
   font-family: var(--font-display);
   font-size: 2.1em;
   color: var(--color-ink);
-  -webkit-text-stroke: 2px var(--color-accent);
+  -webkit-text-stroke: 4px var(--color-accent);
+  paint-order: stroke fill;
 }
 .combo-display.right b {
   -webkit-text-stroke-color: var(--color-other);
@@ -1299,7 +1360,8 @@ dialog::backdrop {
 .announcement[data-tone="end"] strong {
   font-size: max(32px, 9cqw);
   letter-spacing: 0.02em;
-  -webkit-text-stroke: 2px var(--color-shadow);
+  -webkit-text-stroke: 5px var(--color-shadow);
+  paint-order: stroke fill;
   text-shadow:
     0 4px 0 var(--color-shadow),
     0 0 40px color-mix(in srgb, var(--color-accent) 60%, transparent);
@@ -1386,10 +1448,7 @@ dialog::backdrop {
     gap: 14cqw;
     padding-inline: 2cqw;
   }
-  .cooldowns {
-    font-size: 8px;
-  }
-  .power-hud .cooldowns {
+  .power-hud .skills {
     display: none;
   }
   .power-label {
@@ -1408,6 +1467,10 @@ dialog::backdrop {
     width: min(100%, calc((100dvh - 196px) * 1.77778));
     margin-inline: auto;
   }
+  /* 對戰時縮小下方留白，按鍵提示才不會被擠出畫面 */
+  main.shell:has(#battle-screen:not([hidden])) {
+    padding-bottom: 8px;
+  }
 }
 @media (pointer: coarse), (max-width: 690px) {
   .touch-controls:not(:empty) {
@@ -1415,7 +1478,8 @@ dialog::backdrop {
     gap: 16px;
     margin-top: 12px;
   }
-  .battle-keys {
+  .battle-keys,
+  .power-hud kbd {
     display: none;
   }
 }
@@ -1696,6 +1760,14 @@ dialog::backdrop {
   min-height: 48px;
 }
 
+/* 直式手機下方空間很多，操作鈕做大一點比較好按 */
+@media (orientation: portrait) and (pointer: coarse) {
+  .touch-button {
+    min-height: 64px;
+    font-size: 16px;
+  }
+}
+
 /* 手機橫放：對戰畫面佔滿整個螢幕，操作鈕半透明地疊在畫面下方兩側 */
 @media (orientation: landscape) and (max-height: 520px) {
   body:has(#battle-screen:not([hidden])) .site-header {
@@ -1734,8 +1806,9 @@ dialog::backdrop {
     top: 10.5cqw;
     bottom: auto;
     background: none;
+    padding-top: 1cqw;
   }
-  #battle-screen .power-hud .cooldowns {
+  #battle-screen .power-hud .skills {
     display: none;
   }
   #battle-screen .arena {

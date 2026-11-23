@@ -3,6 +3,7 @@
   const {
     FIGHTERS,
     CONTROLS,
+    SOLO_KEYS,
     DIFFICULTY,
     PAD_BUTTONS,
     PAD_LABELS,
@@ -17,18 +18,31 @@
     arcade: "街機挑戰",
     watch: "電腦對打",
   };
+  // 觸控鈕的字要短，直式手機才不會斷行
+  const TOUCH_LABEL = {
+    left: "←",
+    right: "→",
+    jump: "跳",
+    crouch: "蹲",
+    special: "技一",
+    skill2: "技二",
+  };
+  const DODGE_COOLDOWN = 0.78; // 和 match.js 的閃避冷卻一致（畫進度條用）
   const ARCADE_LEVELS = ["easy", "normal", "hard"];
-  // Multi-input commands shown in the help dialog.
+  // 操作說明裡的組合指令
   const COMMANDS = [
     ["衝刺／後撤", "連按兩下 → 或 ←", "衝刺中出招會帶著衝勁向前突進"],
-    ["短跳", "輕點跳躍", "按住跳得高，輕點跳得低"],
-    ["掃腿", "蹲下＋重攻", "下段攻擊，只能蹲著防禦，命中會掃倒對手"],
+    ["三段連擊", "連按輕攻 J", "最後再按一下會接技能一"],
+    ["前進重攻", "按住前＋重攻 K", "往前跨一大步，打得最遠"],
+    ["自動防禦", "按住後退", "對手打過來時自動擋住；蹲下＋後退是蹲防"],
+    ["掃腿", "蹲下＋重攻 K", "下段攻擊，只能蹲著防禦，命中會掃倒對手"],
     [
       "投技",
-      "輕攻＋重攻同時按（或 O / 8）",
+      "U（或輕攻＋重攻同時按）",
       "無視防禦；被抓瞬間按投技可以拆投",
     ],
     ["上下段防禦", "防禦／蹲下＋防禦", "站防擋跳躍攻擊，蹲防擋掃腿與蹲踢"],
+    ["短跳", "輕點跳躍", "按住跳得高，輕點跳得低"],
     ["爆氣", "被連段時按閃避", "消耗 50% 大招能量，強制脫離並震開對手"],
     ["精準防禦", "攻擊到來的前一刻按防禦", "不削血、彈開對手並獲得能量"],
   ];
@@ -73,8 +87,13 @@
     button.className = "fighter-choice";
     button.dataset.fighter = fighter.id;
     button.innerHTML = `
-      <span class="choice-art"><img src="${fighter.portrait}" width="384" height="768" alt=""></span>
-      <span><strong class="choice-name">${fighter.name}</strong><span class="choice-role">${fighter.role}</span></span>
+      <span class="choice-art">
+        <img src="${fighter.portrait}" width="384" height="768" alt="">
+      </span>
+      <span>
+        <strong class="choice-name">${fighter.name}</strong>
+        <span class="choice-role">${fighter.role}</span>
+      </span>
       <span class="choice-seats" aria-hidden="true"></span>`;
     button.addEventListener("click", () => {
       selection[seat] = fighter;
@@ -87,7 +106,9 @@
 
   const keyMap = new Map();
   for (const entry of CONTROLS)
-    entry.codes.forEach((code, index) => keyMap.set(code, { index, ...entry }));
+    entry.codes.forEach((codes, index) => {
+      for (const code of codes) keyMap.set(code, { index, ...entry });
+    });
   const keyboard = [new Set(), new Set()];
   const queued = [[], []];
   const pointers = new Map();
@@ -97,6 +118,11 @@
     { held: new Set(), pressed: [] },
   ];
   let padCount = 0;
+
+  // 某個動作在玩家 index 的鍵盤上是哪一個鍵
+  function keyLabel(action, index) {
+    return CONTROLS.find((entry) => entry.action === action).labels[index];
+  }
 
   function selectionSound() {
     audio.activate();
@@ -154,15 +180,10 @@
     text(get("super-name"), fighter.super.name);
     text(get("super-description"), fighter.super.description);
     const cpuPreview = seat === 1 && mode !== "versus";
-    const keys = {
-      "special-key": ["K", "3"],
-      "skill2-key": ["I", "7"],
-      "super-key": ["L", "4"],
-    };
-    for (const [id, labels] of Object.entries(keys)) {
-      const key = get(id);
+    for (const action of ["special", "skill2", "super"]) {
+      const key = get(`${action}-key`);
       key.hidden = cpuPreview;
-      text(key, labels[seat]);
+      text(key, keyLabel(action, seat));
     }
 
     for (const [index, button] of choiceButtons.entries()) {
@@ -189,45 +210,77 @@
   function buildHelp() {
     const padLabel = (action) =>
       PAD_LABELS[action] ?? { left: "←", right: "→", crouch: "↓" }[action];
-    const rows = CONTROLS.map(
-      ({ action, name, labels }) =>
-        `<tr><th scope="row">${name}</th><td><kbd>${labels[0]}</kbd></td><td><kbd>${labels[1]}</kbd></td><td><kbd>${padLabel(action)}</kbd></td></tr>`,
-    );
+    // 表頭與一列的共用寫法，兩張表才不用各寫一長串標籤
+    const head = (names) =>
+      `<thead><tr>${names
+        .map((name) => `<th scope="col">${name}</th>`)
+        .join("")}</tr></thead>`;
+    const row = (name, cells) =>
+      `<tr><th scope="row">${name}</th>` +
+      `${cells.map((cell) => `<td>${cell}</td>`).join("")}</tr>`;
+    const key = (label) => `<kbd>${label}</kbd>`;
     get("help-keys").innerHTML =
-      `<thead><tr><th scope="col">動作</th><th scope="col">玩家 1</th><th scope="col">玩家 2</th><th scope="col">手把</th></tr></thead><tbody>${rows.join("")}</tbody>`;
-    get("help-commands").innerHTML =
-      `<thead><tr><th scope="col">指令</th><th scope="col">操作</th><th scope="col">效果</th></tr></thead><tbody>${COMMANDS.map(
-        ([name, input, effect]) =>
-          `<tr><th scope="row">${name}</th><td>${input}</td><td>${effect}</td></tr>`,
+      head(["動作", "玩家 1", "玩家 2", "手把"]) +
+      `<tbody>${CONTROLS.map(({ action, name, labels }) =>
+        row(name, [key(labels[0]), key(labels[1]), key(padLabel(action))]),
       ).join("")}</tbody>`;
+    get("help-commands").innerHTML =
+      head(["指令", "操作", "效果"]) +
+      `<tbody>${COMMANDS.map(([name, ...cells]) => row(name, cells)).join(
+        "",
+      )}</tbody>`;
   }
 
   function buildBattleControls() {
     const desktop = get("battle-keys");
-    const keys = CONTROLS.slice(4)
-      .map(({ name, labels }) => `<span><kbd>${labels[0]}</kbd>${name}</span>`)
-      .join("");
-    const padNote = padCount
+    const hint = (labels, name) =>
+      `<span>${labels.map((key) => `<kbd>${key}</kbd>`).join("")}${name}</span>`;
+    const pad = padCount
       ? '<span class="pad-note">🎮 手把已連線</span>'
       : "";
-    desktop.innerHTML =
-      mode !== "versus"
-        ? `<span><kbd>A</kbd><kbd>D</kbd>移動（連按衝刺）</span><span><kbd>W</kbd>跳躍</span><span><kbd>S</kbd>下蹲</span>${keys}<span><kbd>S</kbd>+<kbd>U</kbd>掃腿</span>${padNote}<button type="button" class="utility" id="battle-help">指令表</button>`
-        : `<span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>玩家 1 移動</span><span><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd>玩家 2 移動</span>${padNote}<button type="button" class="utility" id="battle-help">查看攻擊按鍵</button>`;
+    const help = (label) =>
+      '<button type="button" class="utility" id="battle-help">' +
+      `${label}</button>`;
+    if (mode === "versus")
+      desktop.innerHTML =
+        hint(["W", "A", "S", "D"], "玩家 1 移動") +
+        hint(["↑", "←", "↓", "→"], "玩家 2 移動") +
+        pad +
+        help("查看攻擊按鍵");
+    else if (mode === "watch")
+      desktop.innerHTML =
+        "<span>兩邊都由電腦操作，坐著看就好。</span>" + help("指令表");
+    else
+      desktop.innerHTML =
+        hint(["A", "D"], "移動・連按衝刺") +
+        hint(["W"], "跳躍") +
+        hint(["S"], "下蹲") +
+        CONTROLS.slice(4)
+          .map(({ name, labels }) => hint([labels[0]], name))
+          .join("") +
+        pad +
+        help("指令表");
     get("battle-help")?.addEventListener("click", openHelp);
 
     const players = mode === "versus" ? [0, 1] : [0];
     touchControls.innerHTML = players
       .map((index) => {
         const button = ({ action, name }) =>
-          `<button type="button" class="utility touch-button" data-action="${action}">${name}</button>`;
+          '<button type="button" class="utility touch-button" ' +
+          `data-action="${action}" aria-label="${name}">` +
+          `${TOUCH_LABEL[action] ?? name}</button>`;
         const heading = index === 0 ? "玩家 1" : "玩家 2";
         // 方向鍵排成十字（跳在上、蹲在下），手指可以在上面滑動換方向
-        return `<div class="touch-pad" data-player="${index}" aria-label="${heading}" role="group">
-        ${mode === "versus" ? `<p>${heading}</p>` : ""}
-        <div class="touch-group move">${CONTROLS.slice(0, 4).map(button).join("")}</div>
-        <div class="touch-group actions">${CONTROLS.slice(4).map(button).join("")}</div>
-      </div>`;
+        const group = (name, list) =>
+          `<div class="touch-group ${name}">${list.map(button).join("")}</div>`;
+        return (
+          `<div class="touch-pad" data-player="${index}" ` +
+          `aria-label="${heading}" role="group">` +
+          (mode === "versus" ? `<p>${heading}</p>` : "") +
+          group("move", CONTROLS.slice(0, 4)) +
+          group("actions", CONTROLS.slice(4)) +
+          "</div>"
+        );
       })
       .join("");
     for (const [index, panel] of hud.entries()) {
@@ -250,11 +303,24 @@
     const hud = get(id);
     const power = get(powerId);
     const index = id === "left-hud" ? 0 : 1;
-    const cooldowns = document.createElement("div");
-    cooldowns.className = "cooldowns";
-    cooldowns.innerHTML =
-      '<span class="skill-name"></span><span class="skill2-name"></span><div class="cooldown-track"><i></i></div><div class="cooldown-track"><i></i></div><span class="dodge-status"></span>';
-    power.append(cooldowns);
+    // 技能一、技能二、閃避：底色就是冷卻進度，冷卻中顯示剩餘秒數
+    const row = document.createElement("div");
+    row.className = "skills";
+    const chips = {};
+    for (const action of ["special", "skill2", "dodge"]) {
+      const root = document.createElement("span");
+      root.className = "skill-chip";
+      root.innerHTML = "<i></i><kbd></kbd><b></b><em></em>";
+      row.append(root);
+      chips[action] = {
+        root,
+        key: root.querySelector("kbd"),
+        name: root.querySelector("b"),
+        time: root.querySelector("em"),
+      };
+    }
+    text(chips.dodge.name, "閃避");
+    power.append(row);
     const combo = document.createElement("div");
     combo.className = "combo-display" + (index ? " right" : "");
     combo.hidden = true;
@@ -264,7 +330,9 @@
     cutin.hidden = true;
     cutin.setAttribute("role", "status");
     cutin.innerHTML =
-      '<img alt=""><div><small>大招發動</small><strong></strong></div><i class="cutin-streaks" aria-hidden="true"></i>';
+      '<img alt="">' +
+      "<div><small>大招發動</small><strong></strong></div>" +
+      '<i class="cutin-streaks" aria-hidden="true"></i>';
     arena.append(cutin);
     return {
       root: hud,
@@ -272,11 +340,7 @@
       cutin,
       cutinRemaining: 0,
       comboShown: 0,
-      cooldownFill: cooldowns.querySelectorAll(".cooldown-track i")[0],
-      cooldown2Fill: cooldowns.querySelectorAll(".cooldown-track i")[1],
-      skillName: cooldowns.querySelector(".skill-name"),
-      skill2Name: cooldowns.querySelector(".skill2-name"),
-      dodgeStatus: cooldowns.querySelector(".dodge-status"),
+      chips,
       portrait: hud.querySelector("img"),
       name: hud.querySelector(".hud-name"),
       side: hud.querySelector(".hud-side"),
@@ -285,7 +349,8 @@
       healthFill: hud.querySelector(".gauge-fill"),
       lag: hud.querySelector(".gauge-lag"),
       lagValue: 100,
-      skill: power.querySelector(".skill-status"),
+      burst: power.querySelector(".burst-status"),
+      superKey: power.querySelector(".super-name kbd"),
       meterText: power.querySelector(".super-value"),
       meter: power.querySelector(".power-gauge"),
       meterFill: power.querySelector(".gauge-fill"),
@@ -303,6 +368,13 @@
     if (element.getAttribute("aria-valuenow") !== displayed)
       element.setAttribute("aria-valuenow", displayed);
     fill.style.setProperty("--amount", value / 100);
+  }
+
+  function setChip({ root, time }, remaining, total) {
+    root.style.setProperty("--amount", 1 - remaining / total);
+    const ready = String(remaining <= 0);
+    if (root.dataset.ready !== ready) root.dataset.ready = ready;
+    text(time, remaining > 0 ? remaining.toFixed(1) : "");
   }
 
   function renderHud(dt) {
@@ -325,69 +397,47 @@
       panel.combo.hidden = !comboVisible;
       if (comboVisible && panel.comboShown !== fighter.combo) {
         panel.comboShown = fighter.combo;
-        panel.combo.innerHTML = `<b>${fighter.combo}</b> 連擊<small>${fighter.comboDamage} 傷害</small>`;
+        panel.combo.innerHTML =
+          `<b>${fighter.combo}</b> 連擊` +
+          `<small>${fighter.comboDamage} 傷害</small>`;
         panel.combo.classList.remove("pop");
         void panel.combo.offsetWidth;
         panel.combo.classList.add("pop");
         stats[index].maxCombo = Math.max(stats[index].maxCombo, fighter.combo);
       }
       if (!comboVisible) panel.comboShown = 0;
-      panel.cooldownFill.style.setProperty(
-        "--amount",
-        1 - fighter.specialCooldown / fighter.profile.special.cooldown,
+      const { profile } = fighter;
+      setChip(
+        panel.chips.special,
+        fighter.specialCooldown,
+        profile.special.cooldown,
       );
-      panel.cooldown2Fill.style.setProperty(
-        "--amount",
-        1 - fighter.skill2Cooldown / fighter.profile.skill2.cooldown,
+      setChip(
+        panel.chips.skill2,
+        fighter.skill2Cooldown,
+        profile.skill2.cooldown,
       );
-      text(
-        panel.dodgeStatus,
-        fighter.dodgeCooldown > 0
-          ? "閃避 " + fighter.dodgeCooldown.toFixed(1) + "s"
-          : "閃避就緒",
-      );
+      setChip(panel.chips.dodge, fighter.dodgeCooldown, DODGE_COOLDOWN);
+      panel.burst.dataset.ready = fighter.meter >= 50;
       panel.lagValue = Math.max(fighter.hp, panel.lagValue - 52 * dt);
       panel.lag.style.setProperty("--amount", panel.lagValue / 100);
       setGauge(panel.health, panel.healthFill, fighter.hp);
       panel.health.dataset.low = fighter.hp > 0 && fighter.hp <= 25;
       setGauge(panel.meter, panel.meterFill, fighter.meter);
       const skillReady = fighter.specialCooldown <= 0;
-      const skill2Ready = fighter.skill2Cooldown <= 0;
-      const profile = fighter.profile;
-      panel.skill.dataset.ready = skillReady && skill2Ready;
-      text(
-        panel.skill,
-        skillReady && skill2Ready
-          ? "技能就緒"
-          : skillReady || skill2Ready
-            ? "技能部分就緒"
-            : "技能冷卻中",
-      );
-      text(
-        panel.skillName,
-        skillReady
-          ? profile.special.name
-          : `${profile.special.name} ${fighter.specialCooldown.toFixed(1)}s`,
-      );
-      text(
-        panel.skill2Name,
-        skill2Ready
-          ? profile.skill2.name
-          : `${profile.skill2.name} ${fighter.skill2Cooldown.toFixed(1)}s`,
-      );
       panel.power.dataset.ready = fighter.meter >= 100;
       if (panel.touchSkill) {
         text(
           panel.touchSkill,
           skillReady
-            ? "技能一"
-            : `技能一 ${fighter.specialCooldown.toFixed(1)}`,
+            ? "技一"
+            : `技一 ${fighter.specialCooldown.toFixed(1)}`,
         );
         text(
           panel.touchSkill2,
           fighter.skill2Cooldown <= 0
-            ? "技能二"
-            : `技能二 ${fighter.skill2Cooldown.toFixed(1)}`,
+            ? "技二"
+            : `技二 ${fighter.skill2Cooldown.toFixed(1)}`,
         );
         text(
           panel.touchSuper,
@@ -405,9 +455,7 @@
       }
       text(
         panel.meterText,
-        fighter.meter >= 100
-          ? "大招就緒"
-          : `大招 ${Math.floor(fighter.meter)}%`,
+        fighter.meter >= 100 ? "就緒" : `${Math.floor(fighter.meter)}%`,
       );
       for (const [pipIndex, pip] of panel.pips.entries())
         pip.classList.toggle("won", match.score[index] > pipIndex);
@@ -447,7 +495,8 @@
       else
         showAnnouncement(
           `第 ${match.round} 回合`,
-          `${arcade ? `街機第 ${arcade.stage + 1} 戰・` : ""}${match.profiles[0].name} 對 ${match.profiles[1].name}`,
+          (arcade ? `街機第 ${arcade.stage + 1} 戰・` : "") +
+            `${match.profiles[0].name} 對 ${match.profiles[1].name}`,
           "round",
         );
     } else if (
@@ -503,11 +552,17 @@
       ["精準防禦", a.perfect, b.perfect],
       ["投技成功", a.throws, b.throws],
     ];
+    const names = match.profiles.map(
+      ({ name }) => `<th scope="col">${name}</th>`,
+    );
+    const cell = (mine, other) => `<td data-best="${mine > other}">${mine}</td>`;
     get("result-stats").innerHTML =
-      `<thead><tr><th scope="col">${match.profiles[0].name}</th><td></td><th scope="col">${match.profiles[1].name}</th></tr></thead><tbody>${rows
+      `<thead><tr>${names.join("<td></td>")}</tr></thead>` +
+      `<tbody>${rows
         .map(
           ([name, left, right]) =>
-            `<tr><td data-best="${left > right}">${left}</td><th scope="row">${name}</th><td data-best="${right > left}">${right}</td></tr>`,
+            `<tr>${cell(left, right)}` +
+            `<th scope="row">${name}</th>${cell(right, left)}</tr>`,
         )
         .join("")}</tbody>`;
     pauseButton.disabled = true;
@@ -521,7 +576,7 @@
     if (helpDialog.open) helpDialog.close();
   }
 
-  // Arcade: beat the other three fighters in a row, each tougher than the last.
+  // 街機挑戰：連續打敗另外三位，一位比一位強
   function opponentFor() {
     if (mode !== "arcade") return { rival: selection[1], level: difficulty };
     if (!arcade) {
@@ -574,7 +629,11 @@
       mode === "solo" || mode === "watch"
         ? `${MODE_LABEL[mode]}・${DIFFICULTY[difficulty].label}`
         : mode === "arcade"
-          ? `${MODE_LABEL.arcade}・第 ${arcade.stage + 1} / ${arcade.order.length} 戰・${DIFFICULTY[level].label}`
+          ? [
+              MODE_LABEL.arcade,
+              `第 ${arcade.stage + 1} / ${arcade.order.length} 戰`,
+              DIFFICULTY[level].label,
+            ].join("・")
           : MODE_LABEL[mode],
     );
     for (const [index, panel] of hud.entries()) {
@@ -586,8 +645,16 @@
       panel.cutin.hidden = true;
       panel.power.dataset.fighter = match.profiles[index].id;
       panel.cutin.dataset.fighter = match.profiles[index].id;
-      text(panel.skillName, match.profiles[index].special.name);
-      text(panel.skill2Name, match.profiles[index].skill2.name);
+      text(panel.chips.special.name, match.profiles[index].special.name);
+      text(panel.chips.skill2.name, match.profiles[index].skill2.name);
+      // 電腦操作的一方不用顯示按鍵
+      const human = !match.demo && (index === 0 || !match.cpu);
+      for (const [action, chip] of Object.entries(panel.chips)) {
+        chip.key.hidden = !human;
+        text(chip.key, keyLabel(action, index));
+      }
+      panel.superKey.hidden = !human;
+      text(panel.superKey, keyLabel("super", index));
       panel.comboShown = 0;
       panel.combo.hidden = true;
     }
@@ -626,7 +693,7 @@
     pauseDialog.showModal();
   }
 
-  // Gamepads are polled every frame; presses are detected on the rising edge.
+  // 手把每一幀讀一次，由放開變成按下才算按一次
   function pollPads() {
     const list = navigator.getGamepads
       ? [...navigator.getGamepads()].filter((pad) => pad?.connected)
@@ -700,6 +767,7 @@
         crouch: active("crouch"),
         guard: active("guard"),
         jumpHeld: active("jump"),
+        autoGuard: true, // 按住後退就會防禦
         actions: queued[index].splice(0),
       };
     });
@@ -730,18 +798,21 @@
     }
   }
 
-  const STEP = 1 / 60;
+  const STEP = 1 / 120; // 規則每秒跑 120 次，高更新率的螢幕才不會一頓一頓
   let lastTime = performance.now();
   let accumulator = 0;
-  // 畫面順不順：累計最近的幀間隔，太慢就把畫布調回 1 倍解析度
+  // 畫面順不順：累計最近的幀間隔，太慢就先把畫布調回 1 倍解析度，再關掉泛光
   const pace = { sum: 0, frames: 0 };
 
   function watchPace(dt) {
-    if (renderer.scale <= 1 || dt <= 0) return;
+    if (renderer.lite || dt <= 0) return;
     pace.sum += dt;
     pace.frames += 1;
     if (pace.frames < 90) return;
-    if (pace.sum / pace.frames > 0.021) renderer.setScale(1);
+    if (pace.sum / pace.frames > 0.021) {
+      if (renderer.scale > 1) renderer.setScale(1);
+      else renderer.lite = true;
+    }
     pace.sum = pace.frames = 0;
   }
 
@@ -768,7 +839,8 @@
       }
       renderHud(dt);
       renderAnnouncement();
-      renderer.draw(match, scaled, Math.min(1, accumulator / STEP));
+      const alpha = Math.min(1, accumulator / STEP);
+      renderer.draw(match, scaled, alpha, STEP, dt);
       watchPace(dt);
     } else {
       accumulator = 0;
@@ -816,6 +888,16 @@
     ].focus();
   });
 
+  // 這個鍵現在屬於誰、做什麼；對手是電腦時，方向鍵與 Z X C V B 也歸玩家 1
+  function bindingFor(code) {
+    const binding = keyMap.get(code);
+    if (binding && !(binding.index === 1 && match?.cpu)) return binding;
+    const action = match?.cpu && SOLO_KEYS[code];
+    if (!action) return null;
+    const { hold } = CONTROLS.find((entry) => entry.action === action);
+    return { index: 0, action, hold };
+  }
+
   document.addEventListener("keydown", (event) => {
     if (!acceptsInput() || event.ctrlKey || event.metaKey || event.altKey)
       return;
@@ -824,19 +906,19 @@
       openPause();
       return;
     }
-    const binding = keyMap.get(event.code);
-    if (!binding || (binding.index === 1 && match.cpu)) return;
+    const binding = bindingFor(event.code);
+    if (!binding) return;
     if (event.code === "Space" && event.target instanceof HTMLButtonElement)
       return;
     event.preventDefault();
-    // Non-hold keys are queued once, but still tracked as held (jump height depends on it).
+    // 出招鍵只送出一次，但仍記住有沒有按著（跳躍高度會用到）
     if (!binding.hold && !event.repeat)
       queued[binding.index].push(binding.action);
     keyboard[binding.index].add(binding.action);
   });
 
   document.addEventListener("keyup", (event) => {
-    const binding = keyMap.get(event.code);
+    const binding = bindingFor(event.code);
     if (binding) keyboard[binding.index].delete(binding.action);
   });
 
@@ -897,8 +979,11 @@
       openPause();
       audio.setBattle(false);
       audio.context?.suspend().catch(() => {});
-    } else if (audio.context?.state === "suspended") {
-      audio.context.resume().catch(() => {});
+    } else {
+      if (audio.context?.state === "suspended")
+        audio.context.resume().catch(() => {});
+      // 暫停視窗是在畫面藏起來時打開的，回來後把焦點放到「繼續對戰」
+      if (pauseDialog.open) get("resume-button").focus();
     }
   });
   window.addEventListener("blur", clearInputs);
@@ -917,6 +1002,10 @@
   get("help-dialog")
     .querySelector("[data-close]")
     .addEventListener("click", () => helpDialog.close());
+  for (const dialog of [helpDialog, pauseDialog])
+    dialog.addEventListener("close", () => {
+      if (acceptsInput()) arena.focus({ preventScroll: true });
+    });
   startButton.addEventListener("click", newRun);
   pauseButton.addEventListener("click", openPause);
   get("resume-button").addEventListener("click", () => pauseDialog.close());

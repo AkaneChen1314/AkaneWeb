@@ -1,3 +1,3 @@
 1.2
-Edition: 20261121-blueworld-r15c
+Edition: 20261123-blueworld-r15d
 Site: Blue World
