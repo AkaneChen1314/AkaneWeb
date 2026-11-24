@@ -79,6 +79,8 @@
   flex-direction: column;
 }
 
+/* ---------- 戰場外框 ---------- */
+
 .battle-field {
   position: relative;
   flex: 1 1 0;
@@ -87,6 +89,7 @@
   overflow: hidden;
 }
 
+/* 首領血條。 */
 .boss-hud {
   position: static;
   inset: auto;
@@ -180,6 +183,7 @@
   display: none;
 }
 
+/* 單獨開啟時的返回列。 */
 .standalone-portal-nav {
   font-family: "Akane Sans", "Microsoft JhengHei", system-ui, sans-serif;
 }
@@ -193,6 +197,7 @@
   display: none;
 }
 
+/* 左右兩側的觸控欄。 */
 .wide-touch-layout {
   --touch-ui-scale: 1;
   grid-template-columns: minmax(0, 1fr);
@@ -218,6 +223,7 @@
   display: none;
 }
 
+/* 移動區。 */
 .dock-move-pad {
   display: flex;
   flex-direction: column;
@@ -293,6 +299,7 @@
   box-shadow: 0 0 22px #70eee337;
 }
 
+/* 技能欄。 */
 .touch-ability-column {
   display: flex;
   flex-direction: column;
@@ -311,6 +318,7 @@
   color: #93adc9;
 }
 
+/* 加寬版面的技能按鈕。 */
 .wide-touch-layout .game-controls {
   position: static;
   display: grid;
@@ -573,6 +581,8 @@
   }
 }
 
+/* ---------- 手機 ---------- */
+
 @media (max-width: 760px) {
   .loadout-config summary {
     padding: 12px;
@@ -616,6 +626,8 @@
     height: clamp(340px, calc(100dvh - 206px), 700px);
   }
 }
+
+/* ---------- 橫拿手機 ---------- */
 
 @media (max-height: 500px) and (orientation: landscape) {
   .topbar {

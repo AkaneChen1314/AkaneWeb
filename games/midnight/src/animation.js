@@ -14,6 +14,7 @@
   const POSE_FADE = 0.05;
   const HIT_FADE = 0.028;
   const TAU = Math.PI * 2;
+  // 限制範圍與快慢曲線。
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const easeOut = (t) => 1 - (1 - t) ** 3;
   const easeIn = (t) => t * t;
@@ -666,7 +667,9 @@
     return [x, up * lift, Math.cos(k * Math.PI) * up * 26];
   }
 
+  // 補上沒有指定的欄位。
   const complete = (pose) => ({ ...REST, ...pose });
+  // 兩個姿勢之間的混合。
   function blend(a, b, t) {
     const out = {};
     for (const key of KEYS) out[key] = a[key] + (b[key] - a[key]) * t;
@@ -688,6 +691,7 @@
       const hit = complete(part.hit);
       // 打中的瞬間手腳多伸出去一些，馬上彈回來，看起來才有力
       const foot = part.limb === "foot";
+      // 打到最遠那一瞬間的姿勢。
       const peak = {
         ...hit,
         px: hit.px + 8,
@@ -747,6 +751,7 @@
     return p;
   }
 
+  // 取出某個時間點的姿勢。
   function sample(keys, time) {
     let i = 1;
     while (i < keys.length - 1 && keys[i].t < time) i += 1;
@@ -757,6 +762,7 @@
       // 收招：前半把手腳收回來（踢腿先屈膝、出拳用縮短手臂代替），後半回到站姿
       const punch = a.s === "punch";
       const kick = a.limb === "foot";
+      // 收招時先往回收一點。
       const back = complete({
         st: punch ? a.p.st * 0.45 : 1, // 只有出拳的圖需要收步
         ax: punch ? 0.58 : 1,
@@ -791,6 +797,7 @@
     return { x: value, v: 0 };
   }
 
+  // 推進一步彈簧。
   function stepSpring(s, target, k, damping, dt) {
     s.v += ((target - s.x) * k - s.v * damping) * dt;
     s.x += s.v * dt;
@@ -798,6 +805,7 @@
 
   // 沒有 WebGL2 時的備案：直接用原圖，只套整體的旋轉與縮放
   class FlatSprites {
+    // 先把每張圖縮成需要的大小。
     constructor(atlas, res) {
       this.res = res;
       this.images = new Map();
@@ -832,11 +840,13 @@
       this.canvas.height = SIZE.height * res;
     }
 
+    // 圖上某一點的位置，跟 SpriteRig 的同名函式對應。
     point(id, sprite, pose) {
       const { scale } = this.images.get(id);
       return [(pose.px + 150) * scale, 240 * scale];
     }
 
+    // 用原圖畫一個角色。
     render(id, sprite, pose, look) {
       const { scale, set } = this.images.get(id);
       const ctx = this.canvas.getContext("2d");
@@ -860,13 +870,16 @@
     }
   }
 
+  // #rrggbb 換成 0～1 的數值。
   const flashRgb = (value) => [
     parseInt(value.slice(1, 3), 16) / 255,
     parseInt(value.slice(3, 5), 16) / 255,
     parseInt(value.slice(5, 7), 16) / 255,
   ];
 
+  // 所有角色的動畫：算姿勢、換圖、彈簧與繪圖。
   class FighterAnimation {
+    // 有 WebGL2 就用骨架，沒有就用靜態圖。
     constructor(atlas, res = 1) {
       this.res = res;
       const logical = { ...SIZE, x: ORIGIN.x, y: ORIGIN.y };
@@ -882,6 +895,7 @@
       this.layers = [this.layer(), this.layer()]; // 兩位鬥士這一幀的樣子
     }
 
+    // 每位角色一張畫布。
     layer() {
       const canvas = document.createElement("canvas");
       canvas.width = Math.round(SIZE.width * this.res);
@@ -889,9 +903,11 @@
       return canvas;
     }
 
+    // 這位角色的動畫狀態，第一次用到才建立。
     state(fighter) {
       let state = this.states.get(fighter);
       if (!state) {
+        // 各種姿勢、換圖、彈簧與拖影的狀態。
         state = {
           sprite: "idle",
           prevSprite: "idle",
@@ -996,6 +1012,7 @@
       const move = fighter.move;
       const airborne = fighter.y > 0 || fighter.vy > 0;
       const out = { s: "idle", p: null, rate: 26, fade: POSE_FADE, limb: null };
+      // 設定這一幀要的姿勢與圖。
       const pose = (p, s = "idle") => {
         out.p = complete(p);
         out.s = s;
@@ -1007,6 +1024,7 @@
       const low = !airborne && ducking ? 1 : 0;
       state.crouch += (low - state.crouch) * (1 - Math.exp(-26 * dt));
 
+      // 倒地。
       if (fighter.hp === 0) {
         if (airborne) {
           out.rate = 14;
@@ -1042,6 +1060,7 @@
         });
       }
 
+      // 登場。
       if (match?.phase === "intro") {
         const p = clamp(match.phaseTime / 0.85, 0, 1);
         if (p < 1) {
@@ -1052,6 +1071,7 @@
         }
       }
       const settled = match && match.phase !== "fight" && match.result;
+      // 勝利或落敗的姿勢。
       if (settled && match.phaseTime > 0.55) {
         if (match.result.winner === fighter.index && !airborne) {
           const sway = wave(t * 2.4);
@@ -1073,6 +1093,7 @@
         }
       }
 
+      // 被抓住。
       if (fighter.heldBy) {
         return pose({
           y: 26,
@@ -1104,6 +1125,7 @@
       if (move?.rush) return this.rushPose(move, out);
       if (move) return this.movePose(fighter, move, out, match, lag);
 
+      // 衝刺。
       if (fighter.dash) {
         if (fighter.dash.forward) return this.run(out, state, 1);
         out.rate = 40;
@@ -1123,6 +1145,7 @@
           au: -8,
         });
       }
+      // 閃避。
       if (fighter.dodge) {
         // 閃避：壓低身子滑過去
         const forward = fighter.dodge.direction * fighter.face;
@@ -1151,6 +1174,7 @@
       const guardOn = fighter.guard ? 1 : 0;
       state.guard += (guardOn - state.guard) * (1 - Math.exp(-30 * dt));
       const jolt = fighter.blockStun > 0 ? 1 : 0; // 剛擋下一擊，身體往後一頓
+      // 蹲下。
       if (state.crouch > 0.4) {
         const rise = 1 - state.crouch;
         out.rate = 34;
@@ -1284,6 +1308,7 @@
       return out;
     }
 
+    // 出招時的姿勢。
     movePose(fighter, move, out, match, lag = 0) {
       const airborne = fighter.y > 0;
       if (move.spec.counter) {
@@ -1325,6 +1350,7 @@
       out.fade = now.strike ? HIT_FADE : POSE_FADE;
       // 升龍等離地的招式：腿跟著身體收起來
       if (airborne && move.drift && !now.limb) {
+        // 空中移動時腳收起來。
         out.p = {
           ...out.p,
           fx: -18,
@@ -1338,6 +1364,7 @@
       return out;
     }
 
+    // 摔技。
     throwPose(move, out) {
       const { elapsed } = move;
       out.rate = 45;
@@ -1381,6 +1408,7 @@
       return out;
     }
 
+    // 受擊與被擊飛。
     hurtPose(fighter, state, out, airborne) {
       out.s = "idle";
       if (airborne) {
@@ -1478,6 +1506,7 @@
       return out;
     }
 
+    // 每一幀更新：目標姿勢、換圖淡入、彈簧與重力感。
     update(fighter, dt, frozen = false, match = null, lag = 0) {
       const state = this.state(fighter);
       state.time += dt;
@@ -1527,6 +1556,7 @@
       // 馬尾與腰帶：往前衝就往後飄，往下掉就往上揚
       const drag = clamp(speed * 0.05 - lift * 0.02, -38, 38);
       const idle = wave(state.time * 2.1) * 3.5;
+      // 彈簧分成小步算，掉幀時不會爆掉。
       while (remaining > 0) {
         const h = Math.min(remaining, 1 / 120);
         stepSpring(state.ox, 0, 620, 30, h);
@@ -1555,6 +1585,7 @@
     carryOver(fighter, state, next) {
       if (!this.rig.scaleOf) return; // 備案的整張圖不需要
       const { id } = fighter.profile;
+      // 算出骨盆與頭的位置。
       const place = (sprite, pose) => {
         const [x, y] = this.rig.point(id, sprite, pose, "pelvis", "pel");
         const [hx, hy] = this.rig.point(id, sprite, pose, "head", "crown");
@@ -1571,6 +1602,7 @@
       fix.tau = next.strike ? 0.016 : 0.045;
     }
 
+    // 加上換圖時的修正量。
     withFix({ fix }, pose) {
       return {
         ...pose,
@@ -1678,6 +1710,7 @@
       ctx.scale(turn, 1);
     }
 
+    // 把角色畫到場景上，可以加光暈。
     draw(ctx, fighter, state, { glow = null, glowSize = 0 } = {}) {
       // 同一幀內（本體、倒影）只需要畫一次
       const image = state.dirty

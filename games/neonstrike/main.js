@@ -29,10 +29,17 @@ import {
   samplePatrolPoints,
   randomPointNear,
 } from "./navigation.js";
-import { createHarborDistricts, createFoundryDistricts } from "./district-maps.js";
+import {
+  createHarborDistricts,
+  createFoundryDistricts,
+} from "./district-maps.js";
 import { batchStaticMeshes, trimTinyShadowCasters } from "./districts.js";
 
+// ---------- 介面元素 ----------
+
+// 用選擇器找元素的縮寫。
 const $ = (selector) => document.querySelector(selector);
+// 會用到的介面元素，只找一次。
 const ui = {
   lobby: $("#lobby"),
   hud: $("#hud"),
@@ -139,6 +146,9 @@ const ui = {
 // 敵人標記配色：小地圖、頭上標記與威脅箭頭共用。一般與菁英統一紅色，只有首領為橘色。
 const RANK_COLORS = { standard: "#ff3e53", elite: "#ff3e53", boss: "#ffb44f" };
 
+// ---------- 遊戲資料：外觀、幹員、難度、模式、補給與地圖 ----------
+
+// 武器外觀。
 const weaponSkins = [
   {
     name: "ACID // 酸蝕迷彩",
@@ -162,6 +172,7 @@ const weaponSkins = [
   },
 ];
 
+// 幹員：能力、裝備與外觀。
 const operatorSkins = [
   {
     name: "VANTA // 夜襲",
@@ -218,6 +229,7 @@ const operatorSkins = [
     power: 0.98,
   },
 ];
+// 難度：敵人生命、速度、反應與火力。
 const difficulties = [
   {
     id: "cadet",
@@ -259,6 +271,7 @@ const difficulties = [
     detection: 40,
   },
 ];
+// 任務模式。
 const gameModes = [
   {
     id: "purge",
@@ -309,6 +322,7 @@ const gameModes = [
     briefLabel: "首領階段",
   },
 ];
+// 敵人的代號。
 const botNames = [
   "KESTREL",
   "RIFT",
@@ -323,6 +337,7 @@ const botNames = [
   "CIPHER",
   "BANSHEE",
 ];
+// 敵人的出生點。
 const enemySpawnPoints = [
   [-64, -61],
   [8, -64],
@@ -349,6 +364,7 @@ const enemySpawnPoints = [
   [-30, 46],
   [47, 46],
 ];
+// 補給的種類、效果與重生時間。
 const pickupTypes = {
   medkit: {
     name: "醫療包",
@@ -379,6 +395,7 @@ const pickupTypes = {
     respawn: 42,
   },
 };
+// 補給在地圖上的位置。
 const pickupPlacements = [
   ["medkit", 0, 31],
   ["medkit", -20, -41],
@@ -398,9 +415,9 @@ const pickupPlacements = [
   ["grenade", -39, 48],
 ];
 const ARENA_HALF = 74;
-// The perimeter walls' inner faces sit at ±73; stopping the body just
-// before them avoids an invisible strip in front of the walls.
+// 四周牆面內側在 ±73，身體停在牆前，避免牆前面出現一條看不見的空隙。
 const PLAYABLE_LIMIT = 72.4;
+// 兩張地圖的名稱與介紹。
 const mapDefinitions = [
   {
     id: "harbor",
@@ -414,6 +431,7 @@ const mapDefinitions = [
   },
 ];
 
+// 讀取上次的選擇，不合法就用預設。
 function savedIndex(key, fallback) {
   try {
     const raw = sessionStorage.getItem(key);
@@ -562,7 +580,7 @@ const collisionBoxes = [];
 const ladders = [];
 const CLIMB_SPEED = 2.4;
 let climbing = null;
-// Camera offset that eases out step-ups/step-downs so stairs feel smooth.
+// 上下階梯的高度差慢慢補上，走樓梯看起來比較順。
 let stepViewOffset = 0;
 const tracers = [];
 const particles = [];
@@ -588,6 +606,7 @@ let soundBuffers = {};
 let ambientStarted = false;
 const tempCameraWorld = new THREE.Vector3();
 const tempTargetWorld = new THREE.Vector3();
+// 音效檔的位置。
 const soundFiles = {
   rifle0: "./assets/audio/rifle-0.wav",
   rifle1: "./assets/audio/rifle-1.wav",
@@ -600,6 +619,9 @@ const soundFiles = {
 };
 
 // 建立幹員、武器與任務選項，並將玩家選擇同步到大廳介面。
+
+// ---------- 大廳 ----------
+
 function initLoadout() {
   weaponSkins.forEach((skin, index) => {
     const button = document.createElement("button");
@@ -614,6 +636,7 @@ function initLoadout() {
       "aria-checked",
       index === selectedWeapon ? "true" : "false",
     );
+    // 選擇武器外觀。
     button.onclick = () => {
       selectedWeapon = index;
       saveChoice("neonWeapon", index);
@@ -639,6 +662,7 @@ function initLoadout() {
       "aria-checked",
       index === selectedOperator ? "true" : "false",
     );
+    // 選擇幹員。
     button.onclick = () => {
       selectedOperator = index;
       saveChoice("neonOperator", index);
@@ -657,6 +681,7 @@ function initLoadout() {
     );
     button.setAttribute("aria-label", `${mode.label} ${mode.name}`);
     button.innerHTML = `<b>${mode.label}</b><small>${mode.name}</small><em>${mode.tag}</em>`;
+    // 選擇模式。
     button.onclick = () => {
       selectedMode = index;
       saveChoice("neonMode", index);
@@ -675,6 +700,7 @@ function initLoadout() {
     );
     button.setAttribute("aria-label", `${difficulty.name} ${difficulty.label}`);
     button.innerHTML = `${difficulty.label}<small>${difficulty.name}</small>`;
+    // 選擇難度。
     button.onclick = () => {
       selectedDifficulty = index;
       saveChoice("neonDifficulty", index);
@@ -688,26 +714,33 @@ function initLoadout() {
   updateDifficultyPreview();
 }
 
+// 記住選擇；瀏覽器不能存時略過。
 function saveChoice(key, value) {
   try {
     sessionStorage.setItem(key, String(value));
   } catch {}
 }
+// 目前的幹員。
 function currentOperator() {
   return operatorSkins[selectedOperator];
 }
+// 目前的難度。
 function currentDifficulty() {
   return difficulties[selectedDifficulty];
 }
+// 備用彈藥上限。
 function reserveCapacity() {
   return Math.max(240, currentOperator().reserveAmmo + 90);
 }
+// 手榴彈上限。
 function grenadeCapacity() {
   return currentOperator().grenades + 2;
 }
+// 兩張地圖的指揮官名稱不同。
 function commanderName() {
   return builtMap === 1 ? "工廠指揮官" : "港區指揮官";
 }
+// 整理任務設定，不合法的值改回預設。
 function normalizeMissionSettings(value = {}) {
   if (!value || typeof value !== "object") value = {};
   return {
@@ -732,6 +765,7 @@ function normalizeMissionSettings(value = {}) {
       : 1,
   };
 }
+// 讀取任務設定。
 function loadMissionSettings() {
   try {
     return normalizeMissionSettings(
@@ -741,11 +775,13 @@ function loadMissionSettings() {
     return normalizeMissionSettings();
   }
 }
+// 遊戲中用開局時的設定，大廳用目前的設定。
 function encounterSettings() {
   return gameState !== "lobby" && activeEncounter
     ? activeEncounter.settings
     : missionSettings;
 }
+// 套用任務設定後的模式。
 function currentMode(index = selectedMode) {
   const base = gameModes[index],
     settings = encounterSettings(),
@@ -768,6 +804,7 @@ function currentMode(index = selectedMode) {
     base.id === "warlord" || (!base.killTarget && settings.bossFinale);
   return mode;
 }
+// 這一局總共有幾個敵人。
 function encounterTotal(mode = currentMode()) {
   return (
     (mode.waves
@@ -775,11 +812,13 @@ function encounterTotal(mode = currentMode()) {
       : mode.enemyCount) + (mode.bossEnabled ? 1 : 0)
   );
 }
+// 精英比例。
 function getModeEliteRate() {
   return currentMode().id === "warlord"
     ? Math.max(0.25, encounterSettings().eliteRate)
     : encounterSettings().eliteRate;
 }
+// 敵人強度換算成生命、傷害、速度與準度。
 function getEnemyTuning() {
   const power = encounterSettings().enemyPower,
     precision = 1 / Math.sqrt(power);
@@ -792,6 +831,7 @@ function getEnemyTuning() {
     fireInterval: precision,
   };
 }
+// 依任務產生一波敵人。
 function spawnMissionWave(index) {
   const mode = currentMode();
   return spawnEnemies(mode.waves ? mode.waves[index] : mode.enemyCount, {
@@ -800,6 +840,7 @@ function spawnMissionWave(index) {
   });
 }
 
+// 更新幹員介紹與能力條。
 function updateOperatorPreview() {
   const skin = currentOperator();
   [...ui.operatorSkins.children].forEach((node, i) => {
@@ -815,6 +856,7 @@ function updateOperatorPreview() {
   ui.operatorInitials.textContent = skin.initials;
   ui.hudOperator.textContent = skin.shortName;
   document.documentElement.style.setProperty("--acid", skin.accent);
+  // 每一條能力的目前值與上限。
   const values = [
     [
       ui.statHealth,
@@ -846,6 +888,7 @@ function updateOperatorPreview() {
   if (weapon) applyWeaponSkin();
 }
 
+// 更新難度介紹。
 function updateDifficultyPreview() {
   const difficulty = currentDifficulty();
   [...ui.difficultyOptions.children].forEach((node, i) => {
@@ -859,6 +902,7 @@ function updateDifficultyPreview() {
   ui.hudDifficulty.textContent = difficulty.name;
 }
 
+// 更新模式介紹。
 function updateModePreview() {
   const mode = currentMode();
   [...ui.modeOptions.children].forEach((node, i) => {
@@ -898,6 +942,10 @@ function updateModePreview() {
 }
 
 // 建立渲染器、場景與相機；手機與桌機共用場景，但可以使用不同畫質。
+
+// ---------- 3D 場景與地圖 ----------
+
+// 建立場景、鏡頭、燈光與觸控操作。
 function init3D() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x071016);
@@ -912,6 +960,7 @@ function init3D() {
   yaw.position.set(0, eyeHeight, 65);
   scene.add(yaw);
 
+  // 繪圖器與解析度。
   renderer = new THREE.WebGLRenderer({
     antialias: !touchCapable,
     powerPreference: "high-performance",
@@ -932,9 +981,10 @@ function init3D() {
   $("#game").appendChild(renderer.domElement);
   clock = new THREE.Clock();
 
-  // Lift unlit faces without adding more lights or washing out the night sky.
+  // 提亮背光面，不用多加燈，也不會讓夜空變灰。
   const hemi = new THREE.HemisphereLight(0xb1cbd7, 0x3a332d, 1.35);
   scene.add(hemi);
+  // 主光與陰影範圍。
   const sun = new THREE.DirectionalLight(0xffd9b1, 3.05);
   sun.position.set(-24, 38, 18);
   sun.castShadow = true;
@@ -952,6 +1002,7 @@ function init3D() {
   rim.position.set(31, 18, -35);
   scene.add(rim);
   [hemi, sun, rim].forEach((light) => light.layers.enable(1));
+  // 敵人開火用的三盞共用燈。
   for (let i = 0; i < 3; i++) {
     const light = new THREE.PointLight(0xff6d2a, 0, 4, 2);
     scene.add(light);
@@ -977,9 +1028,11 @@ function init3D() {
   animate();
 }
 
+// 建立一種材質。
 const mat = (color, roughness = 0.7, metalness = 0.05, emissive = 0x000000) =>
   new THREE.MeshStandardMaterial({ color, roughness, metalness, emissive });
 
+// 在大廳切換地圖。
 function setSelectedMap(index) {
   if (
     gameState !== "lobby" ||
@@ -993,6 +1046,7 @@ function setSelectedMap(index) {
   return true;
 }
 
+// 開始前才建立選好的地圖。
 function prepareSelectedMap() {
   if (builtMap !== selectedMap) buildSelectedArena(selectedMap);
 }
@@ -1030,7 +1084,7 @@ function buildSelectedArena(index) {
   if (index === 1) createFoundryArena();
   else createArena();
   createPickups();
-  // Merge static scenery to cut draw calls (main view and shadow pass).
+  // 合併不會動的場景，減少主畫面與陰影的繪圖次數。
   batchStaticMeshes({
     scene,
     objects: scene.children.filter((child) => !existing.has(child)),
@@ -1047,6 +1101,7 @@ function buildSelectedArena(index) {
   }
 }
 
+// 敵人的身體會不會碰到這個障礙。
 function navBodyOverlap(box, x, z, radius) {
   return bodyOverlapsCollider(box, x, z, radius, 0.22, 1.85);
 }
@@ -1084,7 +1139,9 @@ function refreshNavigationArea(box) {
   labelComponents(navGrid);
 }
 
+// 夜空、星星與霧。
 function createAtmosphere() {
+  // 天空球。
   const sky = new THREE.Mesh(
     new THREE.SphereGeometry(135, 32, 18),
     new THREE.ShaderMaterial({
@@ -1124,12 +1181,13 @@ function createAtmosphere() {
   );
 }
 
+// 地面紋理。
 function createSurfaceTexture() {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 512;
   const ctx = canvas.getContext("2d");
-  // Keep the texture neutral: the material supplies each arena's colour. A
-  // dark texture multiplied by a dark material erased detail in the shadows.
+  // 紋理保持中性，顏色由各地圖的材質決定；深色紋理乘上深色材質，陰影裡的細節會
+  // 不見。
   ctx.fillStyle = "#b2b7b6";
   ctx.fillRect(0, 0, 512, 512);
   for (let i = 0; i < 9000; i++) {
@@ -1148,8 +1206,7 @@ function createSurfaceTexture() {
     ctx.fillStyle = stain;
     ctx.fillRect(x - r, y - r, r * 2, r * 2);
   }
-  // Fine expansion joints and short cracks replace the featureless floor;
-  // restrained contrast keeps distant tiles from shimmering into a grid.
+  // 細的伸縮縫與短裂痕取代空白地面；對比放低，遠處才不會閃成格子。
   ctx.strokeStyle = "rgba(40,49,52,.16)";
   ctx.lineWidth = 1.2;
   ctx.strokeRect(0.6, 0.6, 510.8, 510.8);
@@ -1178,7 +1235,7 @@ function createSurfaceTexture() {
   return texture;
 }
 
-// A shared, lightweight concrete texture gives the main structures visible seams and wear.
+// 共用的輕量水泥紋理，讓主要建築看得出接縫與磨損。
 function createWallTexture() {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 512;
@@ -1232,6 +1289,7 @@ function createWallTexture() {
   return texture;
 }
 
+// 加一個方塊，預設會擋人與擋子彈。
 function addBox(x, y, z, sx, sy, sz, color, options = {}) {
   const mesh = new THREE.Mesh(
     new THREE.BoxGeometry(sx, sy, sz),
@@ -1254,11 +1312,13 @@ function addBox(x, y, z, sx, sy, sz, color, options = {}) {
   return mesh;
 }
 
+// 登記一個碰撞方塊，可以旋轉。
 function registerCollisionBox(x, y, z, sx, sy, sz, rotation = 0) {
   const cos = Math.abs(Math.cos(rotation)),
     sin = Math.abs(Math.sin(rotation)),
     halfX = (sx * cos + sz * sin) / 2,
     halfZ = (sz * cos + sx * sin) / 2;
+  // 外框加上旋轉後的真正形狀。
   const box = orientCollider(
     new THREE.Box3(
       new THREE.Vector3(x - halfX, y - sy / 2, z - halfZ),
@@ -1276,6 +1336,7 @@ function registerCollisionBox(x, y, z, sx, sy, sz, rotation = 0) {
   return box;
 }
 
+// 第一張地圖：港區。
 function createArena() {
   const groundMaterial = mat(0x69747c, 0.9, 0.04);
   groundMaterial.map = createSurfaceTexture();
@@ -1290,18 +1351,18 @@ function createArena() {
   scene.add(ground);
   worldMeshes.push(ground);
 
-  // Arena boundaries and skyline-like perimeter.
+  // 地圖邊界與像天際線的外圍。
   addBox(0, 3, -74, 148, 6, 2, 0x151d21);
   addBox(0, 3, 74, 148, 6, 2, 0x151d21);
   addBox(-74, 3, 0, 2, 6, 148, 0x151d21);
   addBox(74, 3, 0, 2, 6, 148, 0x151d21);
 
-  // Central warehouse ruins.
+  // 中央倉庫遺跡。
   const wallTexture = createWallTexture();
   [
-    // 11.9 m keeps its end faces inside the side walls (equal faces flickered).
+    // 寬 11.9 公尺，端面藏在側牆裡；一樣寬時兩面會閃爍。
     addBox(0, 2.7, 0, 11.9, 5.4, 1, 0x768488),
-    // Side walls stop 2 cm inside the middle wall: flush end faces flickered.
+    // 側牆比中間的牆短 2 公分，端面切齊會閃爍。
     addBox(-5.5, 2.695, 5.51, 1, 5.39, 11.98, 0x768488),
     addBox(5.5, 2.695, -5.51, 1, 5.39, 11.98, 0x768488),
   ].forEach((wall) => {
@@ -1314,14 +1375,14 @@ function createArena() {
   addBox(3.9, 5.65, 0, 4.2, 0.5, 12, 0x303b40);
   addWarningStripe(0, 0.55, 0.53, 12.05, 0.25, 0.06);
 
-  // Containers - main sightline blockers.
+  // 貨櫃：主要的視線阻擋。
   createContainer(-17, 1.6, -11, 4.8, 3.2, 11, 0x874039, Math.PI / 2);
   createContainer(17, 1.6, 12, 4.8, 3.2, 11, 0x2d6570, -Math.PI / 2);
   createContainer(-28, 1.6, 18, 4.8, 3.2, 11, 0x59693a, 0);
   createContainer(29, 1.6, -20, 4.8, 3.2, 11, 0x7b5734, 0);
   createContainer(-35, 1.6, -29, 4.8, 3.2, 11, 0x314c62, Math.PI / 2);
 
-  // Tactical cover blocks and barricades.
+  // 戰術掩體與路障。
   const covers = [
     [-8, 0.7, 21, 5, 1.4, 1.2, 0],
     [9, 0.7, -20, 5, 1.4, 1.2, 0.25],
@@ -1368,7 +1429,7 @@ function createArena() {
     );
   });
 
-  // Crate clusters.
+  // 木箱群。
   [
     [-12, 14],
     [13, -31],
@@ -1382,7 +1443,7 @@ function createArena() {
     if (groupIndex % 2 === 0) createCrate(x + 0.7, 2.25, z, 1.5, 0x4d5b5e);
   });
 
-  // Shootable fuel drums create chain-reaction opportunities.
+  // 可以射爆的油桶，會連鎖爆炸。
   [
     [-7, 17],
     [11, -15],
@@ -1392,7 +1453,7 @@ function createArena() {
     [-18, -25],
   ].forEach(([x, z], i) => createExplosiveBarrel(x, z, i));
 
-  // Elevated light towers (non-collidable upper geometry).
+  // 高處的燈塔，上半部沒有碰撞。
   [
     [-66, -66],
     [66, -66],
@@ -1400,13 +1461,14 @@ function createArena() {
     [66, 66],
   ].forEach(([x, z]) => {
     addBox(x, 4, z, 0.45, 8, 0.45, 0x252d30);
-    // Solid: the stacked container beside the north-west tower is within jump reach.
+    // 這一個要有碰撞：西北塔旁堆疊的貨櫃跳得到。
     const lamp = addBox(x, 8, z, 2.2, 0.4, 0.7, 0xd8e1cc, {
       emissive: 0x82906b,
     });
     const light = new THREE.PointLight(0xd5ff82, 4, 18, 2);
     light.position.copy(lamp.position);
     scene.add(light);
+    // 光束。
     const beam = new THREE.Mesh(
       new THREE.ConeGeometry(3.5, 10, 16, 1, true),
       new THREE.MeshBasicMaterial({
@@ -1422,7 +1484,7 @@ function createArena() {
     scene.add(beam);
   });
 
-  // Reflective puddles and background port silhouettes add depth without image assets.
+  // 地上的積水與港口剪影，不用圖片也有層次。
   [
     [-25, 8, 2.8, 1.3],
     [14, 21, 3.8, 1.5],
@@ -1432,6 +1494,7 @@ function createArena() {
     [48, -43, 3.6, 1.2],
     [20, 58, 4.7, 1.5],
   ].forEach(([x, z, sx, sz]) => {
+    // 水窪。
     const puddle = new THREE.Mesh(
       new THREE.CircleGeometry(1, 32),
       new THREE.MeshStandardMaterial({
@@ -1467,7 +1530,7 @@ function districtContext() {
     placeZoneSign,
     createWallTexture,
     paintResolution: touchCapable ? 1024 : 2048,
-    // Lamp posts are tall, so test the full pole height, not just body height.
+    // 燈柱很高，要測整根柱子的高度，不只是身體高度。
     isFree: (x, z, radius) =>
       !collisionBoxes.some((box) =>
         bodyOverlapsCollider(box, x, z, radius, 0.05, 6.6),
@@ -1476,8 +1539,8 @@ function districtContext() {
 }
 
 function createFoundryArena() {
-  // A separate open-air foundry: short corridors converge on a circular furnace,
-  // with wide outer flank routes and a clear south deployment lane.
+  // 第二張地圖是露天鑄造廠：短走廊通向圓形熔爐，外圈有寬的側路，南邊保留暢通的
+  // 出發通道。
   const floor = mat(0x82766b, 0.92, 0.08);
   floor.map = createSurfaceTexture();
   floor.bumpMap = floor.map;
@@ -1493,6 +1556,7 @@ function createFoundryArena() {
     [-74, 3, 0, 2, 6, 148],
     [74, 3, 0, 2, 6, 148],
   ].forEach(([x, y, z, sx, sy, sz]) => addBox(x, y, z, sx, sy, sz, 0x332724));
+  // 牆面的位置與大小。
   const walls = [
     [-25, 0, 13, 3, 2],
     [-25, -20, 20, 3, 1],
@@ -1520,8 +1584,7 @@ function createFoundryArena() {
     wall.material.bumpMap = foundryWallTexture;
     wall.material.bumpScale = 0.018;
     wall.material.needsUpdate = true;
-    // Vent panels sit on the wall face, so their decorative louvers add no
-    // separate blocking geometry or expensive collision/raycast work.
+    // 通風口貼在牆面上，裝飾的葉片不需要另外的碰撞或射線檢查。
     if (i < 4) {
       const panel = new THREE.Mesh(
         new THREE.BoxGeometry(2.6, 1.1, 0.06),
@@ -1551,8 +1614,7 @@ function createFoundryArena() {
       sz > sx ? sz + 0.01 : 0.09,
     );
   });
-  // Two portal frames give each long access lane a recognizable industrial
-  // landmark; the high crosspieces are anchored to solid ground-level columns.
+  // 每條長通道有兩座門框當地標；上方橫樑固定在落地的柱子上。
   for (const z of [-40, 40]) {
     for (const x of [-8, 8]) {
       const column = addBox(x, 2.7, z, 0.42, 5.4, 0.42, 0x463c38, {
@@ -1570,7 +1632,7 @@ function createFoundryArena() {
       marker.position.set(x, 4.85, z + 0.24);
       scene.add(marker);
     }
-    // Slightly deeper and taller than the columns so no faces are flush.
+    // 比柱子略深略高，避免表面切齊。
     const beam = addBox(0, 5.23, z, 16.46, 0.38, 0.46, 0x453b37, {
       metalness: 0.5,
     });
@@ -1579,7 +1641,7 @@ function createFoundryArena() {
     light.position.set(0, 4.95, z);
     scene.add(light);
   }
-  // Low cross-cover breaks sightlines without sealing the walking lanes.
+  // 低矮的掩體擋住視線，但不封住通道。
   [
     [-35, -11, 5, 1.25, 1, 0.3],
     [-34, 13, 5, 1.25, 1, -0.3],
@@ -1592,6 +1654,7 @@ function createFoundryArena() {
   ].forEach(([x, z, sx, sy, sz, r]) =>
     addBox(x, sy / 2, z, sx, sy, sz, 0x796653, { rotation: r, metalness: 0.2 }),
   );
+  // 中央熔爐。
   const furnace = new THREE.Mesh(
     new THREE.CylinderGeometry(4.4, 4.4, 5.5, 28),
     mat(0x45352f, 0.45, 0.62),
@@ -1601,7 +1664,7 @@ function createFoundryArena() {
   furnace.receiveShadow = true;
   scene.add(furnace);
   worldMeshes.push(furnace);
-  // The collider includes the rim bands that stand proud of the shell.
+  // 碰撞範圍包含突出外殼的環帶。
   collisionBoxes.push(
     roundCollider(
       new THREE.Box3(
@@ -1622,8 +1685,7 @@ function createFoundryArena() {
     rim.position.y = y;
     scene.add(rim);
   }
-  // Flush heat vents and reinforcing bands make the reactor readable from all
-  // approaches. They sit against the existing cylinder, not in the lanes.
+  // 貼齊的散熱口與加強環，從各方向都認得出熔爐；它們貼著圓柱，不在通道上。
   const ventMaterial = new THREE.MeshBasicMaterial({ color: 0xff7835 });
   const vents = new THREE.InstancedMesh(
       new THREE.BoxGeometry(0.42, 1.05, 0.035),
@@ -1663,8 +1725,7 @@ function createFoundryArena() {
     cap.position.set(x, 5.25, z);
     scene.add(cap);
   }
-  // Raised pipe bridges make the reactor approaches recognizable without
-  // adding obstacles to the walking lanes. Their ends meet the four columns.
+  // 架高的管橋讓熔爐周圍好認，通道不會多出障礙；兩端接在四根柱子上。
   const bridgeGeometry = new THREE.CylinderGeometry(0.18, 0.18, 22, 12),
     bridgeMaterial = mat(0x80614b, 0.46, 0.58);
   const collarGeometry = new THREE.TorusGeometry(0.205, 0.045, 6, 12),
@@ -1699,9 +1760,8 @@ function createFoundryArena() {
     createCrate(x, 0.75, z, 1.5, i % 2 ? 0x725543 : 0x555858);
     createCrate(x + 1.55, 0.75, z, 1.5, 0x594538);
   });
-  // Grounded equipment stations distinguish the flank routes. All low solid
-  // parts use the normal collision path; the face details are decorative and
-  // kept flush to the existing bodies so they cannot create invisible walls.
+  // 落地的設備站讓各條側路好分辨。低處實心的部分用一般碰撞；表面細節只是裝飾並
+  // 貼齊本體，不會變成看不見的牆。
   for (const [x, z, side] of [
     [-60, -14, 1],
     [-60, 15, 1],
@@ -1743,9 +1803,8 @@ function createFoundryArena() {
     for (const dz of [-1.61, 1.61])
       addWarningStripe(x, 2.25, z + dz, 3.62, 0.12, 0.04);
   }
-  // Flush details distinguish the west loading side from the east cooling
-  // side without adding invisible obstacles to the already narrow passages.
-  // Every pipe is fixed to an existing perimeter wall and has no new collider.
+  // 貼齊的細節區分西側裝卸與東側冷卻，已經很窄的通道不會再多隱形障礙。每條管子
+  // 固定在現有的牆上，沒有新的碰撞。
   const pipeGeometry = new THREE.CylinderGeometry(0.075, 0.075, 19, 8);
   const pipeMaterial = mat(0x9b7554, 0.5, 0.52),
     pipeBrackets = mat(0x3d3633, 0.66, 0.4);
@@ -1781,8 +1840,7 @@ function createFoundryArena() {
   pipeBatch.instanceMatrix.needsUpdate = true;
   bracketBatch.instanceMatrix.needsUpdate = true;
   scene.add(pipeBatch, bracketBatch);
-  // Ground-level grates provide material variety while remaining perfectly
-  // flush with the floor. A single instanced mesh avoids per-grate raycasts.
+  // 與地面齊平的格柵只增加質感變化；用一個實例化網格，不必逐一做射線檢查。
   const grates = new THREE.InstancedMesh(
       new THREE.BoxGeometry(2.6, 0.018, 1.2),
       mat(0x272927, 0.72, 0.55),
@@ -1794,6 +1852,7 @@ function createFoundryArena() {
       96,
     ),
     grateMatrix = new THREE.Matrix4();
+  // 格柵的位置。
   const gratePositions = [
     [-42, -34],
     [-42, -24],
@@ -1864,8 +1923,7 @@ function createFoundryArena() {
   ctx.fillText("F O U N D R Y", 512, 850);
   ctx.font = "bold 24px Arial";
   ctx.fillText("REACTOR  //  HOT ZONE", 512, 670);
-  // Painted route arrows and colour-coded work zones remain readable from the
-  // player camera and require no additional physical geometry.
+  // 漆在地上的路線箭頭與分色作業區，從玩家鏡頭也看得清楚，不需要額外的實體。
   const arrow = (x, y, angle, color) => {
     ctx.save();
     ctx.translate(x, y);
@@ -1911,6 +1969,7 @@ function createFoundryArena() {
   ctx.stroke();
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
+  // 貼在地面的標線。
   const markings = new THREE.Mesh(
     new THREE.PlaneGeometry(150, 150),
     new THREE.MeshBasicMaterial({
@@ -1927,8 +1986,7 @@ function createFoundryArena() {
 }
 
 function createFoundrySkyline() {
-  // A separate industrial horizon gives the foundry its own identity. The
-  // silhouettes are beyond the playable perimeter and share three draw calls.
+  // 鑄造廠有自己的工業天際線。剪影在可玩範圍之外，只用三次繪圖。
   const factory = new THREE.InstancedMesh(
     new THREE.BoxGeometry(1, 1, 1),
     mat(0x1b1c1c, 0.94, 0.12),
@@ -1949,6 +2007,7 @@ function createFoundrySkyline() {
     quaternion = new THREE.Quaternion(),
     scale = new THREE.Vector3();
   factory.name = "foundry-skyline";
+  // 一圈廠房，隔一棟加上煙囪與警示燈。
   for (let i = 0; i < 24; i++) {
     const angle = (i * Math.PI * 2) / 24,
       radius = skylineRadius(angle, 87 + (i % 3) * 4, 10, 7),
@@ -1988,11 +2047,16 @@ function createFoundrySkyline() {
   scene.add(factory, chimneys, beacon);
 }
 
+// 讓背景剪影整個落在圍牆外面。
 function skylineRadius(angle, preferred, width, depth) {
   const reach = Math.max(Math.abs(Math.cos(angle)), Math.abs(Math.sin(angle)));
-  return Math.max(preferred, (ARENA_HALF + 3 + Math.hypot(width, depth) / 2) / reach);
+  return Math.max(
+    preferred,
+    (ARENA_HALF + 3 + Math.hypot(width, depth) / 2) / reach,
+  );
 }
 
+// 港區的天際線與吊車。
 function createPortSkyline() {
   const skylineMat = mat(0x071015, 0.92, 0.1);
   for (let i = 0; i < 28; i++) {
@@ -2000,8 +2064,7 @@ function createPortSkyline() {
     const width = 3 + Math.random() * 8;
     const height = 6 + Math.random() * 22;
     const depth = 3 + Math.random() * 4;
-    // The arena is square, so a fixed ring cuts into its corners; push each
-    // silhouette out until its whole footprint clears the perimeter wall.
+    // 場地是方的，固定半徑的圓會切進四個角；每個剪影往外推到整個底面都在圍牆外。
     const radius = skylineRadius(angle, 86 + Math.random() * 20, width, depth);
     const building = new THREE.Mesh(
       new THREE.BoxGeometry(width, height, depth),
@@ -2025,6 +2088,7 @@ function createPortSkyline() {
     }
   }
   const craneMat = mat(0x10191d, 0.65, 0.45);
+  // 吊車。
   [
     [-91, -54],
     [93, -43],
@@ -2047,11 +2111,13 @@ function createPortSkyline() {
   });
 }
 
+// 港區的細節：倉庫、貨櫃、油庫、閘門與維修區。
 function createHarborDetails() {
   const steel = mat(0x263238, 0.58, 0.55),
     dark = mat(0x11191d, 0.7, 0.35),
     yellow = mat(0xb4cb38, 0.62, 0.22),
     pipeMat = mat(0x4b6269, 0.42, 0.68);
+  // 加一個只有裝飾、沒有碰撞的方塊。
   const detailBox = (x, y, z, sx, sy, sz, material, rotation = 0) => {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), material);
     mesh.position.set(x, y, z);
@@ -2063,7 +2129,7 @@ function createHarborDetails() {
     return mesh;
   };
 
-  // HANGAR-03: catwalk, rail, ventilation, power boxes and practical lights.
+  // 03 號機庫：走道、欄杆、通風、電箱與燈。
   detailBox(0, 3.28, 0.15, 10.7, 0.16, 1.05, steel);
   const railGeo = new THREE.BoxGeometry(0.055, 1, 0.055),
     railMat = dark,
@@ -2105,11 +2171,11 @@ function createHarborDetails() {
     anchorY: 5.4,
   });
 
-  // CONTAINER ROW: stacked silhouettes and an economical low-poly forklift.
+  // 貨櫃區：堆疊的剪影與簡單的堆高機。
   createContainer(-35, 4.8, -29, 4.8, 3.2, 11, 0x3d5967, Math.PI / 2, true);
   createContainer(27, 1.6, -35, 4.8, 3.2, 11, 0x39515a, Math.PI / 2);
   createContainer(27, 4.8, -35, 4.8, 3.2, 11, 0x6e4534, Math.PI / 2, true);
-  // An anchored cargo handling frame makes the north yard recognizable.
+  // 固定在地上的吊貨架，讓北區容易辨認。
   for (const x of [20.8, 33.2]) {
     const post = addBox(x, 3.65, -38.4, 0.4, 7.3, 0.4, 0x26363c, {
       metalness: 0.55,
@@ -2117,7 +2183,7 @@ function createHarborDetails() {
     post.name = "harbor-cargo-column";
     addBox(x, 0.12, -38.4, 0.75, 0.24, 0.75, 0x4a4b46, { castShadow: false });
   }
-  // Ends overhang the columns by 2 cm: flush end faces flickered.
+  // 兩端超出柱子 2 公分，切齊會閃爍。
   const cargoBeam = addBox(27, 7.15, -38.4, 12.84, 0.38, 0.45, 0x293b40, {
     metalness: 0.55,
   });
@@ -2163,7 +2229,7 @@ function createHarborDetails() {
   );
   placeZoneSign("CONTAINER ROW", "NORTH YARD", -31, 2.4, -46.2, 0, 0x5de3ff);
 
-  // FUEL DEPOT: two horizontal tanks, pipes and hazard markings.
+  // 油庫：兩座臥式油槽、管線與危險標示。
   [
     [38, 15],
     [39, 6],
@@ -2212,7 +2278,7 @@ function createHarborDetails() {
     0xff485c,
   );
 
-  // GATE A: guard booth, barrier and lane furniture.
+  // A 門：警衛亭、柵欄與路障。
   addBox(7, 1.55, 40, 4.1, 3.1, 4.2, 0x35464c);
   detailBox(
     7,
@@ -2228,6 +2294,7 @@ function createHarborDetails() {
     }),
   );
   detailBox(-2.8, 1.05, 39, 0.24, 2.1, 0.24, steel);
+  // 柵欄的橫桿。
   const gateArm = detailBox(
     1.4,
     1.1,
@@ -2253,7 +2320,7 @@ function createHarborDetails() {
     anchorY: 3.1,
   });
 
-  // SERVICE BAY: work wall, shutters, fans and tire stacks.
+  // 維修區：工作牆、捲門、風扇與輪胎堆。
   addBox(-43.8, 2.5, 7, 0.7, 5, 20, 0x28363b, {
     roughness: 0.8,
     metalness: 0.14,
@@ -2292,6 +2359,7 @@ function createHarborDetails() {
     blades.instanceMatrix.needsUpdate = true;
     fan.add(blades);
   });
+  // 輪胎堆。
   for (let stack = 0; stack < 3; stack++) {
     for (let level = 0; level < 3; level++) {
       const tire = new THREE.Mesh(
@@ -2332,11 +2400,13 @@ function createHarborDetails() {
   createRain();
 }
 
+// 外圈四個區域：船塢、煉油廠、鐵路調車場與拆船廠。
 function createOuterDistricts() {
   const steel = mat(0x27343a, 0.55, 0.55),
     dark = mat(0x11191d, 0.78, 0.28),
     rust = mat(0x6f4436, 0.8, 0.18),
     cool = mat(0x3c5961, 0.55, 0.5);
+  // 加一個裝飾方塊。
   const visualBox = (x, y, z, sx, sy, sz, material, rotation = 0) => {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), material);
     mesh.position.set(x, y, z);
@@ -2347,6 +2417,7 @@ function createOuterDistricts() {
     worldMeshes.push(mesh);
     return mesh;
   };
+  // 儲槽。
   const tank = (x, z, color = 0x53636a) => {
     const mesh = new THREE.Mesh(
       new THREE.CylinderGeometry(2.15, 2.15, 5.3, 20),
@@ -2383,7 +2454,7 @@ function createOuterDistricts() {
     scene.add(beacon);
   };
 
-  // NORTH DRY DOCK — a dense close-range pocket with a stranded hull and gantry.
+  // 北側乾船塢：近距離作戰的密集區，有擱淺的船殼與龍門架。
   addBox(-21, 1.1, -59, 22, 2.2, 5.2, 0x35444a, { metalness: 0.28 });
   addBox(-33, 1.55, -58, 1, 3.1, 19, 0x242f34);
   addBox(-9, 1.55, -58, 1, 3.1, 19, 0x242f34);
@@ -2394,6 +2465,7 @@ function createOuterDistricts() {
   visualBox(-21, 5.35, -55, 24, 0.42, 0.5, steel);
   visualBox(-21, 4.95, -55, 22, 0.08, 0.08, cool);
   [-28, -21, -14].forEach((x, i) => {
+    // 鋼板。
     const plate = visualBox(
       x,
       2.28,
@@ -2418,7 +2490,7 @@ function createOuterDistricts() {
     { mount: "wall", depth: 0.22, bracketSpacing: 0 },
   );
 
-  // EAST REFINERY — large silos, pipe bridges and explosive approach lanes.
+  // 東側煉油廠：大型儲槽、管橋與會爆炸的通道。
   [
     [58, -22, 0x58666a],
     [58, 0, 0x4f6267],
@@ -2441,7 +2513,7 @@ function createOuterDistricts() {
   });
   [49.5, 66.5].forEach((x) => {
     addBox(x, 2.6, 0, 0.45, 5.2, 0.45, 0x202a2f);
-    // A touch wider than the posts so their faces are never flush.
+    // 比柱子略寬，表面不會切齊。
     visualBox(x, 5.1, 0, 0.48, 0.45, 46, steel);
   });
   visualBox(58, 5.1, 0, 17, 0.43, 0.55, steel);
@@ -2455,13 +2527,12 @@ function createOuterDistricts() {
     0xffb34d,
   );
 
-  // SOUTH RAIL YARD — long sightlines split by train cars and loading platforms.
+  // 南側鐵路調車場：長視線被車廂與月台切開。
   const railCars = [
     createContainer(-24, 1.7, 59, 4.9, 3.4, 17, 0x315568, 0),
     createContainer(20, 1.7, 59, 4.9, 3.4, 17, 0x744338, 0),
   ];
-  // Mark both faces separately: lettering stays legible from either side and
-  // sits above the corrugated ribs instead of competing for the same depth.
+  // 兩面分開印字：從哪一邊都看得清楚，而且浮在浪板上方，不會搶同一個深度。
   railCars.forEach((car, index) => {
     const canvas = document.createElement("canvas");
     canvas.width = 512;
@@ -2495,8 +2566,7 @@ function createOuterDistricts() {
   [-8, 8].forEach((x) => {
     const barrier = addBox(x, 0.62, 57, 8, 1.24, 1.15, 0x4e595d);
     barrier.name = "rail-yard-barrier";
-    // The stripe's top used to be exactly level with the barrier top (1.24),
-    // causing competing depth samples and flashing as the view moved.
+    // 黃線的頂面以前和路障頂面一樣高（1.24），兩面搶深度，轉動視角時會閃。
     const stripe = addWarningStripe(x, 1.192, 57, 8.05, 0.12, 0.06);
     stripe.name = "rail-yard-barrier-stripe";
   });
@@ -2528,7 +2598,7 @@ function createOuterDistricts() {
     0xc8ff2e,
   );
 
-  // WEST BREAKERS — irregular steel plates and machinery form short flank routes.
+  // 西側拆船廠：不規則鋼板與機械形成短的側路。
   [
     [-59, -31, 7, 2.4, 0.35, 0.18],
     [-61, -17, 6, 2.6, -0.28, -0.22],
@@ -2545,6 +2615,7 @@ function createOuterDistricts() {
   [-52, -64].forEach((x) =>
     [-42, -2, 39].forEach((z) => {
       visualBox(x, 2.45, z, 0.28, 4.9, 0.28, steel);
+      // 路燈。
       const lamp = visualBox(
         x,
         4.75,
@@ -2567,7 +2638,7 @@ function createOuterDistricts() {
     0xff6848,
   );
 
-  // Outer-ring cover guarantees that the larger lanes still have safe traversal choices.
+  // 外圈的掩體，讓寬的通道仍有安全的走法。
   const outerCover = [
     [-46, -61, 5, 1.3, 1, 0],
     [-2, -54, 5, 1.3, 1, 0.15],
@@ -2596,7 +2667,7 @@ function createOuterDistricts() {
     );
   });
 
-  // Repeated navigation lights are instanced to keep the richer perimeter inexpensive.
+  // 重複的引導燈用實例化，外圈豐富但不吃效能。
   const postGeo = new THREE.CylinderGeometry(0.055, 0.07, 1.15, 7),
     postMat = dark,
     posts = new THREE.InstancedMesh(postGeo, postMat, 28),
@@ -2622,15 +2693,17 @@ function createOuterDistricts() {
   scene.add(posts, lamps);
 }
 
+// 地面的路線、裝卸區與區域代號。
 function createHarborWayfinding() {
-  // One ground decal replaces the full-map debug grid and scattered lane lines.
-  // Industrial routes, loading bays and region codes share a single draw call.
+  // 用一張地面貼圖取代整張除錯格線與零散的車道線；路線、裝卸區與區域代號只要一
+  // 次繪圖。
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 2048;
   const ctx = canvas.getContext("2d"),
     scale = canvas.width / 150,
     toX = (x) => (x + 75) * scale,
     toZ = (z) => (z + 75) * scale;
+  // 畫一條線。
   const line = (points, color, width, dash = []) => {
     ctx.strokeStyle = color;
     ctx.lineWidth = width * scale;
@@ -2642,6 +2715,7 @@ function createHarborWayfinding() {
     ctx.stroke();
     ctx.setLineDash([]);
   };
+  // 畫一條車道。
   const lane = (points, width = 5.8) => {
     line(points, "rgba(10,18,23,.24)", width);
     line(points, "rgba(228,198,107,.42)", 0.1, [1.5, 1.2]);
@@ -2699,6 +2773,7 @@ function createHarborWayfinding() {
     "rgba(229,236,210,.38)",
     0.12,
   );
+  // 畫一格停車或裝卸區。
   const bay = (x, z, width, depth, code, label, color) => {
     ctx.save();
     ctx.translate(toX(x), toZ(z));
@@ -2728,7 +2803,7 @@ function createHarborWayfinding() {
   bay(-38, 20, 11, 4, "S4", "SERVICE BAY", "rgba(229,193,114,.5)");
   bay(-59, 44, 14, 4, "W5", "SALVAGE WORKS", "rgba(229,193,114,.5)");
   bay(0, 15, 9, 3, "H03", "CENTRAL HANGAR", "rgba(203,230,151,.5)");
-  // Painted hazards give the low pipe crossings and gate readable edges.
+  // 漆在地上的警示，讓低矮管線與閘門邊緣看得清楚。
   for (const z of [-31, -11, 11, 31])
     for (let x = 50; x < 66; x += 1.6)
       line(
@@ -2767,13 +2842,18 @@ function createHarborWayfinding() {
   scene.add(plane);
 }
 
+// ---------- 補給 ----------
+
+// 放置所有補給。
 function createPickups() {
   pickupPlacements.forEach(([type, x, z], index) =>
     createPickup(type, x, z, index),
   );
 }
 
+// 位置被擋住就往旁邊移一點。
 function openPickupSpot(x, z) {
+  // 依序嘗試的偏移。
   const offsets = [
     [0, 0],
     [2.4, 0],
@@ -2794,6 +2874,7 @@ function openPickupSpot(x, z) {
   return [x, z];
 }
 
+// 建立一個補給：底座、光圈與各種模型。
 function createPickup(type, x, z, index) {
   const def = pickupTypes[type],
     [px, pz] = openPickupSpot(x, z),
@@ -2824,6 +2905,7 @@ function createPickup(type, x, z, index) {
   const model = new THREE.Group();
   model.position.y = 0.57;
   root.add(model);
+  // 在模型上加一個零件。
   const part = (geometry, material, pos, rotation) => {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(...pos);
@@ -2839,7 +2921,7 @@ function createPickup(type, x, z, index) {
       rubber = mat(0x344448, 0.85, 0.02);
     box(0.76, 0.48, 0.43, shell);
     box(0.78, 0.025, 0.45, rubber, 0, 0.07, 0);
-    // A white hard case, red medical crosses and carrying handle read from every side.
+    // 白色硬殼、紅十字與提把，從各個方向都認得出來。
     [-1, 1].forEach((side) => {
       box(0.13, 0.29, 0.012, red, 0, -0.025, side * 0.222);
       box(0.34, 0.12, 0.015, red, 0, -0.025, side * 0.224);
@@ -2897,7 +2979,7 @@ function createPickup(type, x, z, index) {
     const olive = mat(0x5e7043, 0.75, 0.28),
       safety = new THREE.MeshBasicMaterial({ color: 0xffb347 });
     part(new THREE.CapsuleGeometry(0.22, 0.19, 4, 12), olive, [0, -0.025, 0]);
-    // Segmented shell, safety band, fuse and pin make this a grenade rather than a glowing orb.
+    // 分節外殼、安全環、引信與插銷，看起來是手榴彈而不是發光的球。
     [-0.13, 0, 0.13].forEach((y) =>
       part(
         new THREE.TorusGeometry(y === 0 ? 0.222 : 0.207, 0.018, 5, 12),
@@ -2936,6 +3018,7 @@ function createPickup(type, x, z, index) {
   const label = createPickupLabel(def);
   label.position.set(0, 1.24, 0);
   root.add(label);
+  // 往上的光束。
   const beam = new THREE.Mesh(
     new THREE.CylinderGeometry(0.025, 0.12, 1.45, 8, 1, true),
     new THREE.MeshBasicMaterial({
@@ -2962,6 +3045,7 @@ function createPickup(type, x, z, index) {
   });
 }
 
+// 補給上方的名稱。
 function createPickupLabel(def) {
   const canvas = document.createElement("canvas");
   canvas.width = 256;
@@ -2979,6 +3063,7 @@ function createPickupLabel(def) {
   ctx.fillText(def.name, 132, 64);
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
+  // 名稱的貼圖永遠面向鏡頭。
   const sprite = new THREE.Sprite(
     new THREE.SpriteMaterial({
       map: texture,
@@ -2991,6 +3076,7 @@ function createPickupLabel(def) {
   return sprite;
 }
 
+// 現在撿這個有沒有用。
 function canUsePickup(type, time) {
   const reserveCap = reserveCapacity(),
     grenadeCap = grenadeCapacity();
@@ -3001,6 +3087,7 @@ function canUsePickup(type, time) {
   return false;
 }
 
+// 撿起補給並套用效果。
 function collectPickup(item, time) {
   if (!item.active || !canUsePickup(item.type, time)) return false;
   const beforeHealth = health,
@@ -3030,11 +3117,11 @@ function collectPickup(item, time) {
   return true;
 }
 
+// 拿不拿得到：高度與中間的障礙都要檢查。
 function canReachPickup(item) {
   const feet = yaw.position.y - eyeHeight;
   if (Math.abs(feet - item.baseY) > 1.25) return false;
-  // A pickup on the other side of a fence or wall is not reachable merely
-  // because its horizontal distance is small.
+  // 隔著圍欄或牆的補給，水平距離近也不算拿得到。
   const origin = { x: yaw.position.x, y: feet + 0.4, z: yaw.position.z };
   const delta = {
     x: item.root.position.x - origin.x,
@@ -3046,6 +3133,7 @@ function canReachPickup(item) {
   );
 }
 
+// 補給的重生、旋轉、撿取與提示。
 function updatePickups(dt, time) {
   let nearest = null,
     nearestDistance = Infinity,
@@ -3099,6 +3187,7 @@ function updatePickups(dt, time) {
   } else ui.buffStatus.classList.add("hidden");
 }
 
+// 貨櫃：本體、角柱、浪板與門。
 function createContainer(
   x,
   y,
@@ -3122,8 +3211,7 @@ function createContainer(
   const localZ = rotation ? sx : sz;
   [-1, 1].forEach((dx) =>
     [-1, 1].forEach((dz) => {
-      // Slightly shorter than the box: taller posts overlapped a stacked
-      // container's posts, and flush tops flickered against the roof.
+      // 比箱體略短：太高會和上面的貨櫃重疊，切齊頂面會閃。
       const post = new THREE.Mesh(
         new THREE.BoxGeometry(0.13, sy - 0.02, 0.13),
         edgeMat,
@@ -3173,7 +3261,7 @@ function createContainer(
     }
   doorBars.instanceMatrix.needsUpdate = true;
   body.add(doorBars);
-  // Hinges and end catches remain attached to the actual cargo doors.
+  // 鉸鏈與門栓固定在貨櫃門上。
   const hinges = new THREE.InstancedMesh(
     new THREE.BoxGeometry(0.19, 0.11, 0.055),
     edgeMat,
@@ -3193,6 +3281,7 @@ function createContainer(
   return body;
 }
 
+// 區域招牌：雙面印字，並依環境加支架或吊桿。
 function placeZoneSign(
   title,
   subtitle,
@@ -3231,7 +3320,7 @@ function placeZoneSign(
   sign.userData.zoneSign = true;
   sign.position.set(x, y, z);
   sign.rotation.y = rotation;
-  // Two outward-facing prints: the rear has its own orientation, never a mirrored back face.
+  // 兩面各自朝外的印刷，背面有自己的方向，不會左右相反。
   for (const side of [1, -1]) {
     const face = new THREE.Mesh(geometry, material);
     face.position.z = side * 0.018;
@@ -3242,7 +3331,7 @@ function placeZoneSign(
     new THREE.BoxGeometry(4.24, 1.09, 0.06),
     mat(0x18262c, 0.65, 0.4),
   );
-  // Keep the prints ahead of the physical frame on both sides.
+  // 兩面的字都在實體框的前方。
   sign.children[0].position.z = 0.032;
   sign.children[1].position.z = -0.032;
   sign.add(frame);
@@ -3256,6 +3345,7 @@ function placeZoneSign(
   const supportMaterial =
     placeZoneSign.supportMaterial ||
     (placeZoneSign.supportMaterial = mat(0x34474e, 0.58, 0.55));
+  // 一根支撐，也會登記碰撞。
   const support = (lx, cy, lz, sx, sy, sz) => {
     const mesh = new THREE.Mesh(
       new THREE.BoxGeometry(sx, sy, sz),
@@ -3304,8 +3394,7 @@ function placeZoneSign(
   } else {
     const depth = options.depth ?? 0.28;
     const spacing = options.bracketSpacing ?? 1.6;
-    // Brackets end just behind the frame's face; flush faces showed as dark
-    // flickering blobs on the printed sign.
+    // 支架停在框面後方一點，切齊會在招牌上出現閃爍的黑塊。
     for (const lx of spacing === 0 ? [0] : [-spacing, spacing])
       support(lx, y, -depth / 2 - 0.015, 0.22, 0.12, depth + 0.03);
   }
@@ -3313,6 +3402,7 @@ function placeZoneSign(
   return sign;
 }
 
+// 重複的小物件：三角錐、欄杆與棧板。
 function createInstancedProps() {
   const coneGeo = new THREE.ConeGeometry(0.18, 0.6, 9),
     coneMat = mat(0xff6838, 0.72, 0.08),
@@ -3325,7 +3415,7 @@ function createInstancedProps() {
   positions.forEach((p, i) => {
     m.makeTranslation(...p);
     cones.setMatrixAt(i, m);
-    // Slim enough that the 1.35 m spacing still leaves room to walk between.
+    // 夠細，間隔 1.35 公尺仍能走過去。
     collisionBoxes.push(
       roundCollider(
         new THREE.Box3(
@@ -3359,6 +3449,7 @@ function createInstancedProps() {
     palletMat = mat(0x6f5236, 0.88, 0.02),
     pallets = new THREE.InstancedMesh(palletGeo, palletMat, 9);
   pallets.name = "harbor-pallets";
+  // 棧板的位置。
   [
     [-39, 0, -15],
     [-36, 0, -17],
@@ -3380,8 +3471,7 @@ function createInstancedProps() {
       new THREE.Vector3(1, 1, 1),
     );
     pallets.setMatrixAt(i, m);
-    // The low collision surface supports feet and grenades while staying below
-    // the bot's step clearance; it is intentionally not a bullet ray target.
+    // 低的碰撞面能站人、能彈手榴彈，也低於敵人能跨的高度；特意不擋子彈。
     const box = registerCollisionBox(
       p[0],
       0.1,
@@ -3397,6 +3487,7 @@ function createInstancedProps() {
   scene.add(pallets);
 }
 
+// 鐵絲網圍欄。
 function createFenceLines() {
   const canvas = document.createElement("canvas");
   canvas.width = 128;
@@ -3483,6 +3574,7 @@ function createFenceLines() {
   scene.add(posts, feet, markers);
 }
 
+// 地面的箭頭標線。
 function createRoadDecals() {
   const canvas = document.createElement("canvas");
   canvas.width = 256;
@@ -3520,6 +3612,7 @@ function createRoadDecals() {
 }
 
 let rainSystem = null;
+// 雨。
 function createRain() {
   const count = 900,
     positions = new Float32Array(count * 3);
@@ -3543,6 +3636,7 @@ function createRain() {
   scene.add(rainSystem);
 }
 
+// 雨滴往下掉，落地後回到上方。
 function updateRain(dt) {
   if (!rainSystem) return;
   const positions = rainSystem.geometry.attributes.position.array;
@@ -3558,6 +3652,7 @@ function updateRain(dt) {
   rainSystem.geometry.attributes.position.needsUpdate = true;
 }
 
+// 油桶：可以射爆。
 function createExplosiveBarrel(x, z, index) {
   const root = new THREE.Group();
   root.position.set(x, 0, z);
@@ -3583,8 +3678,7 @@ function createExplosiveBarrel(x, z, index) {
     band.userData.barrelRef = root;
     root.add(band);
   });
-  // Match the barrel's 16-sided curvature; the slight radial offset keeps
-  // the marking attached without either embedding it or causing z-fighting.
+  // 配合油桶的 16 邊曲面；略微往外偏，標示貼在表面又不會閃爍。
   const warning = new THREE.Mesh(
     new THREE.CylinderGeometry(
       0.44,
@@ -3605,6 +3699,7 @@ function createExplosiveBarrel(x, z, index) {
   scene.add(root);
   worldMeshes.push(root);
   explosiveBarrels.push(root);
+  // 油桶的碰撞。
   const box = roundCollider(
     new THREE.Box3(
       new THREE.Vector3(x - 0.47, 0, z - 0.47),
@@ -3618,11 +3713,11 @@ function createExplosiveBarrel(x, z, index) {
   root.userData.collisionBox = box;
 }
 
+// 木箱。
 function createCrate(x, y, z, size, color) {
   const crate = addBox(x, y, z, size, size, size, color, { metalness: 0.1 });
   const bandMat = mat(0x242b2d, 0.7, 0.25);
-  // One square band already wraps all four faces. A second copy rotated 90°
-  // occupies the same surfaces and makes the metal edges shimmer.
+  // 一條方形束帶已經繞過四面，再加一條旋轉 90° 的會佔用同一個面，金屬邊會閃。
   const band = new THREE.Mesh(
     new THREE.BoxGeometry(size + 0.03, 0.13, size + 0.03),
     bandMat,
@@ -3633,6 +3728,7 @@ function createCrate(x, y, z, size, color) {
   return crate;
 }
 
+// 黃色警示條（只有裝飾）。
 function addWarningStripe(x, y, z, sx, sy, sz, rotation = 0) {
   const stripe = new THREE.Mesh(
     new THREE.BoxGeometry(sx, sy, sz),
@@ -3644,6 +3740,7 @@ function addWarningStripe(x, y, z, sx, sy, sz, rotation = 0) {
   return stripe;
 }
 
+// 空氣中的灰塵。
 function addAmbientDetails() {
   const dustGeo = new THREE.BufferGeometry();
   const points = [];
@@ -3681,6 +3778,9 @@ function addAmbientDetails() {
   });
 }
 
+// ---------- 武器模型 ----------
+
+// 邊角有斜面的方塊。
 function bevelBoxGeometry(width, height, depth) {
   const x = width / 2,
     y = height / 2,
@@ -3709,6 +3809,7 @@ function bevelBoxGeometry(width, height, depth) {
   return geometry;
 }
 
+// 手榴彈模型。
 function createGrenadeModel() {
   const body = new THREE.Mesh(
     new THREE.CapsuleGeometry(0.095, 0.075, 5, 14),
@@ -3750,12 +3851,14 @@ function createGrenadeModel() {
   return body;
 }
 
+// 建立步槍：槍身零件、準鏡、細節與手臂。
 function createWeapon() {
   weapon = new THREE.Group();
   weapon.position.set(0.33, -0.29, -0.6);
   weapon.rotation.set(-0.03, -0.04, 0);
   camera.add(weapon);
 
+  // 主要零件：名稱、形狀、位置、旋轉與外觀顏色。
   const parts = [
     [
       "body",
@@ -3836,6 +3939,7 @@ function createWeapon() {
   muzzleFlash = new THREE.PointLight(0xffc35a, 0, 4, 2);
   muzzleFlash.position.set(0, 0.015, -0.92);
   weapon.add(muzzleFlash);
+  // 槍口火光。
   const flashCone = new THREE.Mesh(
     new THREE.ConeGeometry(0.12, 0.34, 7),
     new THREE.MeshBasicMaterial({
@@ -3872,6 +3976,7 @@ function createWeapon() {
     mat(0x101518, 0.28, 0.78),
   );
   opticGroup.add(opticFrame);
+  // 鏡片。
   const opticGlass = new THREE.Mesh(
     new THREE.CircleGeometry(0.046, 40),
     new THREE.MeshPhysicalMaterial({
@@ -3915,6 +4020,7 @@ function createWeapon() {
   glint.stroke();
   const glintTexture = new THREE.CanvasTexture(glintCanvas);
   glintTexture.colorSpace = THREE.SRGBColorSpace;
+  // 鏡片反光。
   const lensGlint = new THREE.Mesh(
     new THREE.CircleGeometry(0.046, 40),
     new THREE.MeshBasicMaterial({
@@ -3927,6 +4033,7 @@ function createWeapon() {
   );
   lensGlint.position.z = 0.003;
   opticGroup.add(lensGlint);
+  // 瞄準紅點。
   const opticDot = new THREE.Mesh(
     new THREE.CircleGeometry(0.0023, 16),
     new THREE.MeshBasicMaterial({
@@ -3970,9 +4077,10 @@ function createWeapon() {
     weapon.add(vent);
   }
 
-  // Recesses, fasteners, rail teeth and magazine ribs stay below the optic sightline.
+  // 凹槽、螺絲、導軌齒與彈匣紋都低於準鏡視線。
   const detailDark = mat(0x101719, 0.45, 0.65),
     detailMetal = mat(0x78858a, 0.32, 0.8);
+  // 加一個細節零件。
   const detail = (geometry, material, x, y, z) => {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
@@ -4004,6 +4112,7 @@ function createWeapon() {
         -0.1,
       );
     for (const z of [-0.13, 0.2]) {
+      // 螺栓。
       const bolt = detail(
         new THREE.CylinderGeometry(0.009, 0.009, 0.009, 10),
         detailMetal,
@@ -4048,8 +4157,9 @@ function createWeapon() {
       -0.135 - i * 0.04,
       0.215 + i * 0.01,
     );
-  // Small machined controls and muzzle ports make the silhouette readable up close.
+  // 小的操作件與槍口孔，近看輪廓才清楚。
   for (const side of [-1, 1]) {
+    // 保險鈕。
     const selector = detail(
       new THREE.CylinderGeometry(0.014, 0.014, 0.006, 12),
       detailMetal,
@@ -4094,6 +4204,7 @@ function createWeapon() {
   text.fillText("NEON  //  5.56 AUTO", 12, 51);
   const serialTex = new THREE.CanvasTexture(serial);
   serialTex.colorSpace = THREE.SRGBColorSpace;
+  // 序號牌。
   const serialPlate = new THREE.Mesh(
     new THREE.PlaneGeometry(0.16, 0.04),
     new THREE.MeshBasicMaterial({
@@ -4121,6 +4232,7 @@ function createWeapon() {
   cacheWeaponClearancePoints();
 }
 
+// 記下槍的外形點，用來判斷會不會插進牆裡。
 function cacheWeaponClearancePoints() {
   weapon.updateWorldMatrix(true, true);
   const inverse = weapon.matrixWorld.clone().invert(),
@@ -4147,6 +4259,7 @@ function cacheWeaponClearancePoints() {
   weapon.userData.clearancePoints = new Float32Array(points);
 }
 
+// 離牆太近時把槍往後收。
 function retractWeaponFromCover(clearance, dt) {
   const points = weapon.userData.clearancePoints;
   if (!points?.length) return;
@@ -4162,7 +4275,7 @@ function retractWeaponFromCover(clearance, dt) {
         matrix[14],
     );
   const target = Math.max(0, -Math.max(0.08, clearance - 0.045) - front);
-  // Enter cover immediately; ease the rifle back out when the space opens.
+  // 碰到掩體馬上收回，空間打開時再慢慢伸出去。
   weaponRetraction =
     target > weaponRetraction
       ? target
@@ -4170,6 +4283,7 @@ function retractWeaponFromCover(clearance, dt) {
   weapon.position.z += weaponRetraction;
 }
 
+// 雙手。
 function createArms() {
   ["leftArm", "rightArm"].forEach((name, i) => {
     const arm = new THREE.Mesh(
@@ -4184,6 +4298,7 @@ function createArms() {
   });
 }
 
+// 套用武器外觀與手套顏色。
 function applyWeaponSkin() {
   const skin = weaponSkins[selectedWeapon];
   weapon.traverse((child) => {
@@ -4211,6 +4326,9 @@ function navSpawnPoint(point, large = false) {
   return [spot.x, spot.z];
 }
 
+// ---------- 敵人：產生與模型 ----------
+
+// 在安全的位置產生一批敵人。
 function spawnEnemies(count, options = {}) {
   const colors = [
     0xb64a4f, 0xc17d3d, 0x4d79a8, 0x7853a6, 0x426d52, 0xa33f75, 0x81733c,
@@ -4237,7 +4355,7 @@ function spawnEnemies(count, options = {}) {
       userData: { state: { radius: variant === "boss" ? 0.55 : 0.34 } },
     };
     let pos = null;
-    // Boss arrivals favor a reachable nearby lane instead of a distant corner.
+    // 首領優先出現在附近走得到的通道，不會在遠處角落。
     for (let pass = 0; pass < (variant === "boss" ? 2 : 1) && !pos; pass++)
       for (let j = 0; j < enemySpawnPoints.length; j++) {
         const candidate = navSpawnPoint(
@@ -4257,6 +4375,7 @@ function spawnEnemies(count, options = {}) {
           break;
         }
       }
+    // 找不到固定點就隨機找。
     for (let attempt = 0; !pos && attempt < 100; attempt++) {
       const x = -67 + Math.random() * 134,
         z = -67 + Math.random() * 134;
@@ -4280,6 +4399,7 @@ function spawnEnemies(count, options = {}) {
   return spawned;
 }
 
+// 建立一個敵人：數值、模型、血條與狀態。
 function createEnemy(x, z, color, index, variant = "standard") {
   const rank =
     variant === "boss" ? "boss" : variant === "elite" ? "elite" : "standard";
@@ -4287,6 +4407,7 @@ function createEnemy(x, z, color, index, variant = "standard") {
     tuning = getEnemyTuning(),
     boss = rank === "boss",
     elite = rank === "elite";
+  // 敵人的作戰風格。
   const role = boss
     ? "commander"
     : index % 3 === 1
@@ -4333,6 +4454,7 @@ function createEnemy(x, z, color, index, variant = "standard") {
     boss ? 0.48 : 0.22,
   );
   const skinMat = mat(0xa87d63, 0.9, 0.01);
+  // 加一個身體零件，並記住屬於哪個敵人與部位。
   const addPart = (geometry, material, pos, name) => {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(...pos);
@@ -4431,6 +4553,7 @@ function createEnemy(x, z, color, index, variant = "standard") {
   const muzzle = new THREE.Object3D();
   muzzle.position.set(0.18, 1.32, 0.86);
   root.add(muzzle);
+  // 槍口火光。
   const enemyFlash = new THREE.Mesh(
     new THREE.ConeGeometry(0.09, 0.27, 6),
     new THREE.MeshBasicMaterial({
@@ -4447,7 +4570,9 @@ function createEnemy(x, z, color, index, variant = "standard") {
   root.add(enemyFlash);
 
   let rankMaterial = null;
+  // 精英與首領多一些裝備。
   if (elite || boss) {
+    // 精英與首領的發光材質。
     const badgeMat = new THREE.MeshStandardMaterial({
       color: boss ? 0xff9e42 : 0x78d8ff,
       emissive: boss ? 0x6b2604 : 0x10456b,
@@ -4484,6 +4609,7 @@ function createEnemy(x, z, color, index, variant = "standard") {
       [0, 1.55, 0.315],
       "body",
     );
+    // 首領的背包與披風。
     if (boss) {
       addPart(
         bevelBoxGeometry(0.48, 0.52, 0.13),
@@ -4514,9 +4640,10 @@ function createEnemy(x, z, color, index, variant = "standard") {
     }
   }
 
-  // Floating world-space health bar.
+  // 浮在頭上的血條。
   const barGroup = new THREE.Group();
   barGroup.position.set(0, 2.35, 0);
+  // 血條底色。
   const back = new THREE.Mesh(
     new THREE.PlaneGeometry(0.82, 0.07),
     new THREE.MeshBasicMaterial({
@@ -4526,6 +4653,7 @@ function createEnemy(x, z, color, index, variant = "standard") {
       depthTest: true,
     }),
   );
+  // 血條。
   const fill = new THREE.Mesh(
     new THREE.PlaneGeometry(0.8, 0.045),
     new THREE.MeshBasicMaterial({
@@ -4539,7 +4667,7 @@ function createEnemy(x, z, color, index, variant = "standard") {
   const nameplate = createNameplate(enemyName, enemyMaxHealth);
   nameplate.position.set(0, 2.52, 0);
   root.add(nameplate);
-  // Fixed-size chevron above enemies that can see you; hidden behind cover.
+  // 看得到你的敵人頭上有固定大小的箭頭，躲在掩體後面就不顯示。
   const marker = new THREE.Sprite(enemyMarkerMaterial(rank));
   marker.position.set(0, 3.02, 0);
   marker.scale.set(0.032, 0.032, 1);
@@ -4548,6 +4676,7 @@ function createEnemy(x, z, color, index, variant = "standard") {
   marker.raycast = () => {};
   root.add(marker);
 
+  // 敵人的所有狀態。
   root.userData.state = {
     name: enemyName,
     rank,
@@ -4595,7 +4724,7 @@ function createEnemy(x, z, color, index, variant = "standard") {
     coverTarget: new THREE.Vector3(),
     coverTime: 0,
     coverCooldown: 0,
-    // Path following and stuck recovery (see steerEnemy).
+    // 沿路徑走與卡住時的處理，見 steerEnemy。
     path: null,
     pathIndex: 0,
     pathGoalX: x,
@@ -4640,6 +4769,7 @@ function createEnemy(x, z, color, index, variant = "standard") {
   return root;
 }
 
+// 敵人標記的材質，同一種只建立一次。
 function enemyMarkerMaterial(rank) {
   const cache = (enemyMarkerMaterial.cache ||= {});
   if (!enemyMarkerMaterial.texture) {
@@ -4670,6 +4800,7 @@ function enemyMarkerMaterial(rank) {
   }));
 }
 
+// 敵人名牌。
 function createNameplate(name, maxHealth) {
   const canvas = document.createElement("canvas");
   canvas.width = 384;
@@ -4677,6 +4808,7 @@ function createNameplate(name, maxHealth) {
   const ctx = canvas.getContext("2d");
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
+  // 名牌的貼圖。
   const sprite = new THREE.Sprite(
     new THREE.SpriteMaterial({
       map: texture,
@@ -4688,6 +4820,7 @@ function createNameplate(name, maxHealth) {
   sprite.scale.set(1.8, 0.3, 1);
   let lastHealth = -1,
     lastMax = -1;
+  // 血量改變時重畫名牌。
   sprite.userData.setHealth = (health, maximum) => {
     const value = Math.max(0, Math.ceil(health)),
       max = Math.max(1, Math.ceil(maximum));
@@ -4713,15 +4846,20 @@ function createNameplate(name, maxHealth) {
   return sprite;
 }
 
+// ---------- 設定與操作 ----------
+
+// 打開說明。
 function openHelp() {
   ui.helpModal.classList.remove("hidden");
   ui.helpButton.setAttribute("aria-expanded", "true");
 }
+// 關閉說明。
 function closeHelp() {
   ui.helpModal.classList.add("hidden");
   ui.helpButton.setAttribute("aria-expanded", "false");
 }
 
+// 主音量。
 function setGameVolume(percent) {
   const value = Number(percent);
   masterVolume =
@@ -4735,6 +4873,7 @@ function setGameVolume(percent) {
   applyAudioMix();
 }
 
+// 滑鼠與觸控靈敏度。
 function setLookSensitivity(percent) {
   const value = Number(percent);
   const clamped = Number.isFinite(value)
@@ -4747,6 +4886,7 @@ function setLookSensitivity(percent) {
   saveChoice("neonSensitivity", Math.round(clamped));
 }
 
+// 畫質：低、中、高。
 function setGraphicsQuality(value) {
   const index = Number(value);
   qualityIndex =
@@ -4765,6 +4905,7 @@ function setGraphicsQuality(value) {
   onResize();
 }
 
+// 綁定所有按鈕、滑鼠與鍵盤操作。
 function setupEvents() {
   // 尚未建好所選地圖時，先把按鈕改成「建立戰場中…」並讓畫面更新，再建圖與開戰。
   ui.deploy.addEventListener("click", () => {
@@ -4779,6 +4920,7 @@ function setupEvents() {
     ui.deploy.setAttribute("aria-busy", "true");
     if (label) label.textContent = "建立戰場中…";
     let started = false;
+    // 先建好地圖再開始。
     const buildAndStart = () => {
       if (started) return;
       started = true;
@@ -4798,6 +4940,7 @@ function setupEvents() {
   const mapControl = $("#mapSelect");
   mapControl.value = String(selectedMap);
   if (typeof window !== "undefined") window.refreshLobbyMapPreview?.();
+  // 切換地圖。
   mapControl.addEventListener("change", () => {
     if (
       setSelectedMap(Number(mapControl.value)) &&
@@ -4806,6 +4949,7 @@ function setupEvents() {
       window.refreshLobbyMapPreview?.();
   });
   ui.resume.addEventListener("click", requestLock);
+  // 回遊戲館或網站首頁。
   $("#touchReturnButton").addEventListener("click", () => {
     if (window.parent !== window)
       window.parent.postMessage(
@@ -4814,6 +4958,7 @@ function setupEvents() {
       );
     else location.href = "../../index.html#games";
   });
+  // 不鎖定滑鼠的相容操作。
   $("#fallbackButton").addEventListener("click", () => {
     freeLook = true;
     resumeGame();
@@ -4847,6 +4992,7 @@ function setupEvents() {
   ui.pauseVolume.addEventListener("input", () =>
     setGameVolume(ui.pauseVolume.value),
   );
+  // 各聲道的音量。
   for (const [channel, id, key] of [
     ["effects", "effectsVolume", "neonEffectsVolume"],
     ["ambience", "ambienceVolume", "neonAmbienceVolume"],
@@ -4856,6 +5002,7 @@ function setupEvents() {
       output = $(`#${id}Value`);
     control.value = String(Math.round(mixSettings[channel] * 100));
     output.textContent = `${control.value}%`;
+    // 調整一個聲道。
     control.addEventListener("input", () => {
       mixSettings[channel] = Math.max(
         0,
@@ -4866,6 +5013,7 @@ function setupEvents() {
       applyAudioMix();
     });
   }
+  // 任務設定的下拉選單。
   for (const [control, field] of [
     [ui.enemyCountSelect, "enemyCount"],
     [ui.enemyPowerSelect, "enemyPower"],
@@ -4881,6 +5029,7 @@ function setupEvents() {
           ? "on"
           : "off"
         : String(missionSettings[field]);
+    // 改任務設定。
     control.addEventListener("change", () => {
       if (gameState !== "lobby") return;
       missionSettings = normalizeMissionSettings({
@@ -4896,6 +5045,7 @@ function setupEvents() {
   }
   updateModePreview();
   addEventListener("resize", onResize);
+  // 按下按鍵。
   addEventListener("keydown", (event) => {
     if (event.code === "Escape" && !ui.helpModal.classList.contains("hidden")) {
       closeHelp();
@@ -4923,6 +5073,7 @@ function setupEvents() {
     if (event.code === "KeyQ" && !event.repeat) useAbility();
     if (event.code === "Space" && !event.repeat) jump();
   });
+  // 放開按鍵；放開 G 會丟出手榴彈。
   addEventListener("keyup", (event) => {
     keys[event.code] = false;
     if (event.code === "KeyG" && grenadeAiming) {
@@ -4932,6 +5083,7 @@ function setupEvents() {
     }
   });
   addEventListener("contextmenu", (event) => event.preventDefault());
+  // 滑鼠左鍵開火、右鍵瞄準。
   addEventListener("mousedown", (event) => {
     if (
       event.sourceCapabilities?.firesTouchEvents ||
@@ -4955,14 +5107,17 @@ function setupEvents() {
       if (now - lastShot > 92) shoot(now);
     }
   });
+  // 放開滑鼠。
   addEventListener("mouseup", (event) => {
     if (event.button === 0) mouseDown = false;
     if (event.button === 2) aiming = false;
   });
+  // 失去焦點就暫停。
   addEventListener("blur", () => {
     clearInputs();
     pauseGame();
   });
+  // 切到背景分頁就暫停。
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       clearInputs();
@@ -4970,6 +5125,7 @@ function setupEvents() {
       document.exitPointerLock?.();
     }
   });
+  // 從總大廳切換時暫停。
   addEventListener("akane-portal-pause", (event) => {
     portalPaused = event.detail?.paused === true;
     if (!portalPaused) return;
@@ -4981,6 +5137,7 @@ function setupEvents() {
   });
   document.addEventListener("pointerlockerror", pauseGame);
   addEventListener("mousemove", onMouseMove);
+  // 滑鼠鎖定狀態改變。
   document.addEventListener("pointerlockchange", () => {
     if (document.pointerLockElement === renderer.domElement) {
       freeLook = false;
@@ -4992,6 +5149,7 @@ function setupEvents() {
   });
 }
 
+// 清空所有輸入，避免切回來後自己動。
 function clearInputs() {
   touchControls?.setPlaying(false);
   touchControls?.reset();
@@ -5004,6 +5162,9 @@ function clearInputs() {
   Object.keys(keys).forEach((key) => (keys[key] = false));
 }
 
+// ---------- 遊戲流程 ----------
+
+// 暫停，並記下時間。
 function pauseGame(message) {
   if (gameState !== "playing") return;
   gameState = "paused";
@@ -5014,6 +5175,7 @@ function pauseGame(message) {
   ui.pause.classList.remove("hidden");
 }
 
+// 繼續，把暫停的時間從任務計時扣掉。
 function resumeGame() {
   if (portalPaused || document.hidden) return;
   resumeAudio();
@@ -5035,11 +5197,11 @@ function resumeGame() {
   touchControls?.setPlaying(gameState === "playing");
 }
 
+// 開始一局：重設所有狀態並產生敵人。
 function startGame() {
   if (gameState !== "lobby") return;
   prepareSelectedMap();
-  // Compile every scene material up front so first sight of a district
-  // cannot stall a frame mid-fight.
+  // 先編譯場景裡所有材質，第一次看到某一區時才不會在戰鬥中卡一下。
   try {
     renderer.compile(scene, camera);
   } catch {}
@@ -5099,10 +5261,11 @@ function startGame() {
   requestLock();
   feed(`任務開始 // ${mode.label} // 敵軍 ${matchTotalEnemies}`);
   playTone(110, 0.18, "sawtooth", 0.035);
-  // Map building and shader warm-up happened before the clock started.
+  // 建地圖與編譯材質都在計時開始之前完成。
   clock.getDelta();
 }
 
+// 要求鎖定滑鼠；不支援就用自由視角。
 function requestLock() {
   if (touchControls?.enabled) {
     freeLook = true;
@@ -5126,6 +5289,7 @@ function requestLock() {
   }
 }
 
+// 使用幹員技能。
 function useAbility() {
   if (gameState !== "playing" || abilityCooldown > 0) return;
   const now = performance.now();
@@ -5148,6 +5312,9 @@ function useAbility() {
   updateHUD();
 }
 
+// ---------- 手榴彈 ----------
+
+// 丟手榴彈。
 function throwGrenade() {
   if (gameState !== "playing" || grenadeCount <= 0) return;
   grenadeAiming = false;
@@ -5168,14 +5335,16 @@ function throwGrenade() {
   feed(`破片手榴彈已投擲 // 剩餘 ${grenadeCount}`);
 }
 
+// 手榴彈的起點與方向。
 function getGrenadeAim(origin, direction) {
-  // Camera shake is visual. Holding G and releasing G use the same stable eye point.
+  // 鏡頭震動只是視覺；按住 G 與放開 G 用同一個穩定的眼睛位置。
   if (camera.parent?.isGroup) camera.parent.getWorldPosition(origin);
   else camera.getWorldPosition(origin);
   camera.getWorldDirection(direction);
   return { origin, direction };
 }
 
+// 建立拋物線與落點的預覽。
 function createGrenadePreview() {
   if (grenadePreview) return grenadePreview.group;
   const geometry = new THREE.BufferGeometry();
@@ -5187,6 +5356,7 @@ function createGrenadePreview() {
     new THREE.BufferAttribute(distances, 1),
   );
   geometry.setDrawRange(0, 0);
+  // 拋物線。
   const line = new THREE.Line(
     geometry,
     new THREE.LineBasicMaterial({
@@ -5198,6 +5368,7 @@ function createGrenadePreview() {
   );
   line.frustumCulled = false;
   const marker = new THREE.Group();
+  // 第一次碰撞的位置。
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(0.37, 0.48, 40),
     new THREE.MeshBasicMaterial({
@@ -5210,6 +5381,7 @@ function createGrenadePreview() {
   );
   ring.rotation.x = -Math.PI / 2;
   marker.add(ring);
+  // 中心點。
   const dot = new THREE.Mesh(
     new THREE.SphereGeometry(0.095, 10, 7),
     new THREE.MeshBasicMaterial({
@@ -5221,6 +5393,7 @@ function createGrenadePreview() {
   );
   marker.add(dot);
   const blastMarker = new THREE.Group();
+  // 爆炸位置的環。
   const blastRing = new THREE.Mesh(
     new THREE.RingGeometry(0.23, 0.32, 32),
     new THREE.MeshBasicMaterial({
@@ -5244,6 +5417,7 @@ function createGrenadePreview() {
   group.add(line, marker, blastMarker);
   group.visible = false;
   scene.add(group);
+  // 預覽用到的所有物件。
   grenadePreview = {
     group,
     line,
@@ -5267,6 +5441,7 @@ function createGrenadePreview() {
   return group;
 }
 
+// 更新預覽；瞄準沒變就不重算。
 function updateGrenadePreview(time, force = false) {
   const active = gameState === "playing" && grenadeAiming && grenadeCount > 0;
   touchControls?.setGrenadePreview(active);
@@ -5287,8 +5462,7 @@ function updateGrenadePreview(time, force = false) {
     grenadePreview.probeOrigin,
     grenadePreview.probeDirection,
   );
-  // Keep the last GPU buffers while the aim is still; recompute immediately on
-  // movement, rotation or a destroyed obstacle, and always on a fresh G press.
+  // 瞄準不動時沿用上一次的資料；移動、轉向、障礙被破壞或重新按 G 時馬上重算。
   if (
     !force &&
     grenadePreview.prediction &&
@@ -5323,7 +5497,7 @@ function updateGrenadePreview(time, force = false) {
   grenadePreview.line.geometry.attributes.position.needsUpdate = true;
   grenadePreview.line.geometry.attributes.lineDistance.needsUpdate = true;
   grenadePreview.line.geometry.setDrawRange(0, previewPoints.length);
-  // Keep a single line and merge nearby contact/blast markers instead of stacking circles.
+  // 只留一條線，距離近的碰撞點與爆炸點合併，不疊很多圈。
   grenadePreview.marker.visible =
     !!prediction.firstImpact &&
     Math.hypot(
@@ -5345,6 +5519,7 @@ function updateGrenadePreview(time, force = false) {
   grenadePreview.blastMarker.position.copy(prediction.end);
   grenadePreview.blastMarker.position.y -= prediction.grounded ? 0.105 : 0;
   grenadePreview.blastRing.visible = prediction.grounded;
+  // 自己在爆炸範圍內就變紅。
   const danger =
     Math.hypot(
       origin.x - prediction.end.x,
@@ -5377,6 +5552,9 @@ function updateGrenadePreview(time, force = false) {
   }
 }
 
+// ---------- 玩家移動與視角 ----------
+
+// 觸控轉動視角。
 function onTouchLook(dx, dy) {
   if (gameState !== "playing" || portalPaused) return;
   const sensitivity = (1 - adsAmount * 0.32) * lookSensitivity;
@@ -5426,6 +5604,7 @@ function onTouchAction(action, pressed) {
   } else if (action === "grenade-throw" && grenadeAiming) throwGrenade();
 }
 
+// 滑鼠轉動視角。
 function onMouseMove(event) {
   if (
     gameState !== "playing" ||
@@ -5439,6 +5618,7 @@ function onMouseMove(event) {
   pitch.rotation.x = Math.max(-1.38, Math.min(1.38, pitch.rotation.x));
 }
 
+// 跳躍；按得稍早或剛離地也算。
 function jump() {
   if (gameState !== "playing") return;
   jumpBuffer = 0.13;
@@ -5451,6 +5631,7 @@ function jump() {
   }
 }
 
+// 玩家能不能站在這個位置。
 function isPositionBlocked(x, z) {
   if (
     x < -PLAYABLE_LIMIT ||
@@ -5477,6 +5658,7 @@ function isPositionBlocked(x, z) {
   return false;
 }
 
+// 槍口前方到障礙的距離。
 function findWeaponClearance(
   origin,
   direction,
@@ -5496,6 +5678,7 @@ function findWeaponClearance(
   return nearest;
 }
 
+// 槍的位置：腰射、瞄準、靠牆收槍、後座力與換彈。
 function updateWeaponPose(dt, time, bob = 0, reloadPose = 0) {
   camera.getWorldPosition(weaponEye);
   camera.getWorldDirection(weaponForward);
@@ -5570,6 +5753,7 @@ function updateWeaponPose(dt, time, bob = 0, reloadPose = 0) {
   retractWeaponFromCover(adsAmount > 0.5 ? centerClearance : clearance, dt);
 }
 
+// 玩家每一步：跳躍、梯子、移動與槍枝動作。
 function updatePlayer(dt, time) {
   jumpBuffer = Math.max(0, jumpBuffer - dt);
   groundGrace = grounded ? 0.1 : Math.max(0, groundGrace - dt);
@@ -5593,8 +5777,9 @@ function updatePlayer(dt, time) {
   const speed = (sprinting ? operator.sprintSpeed : operator.moveSpeed) * boost;
   const sin = Math.sin(yaw.rotation.y),
     cos = Math.cos(yaw.rotation.y);
-  // On a ladder the climb replaces walking and gravity for this step.
-  if (!updateLadder(dt, mx, mz, time)) movePlayerBody(dt, mx, mz, sin, cos, speed);
+  // 在梯子上時，攀爬取代這一步的走路與重力。
+  if (!updateLadder(dt, mx, mz, time))
+    movePlayerBody(dt, mx, mz, sin, cos, speed);
 
   const bob = grounded
     ? Math.sin(time * 0.012 * (sprinting ? 1.6 : 1)) * playerMoving
@@ -5602,25 +5787,26 @@ function updatePlayer(dt, time) {
   finishPlayerUpdate(dt, time, bob, sprinting);
 }
 
+// 移動身體：分小步走、跨階、重力與落地。
 function movePlayerBody(dt, mx, mz, sin, cos, speed) {
   const dx = (mx * cos + mz * sin) * speed * dt;
   const dz = (-mx * sin + mz * cos) * speed * dt;
   const previousX = yaw.position.x,
     previousZ = yaw.position.z;
-  // Short displacement steps keep boosted sprints from skipping thin fences.
+  // 分成小步，衝刺加速時才不會穿過細的圍欄。
   const moveSteps = Math.max(
     1,
     Math.ceil(Math.hypot(dx, dz) / (playerRadius * 0.4)),
   );
+  // 沿一個軸移動；碰到矮的東西就跨上去。
   const moveAxis = (x, z) => {
     if (!isPositionBlocked(x, z)) {
       yaw.position.x = x;
       yaw.position.z = z;
       return;
     }
-    // On the ground only kerbs and rails are stepped over. In the air a ledge
-    // the jump nearly cleared lifts the player onto it instead of pinning
-    // them against its side.
+    // 在地面只能跨過路緣與欄杆；在空中時，差一點跳過的平台會把人帶上去，不會卡
+    // 在側面。
     const airborne = !grounded || verticalVelocity > 0;
     const feet = yaw.position.y - eyeHeight,
       reach = airborne ? 0.45 : 0.22;
@@ -5646,7 +5832,7 @@ function movePlayerBody(dt, mx, mz, sin, cos, speed) {
       yaw.position.x = x;
       yaw.position.z = z;
       if (airborne && verticalVelocity < 0) verticalVelocity = 0;
-      // The body steps up at once (for collision); the view glides after it.
+      // 身體馬上站上去（碰撞用），視角再慢慢跟上。
       stepViewOffset = Math.max(-0.6, stepViewOffset - (yaw.position.y - oldY));
     } else yaw.position.y = oldY;
   };
@@ -5667,6 +5853,7 @@ function movePlayerBody(dt, mx, mz, sin, cos, speed) {
     nextY = previousY + verticalVelocity * dt;
   let support = eyeHeight,
     ceiling = Infinity;
+  // 頭頂與腳下的障礙。
   for (const box of collisionBoxes) {
     if (
       !bodyOverlapsCollider(box, yaw.position.x, yaw.position.z, playerRadius)
@@ -5694,8 +5881,8 @@ function movePlayerBody(dt, mx, mz, sin, cos, speed) {
     verticalVelocity = 0;
     grounded = true;
   } else if (wasGrounded && !risingBefore) {
-    // Walking down stairs or off a kerb: stay on the next surface below
-    // (up to 32 cm) instead of a short free fall, and ease the view down.
+    // 走下樓梯或路緣時，貼著下一層（最多 32 公分），不會短暫懸空；視角慢慢降下
+    // 去。
     const feet = previousY - eyeHeight;
     let below = feet <= 0.32 ? 0 : -Infinity;
     for (const box of collisionBoxes)
@@ -5707,7 +5894,10 @@ function movePlayerBody(dt, mx, mz, sin, cos, speed) {
         below = Math.max(below, box.max.y);
     if (below > -Infinity) {
       const target = below + eyeHeight;
-      stepViewOffset = Math.min(0.6, stepViewOffset + (yaw.position.y - target));
+      stepViewOffset = Math.min(
+        0.6,
+        stepViewOffset + (yaw.position.y - target),
+      );
       yaw.position.y = target;
       verticalVelocity = 0;
       grounded = true;
@@ -5744,7 +5934,7 @@ function updateLadder(dt, mx, mz, time) {
         Math.abs(feet - ladder.top) < 0.3 &&
         -toward > 0.5 &&
         grounded &&
-        // Near the top of the rungs (the platform edge), not mid-platform.
+        // 在梯子最上方（平台邊緣），不是平台中間。
         Math.hypot(
           yaw.position.x - (ladder.climbX - ladder.nx * 0.44),
           yaw.position.z - (ladder.climbZ - ladder.nz * 0.44),
@@ -5766,7 +5956,7 @@ function updateLadder(dt, mx, mz, time) {
   yaw.position.x += (ladder.climbX - yaw.position.x) * hold;
   yaw.position.z += (ladder.climbZ - yaw.position.z) * hold;
   if (jumpBuffer > 0) {
-    // Let go and drop away from the structure.
+    // 放手並往外離開。
     jumpBuffer = 0;
     climbing = null;
     const x = yaw.position.x + ladder.nx * 0.4,
@@ -5778,23 +5968,14 @@ function updateLadder(dt, mx, mz, time) {
     verticalVelocity = 2.2;
     return true;
   }
-  // Moving toward the ladder climbs, moving away descends; so walking out
-  // over the top edge goes down instead of bouncing back onto the platform.
-  // Looking along the ladder (sideways) falls back to W = up, S = down.
+  // 朝梯子移動往上、遠離往下，所以從平台邊緣走出去會往下爬，不會被彈回平台；側
+  // 著看梯子時改成 W 往上、S 往下。
   const along = -(wx * ladder.nx + wz * ladder.nz),
     direction =
-      along > 0.35
-        ? 1
-        : along < -0.35
-          ? -1
-          : mz < -0.2
-            ? 1
-            : mz > 0.2
-              ? -1
-              : 0,
+      along > 0.35 ? 1 : along < -0.35 ? -1 : mz < -0.2 ? 1 : mz > 0.2 ? -1 : 0,
     next = feet + direction * CLIMB_SPEED * dt;
   if (direction > 0 && next >= ladder.top - 0.05) {
-    // Step off onto the platform when there is room to stand.
+    // 上面有空間站就踏上平台。
     const x = yaw.position.x,
       y = yaw.position.y,
       z = yaw.position.z;
@@ -5815,7 +5996,7 @@ function updateLadder(dt, mx, mz, time) {
   }
   yaw.position.y =
     Math.max(ladder.bottom, Math.min(ladder.top - 0.05, next)) + eyeHeight;
-  // Strafing off near the foot of the ladder lets go.
+  // 在梯子底部往旁邊走就放手。
   if (Math.abs(mx) > 0.6 && next - ladder.bottom < 0.35) climbing = null;
   if (direction && time - lastFootstep > 340) {
     playSample(Math.random() > 0.5 ? "step0" : "step1", 0.05, 1.3);
@@ -5824,6 +6005,7 @@ function updateLadder(dt, mx, mz, time) {
   return true;
 }
 
+// 移動後的收尾：視角、後座力、換彈與走路晃動。
 function finishPlayerUpdate(dt, time, bob, sprinting) {
   stepViewOffset *= Math.exp(-dt * 12);
   if (Math.abs(stepViewOffset) < 0.002) stepViewOffset = 0;
@@ -5856,10 +6038,12 @@ function finishPlayerUpdate(dt, time, bob, sprinting) {
   if (mouseDown && time - lastShot > 92) shoot(time);
 }
 
+// ---------- 射擊 ----------
+
+// 子彈可以打到的場景物件，場景沒變就沿用。
 function worldRayTargets() {
-  // Registered meshes are already the solid structure. Recursing into their
-  // decorative ribs/fasteners makes every AI ray test entire instance batches.
-  // Groups (fuel drums, forklift) still expose their actual component meshes.
+  // 登記的網格就是實心結構；往下找裝飾的浪板與螺絲，會讓每次敵人視線檢查都測一
+  // 整批。群組（油桶、堆高機）才取出真正的零件。
   const cache =
     worldRayTargets.cache ||
     (worldRayTargets.cache = { roots: [], sizes: [], targets: [] });
@@ -5874,6 +6058,7 @@ function worldRayTargets() {
     cache.targets = [];
     const seen = new Set();
     for (const root of worldMeshes) {
+      // 加入一個可以打到的網格。
       const add = (object) => {
         if (object.isMesh && !seen.has(object)) {
           seen.add(object);
@@ -5887,6 +6072,7 @@ function worldRayTargets() {
   return cache.targets;
 }
 
+// 算出子彈路徑：先看準心打到哪，再檢查槍口到目標有沒有被擋。
 function resolveShotPath(aimNdc = new THREE.Vector2()) {
   scene.updateMatrixWorld(true);
   const targets = worldRayTargets().slice();
@@ -5907,6 +6093,7 @@ function resolveShotPath(aimNdc = new THREE.Vector2()) {
         material.side = THREE.DoubleSide;
       }
   }
+  // 沿一個方向最先打到的東西。
   const firstHit = (origin, direction, distance) => {
     raycaster.set(origin, direction);
     raycaster.near = 0.00001;
@@ -5925,6 +6112,7 @@ function resolveShotPath(aimNdc = new THREE.Vector2()) {
       muzzleDirection = origin.clone().sub(eye),
       muzzleDistance = muzzleDirection.length();
     let muzzleBlocked = false;
+    // 槍口是否被牆擋住。
     if (muzzleDistance > 0.00001) {
       muzzleDirection.divideScalar(muzzleDistance);
       const cover = firstHit(eye, muzzleDirection, muzzleDistance);
@@ -5961,6 +6149,7 @@ function resolveShotPath(aimNdc = new THREE.Vector2()) {
   }
 }
 
+// 開一槍。
 function shoot(time) {
   if (gameState !== "playing" || grenadeAiming) return;
   if (reloading) return;
@@ -5985,7 +6174,7 @@ function shoot(time) {
   ammo--;
   shots++;
   lastShot = time;
-  // Gunfire is loud: nearby patrols investigate instead of idling out of sight.
+  // 槍聲很大：附近巡邏的敵人會來查看，不會在視線外發呆。
   if (navClock - lastNoiseAt > 0.35) {
     lastNoiseAt = navClock;
     alertEnemiesToNoise(yaw.position.x, yaw.position.z, 36, 6);
@@ -6008,6 +6197,7 @@ function shoot(time) {
   playGunshot();
   updateHUD();
 
+  // 打到東西：油桶、敵人或場景。
   if (shot.hit) {
     const hit = shot.hit;
     const barrelRoot = findBarrelRoot(hit.object);
@@ -6016,6 +6206,7 @@ function shoot(time) {
       explodeBarrel(barrelRoot);
     } else if (enemyRoot?.userData.state.alive) {
       const power = currentOperator().power;
+      // 頭、身體與四肢傷害不同。
       const damage = Math.round(
         (hit.object.userData.part === "head"
           ? 72
@@ -6042,18 +6233,22 @@ function shoot(time) {
 }
 
 const effectGeometries = new Map();
+// 特效共用的形狀，只建立一次。
 function sharedEffectGeometry(name, create) {
   if (!effectGeometries.has(name)) effectGeometries.set(name, create());
   return effectGeometries.get(name);
 }
 
+// 暫時物件太多就清掉最舊的。
 function trimTransientList(list, limit) {
   const overflow = list.length - limit;
   if (overflow > 0)
     for (const item of list.splice(0, overflow)) disposeMesh(item.mesh);
 }
 
+// 拋出彈殼。
 function ejectShell() {
+  // 彈殼。
   const shell = new THREE.Mesh(
     sharedEffectGeometry(
       "shell",
@@ -6083,6 +6278,7 @@ function ejectShell() {
   trimTransientList(particles, [320, 220, 128][qualityIndex]);
 }
 
+// 這個零件屬於哪個油桶。
 function findBarrelRoot(object) {
   let current = object;
   while (current) {
@@ -6093,6 +6289,9 @@ function findBarrelRoot(object) {
   return null;
 }
 
+// ---------- 爆炸 ----------
+
+// 爆炸：特效、傷害與連鎖。
 function explodeBarrel(barrel, source = "barrel") {
   if (barrel.userData.exploded || gameState !== "playing") return;
   barrel.userData.exploded = true;
@@ -6111,6 +6310,7 @@ function explodeBarrel(barrel, source = "barrel") {
   screenShake = Math.max(screenShake, Math.max(0.2, 1 - blastDistance / 50));
   playExplosionSound(blastDistance, center);
 
+  // 火球。
   const fireball = new THREE.Mesh(
     new THREE.SphereGeometry(0.6, 16, 12),
     new THREE.MeshBasicMaterial({
@@ -6122,6 +6322,7 @@ function explodeBarrel(barrel, source = "barrel") {
   );
   fireball.position.copy(center);
   scene.add(fireball);
+  // 衝擊波。
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(0.45, 0.58, 32),
     new THREE.MeshBasicMaterial({
@@ -6140,6 +6341,7 @@ function explodeBarrel(barrel, source = "barrel") {
   scene.add(light);
   explosions.push({ fireball, ring, light, life: 0.72, max: 0.72 });
   if (source !== "grenade" || Number.isFinite(barrel.userData.surfaceY)) {
+    // 地面焦痕。
     const scorch = new THREE.Mesh(
       new THREE.CircleGeometry(1.55, 24),
       new THREE.MeshBasicMaterial({
@@ -6158,8 +6360,10 @@ function explodeBarrel(barrel, source = "barrel") {
     scene.add(scorch);
     bulletDecals.push(scorch);
   }
+  // 火星與煙。
   for (let i = 0; i < 34; i++) {
     const isSmoke = i > 17;
+    // 一顆火星或煙。
     const mesh = new THREE.Mesh(
       isSmoke
         ? new THREE.SphereGeometry(0.09 + Math.random() * 0.12, 6, 5)
@@ -6185,7 +6389,9 @@ function explodeBarrel(barrel, source = "barrel") {
       smoke: isSmoke,
     });
   }
+  // 碎片。
   for (let i = 0; i < 9; i++) {
+    // 一塊碎片。
     const debris = new THREE.Mesh(
       new THREE.BoxGeometry(
         0.06 + Math.random() * 0.09,
@@ -6213,6 +6419,7 @@ function explodeBarrel(barrel, source = "barrel") {
   );
   const radius = GRENADE_BLAST_RADIUS;
   resolvingBlast = true;
+  // 炸到敵人。
   enemies.forEach((enemy) => {
     if (enemy.userData.state.alive) {
       const target = enemy.position.clone();
@@ -6246,6 +6453,7 @@ function explodeBarrel(barrel, source = "barrel") {
   });
 }
 
+// 爆炸能不能打到這個位置（中間有牆就擋住）。
 function blastReaches(origin, position, target = null) {
   const end = new THREE.Vector3(
       position.x,
@@ -6266,6 +6474,7 @@ function blastReaches(origin, position, target = null) {
     );
 }
 
+// 這個零件屬於哪個敵人。
 function findEnemyRoot(object) {
   let current = object;
   while (current) {
@@ -6276,6 +6485,7 @@ function findEnemyRoot(object) {
   return null;
 }
 
+// 敵人受傷：首領弱點、階段變化與警戒。
 function damageEnemy(
   enemy,
   damage,
@@ -6301,6 +6511,7 @@ function damageEnemy(
               : 1)
       : damage;
   state.health = Math.max(0, state.health - Math.max(0, Math.round(received)));
+  // 首領進入第二階段。
   if (
     state.health > 0 &&
     state.rank === "boss" &&
@@ -6329,8 +6540,8 @@ function damageEnemy(
     seekBotCover(enemy);
   if (byPlayer && state.health > 0) {
     state.lastKnown.set(yaw.position.x, 0, yaw.position.z);
-    // Hits from outside line of sight are new information, just like losing
-    // sight of a player: allow time to investigate before returning to patrol.
+    // 看不到的地方打來的傷害也是新線索，就像跟丟玩家一樣：先給時間查看再回去巡
+    // 邏。
     if (state.state !== "ENGAGE") {
       beginSearch(enemy, yaw.position.x, yaw.position.z, 12);
       state.patrolPause = 0;
@@ -6347,6 +6558,7 @@ function damageEnemy(
   if (state.health <= 0) killEnemy(enemy, headshot, byPlayer);
 }
 
+// 擊殺敵人：連殺獎勵、補給與任務進度。
 function killEnemy(enemy, headshot, byPlayer = true) {
   const state = enemy.userData.state;
   if (!state.alive) return;
@@ -6381,6 +6593,7 @@ function killEnemy(enemy, headshot, byPlayer = true) {
   playTone(headshot ? 880 : 660, 0.12, "triangle", 0.05);
   updateHUD();
   const start = performance.now();
+  // 倒下的動畫。
   const fall = () => {
     const p = Math.min(1, (performance.now() - start) / 650);
     enemy.rotation.z = p * 1.38;
@@ -6396,6 +6609,7 @@ function killEnemy(enemy, headshot, byPlayer = true) {
   if (!resolvingBlast) handleEnemyDefeated();
 }
 
+// 擊殺提示。
 function showKillFeedback(name, headshot) {
   const notice = ui.killNotice;
   notice.querySelector("strong").textContent = headshot
@@ -6432,6 +6646,9 @@ function showKillFeedback(name, headshot) {
   screenShake = Math.max(screenShake, 0.1);
 }
 
+// ---------- 首領招式 ----------
+
+// 清掉所有首領的攻擊。
 function clearBossAttacks() {
   for (const attack of bossAttacks) disposeMesh(attack.group);
   bossAttacks.length = 0;
@@ -6439,6 +6656,7 @@ function clearBossAttacks() {
   ui.hud.classList.remove("strike-warning");
 }
 
+// 這個位置的地面高度。
 function bossGroundY(point) {
   let surface = 0;
   const ceiling = Math.max(0.05, (point.y ?? eyeHeight) - eyeHeight + 0.15);
@@ -6452,6 +6670,7 @@ function bossGroundY(point) {
   return surface + 0.045;
 }
 
+// 建立一個首領攻擊的預警圈。
 function createBossZone(
   position,
   radius,
@@ -6466,6 +6685,7 @@ function createBossZone(
     thetaStart = mode === "shockwave" ? -safeAngle + safeHalf : 0,
     thetaLength =
       mode === "shockwave" ? Math.PI * 2 - safeHalf * 2 : Math.PI * 2;
+  // 填滿的範圍。
   const fill = new THREE.Mesh(
     new THREE.CircleGeometry(radius, 64, thetaStart, thetaLength),
     new THREE.MeshBasicMaterial({
@@ -6478,6 +6698,7 @@ function createBossZone(
   );
   fill.rotation.x = -Math.PI / 2;
   group.add(fill);
+  // 外框。
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(
       radius - 0.065,
@@ -6498,6 +6719,7 @@ function createBossZone(
   ring.rotation.x = -Math.PI / 2;
   ring.position.y = 0.005;
   group.add(ring);
+  // 掃過的倒數環。
   const sweep = new THREE.Mesh(
     new THREE.RingGeometry(
       radius - 0.14,
@@ -6526,6 +6748,7 @@ function createBossZone(
   beacon.position.y = 0.3;
   group.add(beacon);
   if (mode === "shockwave") {
+    // 扇形震波的安全區。
     const safe = new THREE.Mesh(
       new THREE.CircleGeometry(radius, 20, -safeAngle - safeHalf, safeHalf * 2),
       new THREE.MeshBasicMaterial({
@@ -6539,6 +6762,7 @@ function createBossZone(
     safe.rotation.x = -Math.PI / 2;
     safe.position.y = 0.008;
     group.add(safe);
+    // 安全區的邊線。
     const safeEdge = new THREE.Mesh(
       new THREE.RingGeometry(
         radius - 0.1,
@@ -6581,6 +6805,7 @@ function createBossZone(
   };
 }
 
+// 首領開始一個招式：精準轟擊、連段轟擊或扇形震波。
 function queueBossAttack(enemy, target, patternOverride) {
   const state = enemy?.userData.state;
   if (
@@ -6633,6 +6858,7 @@ function queueBossAttack(enemy, target, patternOverride) {
     group = new THREE.Group(),
     markers = [];
   const color = phase === 2 ? 0xff435d : 0xff974d;
+  // 扇形震波，留一個安全方向。
   if (pattern === "shockwave") {
     position.copy(enemy.position);
     position.y = bossGroundY({ x: position.x, y: eyeHeight, z: position.z });
@@ -6656,8 +6882,10 @@ function queueBossAttack(enemy, target, patternOverride) {
     const length = distance || 1,
       sideX = (target.z - enemy.position.z) / length,
       sideZ = -(target.x - enemy.position.x) / length;
+    // 轟擊的落點。
     for (let index = 0; index < count; index++) {
       const side = index === 0 ? 0 : index === 1 ? 1 : -1,
+        // 一個落點的位置。
         point = position
           .clone()
           .add(
@@ -6716,6 +6944,7 @@ function queueBossAttack(enemy, target, patternOverride) {
   return true;
 }
 
+// 預警圈對玩家的傷害，只算一次。
 function applyBossZoneDamage(attack, zone, origin, amount) {
   if (zone.hitPlayer) return;
   const body = new THREE.Vector3(
@@ -6740,6 +6969,7 @@ function applyBossZoneDamage(attack, zone, origin, amount) {
   );
 }
 
+// 爆發的火花。
 function createBossBurst(origin, phase) {
   const count = [12, 8, 5][qualityIndex],
     geometry = sharedEffectGeometry(
@@ -6749,6 +6979,7 @@ function createBossBurst(origin, phase) {
   for (let i = 0; i < count; i++) {
     const angle = (i * Math.PI * 2) / count,
       speed = 2.2 + (i % 3) * 0.5;
+    // 一顆火花。
     const mesh = new THREE.Mesh(
       geometry,
       new THREE.MeshBasicMaterial({
@@ -6775,6 +7006,7 @@ function createBossBurst(origin, phase) {
   trimTransientList(particles, [320, 220, 128][qualityIndex]);
 }
 
+// 推進首領的所有攻擊。
 function updateBossAttacks(dt, time) {
   if (gameState !== "playing") return;
   for (let i = bossAttacks.length - 1; i >= 0; i--) {
@@ -6798,6 +7030,7 @@ function updateBossAttacks(dt, time) {
       const before = zone.remaining;
       zone.remaining = Math.max(0, zone.remaining - dt);
       zone.beacon.rotation.y += dt * 3;
+      // 倒數結束就爆發。
       if (!zone.detonated) {
         zone.sweep.scale.setScalar(
           Math.max(0.08, 1 - zone.remaining / zone.duration),
@@ -6839,6 +7072,7 @@ function updateBossAttacks(dt, time) {
         if (distance < 12)
           screenShake = Math.max(screenShake, 0.18 * (1 - distance / 12));
       }
+      // 震波往外擴散，跳起來可以躲。
       if (zone.mode === "shockwave" && !zone.complete) {
         const activeDt = Math.max(0, dt - Math.max(0, before)),
           previousRadius =
@@ -6917,6 +7151,7 @@ function updateBossAttacks(dt, time) {
   }
 }
 
+// 首領血條與狀態。
 function updateBossHUD() {
   const boss = enemies.find(
     (enemy) =>
@@ -6959,6 +7194,7 @@ function updateBossHUD() {
   }
 }
 
+// 敵人被擊敗後：看任務完成、下一波或首領登場。
 function handleEnemyDefeated() {
   if (gameState !== "playing") return;
   const mode = currentMode();
@@ -6986,6 +7222,7 @@ function handleEnemyDefeated() {
   } else endGame(true);
 }
 
+// 換彈。
 function reload(automatic = false) {
   if (reloading || ammo === 30 || reserve <= 0 || gameState !== "playing")
     return;
@@ -7000,6 +7237,7 @@ function reload(automatic = false) {
   updateHUD();
 }
 
+// 計時：技能、換彈、下一波、首領登場與延遲爆炸。
 function updateCombatTimers(dt, time) {
   abilityCooldown = Math.max(0, abilityCooldown - dt);
   if (reloading) {
@@ -7071,6 +7309,9 @@ function updateCombatTimers(dt, time) {
   }
 }
 
+// ---------- 敵人行動 ----------
+
+// 每個敵人每一步：感知、決策、移動、射擊與動畫。
 function updateEnemies(dt, time) {
   const difficulty = currentDifficulty(),
     tuning = getEnemyTuning();
@@ -7080,6 +7321,7 @@ function updateEnemies(dt, time) {
   navClock += dt;
   navPathBudget = NAV_PATHS_PER_UPDATE;
   huntTimer -= dt;
+  // 偶爾派幾個敵人主動找玩家。
   if (huntTimer <= 0) {
     huntTimer = 4.5 + Math.random() * 3;
     dispatchHunters();
@@ -7092,6 +7334,7 @@ function updateEnemies(dt, time) {
     if (!s.alive) continue;
     const boss = s.rank === "boss",
       elite = s.rank === "elite";
+    // 與玩家的距離。
     const toPlayer = tempVec.set(
       yaw.position.x - enemy.position.x,
       0,
@@ -7140,6 +7383,7 @@ function updateEnemies(dt, time) {
     }
     const detection = difficulty.detection + (boss ? 8 : elite ? 3 : 0);
     s.losTimer -= dt;
+    // 視線檢查分散進行，不是每步都做。
     if (s.losTimer <= 0) {
       s.cachedCanSee =
         distance < detection && hasLineOfSight(enemy.position, yaw.position);
@@ -7154,6 +7398,7 @@ function updateEnemies(dt, time) {
       guided = false,
       pace = 1;
     const frozen = s.specialWindup > 0 || (boss && s.bossRecovery > 0);
+    // 看得到玩家：交戰。
     if (canSee) {
       nearestThreat = Math.min(nearestThreat, distance);
       lastEnemyContactAt = navClock;
@@ -7169,6 +7414,7 @@ function updateEnemies(dt, time) {
           callForBackup(enemy);
         }
       }
+      // 首領施放招式。
       if (
         boss &&
         s.state === "ENGAGE" &&
@@ -7187,8 +7433,9 @@ function updateEnemies(dt, time) {
         } else s.bossAttackCooldown = 1;
       }
       if (frozen) {
-        // Boss wind-up and recovery hold position; no route work this frame.
+        // 首領蓄力與恢復時不移動，這一步不算路徑。
       } else if (s.coverTime > 0) {
+        // 走向掩體。
         const step = steerEnemy(
           enemy,
           s.coverTarget.x,
@@ -7213,7 +7460,7 @@ function updateEnemies(dt, time) {
               ? 10
               : 13;
         if (distance > idealRange) {
-          // Route around low cover or corners instead of pressing into them.
+          // 繞過矮掩體或轉角，不會一直頂著走。
           const step = steerEnemy(
             enemy,
             yaw.position.x,
@@ -7240,6 +7487,7 @@ function updateEnemies(dt, time) {
         moveX += toPlayer.z * s.strafe * strafe;
         moveZ -= toPlayer.x * s.strafe * strafe;
       }
+      // 開火：三連發後停頓。
       if (
         s.state === "ENGAGE" &&
         s.specialWindup <= 0 &&
@@ -7273,7 +7521,7 @@ function updateEnemies(dt, time) {
         s.reaction + dt * 0.35,
       );
       if (s.state === "ENGAGE") {
-        // Lost contact: go to the last seen position, then sweep nearby corners.
+        // 跟丟玩家：先到最後看到的位置，再搜附近的角落。
         s.state = "SEARCH";
         s.searchTime = 14;
         s.burstShots = 0;
@@ -7289,8 +7537,9 @@ function updateEnemies(dt, time) {
         s.patrolPause = 0.6 + Math.random() * 0.8;
       }
       if (frozen) {
-        // Hold during boss wind-up and recovery.
+        // 首領蓄力與恢復時不動。
       } else if (s.coverTime > 0) {
+        // 走向掩體。
         const step = steerEnemy(
           enemy,
           s.coverTarget.x,
@@ -7305,9 +7554,10 @@ function updateEnemies(dt, time) {
           guided = true;
         }
       } else if (s.patrolPause > 0) {
-        // Short look-around stops make patrols read as deliberate, not idle.
+        // 短暫停下來張望，巡邏看起來是有意的，不是發呆。
         s.patrolPause -= dt;
       } else if (s.state === "SEARCH") {
+        // 走向搜索點。
         const step = steerEnemy(
           enemy,
           s.searchPoint.x,
@@ -7345,8 +7595,7 @@ function updateEnemies(dt, time) {
         }
       } else {
         s.patrolTimer -= dt;
-        // Spread waypoint choices across frames instead of making every bot
-        // sample the map on the same frame after spawning.
+        // 選路點分散到不同幀，不會產生後同一幀全部一起算。
         if ((!s.hasPatrolGoal || s.patrolTimer <= 0) && patrolPicks < 2) {
           pickPatrolPoint(enemy);
           patrolPicks++;
@@ -7372,6 +7621,7 @@ function updateEnemies(dt, time) {
       moveZ = 0;
     }
     const len = Math.hypot(moveX, moveZ);
+    // 轉向。
     let facing = enemy.rotation.y,
       turnRate = 5.5;
     if (canSee) facing = Math.atan2(toPlayer.x, toPlayer.z);
@@ -7388,6 +7638,7 @@ function updateEnemies(dt, time) {
       Math.min(1, dt * turnRate),
     );
     if (len > 0.02) moveBot(enemy, moveX / len, moveZ / len, dt, guided, pace);
+    // 走路動畫。
     const stride =
       Math.sin(time * 0.009 * s.speed + s.stridePhase) *
       0.24 *
@@ -7417,6 +7668,7 @@ function updateEnemies(dt, time) {
         nearestSearch = Math.min(nearestSearch, away);
       }
     }
+  // 畫面上的警戒提示。
   const mode = nearestThreat < 30 ? "contact" : searching ? "search" : "";
   if (mode !== threatMode) {
     threatMode = mode;
@@ -7467,6 +7719,7 @@ function updateThreatRing() {
   });
 }
 
+// 找一個可以躲玩家的掩體。
 function seekBotCover(enemy) {
   const s = enemy.userData.state;
   s.coverCooldown = 8 + Math.random() * 4;
@@ -7503,6 +7756,7 @@ function seekBotCover(enemy) {
   }
 }
 
+// 角度的平滑轉動，走最短方向。
 function lerpAngle(from, to, t) {
   let delta = ((to - from + Math.PI) % (Math.PI * 2)) - Math.PI;
   if (delta < -Math.PI) delta += Math.PI * 2;
@@ -7523,6 +7777,7 @@ function navComponentNear(x, z) {
   return spot ? componentAt(navGrid, spot.x, spot.z) : -1;
 }
 
+// 往目標走：直線走得通就直走，否則沿導航路徑。
 function steerEnemy(enemy, goalX, goalZ, dt, arriveRadius = 0.9) {
   const s = enemy.userData.state,
     px = enemy.position.x,
@@ -7534,9 +7789,8 @@ function steerEnemy(enemy, goalX, goalZ, dt, arriveRadius = 0.9) {
     s.navStuck = 0;
     return STEER_ARRIVED;
   }
-  if (!navGrid)
-    return { x: (goalX - px) / toGoal, z: (goalZ - pz) / toGoal };
-  // Progress watchdog: only counts while the bot is continuously steering.
+  if (!navGrid) return { x: (goalX - px) / toGoal, z: (goalZ - pz) / toGoal };
+  // 卡住檢查，只在持續移動時才計算。
   if (navClock - (s.lastSteerAt ?? -1) > 0.3) {
     s.navCheckTime = 0;
     s.navCheckX = px;
@@ -7584,7 +7838,8 @@ function steerEnemy(enemy, goalX, goalZ, dt, arriveRadius = 0.9) {
       goalMoved > Math.max(1.5, toGoal * 0.25) ||
       s.pathAge > 6;
   if (needPath) {
-    if (navClock < s.pathRetryAt) return s.path ? followPath(s, px, pz) : STEER_FAILED;
+    if (navClock < s.pathRetryAt)
+      return s.path ? followPath(s, px, pz) : STEER_FAILED;
     if (navPathBudget <= 0) return s.path ? followPath(s, px, pz) : STEER_WAIT;
     navPathBudget--;
     const path =
@@ -7603,13 +7858,13 @@ function steerEnemy(enemy, goalX, goalZ, dt, arriveRadius = 0.9) {
   return followPath(s, px, pz);
 }
 
+// 沿路徑點前進。
 function followPath(s, px, pz) {
   let waypoint = s.path[s.pathIndex];
   while (waypoint && Math.hypot(waypoint.x - px, waypoint.z - pz) < 0.55)
     waypoint = s.path[++s.pathIndex];
   if (!waypoint) {
-    // The goal itself may sit on top of cover; the end of the route is as
-    // close as a bot can get, so treat it as arrival rather than a failure.
+    // 目標可能在掩體上面；路徑終點已經是最近的位置，當作到達而不是失敗。
     s.path = null;
     return STEER_ARRIVED;
   }
@@ -7619,6 +7874,7 @@ function followPath(s, px, pz) {
   return { x: dx / length, z: dz / length };
 }
 
+// 卡住時換個位置或方向。
 function unstickEnemy(enemy) {
   const s = enemy.userData.state;
   s.path = null;
@@ -7632,7 +7888,7 @@ function unstickEnemy(enemy) {
     z = enemy.position.z;
   if (isWalkable(navGrid, x, z, large) && !isBotWorldBlocked(x, z, enemy))
     return;
-  // Wedged against geometry: slide to the closest clear cell centre.
+  // 卡進障礙：滑到最近的空格中心。
   const spot =
     nearestWalkable(navGrid, x, z, 4, large) ||
     nearestWalkable(navGrid, x, z, 4, false);
@@ -7642,6 +7898,7 @@ function unstickEnemy(enemy) {
   }
 }
 
+// 去某個位置搜索。
 function beginSearch(enemy, x, z, duration = 12) {
   const s = enemy.userData.state;
   if (!s.alive || s.state === "ENGAGE") return;
@@ -7723,6 +7980,7 @@ function dispatchHunters() {
     if (s.state === "PATROL") idle.push(enemy);
   }
   if (!idle.length) return;
+  // 與玩家的距離。
   const distanceTo = (enemy) =>
     Math.hypot(
       enemy.position.x - yaw.position.x,
@@ -7752,6 +8010,7 @@ function dispatchHunters() {
   }
 }
 
+// 選下一個巡邏點，避開最近去過與同伴附近的地方。
 function pickPatrolPoint(enemy) {
   const s = enemy.userData.state;
   s.hasPatrolGoal = false;
@@ -7819,7 +8078,7 @@ function pickPatrolPoint(enemy) {
     s.patrolPause = 0.8;
     return;
   }
-  // Fallback without a navigation grid (unit tests that stub the map).
+  // 沒有導航格時的備援（單元測試會替換地圖）。
   for (let attempt = 0; attempt < 3; attempt++) {
     const angle = Math.random() * Math.PI * 2,
       distance = 4 + Math.random() * 12;
@@ -7868,8 +8127,7 @@ function moveBot(enemy, dx, dz, dt, guided = false, pace = 1) {
     s.progressZ = enemy.position.z;
   }
   if (s.progressTime >= 1.8) {
-    // A series of tiny moves into a corner can still be a deadlock; alternate
-    // the preferred side rather than repeating the same back-and-forth route.
+    // 一直小步往角落走也算卡住；換另一側，不要重複同一條來回路線。
     if (
       Math.hypot(
         enemy.position.x - s.progressX,
@@ -7890,10 +8148,10 @@ function moveBot(enemy, dx, dz, dt, guided = false, pace = 1) {
     let moved = false;
     const side = s.avoidSide || 1,
       avoiding = s.avoidTime > 0;
-    // Keep a world-space tangent while rounding a wall. Recomputing it from
-    // the target every frame pulls the bot back into the same corner.
+    // 繞牆時保持場景座標的切線方向；每幀都從目標重算，會被拉回同一個角落。
     const bx = avoiding ? s.avoidX : dx,
       bz = avoiding ? s.avoidZ : dz;
+    // 依序嘗試的偏轉角度。
     const options = [
       0,
       side * 0.62,
@@ -7948,6 +8206,7 @@ function moveBot(enemy, dx, dz, dt, guided = false, pace = 1) {
   }
 }
 
+// 敵人會不會撞到場景。
 function isBotWorldBlocked(x, z, self) {
   const radius = self?.userData?.state?.radius ?? 0.34;
   if (
@@ -7962,12 +8221,13 @@ function isBotWorldBlocked(x, z, self) {
   return false;
 }
 
+// 敵人會不會撞到場景、同伴或玩家。
 function isBotBlocked(x, z, self) {
   const radius = self?.userData?.state?.radius ?? 0.34;
   if (isBotWorldBlocked(x, z, self)) return true;
-  // Bodies that already overlap may always move apart; otherwise two bots
-  // pushed together (spawns, knockback) could never take a step again.
+  // 已經重疊的身體一律可以分開；不然兩個被擠在一起的敵人永遠動不了。
   const from = self?.position;
+  // 兩個身體太近，而且還在靠近。
   const blocks = (ox, oz, minimum) => {
     const next = Math.hypot(ox - x, oz - z);
     if (next >= minimum) return false;
@@ -7989,6 +8249,7 @@ function isBotBlocked(x, z, self) {
   return false;
 }
 
+// 從 from 看不看得到 to。
 function hasLineOfSight(from, to) {
   const origin = new THREE.Vector3(from.x, 1.5, from.z);
   const target = new THREE.Vector3(to.x, to.y, to.z);
@@ -7999,6 +8260,7 @@ function hasLineOfSight(from, to) {
   return raycaster.intersectObjects(worldRayTargets(), false).length === 0;
 }
 
+// 敵人開槍：準度受難度、距離與移動影響。
 function enemyShoot(enemy, distance) {
   const difficulty = currentDifficulty(),
     tuning = getEnemyTuning();
@@ -8032,8 +8294,8 @@ function enemyShoot(enemy, distance) {
       }
   let obstacle, direction, along, miss;
   try {
-    // Cached perception can remain clear for a few frames while the actor moves
-    // behind cover. A protruding muzzle must not start its shot beyond the wall.
+    // 視線結果會快取幾幀，敵人可能已經走到掩體後面；突出牆外的槍口不可以從牆的
+    // 另一側開始射擊。
     const eye = enemy.localToWorld(new THREE.Vector3(0, 1.5, 0)),
       toMuzzle = origin.clone().sub(eye),
       length = toMuzzle.length();
@@ -8090,6 +8352,7 @@ function enemyShoot(enemy, distance) {
   playDistantShot(distance, enemy.position);
 }
 
+// 玩家受傷：先扣護甲，再扣血，顯示方向。
 function takeDamage(amount, source) {
   if (gameState !== "playing") return;
   if (performance.now() < damageShieldUntil)
@@ -8100,8 +8363,9 @@ function takeDamage(amount, source) {
     armor -= absorbed;
     remaining -= absorbed;
   }
-  // Armour absorption counts as damage taken; overkill past zero does not.
-  damageTaken += Math.min(health, Math.max(0, remaining)) + (amount - remaining);
+  // 護甲吸收也算受到的傷害，超過剩餘血量的部分不算。
+  damageTaken +=
+    Math.min(health, Math.max(0, remaining)) + (amount - remaining);
   health = Math.max(0, health - remaining);
   damageAngle =
     Math.atan2(source.x - yaw.position.x, source.z - yaw.position.z) -
@@ -8123,6 +8387,9 @@ function takeDamage(amount, source) {
   if (health <= 0) endGame(false);
 }
 
+// ---------- 特效 ----------
+
+// 彈道線。
 function createTracer(start, end, color) {
   const direction = end.clone().sub(start);
   const length = direction.length();
@@ -8145,9 +8412,11 @@ function createTracer(start, end, color) {
   trimTransientList(tracers, [64, 48, 32][qualityIndex]);
 }
 
+// 彈著點：彈孔與火花。
 function createImpact(point, normal, color = 0xffd067) {
   if (!point) return;
   if (normal) {
+    // 彈孔。
     const mark = new THREE.Mesh(
       sharedEffectGeometry(
         "impact-mark",
@@ -8173,6 +8442,7 @@ function createImpact(point, normal, color = 0xffd067) {
     bulletDecals.push(mark);
   }
   for (let i = 0; i < 5; i++) {
+    // 一顆火花。
     const mesh = new THREE.Mesh(
       sharedEffectGeometry(
         "spark",
@@ -8196,6 +8466,7 @@ function createImpact(point, normal, color = 0xffd067) {
   trimTransientList(particles, [320, 220, 128][qualityIndex]);
 }
 
+// 手榴彈的飛行與引爆。
 function updateGrenades(dt) {
   for (let i = grenades.length - 1; i >= 0; i--) {
     const grenade = grenades[i],
@@ -8240,6 +8511,7 @@ function updateGrenades(dt) {
   }
 }
 
+// 所有特效的推進與回收。
 function updateEffects(dt) {
   trimTransientList(tracers, [64, 48, 32][qualityIndex]);
   trimTransientList(particles, [320, 220, 128][qualityIndex]);
@@ -8297,6 +8569,7 @@ function updateEffects(dt) {
   }
 }
 
+// 移除一個物件並釋放資源。
 function disposeMesh(mesh) {
   if (!mesh) return;
   mesh.removeFromParent();
@@ -8313,6 +8586,7 @@ function disposeMesh(mesh) {
   materials.forEach((material) => material.dispose());
 }
 
+// 準心的命中標記。
 function showHitmarker(kill) {
   ui.hitmarker.classList.remove("show", "kill");
   void ui.hitmarker.offsetWidth;
@@ -8320,6 +8594,9 @@ function showHitmarker(kill) {
   ui.hitmarker.classList.add("show");
 }
 
+// ---------- 介面 ----------
+
+// 更新生命、彈藥、敵人數量等資訊。
 function updateHUD() {
   const healthRatio = Math.max(0, health / maxHealth),
     armorRatio = maxArmor ? Math.max(0, armor / maxArmor) : 0;
@@ -8374,6 +8651,7 @@ function updateHUD() {
     : ammo === 0 && reserve === 0
       ? "備彈用盡 · 尋找彈藥箱"
       : "按 R 重新裝填";
+  // 彈藥格只在第一次建立。
   if (!ui.ammoTrack.children.length)
     ui.ammoTrack.replaceChildren(
       ...Array.from({ length: 30 }, () => document.createElement("i")),
@@ -8389,11 +8667,13 @@ function updateHUD() {
   updateBossHUD();
 }
 
+// 秒數換成 分:秒。
 function formatClock(seconds) {
   const safe = Math.max(0, Math.ceil(seconds));
   return `${String(Math.floor(safe / 60)).padStart(2, "0")}:${String(safe % 60).padStart(2, "0")}`;
 }
 
+// 目前位置的區域名稱。
 function getZoneName(x, z) {
   const inside = (x1, x2, z1, z2) => x >= x1 && x <= x2 && z >= z1 && z <= z2;
   if (builtMap === 1) {
@@ -8428,6 +8708,7 @@ function getZoneName(x, z) {
   return "TRANSIT GRID // 港區外環";
 }
 
+// 任務時間、階段、技能與區域提示。
 function updateMissionStatus(time, force = false) {
   if (!force && time - lastMissionPaint < 160) return;
   lastMissionPaint = time;
@@ -8455,7 +8736,7 @@ function updateMissionStatus(time, force = false) {
   const mode = currentMode();
   const zone = getZoneName(yaw.position.x, yaw.position.z);
   if (zone !== lastZoneName) {
-    // Entering a named sector briefly announces it under the compass.
+    // 進入有名字的區域時，在羅盤下方短暫顯示。
     if (lastZoneName && ui.zoneToast) {
       const [code, label = ""] = zone.split(" // ");
       ui.zoneToast.querySelector("b").textContent = code;
@@ -8472,6 +8753,7 @@ function updateMissionStatus(time, force = false) {
     lastZoneName = zone;
   }
   ui.zoneName.textContent = zone;
+  // 限時任務。
   if (mode.timeLimit) {
     const seconds = (matchDeadline - time) / 1000;
     ui.missionTimer.textContent = formatClock(seconds);
@@ -8505,6 +8787,7 @@ function updateMissionStatus(time, force = false) {
   }
 }
 
+// 羅盤。
 function updateCompass() {
   const degrees =
     ((THREE.MathUtils.radToDeg(-yaw.rotation.y) % 360) + 360) % 360;
@@ -8512,8 +8795,7 @@ function updateCompass() {
   ui.heading.textContent = `${dirs[Math.round(degrees / 45) % 8]} ${Math.round(degrees).toString().padStart(3, "0")}°`;
 }
 
-// Draw the footprint the player can actually collide with, not the broad-phase
-// bounding rectangle (which fills empty corners around angled and round cover).
+// 畫玩家真正會碰到的形狀，不是外接方框（方框會把斜的與圓的掩體的空角落也填滿）。
 function drawMinimapCollider(ctx, box, scale, ox, oy) {
   if (box.max.y <= 0.22 || box.min.y >= 1.85) return;
   const w = (box.max.x - box.min.x) * scale,
@@ -8548,6 +8830,7 @@ function drawMinimapCollider(ctx, box, scale, ox, oy) {
   } else ctx.fillRect(ox + box.min.x * scale, oy + box.min.z * scale, w, h);
 }
 
+// 小地圖：地形、補給、敵人、手榴彈與首領攻擊。
 function drawMinimap(time = 0) {
   if (time - lastMinimapPaint < 80) return;
   lastMinimapPaint = time;
@@ -8583,10 +8866,9 @@ function drawMinimap(time = 0) {
   ctx.fillStyle = "rgba(150,165,170,.35)";
   for (const box of collisionBoxes)
     drawMinimapCollider(ctx, box, scale, ox, oy);
-  // Symbol sizes are in on-screen pixels: k converts them to canvas pixels,
-  // so markers stay readable on the small touch-layout map too.
+  // 符號大小以螢幕像素為準，k 換算成畫布像素，觸控版的小地圖也看得清楚。
   const k = c.width / Math.max(48, c.clientWidth || c.width);
-  // Player view cone under everything else.
+  // 玩家的視野扇形畫在最下面。
   const px = ox + yaw.position.x * scale,
     py = oy + yaw.position.z * scale,
     heading = -yaw.rotation.y - Math.PI / 2,
@@ -8603,13 +8885,13 @@ function drawMinimap(time = 0) {
     if (!pickup.active) continue;
     const x = ox + pickup.root.position.x * scale,
       y = oy + pickup.root.position.z * scale;
-    // One neutral style for every supply so enemies stay the only red marks.
+    // 補給用同一種中性樣式，紅點就只有敵人。
     ctx.fillStyle = "rgba(0,0,0,.6)";
     ctx.fillRect(x - 2.3 * k, y - 2.3 * k, 4.6 * k, 4.6 * k);
     ctx.fillStyle = "#cfe3d6";
     ctx.fillRect(x - 1.5 * k, y - 1.5 * k, 3 * k, 3 * k);
   }
-  // Enemies: one plain red dot for everyone; only the boss stands out.
+  // 敵人都是一樣的紅點，只有首領特別標示。
   let bossAlive = false;
   for (const enemy of enemies) {
     const state = enemy.userData.state;
@@ -8633,6 +8915,7 @@ function drawMinimap(time = 0) {
     ctx.fillStyle = boss ? RANK_COLORS.boss : RANK_COLORS.standard;
     ctx.fill();
   }
+  // 手榴彈。
   for (const grenade of grenades) {
     ctx.strokeStyle = "#ffb44f";
     ctx.beginPath();
@@ -8645,6 +8928,7 @@ function drawMinimap(time = 0) {
     );
     ctx.stroke();
   }
+  // 首領攻擊範圍。
   for (const attack of bossAttacks) {
     if (attack.detonated) continue;
     for (const marker of attack.markers || [attack]) {
@@ -8690,7 +8974,7 @@ function drawMinimap(time = 0) {
   ctx.stroke();
   ctx.fill();
   ctx.restore();
-  // Legend strip along the top edge (desktop-size maps only).
+  // 上方的圖例，只在電腦版大小的地圖顯示。
   if (c.clientWidth < 140) {
     ctx.strokeStyle = "rgba(255,255,255,.25)";
     ctx.strokeRect(0.5, 0.5, c.width - 1, c.height - 1);
@@ -8729,6 +9013,7 @@ function drawMinimap(time = 0) {
   ctx.strokeRect(0.5, 0.5, c.width - 1, c.height - 1);
 }
 
+// 左下角的訊息。
 function feed(message) {
   const span = document.createElement("span");
   span.textContent = message;
@@ -8739,6 +9024,7 @@ function feed(message) {
   }, 2500);
 }
 
+// 結束一局：統計並顯示結果。
 function endGame(win) {
   if (gameState === "ended") return;
   gameState = "ended";
@@ -8815,6 +9101,9 @@ function missionGrade(win, elapsed) {
   return { letter, tip };
 }
 
+// ---------- 音效 ----------
+
+// 建立音訊；必須在玩家操作之後。
 function initAudio() {
   if (audioContext?.state === "closed") return false;
   if (!audioContext) {
@@ -8857,6 +9146,7 @@ function initAudio() {
   return true;
 }
 
+// 讀取聲道音量。
 function readMixSetting(key, fallback) {
   try {
     const raw = sessionStorage.getItem(key);
@@ -8870,15 +9160,18 @@ function readMixSetting(key, fallback) {
   }
 }
 
+// 確保音訊用的數值合法。
 function safeAudioNumber(value, fallback, min, max) {
   return Number.isFinite(Number(value))
     ? Math.max(min, Math.min(max, Number(value)))
     : fallback;
 }
 
+// 把音量套用到各聲道，慢慢變化避免爆音。
 function applyAudioMix() {
   masterVolume = safeAudioNumber(masterVolume, 0.72, 0, 1);
   const now = audioContext?.currentTime || 0;
+  // 設定一個音量參數。
   const setGain = (parameter, value) => {
     if (!parameter) return;
     if (parameter.setTargetAtTime) parameter.setTargetAtTime(value, now, 0.035);
@@ -8896,6 +9189,7 @@ function applyAudioMix() {
   }
 }
 
+// 恢復音訊。
 function resumeAudio() {
   if (!audioContext || audioContext.state === "closed") return false;
   try {
@@ -8906,10 +9200,12 @@ function resumeAudio() {
   }
 }
 
+// 聲道的輸出位置。
 function audioDestination(channel) {
   return audioBuses[channel] || audioMaster;
 }
 
+// 登記一個正在播放的聲音；太多時停掉最不重要的。
 function trackAudioVoice(source, nodes, priority = 1) {
   if (audioVoices.size >= AUDIO_VOICE_LIMIT) {
     let victim = null;
@@ -8926,6 +9222,7 @@ function trackAudioVoice(source, nodes, priority = 1) {
     victim[1].release(true);
   }
   let released = false;
+  // 播完或被停掉時釋放。
   const release = (stop = false) => {
     if (released) return;
     released = true;
@@ -8947,6 +9244,7 @@ function trackAudioVoice(source, nodes, priority = 1) {
   return true;
 }
 
+// 載入音效檔，失敗的下次再試。
 async function loadAudioAssets() {
   if (!audioContext || audioContext.state === "closed") return;
   if (audioLoadPromise) return audioLoadPromise;
@@ -8963,8 +9261,7 @@ async function loadAudioAssets() {
           await response.arrayBuffer(),
         );
         soundBuffers[name] = buffer;
-        // Gentle level matching avoids a single unusually loud source dominating
-        // the mix. Never boost a quiet sample by more than 25 percent.
+        // 音量大致拉平，避免單一音源太大聲；太小聲的最多放大 25%。
         const samples = buffer.getChannelData(0);
         let sum = 0,
           peak = 0,
@@ -8994,6 +9291,7 @@ async function loadAudioAssets() {
   }
 }
 
+// 換彈的各段聲音，用雜訊合成。
 function playReloadSound(stage) {
   if (
     !audioContext ||
@@ -9001,6 +9299,7 @@ function playReloadSound(stage) {
     mixSettings.effects === 0
   )
     return false;
+  // 各段的長度、頻率與音量。
   const settings = {
     release: {
       duration: 0.075,
@@ -9028,6 +9327,7 @@ function playReloadSound(stage) {
     },
   }[stage];
   if (!settings) return false;
+  // 同一段聲音只合成一次。
   if (!mechanicalBuffers[stage]) {
     const count = Math.ceil(audioContext.sampleRate * settings.duration),
       buffer = audioContext.createBuffer(1, count, audioContext.sampleRate),
@@ -9065,6 +9365,7 @@ function playReloadSound(stage) {
   return true;
 }
 
+// 播放一個音效檔。
 function playSample(
   name,
   volume = 0.1,
@@ -9106,9 +9407,10 @@ function playSample(
   source.start(audioContext.currentTime + safeAudioNumber(delay, 0, 0, 0.5));
   return true;
 }
+// 依方向決定左右聲道。
 function spatialPan(position) {
   if (!position || !yaw) return 0;
-  // Camera forward is -Z. A source on the listener's world-right must pan right.
+  // 鏡頭前方是 -Z；在右邊的聲音必須偏右。
   const dx = position.x - yaw.position.x,
     dz = position.z - yaw.position.z,
     distance = Math.hypot(dx, dz);
@@ -9121,6 +9423,7 @@ function spatialPan(position) {
       )
     : 0;
 }
+// 播放一個合成音。
 function playTone(
   freq,
   duration,
@@ -9174,6 +9477,7 @@ function playTone(
   return true;
 }
 
+// 槍聲。
 function playGunshot() {
   if (
     !audioContext ||
@@ -9181,6 +9485,7 @@ function playGunshot() {
     mixSettings.effects === 0
   )
     return;
+  // 優先用音效檔。
   const sampled = playSample(
     Math.random() > 0.5 ? "rifle0" : "rifle1",
     0.27,
@@ -9228,6 +9533,7 @@ function playGunshot() {
   if (trackAudioVoice(source, [source, filter, gain], 3)) source.start();
   playTone(78, 0.065, "sawtooth", sampled ? 0.022 : 0.035, 0, "effects");
 }
+// 爆炸聲，依距離變小聲。
 function playExplosionSound(distance, position) {
   if (!audioContext) return;
   distance = safeAudioNumber(distance, 75, 0, 300);
@@ -9258,6 +9564,7 @@ function playExplosionSound(distance, position) {
     playTone(42, 0.4, "sawtooth", 0.035 * attenuation, pan, "effects");
   }
 }
+// 敵人的槍聲。
 function playDistantShot(distance, position) {
   if (!audioContext) return;
   const now = audioContext.currentTime;
@@ -9267,6 +9574,7 @@ function playDistantShot(distance, position) {
   if (distance > 90) return;
   const pan = spatialPan(position),
     attenuation = 1 / (1 + Math.pow(distance / 15, 1.7));
+  // 優先用音效檔。
   const sampled = playSample(
     Math.random() > 0.5 ? "rifle0" : "rifle1",
     0.105 * attenuation,
@@ -9286,6 +9594,7 @@ function playDistantShot(distance, position) {
       "effects",
     );
 }
+// 環境風聲，循環播放。
 function startAmbientSound() {
   if (ambientStarted || !audioContext) return;
   ambientStarted = true;
@@ -9297,7 +9606,7 @@ function startAmbientSound() {
     smooth = smooth * 0.985 + (Math.random() * 2 - 1) * 0.015;
     data[i] = smooth;
   }
-  // Match both ends at zero over a short fade, avoiding a click at the loop seam.
+  // 頭尾都淡到零，循環接點才不會有爆音。
   const fade = Math.min(1024, Math.floor(length / 10));
   for (let i = 0; i < fade; i++) {
     const t = i / fade;
@@ -9314,6 +9623,7 @@ function startAmbientSound() {
   filter.Q.value = 0.55;
   gain.gain.value = 0.04;
   source.connect(filter).connect(gain).connect(audioDestination("ambience"));
+  // 停止時釋放。
   source.onended = () => {
     source.disconnect();
     filter.disconnect();
@@ -9323,6 +9633,9 @@ function startAmbientSound() {
   source.start();
 }
 
+// ---------- 主迴圈 ----------
+
+// 視窗大小改變。
 function onResize() {
   const view = $("#game"),
     width = view.clientWidth || innerWidth,
@@ -9332,6 +9645,7 @@ function onResize() {
   renderer.setSize(width, height, false);
 }
 
+// 畫一幀：先畫場景，再單獨畫手上的槍；陰影更新次數依畫質。
 function renderFrame() {
   const background = scene.background,
     shadowUpdate = renderer.shadowMap.autoUpdate;
@@ -9347,8 +9661,8 @@ function renderFrame() {
     camera.layers.set(0);
     renderer.clear();
     renderer.render(scene, camera);
-    // A depth-isolated view model prevents the foreground rifle from intersecting world surfaces.
-    // Wall clearance retracts the rifle; actual scenery receives obstructed shots.
+    // 手上的槍用獨立深度繪製，不會插進場景；靠牆時收槍，真正的遮擋由子彈判定處
+    // 理。
     scene.background = null;
     renderer.clearDepth();
     camera.layers.set(1);
@@ -9361,6 +9675,7 @@ function renderFrame() {
   }
 }
 
+// 每一幀：固定步長推進規則，再更新介面與畫面。
 function animate(time = 0) {
   requestAnimationFrame(animate);
   const elapsed = Math.max(0, clock.getDelta());
@@ -9368,15 +9683,14 @@ function animate(time = 0) {
     gameState === "playing" && !portalPaused && !document.hidden,
   );
   if (portalPaused || document.hidden) return;
-  // A long suspended frame must not teleport the player or consume a contract.
-  // The clock is still sampled on paused frames, so resuming has no catch-up loop.
-  // Ordinary hitches (shader warm-up, a busy tab) are absorbed by clamping the
-  // step instead of interrupting the match; only real suspensions pause it.
+  // 長時間停住的一幀不可以讓玩家瞬移或吃掉任務時間。暫停時仍會讀時鐘，恢復後不
+  // 會補跑。一般的小卡頓（編譯材質、分頁忙碌）只限制單步長度，不中斷遊戲；真正
+  // 的停頓才暫停。
   if (gameState === "playing" && elapsed > 2.5) {
     pauseGame("偵測到畫面長時間停頓，已安全暫停。可調低畫質後繼續任務。");
     pauseStarted -= elapsed * 1000;
   } else if (gameState === "playing" && elapsed > 0.25) {
-    // Keep the mission clock fair: time lost to a hitch is not charged.
+    // 任務計時保持公平：卡頓損失的時間不算。
     if (matchDeadline) matchDeadline += (elapsed - 0.1) * 1000;
   }
   const dt = Math.min(elapsed, 0.1);

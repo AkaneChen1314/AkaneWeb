@@ -16,6 +16,7 @@
  */
 
 class WeaponState {
+  // def 是武器資料，owner 是持有者；每個人各自記錄自己的彈藥。
   constructor(def, owner) {
     this.def = def; // 武器資料（WEAPONS 裡的那一筆）
     this.owner = owner;
@@ -30,7 +31,9 @@ class WeaponState {
 
   // 彈匣容量（生存模式的「擴充彈匣」會放大它）
   get magSize() {
-    return Math.round(this.def.mag * (this.owner.mods ? this.owner.mods.mag : 1));
+    return Math.round(
+      this.def.mag * (this.owner.mods ? this.owner.mods.mag : 1),
+    );
   }
 
   get reloading() {
@@ -58,6 +61,7 @@ const Combat = {
   _origin: new THREE.Vector3(),
   _aim: new THREE.Vector3(),
 
+  // 換地圖或離開對戰時，清除所有飛行物、手榴彈、油桶與補給。
   reset() {
     for (const p of this.projectiles) this._removeProjectile(p);
     for (const g of this.grenades) Scene3D.scene.remove(g.mesh);
@@ -83,6 +87,7 @@ const Combat = {
     this.timers.push({ t: seconds, fn });
   },
 
+  // 每一格畫面更新延遲事件、飛行物、手榴彈與補給。
   update(dt) {
     for (let i = this.timers.length - 1; i >= 0; i--) {
       const timer = this.timers[i];
@@ -132,9 +137,11 @@ const Combat = {
     }
   },
 
+  // 開始換彈；彈匣已滿或沒有備彈時不動作。
   startReload(actor, ws = actor.weapon) {
     if (ws.reloading || ws.ammo >= ws.magSize || ws.reserve <= 0) return false;
-    ws.reloadTotal = ws.reloadLeft = ws.def.reload / (actor.mods ? actor.mods.reload : 1);
+    ws.reloadTotal = ws.reloadLeft =
+      ws.def.reload / (actor.mods ? actor.mods.reload : 1);
     ws.reloadStage = 0;
     return true;
   },
@@ -169,10 +176,23 @@ const Combat = {
 
     // 槍口位置：曳光彈和火光從這裡出現（命中判定仍然從眼睛算）
     const muzzle = actor.muzzlePos(TMP.v4);
-    const mx = muzzle.x, my = muzzle.y, mz = muzzle.z;
-    if (!actor.isPlayer) FX.muzzle(mx, my, mz, def.tracer, def.id === "shotgun" || def.id === "sniper");
-    if (def.kind === "hitscan" && Math.random() < 0.6) FX.muzzleSmoke(mx, my, mz); // 槍口冒出的白煙
-    Sound.play(def.sound, { pos: actor.isPlayer ? null : actor.pos, vol: actor.isPlayer ? 0.9 : 1 });
+    const mx = muzzle.x,
+      my = muzzle.y,
+      mz = muzzle.z;
+    if (!actor.isPlayer)
+      FX.muzzle(
+        mx,
+        my,
+        mz,
+        def.tracer,
+        def.id === "shotgun" || def.id === "sniper",
+      );
+    if (def.kind === "hitscan" && Math.random() < 0.6)
+      FX.muzzleSmoke(mx, my, mz); // 槍口冒出的白煙
+    Sound.play(def.sound, {
+      pos: actor.isPlayer ? null : actor.pos,
+      vol: actor.isPlayer ? 0.9 : 1,
+    });
     if (actor.rig) actor.rig.recoil = 1;
     actor.lastShotTime = Game.time;
 
@@ -199,7 +219,11 @@ const Combat = {
     if (right.lengthSq() < 1e-6) right.set(1, 0, 0);
     right.normalize();
     const up = TMP.v2.crossVectors(right, dir);
-    return out.copy(dir).addScaledVector(right, Math.cos(angle) * radius).addScaledVector(up, Math.sin(angle) * radius).normalize();
+    return out
+      .copy(dir)
+      .addScaledVector(right, Math.cos(angle) * radius)
+      .addScaledVector(up, Math.sin(angle) * radius)
+      .normalize();
   },
 
   // 距離衰減：falloff = [開始衰減, 衰減結束, 最低比例]
@@ -213,20 +237,55 @@ const Combat = {
   // 立即命中的一發子彈；打到敵人回傳 true
   _hitscan(actor, origin, d, def, mx, my, mz) {
     const hit = this._hit;
-    const wallDist = World.raycast(origin.x, origin.y, origin.z, d.x, d.y, d.z, 320, hit);
-    const target = this.rayActors(origin.x, origin.y, origin.z, d.x, d.y, d.z, Math.min(wallDist, 320), actor);
+    const wallDist = World.raycast(
+      origin.x,
+      origin.y,
+      origin.z,
+      d.x,
+      d.y,
+      d.z,
+      320,
+      hit,
+    );
+    const target = this.rayActors(
+      origin.x,
+      origin.y,
+      origin.z,
+      d.x,
+      d.y,
+      d.z,
+      Math.min(wallDist, 320),
+      actor,
+    );
 
     let ex, ey, ez; // 子彈終點
     let result = false;
+    // 打中人：計算距離衰減與爆頭倍率。
     if (target) {
       ex = origin.x + d.x * target.dist;
       ey = origin.y + d.y * target.dist;
       ez = origin.z + d.z * target.dist;
       let dmg = def.damage * this._falloff(def, target.dist);
       if (target.head) dmg *= def.headMult * (actor.mods ? actor.mods.head : 1);
-      this.damage(target.actor, dmg, actor, { head: target.head, weapon: def.id, x: ex, y: ey, z: ez });
+      this.damage(target.actor, dmg, actor, {
+        head: target.head,
+        weapon: def.id,
+        x: ex,
+        y: ey,
+        z: ez,
+      });
       if (actor.mods && actor.mods.explosive > 0)
-        this.explode(ex, ey, ez, 2.2, actor.mods.explosive, actor, 0xffc266, def.id, true);
+        this.explode(
+          ex,
+          ey,
+          ez,
+          2.2,
+          actor.mods.explosive,
+          actor,
+          0xffc266,
+          def.id,
+          true,
+        );
       result = true;
     } else if (wallDist < Infinity) {
       ex = hit.x;
@@ -234,23 +293,56 @@ const Combat = {
       ez = hit.z;
       FX.impact(hit, def.tracer);
       if (Math.random() < 0.35) Sound.play("impact", { pos: hit });
-      if (hit.box && hit.box.tag && hit.box.tag.barrel) this.damageBarrel(hit.box.tag.barrel, def.damage, actor);
+      if (hit.box && hit.box.tag && hit.box.tag.barrel)
+        this.damageBarrel(hit.box.tag.barrel, def.damage, actor);
       if (actor.mods && actor.mods.explosive > 0)
-        this.explode(ex, ey, ez, 2.2, actor.mods.explosive, actor, 0xffc266, def.id, true);
+        this.explode(
+          ex,
+          ey,
+          ez,
+          2.2,
+          actor.mods.explosive,
+          actor,
+          0xffc266,
+          def.id,
+          true,
+        );
     } else {
       ex = origin.x + d.x * 150;
       ey = origin.y + d.y * 150;
       ez = origin.z + d.z * 150;
     }
-    FX.tracer(mx, my, mz, ex, ey, ez, def.tracer, def.id === "sniper" ? 0.05 : 0.022);
+    FX.tracer(
+      mx,
+      my,
+      mz,
+      ex,
+      ey,
+      ez,
+      def.tracer,
+      def.id === "sniper" ? 0.05 : 0.022,
+    );
 
     // 敵人的子彈從玩家耳邊飛過時播放呼嘯聲
     const player = Game.player;
-    if (!actor.isPlayer && player && player.alive && !result && Math.random() < 0.5) {
-      const px = player.pos.x - origin.x, py = player.pos.y + 1.5 - origin.y, pz = player.pos.z - origin.z;
+    // 子彈從玩家身邊飛過時，播放呼嘯聲。
+    if (
+      !actor.isPlayer &&
+      player &&
+      player.alive &&
+      !result &&
+      Math.random() < 0.5
+    ) {
+      const px = player.pos.x - origin.x,
+        py = player.pos.y + 1.5 - origin.y,
+        pz = player.pos.z - origin.z;
       const along = px * d.x + py * d.y + pz * d.z; // 玩家在彈道上的投影距離
       if (along > 2 && along < Math.min(wallDist, 320)) {
-        const miss = Math.hypot(px - d.x * along, py - d.y * along, pz - d.z * along);
+        const miss = Math.hypot(
+          px - d.x * along,
+          py - d.y * along,
+          pz - d.z * along,
+        );
         if (miss < 1.6) Sound.play("whiz", { vol: 0.7 });
       }
     }
@@ -263,14 +355,19 @@ const Combat = {
   rayActors(ox, oy, oz, dx, dy, dz, maxDist, shooter) {
     let best = null;
     let bestDist = maxDist;
+    // 逐一檢查每個角色的頭部與身體。
     for (const a of this.actors) {
-      if (!a.alive || a === shooter || (shooter && a.team === shooter.team)) continue;
+      if (!a.alive || a === shooter || (shooter && a.team === shooter.team))
+        continue;
       const h = a.hit;
-      const cx = a.pos.x, cz = a.pos.z;
+      const cx = a.pos.x,
+        cz = a.pos.z;
       const base = a.pos.y + h.base;
 
       // 粗略篩選：離彈道太遠的直接跳過
-      const tx = cx - ox, ty = base + h.h * 0.5 - oy, tz = cz - oz;
+      const tx = cx - ox,
+        ty = base + h.h * 0.5 - oy,
+        tz = cz - oz;
       const along = tx * dx + ty * dy + tz * dz;
       if (along < -2 || along > bestDist + 3) continue;
       const off2 = tx * tx + ty * ty + tz * tz - along * along;
@@ -279,10 +376,13 @@ const Combat = {
 
       // 頭：射線與球的交點
       let tHead = Infinity;
+      // 頭部：用球體判斷。
       if (h.headR > 0) {
         // headFwd：弱點往角色正面突出的距離（九頭蛇核心的巨眼）
         const fwd = h.headFwd || 0;
-        const hx = cx - Math.sin(a.yaw) * fwd - ox, hy = base + h.headY - oy, hz = cz - Math.cos(a.yaw) * fwd - oz;
+        const hx = cx - Math.sin(a.yaw) * fwd - ox,
+          hy = base + h.headY - oy,
+          hz = cz - Math.cos(a.yaw) * fwd - oz;
         const b = hx * dx + hy * dy + hz * dz;
         const c = hx * hx + hy * hy + hz * hz - h.headR * h.headR;
         const disc = b * b - c;
@@ -293,10 +393,12 @@ const Combat = {
       }
 
       // 身體：射線與直立圓柱的交點（先解俯視圖的圓，再檢查高度）
+      // 身體：用直立的圓柱判斷。
       let tBody = Infinity;
       const A = dx * dx + dz * dz;
       if (A > 1e-8) {
-        const fx = ox - cx, fz = oz - cz;
+        const fx = ox - cx,
+          fz = oz - cz;
         const B = fx * dx + fz * dz;
         const C = fx * fx + fz * fz - h.r * h.r;
         const disc = B * B - A * C;
@@ -325,8 +427,10 @@ const Combat = {
     // 難度：電腦打玩家的傷害倍率；電腦互打時降低一些，讓戰線不會瞬間崩潰
     if (attacker && !attacker.isPlayer) {
       amount *= target.isPlayer
-        ? Game.difficulty.botDamage * (attacker.damageMult || 1) * (Game.rules.enemyDamage ?? 1)
-          * (attacker.isBoss ? 1 : Game.rules.minionDamage ?? 1) // 首領戰：小兵的傷害另外打折
+        ? Game.difficulty.botDamage *
+          (attacker.damageMult || 1) *
+          (Game.rules.enemyDamage ?? 1) *
+          (attacker.isBoss ? 1 : (Game.rules.minionDamage ?? 1)) // 首領戰：小兵的傷害另外打折
         : 0.34;
     }
     if (attacker && attacker.isPlayer) {
@@ -351,7 +455,13 @@ const Combat = {
 
     // 命中特效（打在護甲上是藍白色火花）
     if (info.x !== undefined) {
-      FX.hitFlesh(info.x, info.y, info.z, target.armor > 0 ? 0x9fd8ff : 0xff6a5a, info.head);
+      FX.hitFlesh(
+        info.x,
+        info.y,
+        info.z,
+        target.armor > 0 ? 0x9fd8ff : 0xff6a5a,
+        info.head,
+      );
     }
     if (target.rig) target.rig.flashT = 1;
 
@@ -363,7 +473,7 @@ const Combat = {
         (info.y ?? target.pos.y + 1.5) + 0.2,
         info.z ?? target.pos.z,
         dealt,
-        info.head
+        info.head,
       );
       Sound.play(info.head ? "headshot" : "hit");
     }
@@ -373,7 +483,17 @@ const Combat = {
 
   /* 爆炸：對半徑內所有「沒被牆擋住」的角色造成傷害。
    * small = true 是爆裂彈那種小爆炸，特效與震動較小。 */
-  explode(x, y, z, radius, damage, attacker, colorHex = 0xff8a2a, weaponId = "explosion", small = false) {
+  explode(
+    x,
+    y,
+    z,
+    radius,
+    damage,
+    attacker,
+    colorHex = 0xff8a2a,
+    weaponId = "explosion",
+    small = false,
+  ) {
     if (small) {
       FX.flash(x, y, z, colorHex, radius * 0.9, 0.15, 1.8);
       FX.sparks(x, y, z, 0, 1, 0, colorHex, 10, 6);
@@ -428,13 +548,26 @@ const Combat = {
   spawnProjectile(actor, mx, my, mz, origin, dir, def) {
     const p = def.projectile;
     // 從槍口出發，但方向修正為「瞄準線 60 公尺處」，子彈才會飛向準星
-    const tx = origin.x + dir.x * 60, ty = origin.y + dir.y * 60, tz = origin.z + dir.z * 60;
+    const tx = origin.x + dir.x * 60,
+      ty = origin.y + dir.y * 60,
+      tz = origin.z + dir.z * 60;
     const d = this._v.set(tx - mx, ty - my, tz - mz).normalize();
     this.addProjectile({
-      owner: actor, x: mx, y: my, z: mz,
-      vx: d.x * p.speed, vy: d.y * p.speed + (p.gravity ? 2.2 : 0), vz: d.z * p.speed,
-      gravity: p.gravity, damage: def.damage, blast: p.blast, color: p.color, size: p.size,
-      weapon: def.id, rocket: def.id === "launcher", direct: def.id !== "launcher",
+      owner: actor,
+      x: mx,
+      y: my,
+      z: mz,
+      vx: d.x * p.speed,
+      vy: d.y * p.speed + (p.gravity ? 2.2 : 0),
+      vz: d.z * p.speed,
+      gravity: p.gravity,
+      damage: def.damage,
+      blast: p.blast,
+      color: p.color,
+      size: p.size,
+      weapon: def.id,
+      rocket: def.id === "launcher",
+      direct: def.id !== "launcher",
     });
   },
 
@@ -451,7 +584,11 @@ const Combat = {
     const ow = p.owner;
     if (ow && ow.pos) {
       const hd = Math.hypot(p.x - ow.pos.x, p.z - ow.pos.z);
-      if (hd > 0.05 && hd < 4 && !World.los(ow.pos.x, p.y, ow.pos.z, p.x, p.y, p.z)) {
+      if (
+        hd > 0.05 &&
+        hd < 4 &&
+        !World.los(ow.pos.x, p.y, ow.pos.z, p.x, p.y, p.z)
+      ) {
         p.x = ow.pos.x;
         p.z = ow.pos.z;
       }
@@ -465,7 +602,7 @@ const Combat = {
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       transparent: true,
-      toneMapped: false
+      toneMapped: false,
     });
     mat.color.setHex(p.color).multiplyScalar(3);
     p.sprite = new THREE.Sprite(mat);
@@ -483,6 +620,7 @@ const Combat = {
     return p;
   },
 
+  // 移除一個飛行物與它的外觀。
   _removeProjectile(p) {
     if (p.mesh) {
       Builder.dispose(p.mesh);
@@ -495,6 +633,7 @@ const Combat = {
     }
   },
 
+  // 更新所有飛行物：移動、重力、碰撞與尾焰。
   _updateProjectiles(dt) {
     const hit = this._hit;
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
@@ -503,30 +642,91 @@ const Combat = {
       p.vy -= p.gravity * dt;
       const speed = Math.hypot(p.vx, p.vy, p.vz);
       const step = speed * dt;
-      const dx = p.vx / speed, dy = p.vy / speed, dz = p.vz / speed;
+      const dx = p.vx / speed,
+        dy = p.vy / speed,
+        dz = p.vz / speed;
 
       // 這一小段路徑上有沒有撞到牆或敵人
-      const wallDist = World.raycast(p.x, p.y, p.z, dx, dy, dz, step + 0.1, hit);
-      const target = this.rayActors(p.x, p.y, p.z, dx, dy, dz, Math.min(wallDist, step + 0.1), p.owner);
+      const wallDist = World.raycast(
+        p.x,
+        p.y,
+        p.z,
+        dx,
+        dy,
+        dz,
+        step + 0.1,
+        hit,
+      );
+      const target = this.rayActors(
+        p.x,
+        p.y,
+        p.z,
+        dx,
+        dy,
+        dz,
+        Math.min(wallDist, step + 0.1),
+        p.owner,
+      );
       let impact = null;
-      if (target) impact = { x: p.x + dx * target.dist, y: p.y + dy * target.dist, z: p.z + dz * target.dist };
-      else if (wallDist < Infinity) impact = { x: hit.x - dx * 0.05, y: hit.y - dy * 0.05, z: hit.z - dz * 0.05 };
+      if (target)
+        impact = {
+          x: p.x + dx * target.dist,
+          y: p.y + dy * target.dist,
+          z: p.z + dz * target.dist,
+        };
+      else if (wallDist < Infinity)
+        impact = {
+          x: hit.x - dx * 0.05,
+          y: hit.y - dy * 0.05,
+          z: hit.z - dz * 0.05,
+        };
 
+      // 命中或時間到：造成傷害、爆炸，然後移除。
       if (impact || p.life <= 0) {
         const at = impact || p;
         if (p.direct && target) {
           // 電漿／光球：直接命中造成全額傷害
-          this.damage(target.actor, p.damage, p.owner, { head: target.head, weapon: p.weapon, x: at.x, y: at.y, z: at.z });
+          this.damage(target.actor, p.damage, p.owner, {
+            head: target.head,
+            weapon: p.weapon,
+            x: at.x,
+            y: at.y,
+            z: at.z,
+          });
           if (p.owner && WEAPONS[p.weapon]) p.owner.stats.hits++; // 電漿彈直接命中
           FX.flash(at.x, at.y, at.z, p.color, 1.2, 0.14, 1.8);
         } else if (p.direct) {
           FX.flash(at.x, at.y, at.z, p.color, 1.0, 0.14, 1.8);
-          FX.sparks(at.x, at.y, at.z, hit.nx || 0, hit.ny || 1, hit.nz || 0, p.color, 8, 5);
+          FX.sparks(
+            at.x,
+            at.y,
+            at.z,
+            hit.nx || 0,
+            hit.ny || 1,
+            hit.nz || 0,
+            p.color,
+            8,
+            5,
+          );
           if (wallDist < Infinity) FX.scorch(hit, p.color); // 打在牆上留下發光的灼痕
-          if (wallDist < Infinity && hit.box && hit.box.tag && hit.box.tag.barrel)
+          if (
+            wallDist < Infinity &&
+            hit.box &&
+            hit.box.tag &&
+            hit.box.tag.barrel
+          )
             this.damageBarrel(hit.box.tag.barrel, p.damage, p.owner);
         } else {
-          const n = this.explode(at.x, at.y, at.z, p.blast, p.damage, p.owner, p.color, p.weapon);
+          const n = this.explode(
+            at.x,
+            at.y,
+            at.z,
+            p.blast,
+            p.damage,
+            p.owner,
+            p.color,
+            p.weapon,
+          );
           if (n > 0 && p.owner && WEAPONS[p.weapon]) p.owner.stats.hits++; // 火箭炸到人也算命中
         }
         if (p.onHit) p.onHit(at);
@@ -549,16 +749,35 @@ const Combat = {
       p.sprite.scale.setScalar(p.size * 7 * show);
       if (p.mesh) p.mesh.visible = show > 0;
       p.sprite.position.set(p.x, p.y, p.z);
+      // 有模型的飛行物（火箭、飛刃）朝飛行方向轉動。
       if (p.mesh) {
         p.mesh.position.set(p.x, p.y, p.z);
         p.mesh.lookAt(p.x + dx, p.y + dy, p.z + dz);
-        if (show > 0) FX.puff(p.x - dx * 0.3, p.y - dy * 0.3, p.z - dz * 0.3, 1, 0.35, 0x8a8a8a, 0.2); // 火箭尾煙
+        if (show > 0)
+          FX.puff(
+            p.x - dx * 0.3,
+            p.y - dy * 0.3,
+            p.z - dz * 0.3,
+            1,
+            0.35,
+            0x8a8a8a,
+            0.2,
+          ); // 火箭尾煙
       }
       if (show <= 0) continue; // 還在槍口附近：不畫尾跡
       // 發光尾跡
       FX.glow.emit({
-        x: p.x, y: p.y, z: p.z, vx: 0, vy: 0, vz: 0, life: 0.22, size: p.size * 2.4 * show, size1: 0.01,
-        color: FX._c.setHex(p.color), bright: 2.5
+        x: p.x,
+        y: p.y,
+        z: p.z,
+        vx: 0,
+        vy: 0,
+        vz: 0,
+        life: 0.22,
+        size: p.size * 2.4 * show,
+        size1: 0.01,
+        color: FX._c.setHex(p.color),
+        bright: 2.5,
       });
     }
   },
@@ -571,12 +790,18 @@ const Combat = {
     Scene3D.scene.add(mesh);
     const G = CONFIG.GRENADE;
     this.grenades.push({
-      owner: actor, mesh, fuse: G.fuse,
-      pos: new THREE.Vector3(origin.x + dir.x * 0.5, origin.y - 0.15, origin.z + dir.z * 0.5),
+      owner: actor,
+      mesh,
+      fuse: G.fuse,
+      pos: new THREE.Vector3(
+        origin.x + dir.x * 0.5,
+        origin.y - 0.15,
+        origin.z + dir.z * 0.5,
+      ),
       vel: new THREE.Vector3(
         dir.x * G.speed + actor.vel.x * 0.5,
         dir.y * G.speed + 3.2,
-        dir.z * G.speed + actor.vel.z * 0.5
+        dir.z * G.speed + actor.vel.z * 0.5,
       ),
     });
     Sound.play("throw", { pos: actor.isPlayer ? null : actor.pos });
@@ -589,14 +814,27 @@ const Combat = {
     vel.y -= 16 * dt;
     const speed = vel.length();
     if (speed < 0.01) return false;
-    const dist = World.raycast(pos.x, pos.y, pos.z, vel.x / speed, vel.y / speed, vel.z / speed, speed * dt + 0.08, hit);
+    const dist = World.raycast(
+      pos.x,
+      pos.y,
+      pos.z,
+      vel.x / speed,
+      vel.y / speed,
+      vel.z / speed,
+      speed * dt + 0.08,
+      hit,
+    );
     if (dist < Infinity) {
       // 反彈：把速度沿表面法線反射，並損失大部分能量
       const dot = vel.x * hit.nx + vel.y * hit.ny + vel.z * hit.nz;
       vel.x = (vel.x - 2 * dot * hit.nx) * 0.42;
       vel.y = (vel.y - 2 * dot * hit.ny) * 0.42;
       vel.z = (vel.z - 2 * dot * hit.nz) * 0.42;
-      pos.set(hit.x + hit.nx * 0.09, hit.y + hit.ny * 0.09, hit.z + hit.nz * 0.09);
+      pos.set(
+        hit.x + hit.nx * 0.09,
+        hit.y + hit.ny * 0.09,
+        hit.z + hit.nz * 0.09,
+      );
       // 落在地上：滾動摩擦
       if (hit.ny > 0.5) {
         vel.x *= 0.7;
@@ -609,6 +847,7 @@ const Combat = {
     return false;
   },
 
+  // 更新飛行中的手榴彈：彈跳、倒數與爆炸。
   _updateGrenades(dt) {
     for (let i = this.grenades.length - 1; i >= 0; i--) {
       const g = this.grenades[i];
@@ -623,8 +862,14 @@ const Combat = {
         FX.flash(g.pos.x, g.pos.y + 0.1, g.pos.z, 0xff3030, 0.5, 0.05, 1);
       if (g.fuse <= 0) {
         this.explode(
-          g.pos.x, g.pos.y + 0.1, g.pos.z, CONFIG.GRENADE.radius, CONFIG.GRENADE.damage, g.owner, 0xff8a2a,
-          "grenade"
+          g.pos.x,
+          g.pos.y + 0.1,
+          g.pos.z,
+          CONFIG.GRENADE.radius,
+          CONFIG.GRENADE.damage,
+          g.owner,
+          0xff8a2a,
+          "grenade",
         );
         Builder.dispose(g.mesh);
         this.grenades.splice(i, 1);
@@ -639,22 +884,52 @@ const Combat = {
     const M = CONFIG.MELEE;
     Sound.play("melee", { pos: actor.isPlayer ? null : actor.pos });
     // 找出正前方範圍內最近的敵人
-    let best = null, bestDist = M.range;
+    let best = null,
+      bestDist = M.range;
     for (const a of this.actors) {
       if (!a.alive || a === actor || a.team === actor.team) continue;
-      const dx = a.pos.x - origin.x, dy = a.pos.y + a.hit.base + a.hit.h * 0.6 - origin.y, dz = a.pos.z - origin.z;
+      const dx = a.pos.x - origin.x,
+        dy = a.pos.y + a.hit.base + a.hit.h * 0.6 - origin.y,
+        dz = a.pos.z - origin.z;
       const dist = Math.hypot(dx, dy, dz) - a.hit.r;
       if (dist > bestDist) continue;
-      const facing = (dx * dir.x + dy * dir.y + dz * dir.z) / Math.max(0.1, Math.hypot(dx, dy, dz));
+      const facing =
+        (dx * dir.x + dy * dir.y + dz * dir.z) /
+        Math.max(0.1, Math.hypot(dx, dy, dz));
       if (facing < 0.55) continue; // 不在正面扇形內
-      if (!World.los(origin.x, origin.y, origin.z, a.pos.x, a.pos.y + a.hit.base + a.hit.h * 0.6, a.pos.z)) continue; // 隔著牆打不到
+      if (
+        !World.los(
+          origin.x,
+          origin.y,
+          origin.z,
+          a.pos.x,
+          a.pos.y + a.hit.base + a.hit.h * 0.6,
+          a.pos.z,
+        )
+      )
+        continue; // 隔著牆打不到
       best = a;
       bestDist = dist;
     }
     if (best) {
       const y = best.pos.y + best.hit.base + best.hit.h * 0.7;
-      this.damage(best, M.damage, actor, { weapon: "melee", x: best.pos.x, y, z: best.pos.z });
-      FX.sparks(best.pos.x, y, best.pos.z, -dir.x, 0.4, -dir.z, 0xffffff, 10, 5);
+      this.damage(best, M.damage, actor, {
+        weapon: "melee",
+        x: best.pos.x,
+        y,
+        z: best.pos.z,
+      });
+      FX.sparks(
+        best.pos.x,
+        y,
+        best.pos.z,
+        -dir.x,
+        0.4,
+        -dir.z,
+        0xffffff,
+        10,
+        5,
+      );
       return true;
     }
     return false;
@@ -667,16 +942,42 @@ const Combat = {
     for (const spot of list) {
       const p = Nav.snap(spot.x, spot.z);
       const b = new Builder();
-      b.cyl(0.42, 0.42, 1.15, { p: [0, 0.575, 0], c: 0xb02a2a, m: "metal", seg: 16 });
+      b.cyl(0.42, 0.42, 1.15, {
+        p: [0, 0.575, 0],
+        c: 0xb02a2a,
+        m: "metal",
+        seg: 16,
+      });
       for (const y of [0.1, 0.58, 1.06])
-        b.torus(0.43, 0.035, { p: [0, y, 0], r: [Math.PI / 2, 0, 0], c: 0x7a1a1a, m: "metal", seg: 18 });
-      b.cyl(0.432, 0.432, 0.22, { p: [0, 0.75, 0], c: 0xffc233, m: "glow", e: 0.5, seg: 16, open: true }); // 警示帶
-      b.cyl(0.08, 0.08, 0.05, { p: [0.18, 1.17, 0], c: 0x2a2d33, m: "metal", seg: 8 });
+        b.torus(0.43, 0.035, {
+          p: [0, y, 0],
+          r: [Math.PI / 2, 0, 0],
+          c: 0x7a1a1a,
+          m: "metal",
+          seg: 18,
+        });
+      b.cyl(0.432, 0.432, 0.22, {
+        p: [0, 0.75, 0],
+        c: 0xffc233,
+        m: "glow",
+        e: 0.5,
+        seg: 16,
+        open: true,
+      }); // 警示帶
+      b.cyl(0.08, 0.08, 0.05, {
+        p: [0.18, 1.17, 0],
+        c: 0x2a2d33,
+        m: "metal",
+        seg: 8,
+      });
       const mesh = b.build();
       mesh.position.set(p.x, p.y, p.z);
       Scene3D.scene.add(mesh);
       const barrel = { x: p.x, y: p.y, z: p.z, mesh, hp: 35, alive: true };
-      barrel.box = World.addBox(p.x, p.y + 0.575, p.z, 0.8, 1.15, 0.8, { tag: { barrel }, noWalk: true });
+      barrel.box = World.addBox(p.x, p.y + 0.575, p.z, 0.8, 1.15, 0.8, {
+        tag: { barrel },
+        noWalk: true,
+      });
       // 桶子佔住的那一格暫時標成不可走，電腦尋路時就會繞開；爆炸後再還原
       barrel.cell = Nav.idx(p.x, p.z);
       Nav.ok[barrel.cell] = 0;
@@ -693,12 +994,22 @@ const Combat = {
       return;
     }
     barrel.alive = false;
+    // 實際爆炸；也會引爆附近其他的油桶。
     const boom = () => {
       barrel.gone = true;
       World.removeBox(barrel.box);
       Nav.ok[barrel.cell] = 1;
       barrel.mesh.visible = false;
-      this.explode(barrel.x, barrel.y + 0.6, barrel.z, 6.5, 150, attacker, 0xff6a1a, "barrel");
+      this.explode(
+        barrel.x,
+        barrel.y + 0.6,
+        barrel.z,
+        6.5,
+        150,
+        attacker,
+        0xff6a1a,
+        "barrel",
+      );
     };
     if (delay > 0) this.after(delay, boom);
     else boom();
@@ -713,10 +1024,20 @@ const Combat = {
       const mesh = WeaponModels.pickup(type);
       mesh.position.set(p.x, p.y, p.z);
       Scene3D.scene.add(mesh);
-      this.pickups.push({ type, x: p.x, y: p.y, z: p.z, mesh, item: mesh.userData.item, active: true, timer: 0 });
+      this.pickups.push({
+        type,
+        x: p.x,
+        y: p.y,
+        z: p.z,
+        mesh,
+        item: mesh.userData.item,
+        active: true,
+        timer: 0,
+      });
     }
   },
 
+  // 補給：等待重新出現、漂浮旋轉，以及玩家靠近時撿取。
   _updatePickups(dt) {
     for (const p of this.pickups) {
       if (!p.active) {
@@ -731,14 +1052,27 @@ const Combat = {
       p.item.rotation.y += dt * 1.2;
       for (const a of this.actors) {
         if (!a.alive || a.isBoss || a.noPickup) continue;
-        if (Math.abs(a.pos.y - p.y) > 1.2 || Util.dist2D(a.pos.x, a.pos.z, p.x, p.z) > 1.2) continue;
+        if (
+          Math.abs(a.pos.y - p.y) > 1.2 ||
+          Util.dist2D(a.pos.x, a.pos.z, p.x, p.z) > 1.2
+        )
+          continue;
         if (!a.usePickup(p.type)) continue; // 已經滿了就不會撿
         p.active = false;
         p.item.visible = false; // 只藏起物品，底座留著（上面會顯示重生倒數）
-        p.timer = p.maxTimer = { ammo: 18, armor: 30, health: 26, grenade: 26 }[p.type];
+        p.timer = p.maxTimer = { ammo: 18, armor: 30, health: 26, grenade: 26 }[
+          p.type
+        ];
         if (a.isPlayer) {
           Sound.play("pickup");
-          HUD.toast({ health: "醫療包 +1（按 H 使用）", armor: "護盾已補滿", ammo: "彈藥補給", grenade: "手榴彈 +2" }[p.type]);
+          HUD.toast(
+            {
+              health: "醫療包 +1（按 H 使用）",
+              armor: "護盾已補滿",
+              ammo: "彈藥補給",
+              grenade: "手榴彈 +2",
+            }[p.type],
+          );
         }
         break;
       }

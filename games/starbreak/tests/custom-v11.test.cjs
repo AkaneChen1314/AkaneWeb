@@ -1,3 +1,6 @@
+/*
+ * 測試：v1.1 的自訂波數、商店、模組、首領與獎勵。
+ */
 const assert = require("node:assert/strict");
 const {
   Engine,
@@ -6,15 +9,18 @@ const {
   isBossWave,
   MODULES,
 } = require("../game.js");
+// 執行一項測試。
 const test = (n, f) => {
   f();
   console.log("PASS", n);
 };
+// 開始一場遠征。
 function run(config, mode = "campaign") {
   const e = new Engine(defaultProfile());
   e.newRun("scout", mode, 0, 1138, config);
   return e;
 }
+// 可以選任意最終波，以及最後、沒有、間隔三種首領規則。
 test("arbitrary final wave and final-only/none/interval rules", () => {
   for (const n of [1, 3, 7, 16, 25, 80]) {
     const e = run({ totalWaves: n, bossEvery: 3 });
@@ -29,6 +35,7 @@ test("arbitrary final wave and final-only/none/interval rules", () => {
   const endless = run({ totalWaves: 7, bossRule: "final" }, "endless");
   assert.equal(isBossWave(endless.r, 7), false);
 });
+// 舊的每波秒數不再決定過關。
 test("legacy wave duration no longer governs completion", () => {
   for (const seconds of [30, 90]) {
     const e = run({ totalWaves: 3, waveSeconds: seconds, bossRule: "none" });
@@ -41,6 +48,7 @@ test("legacy wave duration no longer governs completion", () => {
     assert.equal(e.r.phase, "upgrade");
   }
 });
+// 一波與七波的遠征都在選定的波數結束。
 test("one-wave and seven-wave expeditions finish at the selected wave", () => {
   for (const n of [1, 7]) {
     const e = run({ totalWaves: n, waveSeconds: 30, bossRule: "none" });
@@ -61,6 +69,7 @@ test("one-wave and seven-wave expeditions finish at the selected wave", () => {
     assert.equal(e.profile.longWins, 0);
   }
 });
+// 商店不能重複買、不能超支，重新載入也不會消失。
 test("market purchases cannot repeat, overspend, or vanish on reload", () => {
   const e = run({});
   e.setPhase("intermission");
@@ -79,6 +88,7 @@ test("market purchases cannot repeat, overspend, or vanish on reload", () => {
   e.r.gold = 0;
   assert.equal(e.refreshShop(), false);
 });
+// 裝備已滿時，不會顯示買不了的武器與數值。
 test("full arsenal hides unpurchasable weapons and capped stats", () => {
   const e = run({});
   e.r.stats.damage = 8;
@@ -89,6 +99,7 @@ test("full arsenal hides unpurchasable weapons and capped stats", () => {
   w.level = 5;
   assert.equal(e.canBuy({ kind: "weapon", id: w.id, cost: 1 }), false);
 });
+// 模組與變異只影響新的遠征。
 test("module unlock snapshot and mutators apply only to new launches", () => {
   const p = defaultProfile();
   p.moduleOwned = MODULES.map((x) => x.id);
@@ -104,6 +115,7 @@ test("module unlock snapshot and mutators apply only to new launches", () => {
   assert.equal(e.r.p.maxHp, 68);
   assert.equal(e.r.stats.damage, 1);
 });
+// v1.0 的存檔轉換後，血量與武器等級不變。
 test("v1.0 run data migrates without losing health or weapon levels", () => {
   const e = run({}),
     old = JSON.parse(JSON.stringify(e.r));
@@ -132,6 +144,7 @@ test("v1.0 run data migrates without losing health or weapon levels", () => {
   assert.deepEqual(f.r.weapons, e.r.weapons);
   assert.equal(f.r.phase, "paused");
 });
+// 四個首領攻擊不同，頂級首領有第三階段。
 test("four Bosses have distinct attacks and apex has third phase", () => {
   const signatures = [];
   for (let i = 0; i < 4; i++) {
@@ -155,6 +168,7 @@ test("four Bosses have distinct attacks and apex has third phase", () => {
   }
   assert.equal(new Set(signatures).size, 4);
 });
+// 光束只傷害預警範圍內的目標。
 test("beam collision hurts only inside the warned corridor", () => {
   const e = run({});
   e.r.enemies = [];
@@ -175,6 +189,7 @@ test("beam collision hurts only inside the warned corridor", () => {
   e.step(0.02);
   assert.equal(e.r.p.hp, hp);
 });
+// 目標、補給箱與連擊獎勵都有效。
 test("objectives, supply caches and combo rewards are real", () => {
   const e = run({});
   e.r.p.dashCD = 0;

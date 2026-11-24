@@ -1,13 +1,19 @@
+/*
+ * 測試：深淵遊戲的戰鬥、存檔、首領、圖鑑、事件與商店。
+ */
 const fs = require("node:fs");
 const vm = require("node:vm");
 const assert = require("node:assert/strict");
 const path = require("node:path");
+// 要測試的遊戲資料夾；可以用環境變數指定其他位置。
 const root = process.env.GAME_TEST_ROOT || path.join(__dirname, "..");
 const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const source = fs.readFileSync(path.join(root, "game.js"), "utf8");
+// 網頁上的 id 不能重複。
 const ids = [...html.matchAll(/id="([^"]+)"/g)].map((match) => match[1]);
 assert.equal(new Set(ids).size, ids.length, "duplicate HTML id");
 const eventListeners = new Map();
+// 假的網頁元素；只實作遊戲會用到的部分。
 class Element {
   constructor(name = "") {
     this.name = name;
@@ -73,6 +79,7 @@ class Element {
   querySelectorAll() {
     return this.children;
   }
+  // 往上找符合的元素。
   closest(selector) {
     if (selector.startsWith("#"))
       return this.name === selector.slice(1) ? this : null;
@@ -83,6 +90,7 @@ class Element {
     }
     return null;
   }
+  // 模擬點擊：先呼叫 onclick，再通知登記在 document 上的事件。
   click() {
     if (this.disabled) return;
     this.onclick?.();
@@ -96,6 +104,7 @@ class Element {
   }
 }
 const nodes = new Map(ids.map((id) => ["#" + id, new Element(id)]));
+// 依選擇器找到或建立假元素。
 const getNode = (selector) => {
   if (selector === ".modal.open")
     return (
@@ -113,6 +122,7 @@ const getNode = (selector) => {
   }
   return nodes.get(selector);
 };
+// 假的 document。
 const document = {
   querySelector: getNode,
   querySelectorAll: (selector) =>
@@ -127,6 +137,7 @@ const document = {
   body: new Element("body"),
 };
 const storage = new Map();
+// 沙盒環境裡可以使用的東西。
 const sandbox = {
   document,
   console,
@@ -152,29 +163,37 @@ const sandbox = {
   confirm: () => false,
 };
 vm.createContext(sandbox);
+// 把動畫等待時間換成 0，測試才跑得快。
 const runtimeSource = source.replace(
   /wait\s*=\s*\(?ms\)?\s*=>\s*new Promise\(\(?r\)?\s*=>\s*setTimeout\(r,\s*ms\)\)/,
   "wait = ms => Promise.resolve()",
 );
 assert.notEqual(runtimeSource, source, "animation wait stub was applied");
 vm.runInContext(runtimeSource, sandbox);
+// 在遊戲裡執行一段程式。
 const run = (code) => vm.runInContext(code, sandbox);
-// Real game functions and rendering execute against an instrumented minimal DOM.
-// Animation waits are removed, not gameplay logic.
+// 用簡化的 DOM 執行真正的遊戲函式與畫面；只拿掉動畫等待，不改規則。
 getNode(".filter.active").dataset.filter = "all";
 getNode("[data-shop-filter].active").dataset.shopFilter = "all";
 async function main() {
-  // Sequential tests: all cases share the actual game state.
+  // 依序執行：所有測試共用同一份遊戲狀態。
+  // 執行一項檢查並顯示結果。
   const check = async (name, action) => {
     await action();
     console.log("PASS", name);
   };
+  // 打贏後會出現下一層的按鈕。
   await check(
     "actual action victory unlocks the next-floor button",
     async () => {
       for (const action of ['useSkill("basic")', 'useTactic("heavy")']) {
         run(
-          'startGame("knight"); createEnemy(); S.enemy.hp=1; S.nextEventAt=9999;',
+          `
+            startGame("knight");
+            createEnemy();
+            S.enemy.hp = 1;
+            S.nextEventAt = 9999;
+          `,
         );
         await run(action);
         assert.equal(run("busy"), false);
@@ -191,12 +210,20 @@ async function main() {
       }
     },
   );
+  // 中毒、燃燒擊殺、逃跑與戰敗後都能繼續操作。
   await check(
     "poison/burn kills, fleeing and defeat all release controls",
     async () => {
       for (const effect of ["poison", "burn"]) {
         run(
-          `startGame("knight"); createEnemy(); S.enemy.hp=1; S.enemy.effects.${effect}=2; S.enemy.effectTurns.${effect}=3; S.enemy.intent={type:"guard",value:0};`,
+          `
+            startGame("knight");
+            createEnemy();
+            S.enemy.hp = 1;
+            S.enemy.effects.${effect} = 2;
+            S.enemy.effectTurns.${effect} = 3;
+            S.enemy.intent = { type: "guard", value: 0 };
+          `,
         );
         await run('useTactic("guard")');
         assert.equal(run("S.enemy"), null);
@@ -212,7 +239,12 @@ async function main() {
       assert.equal(run("S.enemy"), null);
       assert.equal(getNode("[data-route=explore]").disabled, false);
       run(
-        'createEnemy(); S.hp=1; S.enemy.atk=999; S.enemy.intent={type:"attack",mult:1};',
+        `
+          createEnemy();
+          S.hp = 1;
+          S.enemy.atk = 999;
+          S.enemy.intent = { type: "attack", mult: 1 };
+        `,
       );
       sandbox.Math.random = () => 0.99;
       await run('useSkill("basic")');
@@ -223,11 +255,23 @@ async function main() {
       sandbox.Math.random = Math.random;
     },
   );
+  // 回合失敗會復原並可重試，藥水不會消失。
   await check(
     "failed turn rolls back and can be retried without losing potions",
     async () => {
       run(
-        'startGame("knight"); createEnemy(); S.hp=30; S.potions.red=2; openBattlePotionMode(); toggleBattlePotion("red"); const originalEnemyTurn=enemyTurn; enemyTurn=async()=>{throw Error("Injected turn failure")};',
+        `
+          startGame("knight");
+          createEnemy();
+          S.hp = 30;
+          S.potions.red = 2;
+          openBattlePotionMode();
+          toggleBattlePotion("red");
+          const originalEnemyTurn = enemyTurn;
+          enemyTurn = async () => {
+            throw Error("Injected turn failure");
+          };
+        `,
       );
       const hp = run("S.hp"),
         resource = run("S.res");
@@ -242,15 +286,36 @@ async function main() {
       assert.equal(run("S.enemy.turns"), 1);
     },
   );
+  // 敵人的護盾能擋下全部傷害；中毒只判定一次抗性。
   await check(
     "enemy shields block all HP damage; poison signatures roll resistance once",
     async () => {
-      run('startGame("knight"); createEnemy(); S.enemy.shield=9999;');
+      run(`
+        startGame("knight");
+        createEnemy();
+        S.enemy.shield = 9999;
+      `);
       const hp = run("S.enemy.hp");
       assert.equal(await run("dealDamage({d:1})"), 0);
       assert.equal(run("S.enemy.hp"), hp);
       run(
-        'godUnlocked=true; startGame("god"); buyGear("knight_armor_prismatic"); equip(S.gear[0].uid); S.floor=349; createEnemy(); chooseBossDialogue(0); beginBossBattle(); S.enemy.signatureEffect="poison"; S.enemy.poison=5; S.enemy.atk=100; S.enemy.turns=3; rollIntent(); S.shield=0; S.hp=stats().maxHp;',
+        `
+          godUnlocked = true;
+          startGame("god");
+          buyGear("knight_armor_prismatic");
+          equip(S.gear[0].uid);
+          S.floor = 349;
+          createEnemy();
+          chooseBossDialogue(0);
+          beginBossBattle();
+          S.enemy.signatureEffect = "poison";
+          S.enemy.poison = 5;
+          S.enemy.atk = 100;
+          S.enemy.turns = 3;
+          rollIntent();
+          S.shield = 0;
+          S.hp = stats().maxHp;
+        `,
       );
       assert.ok(run("stats().poisonResist") > 0);
       let rolls = 0;
@@ -259,17 +324,25 @@ async function main() {
         return 0.99;
       };
       await run("enemyTurn()");
-      // One damage variance roll, one poison resistance roll, one next-intent roll.
+      // 只擲一次傷害浮動、一次中毒抗性、一次下回合意圖。
       assert.equal(rolls, 3);
       assert.equal(run("S.debuffs.poison"), 4);
       sandbox.Math.random = Math.random;
     },
   );
+  // 連點、不能用的技能與取消藥水，都不會多花回合。
   await check(
     "rapid inputs, unavailable skills and potion cancellation do not spend extra turns",
     async () => {
       run(
-        'startGame("knight"); createEnemy(); S.enemy.hp=S.enemy.maxHp=99999; S.enemy.atk=1; S.enemy.poison=0; S.res=0;',
+        `
+          startGame("knight");
+          createEnemy();
+          S.enemy.hp = S.enemy.maxHp = 99999;
+          S.enemy.atk = 1;
+          S.enemy.poison = 0;
+          S.res = 0;
+        `,
       );
       await run('useSkill("0")');
       assert.equal(run("busy"), false);
@@ -277,7 +350,11 @@ async function main() {
       assert.equal(getNode("[data-skill=basic]").disabled, false);
       await run('Promise.all([useSkill("basic"),useSkill("basic")])');
       assert.equal(run("S.enemy.turns"), 1);
-      run('S.hp=30; openBattlePotionMode(); toggleBattlePotion("red");');
+      run(`
+        S.hp = 30;
+        openBattlePotionMode();
+        toggleBattlePotion("red");
+      `);
       const count = run("S.potions.red");
       run("closeBattlePotionMode()");
       assert.equal(run("S.potions.red"), count);
@@ -288,6 +365,7 @@ async function main() {
       assert.equal(run("S.floor"), floor);
     },
   );
+  // 資料、圖片與所有 DOM id 都存在。
   await check("static data, assets and all DOM ids", () => {
     const refs = [...source.matchAll(/\$\("#([\w-]+)"\)/g)].map(
       (match) => match[1],
@@ -303,6 +381,7 @@ async function main() {
     assert.equal(run("Object.keys(GEAR).length"), 60);
     assert.equal(run("new Set(BOSS_SIGNATURES).size"), 20);
   });
+  // 六個職業、神職數值與裝備強化上限。
   await check("six classes, God values, gear enhancement cap", () => {
     for (const id of [
       "knight",
@@ -321,14 +400,23 @@ async function main() {
     assert.equal(run("S.baseAtk"), 999);
     run('buyGear("knight_weapon_prismatic")');
     run(
-      "S.gear[0].level = 9; const beforeGold = S.gold; enhance(S.gear[0].uid);",
+      `
+        S.gear[0].level = 9;
+        const beforeGold = S.gold;
+        enhance(S.gear[0].uid);
+      `,
     );
     assert.equal(run("S.gear[0].level"), 9);
     assert.equal(run("S.gold === beforeGold"), true);
   });
+  // 沒有小首領；二十個固定首領與各自的招式。
   await check("no mini Boss, all 20 fixed Bosses and their signatures", () => {
     for (let floor = 1; floor <= 1000; floor++) {
-      run(`S.floor=${floor - 1}; S.completed=false; createEnemy(false);`);
+      run(`
+        S.floor = ${floor - 1};
+        S.completed = false;
+        createEnemy(false);
+      `);
       assert.equal(run("S.enemy.worldBoss"), floor % 50 === 0);
       if (floor % 50 === 0) {
         assert.equal(
@@ -340,11 +428,23 @@ async function main() {
       }
     }
   });
+  // 存檔能接續敵人、血量、護盾與冷卻，不會存到一半的回合。
   await check(
     "save resumes enemy, HP, shields and cooldowns; no half-turn writes",
     () => {
       run(
-        "busy=false; S.floor=499; S.completed=false; createEnemy(); chooseBossDialogue(1); beginBossBattle(); S.enemy.hp-=123; S.shield=77; S.cooldowns=[2,1,0]; save();",
+        `
+          busy = false;
+          S.floor = 499;
+          S.completed = false;
+          createEnemy();
+          chooseBossDialogue(1);
+          beginBossBattle();
+          S.enemy.hp -= 123;
+          S.shield = 77;
+          S.cooldowns = [2, 1, 0];
+          save();
+        `,
       );
       const hp = run("S.enemy.hp");
       run("S.enemy=null; continueGame();");
@@ -352,26 +452,52 @@ async function main() {
       assert.equal(run("S.shield"), 77);
       assert.equal(run("S.cooldowns[0]"), 2);
       const stable = storage.get("abyss-adventure-v1");
-      run('busy=true; S.hp=1; save(); save({type:"pagehide"});');
+      run(`
+        busy = true;
+        S.hp = 1;
+        save();
+        save({ type: "pagehide" });
+      `);
       assert.equal(storage.get("abyss-adventure-v1"), stable);
       run("busy=false; continueGame()");
       assert.notEqual(run("S.hp"), 1);
     },
   );
+  // 首領對話還沒回答時，重新整理也不能跳過。
   await check("unanswered Boss dialogue cannot be skipped by reload", () => {
     run("S.floor=49; createEnemy(); continueGame();");
     assert.equal(run("busy"), true);
     assert.equal(run("S.enemy.worldBoss && !S.enemy.dialogueResolved"), true);
     run("chooseBossDialogue(0); beginBossBattle();");
   });
+  // 三種藥水共花一回合；重複與第四瓶會被擋下。
   await check(
     "three different potions cost one enemy turn; duplicate and fourth are blocked",
     async () => {
       run(
-        'startGame("knight"); createEnemy(); S.enemy.atk=1; S.enemy.poison=0; S.hp=30; S.res=0; S.debuffs.poison=4; S.debuffs.burn=4; S.debuffTurns={poison:3,burn:3}; S.potions={red:5,blue:5,antidote:5,cooling:5}; openBattlePotionMode(); toggleBattlePotion("red"); toggleBattlePotion("blue"); toggleBattlePotion("antidote"); toggleBattlePotion("cooling");',
+        `
+          startGame("knight");
+          createEnemy();
+          S.enemy.atk = 1;
+          S.enemy.poison = 0;
+          S.hp = 30;
+          S.res = 0;
+          S.debuffs.poison = 4;
+          S.debuffs.burn = 4;
+          S.debuffTurns = { poison: 3, burn: 3 };
+          S.potions = { red: 5, blue: 5, antidote: 5, cooling: 5 };
+          openBattlePotionMode();
+          toggleBattlePotion("red");
+          toggleBattlePotion("blue");
+          toggleBattlePotion("antidote");
+          toggleBattlePotion("cooling");
+        `,
       );
       assert.equal(run("selectedBattlePotions.length"), 3);
-      run('toggleBattlePotion("red"); toggleBattlePotion("red");');
+      run(`
+        toggleBattlePotion("red");
+        toggleBattlePotion("red");
+      `);
       assert.equal(run("new Set(selectedBattlePotions).size"), 3);
       await run("confirmBattlePotions()");
       assert.equal(run("S.enemy.turns"), 1);
@@ -382,11 +508,17 @@ async function main() {
       assert.equal(run("S.debuffs.poison || 0"), 0);
     },
   );
+  // 異常狀態的更新、持續回合與完全擋下的攻擊。
   await check(
     "debuff refresh, finite duration and fully blocked hits",
     async () => {
       run(
-        'S.debuffs={}; S.debuffTurns={}; applyEnemyDebuff("burn",8); applyEnemyDebuff("burn",8);',
+        `
+          S.debuffs = {};
+          S.debuffTurns = {};
+          applyEnemyDebuff("burn", 8);
+          applyEnemyDebuff("burn", 8);
+        `,
       );
       assert.equal(run("S.debuffs.burn"), 8);
       run('S.enemy.intent={type:"guard",value:1};');
@@ -396,7 +528,11 @@ async function main() {
       }
       assert.equal(run("S.debuffs.burn"), 0);
       run(
-        'S.enemy.poison=5; S.enemy.intent={type:"attack",mult:1}; S.shield=999;',
+        `
+          S.enemy.poison = 5;
+          S.enemy.intent = { type: "attack", mult: 1 };
+          S.shield = 999;
+        `,
       );
       const hp = run("S.hp");
       sandbox.Math.random = () => 0.99;
@@ -406,19 +542,34 @@ async function main() {
       sandbox.Math.random = Math.random;
     },
   );
+  // 首領只會進入一次第二階段，招式可以打斷。
   await check(
     "Boss phase activates once, signature is interruptible",
     async () => {
       run(
-        "S.floor=549; createEnemy(); chooseBossDialogue(0); beginBossBattle();",
+        `
+          S.floor = 549;
+          createEnemy();
+          chooseBossDialogue(0);
+          beginBossBattle();
+        `,
       );
       const atk = run("S.enemy.atk");
       run(
-        "S.enemy.hp=Math.floor(S.enemy.maxHp*.49); checkBossPhase(); checkBossPhase();",
+        `
+          S.enemy.hp = Math.floor(S.enemy.maxHp * 0.49);
+          checkBossPhase();
+          checkBossPhase();
+        `,
       );
       assert.equal(run("S.enemy.atk"), Math.round(atk * 1.15));
       run(
-        "S.enemy.turns=3; rollIntent(); S.res=baseClass().maxRes; S.enemy.hp=S.enemy.maxHp;",
+        `
+          S.enemy.turns = 3;
+          rollIntent();
+          S.res = baseClass().maxRes;
+          S.enemy.hp = S.enemy.maxHp;
+        `,
       );
       assert.equal(run("S.enemy.intent.type"), "signature");
       const hp = run("S.hp");
@@ -427,27 +578,48 @@ async function main() {
       assert.equal(run("S.enemy.turns"), 4);
     },
   );
+  // 首領特殊效果會先預告，護盾足夠就能擋下。
   await check(
     "Boss special effects are advertised and blocked by full shields",
     async () => {
       run(
-        "S.floor=199; createEnemy(); chooseBossDialogue(0); beginBossBattle(); S.enemy.turns=3; rollIntent(); S.enemy.poison=0; S.res=baseClass().maxRes; S.shield=999999;",
+        `
+          S.floor = 199;
+          createEnemy();
+          chooseBossDialogue(0);
+          beginBossBattle();
+          S.enemy.turns = 3;
+          rollIntent();
+          S.enemy.poison = 0;
+          S.res = baseClass().maxRes;
+          S.shield = 999999;
+        `,
       );
       sandbox.Math.random = () => 0.99;
       const resource = run("S.res");
       assert.ok(run('intentTooltip().includes("10%")'));
       await run("enemyTurn()");
       assert.equal(run("S.res"), resource);
-      run("S.enemy.turns=3; rollIntent(); S.shield=0; S.hp=stats().maxHp;");
+      run(`
+        S.enemy.turns = 3;
+        rollIntent();
+        S.shield = 0;
+        S.hp = stats().maxHp;
+      `);
       await run("enemyTurn()");
       assert.equal(run("S.res"), resource - Math.ceil(resource * 0.1));
       run(
-        'S.enemy.signatureEffect="weak"; S.enemy.intent.name="測試招式"; applyBossSpecial(S.enemy);',
+        `
+          S.enemy.signatureEffect = "weak";
+          S.enemy.intent.name = "測試招式";
+          applyBossSpecial(S.enemy);
+        `,
       );
       assert.equal(run("S.debuffs.weak"), 3);
       sandbox.Math.random = Math.random;
     },
   );
+  // 每個職業的三個技能都能用，而且只花一回合。
   await check(
     "each class can use all three skills and take one turn",
     async () => {
@@ -461,7 +633,14 @@ async function main() {
       ]) {
         for (let skill = 0; skill < 3; skill++) {
           run(
-            `startGame('${id}'); createEnemy(); S.enemy.hp=S.enemy.maxHp=99999; S.enemy.atk=1; S.enemy.poison=0; S.hp=30;`,
+            `
+              startGame("${id}");
+              createEnemy();
+              S.enemy.hp = S.enemy.maxHp = 99999;
+              S.enemy.atk = 1;
+              S.enemy.poison = 0;
+              S.hp = 30;
+            `,
           );
           await run(`useSkill('${skill}')`);
           assert.equal(run("busy"), false);
@@ -473,10 +652,16 @@ async function main() {
       }
     },
   );
+  // 圖鑑要真的遇過才會解鎖，並會保存。
   await check(
     "read-only codex requires actual encounters, persists discoveries and blocks hidden spawns",
     () => {
-      run('startGame("knight"); S.floor=800; S.highestFloor=800; openCodex()');
+      run(`
+        startGame("knight");
+        S.floor = 800;
+        S.highestFloor = 800;
+        openCodex();
+      `);
       assert.equal(run("S.discoveredMonsters.length"), 0);
       assert.ok(getNode("#codexList").innerHTML.includes("未發現的魔物"));
       for (const monster of run("MONSTERS")) {
@@ -500,26 +685,48 @@ async function main() {
       assert.ok(getNode("#codexList").innerHTML.includes("掉落素材"));
       assert.ok(!getNode("#codexList").innerHTML.includes("data-hunt"));
       assert.ok(!getNode("#codexList").innerHTML.includes("<button"));
-      run("busy=false; save(); S.discoveredMonsters=[]; load()");
+      run(`
+        busy = false;
+        save();
+        S.discoveredMonsters = [];
+        load();
+      `);
       assert.equal(run("S.discoveredMonsters[0]"), name);
       run("openCodex(S.enemy.drop)");
       assert.ok(getNode("#codexList").innerHTML.includes(name));
-      // New adventure clears discoveries. Floor and test class do not grant entries.
+      // 新冒險會清空圖鑑；樓層與測試職業不會自動解鎖項目。
       run(
-        'godUnlocked=true; startGame("god"); S.floor=999; S.highestFloor=999; openCodex()',
+        `
+          godUnlocked = true;
+          startGame("god");
+          S.floor = 999;
+          S.highestFloor = 999;
+          openCodex();
+        `,
       );
       assert.equal(run("S.discoveredMonsters.length"), 0);
       assert.ok(!getNode("#codexList").innerHTML.includes(name));
       assert.ok(!getNode("#codexBtn").disabled);
     },
   );
+  // 舊版圖鑑只依紀錄恢復，舊的支線能安全結束。
   await check(
     "legacy codex recovery uses evidence only and retires old side hunts safely",
     () => {
-      run('startGame("knight"); S.floor=30; createEnemy(); busy=false; save()');
+      run(`
+        startGame("knight");
+        S.floor = 30;
+        createEnemy();
+        busy = false;
+        save();
+      `);
       const expected = run("S.enemy.n");
-      run(`let legacy=JSON.parse(localStorage.getItem(SAVE_KEY)); delete legacy.discoveredMonsters;
-      legacy.enemy.hunt=true; localStorage.setItem(SAVE_KEY,JSON.stringify(legacy));`);
+      run(`
+        let legacy = JSON.parse(localStorage.getItem(SAVE_KEY));
+        delete legacy.discoveredMonsters;
+        legacy.enemy.hunt = true;
+        localStorage.setItem(SAVE_KEY, JSON.stringify(legacy));
+      `);
       const before = run("JSON.parse(localStorage.getItem(SAVE_KEY))");
       assert.equal(run("load()"), true);
       assert.equal(run("S.enemy"), null);
@@ -530,18 +737,33 @@ async function main() {
         JSON.stringify(before.materials),
       );
       assert.ok(run("S.discoveredMonsters").includes(expected));
-      run(`let old=JSON.parse(localStorage.getItem(SAVE_KEY)); delete old.discoveredMonsters;
-      old.enemy=null; old.logs=[]; old.floor=old.highestFloor=800;
-      localStorage.setItem(SAVE_KEY,JSON.stringify(old)); load();`);
+      run(`
+        let old = JSON.parse(localStorage.getItem(SAVE_KEY));
+        delete old.discoveredMonsters;
+        old.enemy = null;
+        old.logs = [];
+        old.floor = old.highestFloor = 800;
+        localStorage.setItem(SAVE_KEY, JSON.stringify(old));
+        load();
+      `);
       assert.equal(run("S.discoveredMonsters.length"), 0);
-      run(`let logSave=JSON.parse(localStorage.getItem(SAVE_KEY)); logSave.enemy=null;
-      logSave.logs=[{msg:'魔物「'+MONSTERS[1].n+'」出現！'}];
-      logSave.discoveredMonsters=['not a real monster',MONSTERS[1].n,MONSTERS[1].n];
-      localStorage.setItem(SAVE_KEY,JSON.stringify(logSave)); load();`);
+      run(`
+        let logSave = JSON.parse(localStorage.getItem(SAVE_KEY));
+        logSave.enemy = null;
+        logSave.logs = [{ msg: "魔物「" + MONSTERS[1].n + "」出現！" }];
+        logSave.discoveredMonsters = [
+          "not a real monster",
+          MONSTERS[1].n,
+          MONSTERS[1].n,
+        ];
+        localStorage.setItem(SAVE_KEY, JSON.stringify(logSave));
+        load();
+      `);
       assert.equal(run("S.discoveredMonsters.length"), 1);
       assert.equal(run("S.discoveredMonsters[0]"), run("MONSTERS[1].n"));
     },
   );
+  // 事件間隔維持 5～10 層，首領樓層不會有事件。
   await check(
     "all event gaps remain 5-10, including 991-999; no event on Boss floor",
     () => {
@@ -559,14 +781,23 @@ async function main() {
       sandbox.Math.random = Math.random;
     },
   );
+  // 還沒處理的事件可以接續，寶箱不會因重新整理多拿。
   await check(
     "pending events resume; treasure does not duplicate on refresh",
     async () => {
-      run('S.floor=230; S.lastEventType="fountain"; event();');
+      run(`
+        S.floor = 230;
+        S.lastEventType = "fountain";
+        event();
+      `);
       const type = run("S.pendingEvent.type");
       run("continueGame()");
       assert.equal(run("S.pendingEvent.type"), type);
-      run('S.pendingEvent={type:"treasure"}; treasure(); save();');
+      run(`
+        S.pendingEvent = { type: "treasure" };
+        treasure();
+        save();
+      `);
       const gold = run("S.gold");
       run("continueGame(); continueGame();");
       assert.equal(run("S.gold"), gold);
@@ -584,11 +815,18 @@ async function main() {
       assert.equal(run("S.pendingEvent"), null);
     },
   );
+  // 事件結果顯示實際增減，重新整理不會重複。
   await check(
     "event results report clamped gains/losses and survive reload without repeating",
     () => {
       run(
-        'startGame("knight"); S.gold=100; S.hp=1; S.pendingEvent={type:"gamble",good:false}; eventGambleChest();',
+        `
+          startGame("knight");
+          S.gold = 100;
+          S.hp = 1;
+          S.pendingEvent = { type: "gamble", good: false };
+          eventGambleChest();
+        `,
       );
       const option = getNode("#eventOptions").children[0];
       option.onclick();
@@ -608,7 +846,12 @@ async function main() {
       assert.equal(run("S.gold"), 88);
       assert.equal(run("S.floor"), 0);
       run(
-        'acknowledgeEventResult(); S.hp=stats().maxHp-2; S.pendingEvent={type:"fountain"}; eventFountain();',
+        `
+          acknowledgeEventResult();
+          S.hp = stats().maxHp - 2;
+          S.pendingEvent = { type: "fountain" };
+          eventFountain();
+        `,
       );
       getNode("#eventOptions").children[0].onclick();
       assert.equal(
@@ -619,8 +862,13 @@ async function main() {
       assert.equal(run("S.pendingEvent"), null);
     },
   );
+  // 商店篩選只顯示符合的裝備或藥水。
   await check("shop filters contain only matching equipment or potions", () => {
-    run('startGame("knight"); S.highestFloor=1000; S.floor=1000;');
+    run(`
+      startGame("knight");
+      S.highestFloor = 1000;
+      S.floor = 1000;
+    `);
     for (const filter of ["potion", "weapon", "armor"]) {
       getNode("[data-shop-filter].active").dataset.shopFilter = filter;
       run("renderShop()");
@@ -636,6 +884,7 @@ async function main() {
       );
     }
   });
+  // 紀錄數量、動畫上限、零數值強化與稀有度顏色。
   await check(
     "log size, animation cap, zero-stat enhancements and rarity colors",
     () => {
@@ -653,7 +902,14 @@ async function main() {
         0,
       );
       run(
-        'S.gold=999999; S.materials=Object.fromEntries(Object.keys(MATERIALS).map(id=>[id,999])); buyGear("knight_armor_prismatic"); equip(S.gear[0].uid);',
+        `
+          S.gold = 999999;
+          S.materials = Object.fromEntries(
+            Object.keys(MATERIALS).map((id) => [id, 999]),
+          );
+          buyGear("knight_armor_prismatic");
+          equip(S.gear[0].uid);
+        `,
       );
       assert.equal(
         getNode('[data-equip-slot="armor"]').classList.contains(
@@ -663,6 +919,7 @@ async function main() {
       );
     },
   );
+  // 存檔壞掉時用備份，並保留到確認恢復。
   await check(
     "corrupted save uses backup and preserves it until valid recovery",
     () => {
@@ -677,6 +934,7 @@ async function main() {
       assert.equal(run("load()"), true);
     },
   );
+  // 在第 1000 層的存檔不算通關，打贏最後一戰才算。
   await check(
     "1000-floor save is not premature clear; final victory is clear",
     async () => {
@@ -687,10 +945,15 @@ async function main() {
       await run("victory()");
       assert.equal(run("S.completed"), true);
       assert.equal(run("S.floor"), 1000);
-      run('busy=false; continueGame(); chooseRoute("explore")');
+      run(`
+        busy = false;
+        continueGame();
+        chooseRoute("explore");
+      `);
       assert.equal(run("S.enemy"), null);
     },
   );
+  // 走完整 1000 層的路線、行動與事件都不會卡住。
   await check(
     "complete 1000-floor route/action/event chain does not get stuck",
     async () => {

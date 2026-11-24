@@ -1,3 +1,6 @@
+/*
+ * 測試：霓光突擊的聲音混音（音量分類、同時播放數量、立體聲與環境音）。
+ */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
@@ -10,10 +13,12 @@ const audioEnd = source.search(/\nfunction\s+onResize\s*\(/);
 assert.ok(audioStart >= 0 && audioEnd > audioStart, "audio source boundaries");
 const audioSource = source.slice(audioStart, audioEnd);
 
+// 建立一個假的瀏覽器聲音環境，只載入音效相關的程式碼。
 function harness(saved = {}) {
   const nodes = [],
     starts = [],
     buffers = [];
+  // 假的音訊參數；直接把目標值寫進 value。
   const parameter = () => ({
     value: 0,
     setValueAtTime(value) {
@@ -26,6 +31,7 @@ function harness(saved = {}) {
       this.value = value;
     },
   });
+  // 假的音訊節點；會記住接到哪裡、何時開始。
   function node(kind) {
     const result = {
       kind,
@@ -57,6 +63,7 @@ function harness(saved = {}) {
     nodes.push(result);
     return result;
   }
+  // 假的 AudioContext。
   class FakeAudioContext {
     constructor() {
       this.sampleRate = 8000;
@@ -100,6 +107,7 @@ function harness(saved = {}) {
       return Promise.resolve();
     }
   }
+  // 給程式碼用的沙盒環境。
   const context = vm.createContext({
     THREE,
     window: { AudioContext: FakeAudioContext },
@@ -111,6 +119,7 @@ function harness(saved = {}) {
     console,
     Promise,
   });
+  // 只截取主程式的音效部分來執行。
   vm.runInContext(
     `
     let audioContext,audioMaster,audioCompressor,audioLoadPromise;
@@ -134,10 +143,12 @@ function harness(saved = {}) {
 }
 
 const checks = [];
+// 登記一項測試。
 function test(name, execute) {
   checks.push({ name, execute });
 }
 
+// 三種音量能還原設定、修正壞掉的數值，並平順地調整。
 test("three volume buses restore settings, clamp corrupt input and smooth live gains", () => {
   const h = harness({
     neonEffectsVolume: "500",
@@ -148,7 +159,14 @@ test("three volume buses restore settings, clamp corrupt input and smooth live g
   assert.equal(h.run("mixSettings.ambience"), 0);
   assert.equal(h.run("mixSettings.feedback"), 0.55);
   h.run(
-    "initAudio();mixSettings.effects=NaN;mixSettings.ambience=.23;mixSettings.feedback=Infinity;masterVolume=-1;applyAudioMix();",
+    `
+      initAudio();
+      mixSettings.effects = NaN;
+      mixSettings.ambience = 0.23;
+      mixSettings.feedback = Infinity;
+      masterVolume = -1;
+      applyAudioMix();
+    `,
   );
   assert.equal(h.run("audioBuses.effects.gain.value"), 0.8);
   assert.equal(h.run("audioBuses.ambience.gain.value"), 0.23);
@@ -157,13 +175,23 @@ test("three volume buses restore settings, clamp corrupt input and smooth live g
   assert.equal(h.run("audioCompressor.ratio.value"), 8);
 });
 
+// 關掉其中一種音量，不影響其他種類。
 test("muting one bus preserves the other sound categories and rejects malformed parameters", () => {
   const h = harness();
-  h.run("initAudio();mixSettings.effects=0;applyAudioMix();");
+  h.run(`
+    initAudio();
+    mixSettings.effects = 0;
+    applyAudioMix();
+  `);
   assert.equal(h.run("playSample('rifle0')"), false);
   assert.equal(h.run("playTone(400,.1)"), true);
   h.run(
-    "mixSettings.effects=.8;applyAudioMix();playSample('rifle0',.2,NaN,NaN,Infinity);playTone(NaN,NaN,'invalid',.02,NaN);",
+    `
+      mixSettings.effects = 0.8;
+      applyAudioMix();
+      playSample("rifle0", 0.2, NaN, NaN, Infinity);
+      playTone(NaN, NaN, "invalid", 0.02, NaN);
+    `,
   );
   assert.ok(
     h.nodes.every((node) =>
@@ -174,6 +202,7 @@ test("muting one bus preserves the other sound categories and rejects malformed 
   );
 });
 
+// 同時播放的數量有上限；優先捨棄遠處的聲音。
 test("voice budget preserves player effects by evicting distant voices and releases nodes", () => {
   const h = harness();
   h.run("initAudio();");
@@ -193,6 +222,7 @@ test("voice budget preserves player effects by evicting distant voices and relea
   );
 });
 
+// 立體聲跟著玩家的方向，左右不會相反。
 test("spatial audio follows listener orientation and keeps left and right consistent", () => {
   const h = harness();
   assert.equal(h.run("spatialPan({x:10,y:0,z:0})"), 1);
@@ -202,6 +232,7 @@ test("spatial audio follows listener orientation and keeps left and right consis
   assert.equal(h.run("spatialPan({x:0,y:0,z:0})"), 0);
 });
 
+// 大量敵人開火時會限制次數，遠處的槍聲會變小。
 test("dense enemy fire is throttled and distant shots decay instead of retaining a loud floor", () => {
   const h = harness();
   h.run("initAudio();");
@@ -211,7 +242,10 @@ test("dense enemy fire is throttled and distant shots decay instead of retaining
       .length,
     1,
   );
-  h.run("audioContext.currentTime+=.06;playDistantShot(70,{x:70,y:0,z:0});");
+  h.run(`
+    audioContext.currentTime += 0.06;
+    playDistantShot(70, { x: 70, y: 0, z: 0 });
+  `);
   const shots = h.starts.filter((source) =>
     source.buffer?.name?.startsWith("rifle"),
   );
@@ -219,10 +253,15 @@ test("dense enemy fire is throttled and distant shots decay instead of retaining
   assert.ok(shots[1].target.gain.value < shots[0].target.gain.value / 5);
 });
 
+// 幾乎同時的爆炸不會把低音疊得太大聲。
 test("near-simultaneous explosions avoid multiplying low-frequency layers", () => {
   const h = harness();
   h.run(
-    "initAudio();playExplosionSound(0,{x:0,y:0,z:-1});playExplosionSound(0,{x:0,y:0,z:-1});",
+    `
+      initAudio();
+      playExplosionSound(0, { x: 0, y: 0, z: -1 });
+      playExplosionSound(0, { x: 0, y: 0, z: -1 });
+    `,
   );
   assert.equal(
     h.starts.filter((source) => source.buffer?.name === "explosion").length,
@@ -234,9 +273,14 @@ test("near-simultaneous explosions avoid multiplying low-frequency layers", () =
   );
 });
 
+// 環境音頭尾接得起來，重複啟動也不會多一份。
 test("ambient loop joins at silence and repeated starts do not allocate another loop", () => {
   const h = harness();
-  h.run("initAudio();startAmbientSound();startAmbientSound();");
+  h.run(`
+    initAudio();
+    startAmbientSound();
+    startAmbientSound();
+  `);
   const loops = h.starts.filter((source) => source.loop);
   assert.equal(loops.length, 1);
   const samples = loops[0].buffer.getChannelData(0);

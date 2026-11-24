@@ -1,5 +1,7 @@
+# 讓每個人的編輯器用同樣的編碼、換行與縮排。
 root = true
 
+# 所有檔案：UTF-8、LF 換行、兩個空白縮排。
 [*]
 charset = utf-8
 end_of_line = lf
@@ -7,5 +9,6 @@ insert_final_newline = true
 indent_style = space
 indent_size = 2
 
+# 說明文件的行尾空白有換行的意思，不要自動刪掉。
 [*.md]
 trim_trailing_whitespace = false

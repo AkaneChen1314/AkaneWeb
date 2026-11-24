@@ -5,7 +5,7 @@
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-// Rebuild only when game source or audio changes. Players use the committed browser.js.
+// 只有規則或音效改變時才重建；玩家用的是已提交的 browser.js。
 const binary = process.argv[2] || "esbuild";
 const version = spawnSync(binary, ["--version"], { encoding: "utf8" });
 if (

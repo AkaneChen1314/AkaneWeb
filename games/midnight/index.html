@@ -1,4 +1,8 @@
 <!doctype html>
+<!--
+  遊戲版面入口：選手選擇 → 對戰 → 結算，另有說明與暫停視窗。
+  這裡只有畫面結構與文字；規則在 src 資料夾的程式，外觀在 styles.css。
+-->
 <html lang="zh-Hant">
   <head>
     <meta charset="utf-8" />
@@ -15,10 +19,15 @@
       content="選擇四名原創鬥士之一，在雨夜天台與電腦或同鍵盤的朋友對戰。"
     />
     <title>午夜擂台 | Midnight Circuit</title>
+    <!-- 樣式。 -->
     <link
       rel="stylesheet"
       href="styles.css?v=10"
     />
+    <!--
+      遊戲程式，依序載入：選手資料、電腦、比賽規則、骨架、場地、特效、動
+      作、繪圖、聲音、主程式。順序不要更動。
+    -->
     <script
       src="src/roster.js?v=10"
       defer
@@ -67,12 +76,15 @@
       src="src/app.js?v=10"
       defer
     ></script>
+    <!-- 網站共用字型。 -->
     <link
       rel="stylesheet"
       href="../../shared/fonts.css"
     />
   </head>
   <body>
+    <!-- ===== 上方列：遊戲名稱、聲音與說明 ===== -->
+
     <header class="site-header">
       <div class="header-inner shell">
         <div class="wordmark">
@@ -80,14 +92,14 @@
             class="brand-mark"
             aria-hidden="true"
           ></span>
-          <div
-            ><span class="brand-name">午夜擂台</span
+          <div>
+            <span class="brand-name">午夜擂台</span
             ><span
               class="brand-en"
               lang="en"
               >Midnight Circuit</span
-            ></div
-          >
+            >
+          </div>
         </div>
         <div class="header-actions">
           <button
@@ -95,34 +107,39 @@
             class="utility"
             id="music-button"
             aria-pressed="true"
-            >配樂開啟</button
           >
+            配樂開啟
+          </button>
           <button
             type="button"
             class="utility"
             id="help-button"
-            ><span
+          >
+            <span
               class="key-icon"
               aria-hidden="true"
             ></span
-            >操作說明</button
-          >
+            >操作說明
+          </button>
           <button
             type="button"
             class="utility"
             id="sound-button"
             aria-pressed="true"
-            ><span
+          >
+            <span
               class="sound-icon"
               aria-hidden="true"
             ></span
-            ><span id="sound-label">音效開啟</span></button
-          >
+            ><span id="sound-label">音效開啟</span>
+          </button>
         </div>
       </div>
     </header>
 
     <main class="shell">
+      <!-- ===== 畫面一：選擇選手 ===== -->
+
       <section
         id="select-screen"
         aria-labelledby="select-title"
@@ -132,10 +149,12 @@
             <h1
               id="select-title"
               tabindex="-1"
-              >選擇鬥士</h1
             >
+              選擇鬥士
+            </h1>
             <p>選擇你的鬥士，率先拿下兩回合。</p>
           </div>
+          <!-- 對戰模式：對電腦、雙人或觀戰。 -->
           <div
             class="segmented"
             aria-label="對戰模式"
@@ -145,41 +164,48 @@
               type="button"
               data-mode="solo"
               aria-pressed="true"
-              >單人對電腦</button
             >
+              單人對電腦
+            </button>
             <button
               type="button"
               data-mode="versus"
               aria-pressed="false"
-              >本機雙人</button
             >
+              本機雙人
+            </button>
             <button
               type="button"
               data-mode="training"
               aria-pressed="false"
-              >練習模式</button
             >
+              練習模式
+            </button>
             <button
               type="button"
               data-mode="arcade"
               aria-pressed="false"
-              >街機挑戰</button
             >
+              街機挑戰
+            </button>
             <button
               type="button"
               data-mode="watch"
               aria-pressed="false"
-              >電腦對打</button
             >
+              電腦對打
+            </button>
           </div>
         </div>
 
+        <!-- 目前選手的展示。 -->
         <article
           id="showcase"
           class="showcase"
           data-fighter="thunder"
           aria-labelledby="fighter-name"
         >
+          <!-- 選手圖。 -->
           <div
             class="showcase-visual"
             aria-hidden="true"
@@ -193,56 +219,60 @@
               alt=""
             />
           </div>
+          <!-- 選手的介紹與招式。 -->
           <div class="showcase-details">
             <p
               class="fighter-role"
               id="fighter-role"
-              >突進型</p
             >
+              突進型
+            </p>
             <h2 id="fighter-name">雷隼</h2>
             <p
               class="fighter-summary"
               id="fighter-summary"
-              >快速拉近距離，用連擊壓制對手。</p
             >
+              快速拉近距離，用連擊壓制對手。
+            </p>
             <dl class="move-list">
               <div class="move-row">
                 <kbd id="special-key">L</kbd>
-                <div
-                  ><dt
-                    ><span class="move-type">技能一</span
-                    ><strong id="special-name">雷步突拳</strong></dt
-                  ><dd id="special-description"
-                    >向前衝刺，打出一道帶電重拳。</dd
-                  ></div
-                >
+                <div>
+                  <dt>
+                    <span class="move-type">技能一</span
+                    ><strong id="special-name">雷步突拳</strong>
+                  </dt>
+                  <dd id="special-description">向前衝刺，打出一道帶電重拳。</dd>
+                </div>
               </div>
               <div class="move-row">
                 <kbd id="skill2-key">I</kbd>
-                <div
-                  ><dt
-                    ><span class="move-type">技能二</span
-                    ><strong id="skill2-name">雷霆升龍</strong></dt
-                  ><dd id="skill2-description">起手無敵的升空雷拳。</dd></div
-                >
+                <div>
+                  <dt>
+                    <span class="move-type">技能二</span
+                    ><strong id="skill2-name">雷霆升龍</strong>
+                  </dt>
+                  <dd id="skill2-description">起手無敵的升空雷拳。</dd>
+                </div>
               </div>
               <div class="move-row">
                 <kbd id="super-key">O</kbd>
-                <div
-                  ><dt
-                    ><span class="move-type">大招</span
-                    ><strong id="super-name">雷鳴連擊</strong></dt
-                  ><dd id="super-description"
-                    >以三段追擊把對手逼向場邊。</dd
-                  ></div
-                >
+                <div>
+                  <dt>
+                    <span class="move-type">大招</span
+                    ><strong id="super-name">雷鳴連擊</strong>
+                  </dt>
+                  <dd id="super-description">以三段追擊把對手逼向場邊。</dd>
+                </div>
               </div>
             </dl>
           </div>
         </article>
 
+        <!-- 選手名單的標題。 -->
         <div class="roster-toolbar">
           <h2>鬥士名單</h2>
+          <!-- 電腦難度。 -->
           <div
             class="segmented difficulty"
             id="difficulty"
@@ -253,21 +283,25 @@
               type="button"
               data-difficulty="easy"
               aria-pressed="false"
-              >簡單</button
             >
+              簡單
+            </button>
             <button
               type="button"
               data-difficulty="normal"
               aria-pressed="true"
-              >普通</button
             >
+              普通
+            </button>
             <button
               type="button"
               data-difficulty="hard"
               aria-pressed="false"
-              >困難</button
             >
+              困難
+            </button>
           </div>
+          <!-- 要設定哪一方的選手。 -->
           <div
             class="segmented seats"
             id="seat-picker"
@@ -278,17 +312,20 @@
               type="button"
               data-seat="0"
               aria-pressed="true"
-              >玩家 1</button
             >
+              玩家 1
+            </button>
             <button
               type="button"
               data-seat="1"
               aria-pressed="false"
               id="opponent-seat"
-              >電腦</button
             >
+              電腦
+            </button>
           </div>
         </div>
+        <!-- 選手卡由程式產生。 -->
         <div
           class="roster"
           id="roster"
@@ -297,6 +334,7 @@
         ></div>
         <noscript><p>啟用瀏覽器的 JavaScript 即可選角和對戰。</p></noscript>
 
+        <!-- 目前的對戰組合與開始按鈕。 -->
         <div class="match-bar">
           <div
             class="matchup"
@@ -322,37 +360,44 @@
             id="start-button"
             class="primary"
             disabled
-            >開戰<span
+          >
+            開戰<span
               class="chevron"
               aria-hidden="true"
-            ></span
-          ></button>
+            ></span>
+          </button>
         </div>
       </section>
+
+      <!-- ===== 畫面二：對戰 ===== -->
 
       <section
         id="battle-screen"
         hidden
         aria-labelledby="battle-title"
       >
+        <!-- 場地名稱與按鈕。 -->
         <div class="battle-heading">
-          <div
-            ><h1 id="battle-title">雨夜天台</h1
-            ><p id="battle-mode">單人對電腦</p></div
-          >
+          <div>
+            <h1 id="battle-title">雨夜天台</h1>
+            <p id="battle-mode">單人對電腦</p>
+          </div>
           <button
             type="button"
             class="utility pause-button"
             id="pause-button"
-            >暫停 <kbd>Esc</kbd></button
           >
+            暫停 <kbd>Esc</kbd>
+          </button>
         </div>
+        <!-- 擂台。 -->
         <div
           class="arena"
           id="arena"
           tabindex="-1"
           aria-label="對戰場地"
         >
+          <!-- 對戰畫面由程式畫在這裡。 -->
           <canvas
             id="fight-canvas"
             width="1280"
@@ -360,7 +405,9 @@
             aria-label="格鬥畫面"
             >這個遊戲需要支援 Canvas 的瀏覽器。</canvas
           >
+          <!-- 上方：雙方血條、回合與時間。 -->
           <div class="hud">
+            <!-- 左邊的選手。 -->
             <div
               class="fighter-hud"
               id="left-hud"
@@ -373,10 +420,10 @@
                 alt=""
               />
               <div class="hud-details">
-                <div class="hud-label"
-                  ><strong class="hud-name"></strong
-                  ><span class="hud-side">玩家 1</span></div
-                >
+                <div class="hud-label">
+                  <strong class="hud-name"></strong
+                  ><span class="hud-side">玩家 1</span>
+                </div>
                 <div
                   class="health gauge"
                   role="meter"
@@ -384,18 +431,22 @@
                   aria-valuemin="0"
                   aria-valuemax="100"
                   aria-valuenow="100"
-                  ><div class="gauge-lag"></div><div class="gauge-fill"></div
-                ></div>
+                >
+                  <div class="gauge-lag"></div>
+                  <div class="gauge-fill"></div>
+                </div>
                 <div class="hud-rounds"><span></span><span></span></div>
               </div>
             </div>
-            <div class="hud-center"
-              ><time
+            <!-- 回合與時間。 -->
+            <div class="hud-center">
+              <time
                 id="round-clock"
                 datetime="PT60S"
                 >60</time
-              ><span id="round-label">第 1 回合</span></div
-            >
+              ><span id="round-label">第 1 回合</span>
+            </div>
+            <!-- 右邊的選手。 -->
             <div
               class="fighter-hud right"
               id="right-hud"
@@ -408,10 +459,10 @@
                 alt=""
               />
               <div class="hud-details">
-                <div class="hud-label"
-                  ><strong class="hud-name"></strong
-                  ><span class="hud-side">電腦</span></div
-                >
+                <div class="hud-label">
+                  <strong class="hud-name"></strong
+                  ><span class="hud-side">電腦</span>
+                </div>
                 <div
                   class="health gauge"
                   role="meter"
@@ -419,29 +470,37 @@
                   aria-valuemin="0"
                   aria-valuemax="100"
                   aria-valuenow="100"
-                  ><div class="gauge-lag"></div><div class="gauge-fill"></div
-                ></div>
+                >
+                  <div class="gauge-lag"></div>
+                  <div class="gauge-fill"></div>
+                </div>
                 <div class="hud-rounds"><span></span><span></span></div>
               </div>
             </div>
           </div>
+          <!-- 回合開始與結束的大字。 -->
           <div
             class="announcement"
             id="announcement"
             role="status"
             hidden
-            ><strong></strong><span></span
-          ></div>
+          >
+            <strong></strong><span></span>
+          </div>
+          <!-- 下方：大招能量與技能。 -->
           <div class="power-hud">
             <div
               class="power-side"
               id="left-power"
             >
-              <div class="power-label"
-                ><span class="super-name"><kbd hidden>O</kbd>大招</span
-                ><span class="burst-status" data-ready="false">爆氣可用</span
-                ><span class="super-value">32%</span></div
-              >
+              <div class="power-label">
+                <span class="super-name"><kbd hidden>O</kbd>大招</span
+                ><span
+                  class="burst-status"
+                  data-ready="false"
+                  >爆氣可用</span
+                ><span class="super-value">32%</span>
+              </div>
               <div
                 class="gauge power-gauge"
                 role="meter"
@@ -449,18 +508,22 @@
                 aria-valuemin="0"
                 aria-valuemax="100"
                 aria-valuenow="32"
-                ><div class="gauge-fill"></div
-              ></div>
+              >
+                <div class="gauge-fill"></div>
+              </div>
             </div>
             <div
               class="power-side right"
               id="right-power"
             >
-              <div class="power-label"
-                ><span class="super-name"><kbd hidden>O</kbd>大招</span
-                ><span class="burst-status" data-ready="false">爆氣可用</span
-                ><span class="super-value">32%</span></div
-              >
+              <div class="power-label">
+                <span class="super-name"><kbd hidden>O</kbd>大招</span
+                ><span
+                  class="burst-status"
+                  data-ready="false"
+                  >爆氣可用</span
+                ><span class="super-value">32%</span>
+              </div>
               <div
                 class="gauge power-gauge"
                 role="meter"
@@ -468,10 +531,12 @@
                 aria-valuemin="0"
                 aria-valuemax="100"
                 aria-valuenow="32"
-                ><div class="gauge-fill"></div
-              ></div>
+              >
+                <div class="gauge-fill"></div>
+              </div>
             </div>
           </div>
+          <!-- 結算畫面。 -->
           <div
             id="match-result"
             class="result-shade"
@@ -498,26 +563,30 @@
                   type="button"
                   class="utility"
                   id="result-back"
-                  >返回選角</button
                 >
+                  返回選角
+                </button>
                 <button
                   type="button"
                   class="primary"
                   id="rematch-button"
-                  >再戰一場<span
+                >
+                  再戰一場<span
                     class="chevron"
                     aria-hidden="true"
-                  ></span
-                ></button>
+                  ></span>
+                </button>
               </div>
             </div>
           </div>
         </div>
+        <!-- 快捷鍵提示。 -->
         <div
           class="battle-keys"
           id="battle-keys"
           aria-label="快捷鍵"
         ></div>
+        <!-- 觸控按鈕由 app.js 產生。 -->
         <div
           class="touch-controls"
           id="touch-controls"
@@ -526,19 +595,23 @@
       </section>
     </main>
 
+    <!-- ===== 視窗 ===== -->
+
     <dialog
       id="help-dialog"
       aria-labelledby="help-title"
     >
-      <div class="dialog-heading"
-        ><h2 id="help-title">操作說明</h2
-        ><button
+      <div class="dialog-heading">
+        <h2 id="help-title">操作說明</h2>
+        <button
           type="button"
           class="utility"
           data-close="help"
-          >關閉</button
-        ></div
-      >
+        >
+          關閉
+        </button>
+      </div>
+      <!-- 雙方按鍵與進階指令由程式填入。 -->
       <table
         class="key-table"
         id="help-keys"
@@ -550,38 +623,40 @@
         id="help-commands"
         aria-label="進階指令"
       ></table>
+      <!-- 操作技巧。 -->
       <ul class="help-tips">
-        <li
-          >連按輕攻會自動接成三段連擊，再按一下就接技能一。輕攻打中後也可以改按重攻、技能或大招，提早一點點按也接得上。</li
-        >
-        <li
-          >站得有點遠也沒關係：出拳出腳時會自動往前跨一步。按住前再出重攻，打得更遠。</li
-        >
-        <li
-          >按住後退，對手打過來時會自動防禦；蹲下再按住後退就是蹲防。也可以按防禦鍵站著不動擋。</li
-        >
-        <li
-          >攻擊到來的前一刻按下防禦鍵是「精準防禦」：不受削血、彈開對手並獲得能量。在對手出招前搶先打中會造成「反擊」加傷。</li
-        >
-        <li
-          >閃避起步時短暫無敵，不按方向會往後退，搭配左右可以朝指定方向閃開。出招途中也可以用閃避或衝刺取消。</li
-        >
-        <li
-          >每名鬥士有兩招技能（L、I），各自冷卻。技能命中後可互相接續，再接大招（O）。大招能量會隨時間及交手累積，滿格後即可施放。</li
-        >
-        <li
-          >遇到地面震波可以跳起來，較高的飛行道具可以蹲下躲過。兩發飛行道具相撞會互相抵銷。</li
-        >
-        <li
-          >單人模式也能改用方向鍵移動，搭配 Z 輕攻、X 重攻、C 技能一、V 技能二、B
-          大招、G 投技。</li
-        >
-        <li
-          >連擊越長，後續傷害會逐步遞減。練習模式中生命與能量會自動回復，適合練連段。</li
-        >
+        <li>
+          連按輕攻會自動接成三段連擊，再按一下就接技能一。輕攻打中後也可以改按重攻、技能或大招，提早一點點按也接得上。
+        </li>
+        <li>
+          站得有點遠也沒關係：出拳出腳時會自動往前跨一步。按住前再出重攻，打得更遠。
+        </li>
+        <li>
+          按住後退，對手打過來時會自動防禦；蹲下再按住後退就是蹲防。也可以按防禦鍵站著不動擋。
+        </li>
+        <li>
+          攻擊到來的前一刻按下防禦鍵是「精準防禦」：不受削血、彈開對手並獲得能量。在對手出招前搶先打中會造成「反擊」加傷。
+        </li>
+        <li>
+          閃避起步時短暫無敵，不按方向會往後退，搭配左右可以朝指定方向閃開。出招途中也可以用閃避或衝刺取消。
+        </li>
+        <li>
+          每名鬥士有兩招技能（L、I），各自冷卻。技能命中後可互相接續，再接大招（O）。大招能量會隨時間及交手累積，滿格後即可施放。
+        </li>
+        <li>
+          遇到地面震波可以跳起來，較高的飛行道具可以蹲下躲過。兩發飛行道具相撞會互相抵銷。
+        </li>
+        <li>
+          單人模式也能改用方向鍵移動，搭配 Z 輕攻、X 重攻、C 技能一、V 技能二、B
+          大招、G 投技。
+        </li>
+        <li>
+          連擊越長，後續傷害會逐步遞減。練習模式中生命與能量會自動回復，適合練連段。
+        </li>
       </ul>
     </dialog>
 
+    <!-- 暫停。 -->
     <dialog
       id="pause-dialog"
       aria-labelledby="pause-title"
@@ -592,24 +667,27 @@
           type="button"
           class="utility"
           id="pause-back"
-          >返回選角</button
         >
+          返回選角
+        </button>
         <button
           type="button"
           class="utility"
           id="restart-button"
-          >重打對戰</button
         >
+          重打對戰
+        </button>
         <button
           type="button"
           class="primary"
           id="resume-button"
           autofocus
-          >繼續對戰<span
+        >
+          繼續對戰<span
             class="chevron"
             aria-hidden="true"
-          ></span
-        ></button>
+          ></span>
+        </button>
       </div>
     </dialog>
   </body>

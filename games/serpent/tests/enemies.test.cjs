@@ -1,8 +1,12 @@
+/*
+ * 測試：霓虹蛇的敵人種類、難度與首領招式。
+ */
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const S = require("../engine.js");
 
+// 建立指定難度的空地圖。
 function arena(difficulty = "normal", mode = "survival") {
   const g = new S.Game({ mode, seed: 21, difficulty });
   Object.assign(g, {
@@ -22,11 +26,13 @@ function arena(difficulty = "normal", mode = "survival") {
   });
   return g;
 }
+// 放一個指定種類的敵人。
 function foe(g, kind, x, z, extra = {}) {
   const e = g.spawnEnemy(false, 0, kind, { x, z });
   Object.assign(e, { age: 2 }, extra);
   return e;
 }
+// 前進指定秒數；遇到強化選擇就選第一個。
 function run(g, seconds, input = {}) {
   for (let i = 0; i < Math.round(seconds * 60); i++) {
     g.update(1 / 60, input);
@@ -34,6 +40,7 @@ function run(g, seconds, input = {}) {
   }
 }
 
+// 難度會改變敵人種類、數值、傷害與波數。
 test("difficulty changes the monster roster, enemy stats, incoming damage and arena waves", () => {
   const easy = arena("easy"),
     normal = arena("normal"),
@@ -78,12 +85,14 @@ test("difficulty changes the monster roster, enemy stats, incoming damage and ar
   );
 });
 
+// 新怪物第一次出現時會提示。
 test("new monsters are announced when a wave introduces them", () => {
   const g = arena("normal");
   assert.deepEqual(g.newKinds(2).sort(), ["分裂蟲", "群蜂", "衝鋒甲蟲"].sort());
   assert.deepEqual(g.newKinds(3).sort(), ["盾甲蟲", "自爆蟲"].sort());
 });
 
+// 蟲群成群出現，分裂怪會變成小隻。
 test("swarms arrive as packs and splitters split into minis", () => {
   const g = arena("normal");
   assert.ok(g.spawnPack("swarm").length >= 4);
@@ -98,6 +107,7 @@ test("swarms arrive as packs and splitters split into minis", () => {
   }
 });
 
+// 盾甲蟲要先用衝撞打破盾。
 test("shield beetles block bites until a ram breaks the shield", () => {
   const g = arena(),
     e = foe(g, "shield", 0, -2.5, { hp: 500, maxHp: 500, speed: 0 });
@@ -115,6 +125,7 @@ test("shield beetles block bites until a ram breaks the shield", () => {
   assert.equal(e.hp, 380);
 });
 
+// 自爆怪靠近後倒數爆炸，也會傷到附近敵人。
 test("bombers arm near you, explode after the fuse and also hurt nearby enemies", () => {
   const g = arena();
   g.biteCooldown = 1e9;
@@ -136,6 +147,7 @@ test("bombers arm near you, explode after the fuse and also hurt nearby enemies"
   assert.equal(k.health, k.maxHealth);
 });
 
+// 衝鋒怪先預警再直線衝撞，之後會暈眩並受到更多傷害。
 test("chargers telegraph, charge in a locked line, then stay stunned and take extra damage", () => {
   const g = arena();
   g.biteCooldown = 1e9;
@@ -154,6 +166,7 @@ test("chargers telegraph, charge in a locked line, then stay stunned and take ex
   assert.equal(hp - c.hp, 60);
 });
 
+// 治療怪會回復附近同伴。
 test("healers restore nearby allies", () => {
   const g = arena();
   g.biteCooldown = 1e9;
@@ -164,6 +177,7 @@ test("healers restore nearby allies", () => {
   assert.ok(ally.hp > ally.maxHp * 0.29);
 });
 
+// 狙擊怪先用雷射瞄準，再射出快速子彈。
 test("snipers aim with a laser before firing a fast shot", () => {
   const g = arena("hard");
   g.biteCooldown = 1e9;
@@ -177,6 +191,7 @@ test("snipers aim with a laser before firing a fast shot", () => {
   assert.ok(Math.hypot(shot.vx, shot.vz) > 20);
 });
 
+// 首領有三個階段，換階段時怒吼無敵，之後繼續戰鬥。
 test("bosses have three phases, roar invulnerably between them and keep fighting", () => {
   const g = arena(),
     b = g.spawnEnemy(true, 0);
@@ -193,6 +208,7 @@ test("bosses have three phases, roar invulnerably between them and keep fighting
   assert.equal(b.phase, 3);
 });
 
+// 首領的每一招都會產生對應的攻擊。
 test("every boss move produces its own attack", () => {
   const check = {
     quake: (g) => g.hazards.some((h) => h.cause === "shockwave"),
@@ -229,6 +245,7 @@ test("every boss move produces its own attack", () => {
   );
 });
 
+// 女王的護衛還在時，受到的傷害較少。
 test("the queen guard reduces damage while her minions live", () => {
   const g = arena(),
     b = g.spawnEnemy(true, 1);
@@ -243,6 +260,7 @@ test("the queen guard reduces damage while her minions live", () => {
   assert.equal(b.hp, 865);
 });
 
+// 可以衝過環形攻擊；雷射會掃動，毒池會持續傷害。
 test("rings can be dashed through, lasers sweep and poison pools tick", () => {
   const ring = () => ({
     type: "ring",
@@ -300,6 +318,7 @@ test("rings can be dashed through, lasers sweep and poison pools tick", () => {
   assert.equal(p.health, p.maxHealth - 20);
 });
 
+// 高難度的首領血量較多，並提早一個階段使用大招。
 test("hard bosses unlock their big moves one phase earlier and have more health", () => {
   const n = new S.Game({ seed: 3, difficulty: "normal" }),
     h = new S.Game({ seed: 3, difficulty: "hard" });
@@ -310,6 +329,7 @@ test("hard bosses unlock their big moves one phase earlier and have more health"
   assert.ok(bh.maxHp > bn.maxHp);
 });
 
+// 難度會存進個人資料與紀錄。
 test("difficulty is saved with the profile and run history", () => {
   const p = S.sanitizeProfile({
     difficulty: "hard",

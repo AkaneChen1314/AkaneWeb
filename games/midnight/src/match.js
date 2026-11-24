@@ -45,6 +45,7 @@
     guard: false,
     actions: [],
   };
+  // 攻擊的優先順序，大的可以取消小的。
   const RANK = {
     light: 0,
     heavy: 1,
@@ -54,6 +55,7 @@
     super: 3,
   };
   const COOLDOWN_KEY = { special: "specialCooldown", skill2: "skill2Cooldown" };
+  // 打中時畫面停頓的秒數。
   const HIT_STOP = {
     light: 0.055,
     heavy: 0.085,
@@ -64,23 +66,28 @@
     super: 0.07,
   };
 
+  // 小工具：限制範圍、倒數與場地邊界。
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const decay = (value, dt) => Math.max(0, value - dt);
   const stageX = (x) => clamp(x, FIELD.left, FIELD.right);
+  // 目前是否在招式的某個時間區段內。
   const within = (move, key) => {
     const window = move?.spec[key];
     return Boolean(
       window && move.elapsed >= window[0] && move.elapsed < window[1],
     );
   };
+  // 有沒有預先輸入這個動作。
   const has = (fighter, action) =>
     fighter.buffer.some((entry) => entry.action === action);
+  // 用掉預先輸入的動作。
   const take = (fighter, ...actions) => {
     fighter.buffer = fighter.buffer.filter(
       (entry) => !actions.includes(entry.action),
     );
   };
 
+  // 一位鬥士的初始狀態。
   function createFighter(profile, index) {
     return {
       profile,
@@ -131,6 +138,7 @@
     };
   }
 
+  // 身體的上下範圍，蹲下時比較矮。
   function body(fighter) {
     const height = fighter.profile.size * (fighter.crouch ? 0.57 : 0.92);
     return [fighter.y + 4, fighter.y + height];
@@ -175,12 +183,14 @@
     return at;
   }
 
+  // 現在打不到：無敵、閃避或招式的無敵時間。
   function invulnerable(fighter) {
     if (fighter.safe > 0) return true;
     if (fighter.dodge && fighter.dodge.elapsed < 0.205) return true;
     return within(fighter.move, "invulnerable");
   }
 
+  // 記錄這一步的輸入。
   function recordInputs(fighter, controls) {
     for (const action of controls.actions) {
       fighter.buffer = fighter.buffer.filter(
@@ -198,7 +208,9 @@
     );
   }
 
+  // 一場比賽的規則：移動、攻擊判定、傷害、回合與勝負。
   class Match {
+    // 建立比賽；demo 是兩邊都由電腦操作。
     constructor(
       profiles,
       {
@@ -231,6 +243,7 @@
       this.resetRound();
     }
 
+    // 開始新的回合。
     resetRound() {
       this.fighters = this.profiles.map(createFighter);
       this.projectiles = [];
@@ -261,6 +274,7 @@
       return 0.3;
     }
 
+    // 推進一步。
     step(dt, playerInputs = []) {
       if (this.phase === "over") return;
       for (const fighter of this.fighters) {
@@ -269,6 +283,7 @@
       }
       for (const shot of this.projectiles) shot.previousX = shot.x;
       this.phaseTime += dt;
+      // 登場。
       if (this.phase === "intro") {
         if (this.phaseTime >= 1.55) {
           this.phase = "fight";
@@ -282,12 +297,14 @@
         playerInputs[0] ?? EMPTY_CONTROLS,
         playerInputs[1] ?? EMPTY_CONTROLS,
       ];
+      // 回合結束後仍讓角色落地。
       if (this.phase === "round-end") {
         // 輸的人繼續倒下、滑行，雙方都不能行動
         for (const fighter of this.fighters) this.settle(fighter, dt);
         if (this.phaseTime >= 2.2) this.advanceRound();
         return;
       }
+      // 打中停頓：只處理輸入。
       if (this.hitStop > 0) {
         this.hitStop = decay(this.hitStop, dt);
         this.fighters.forEach((fighter, index) =>
@@ -331,6 +348,7 @@
         this.finishRound(knockout ? "ko" : "time");
     }
 
+    // 練習模式自動恢復血量與能量。
     refillTraining(dt) {
       for (const fighter of this.fighters) {
         if (fighter.stun === 0 && this.elapsed - fighter.lastHurt > 1.1)
@@ -340,6 +358,7 @@
       }
     }
 
+    // 回合結束後的慣性。
     settle(fighter, dt) {
       fighter.heldBy = null;
       fighter.flash = decay(fighter.flash, dt); // 否則倒地的人會一直是整片白色
@@ -421,6 +440,7 @@
       fighter.stun = 0;
       fighter.knock = 0;
       fighter.dash = null;
+      // 爆氣中的動作。
       fighter.move = {
         spec: BURST,
         action: "burst",
@@ -440,8 +460,7 @@
       const heavy = find("heavy");
       if (!heavy) return;
       const light = find("light");
-      const together =
-        light && Math.abs(light.at - heavy.at) <= THROW_CHORD;
+      const together = light && Math.abs(light.at - heavy.at) <= THROW_CHORD;
       const fresh =
         fighter.move?.action === "light" &&
         !fighter.move.touched &&
@@ -522,6 +541,7 @@
       fighter.buffer = [...waiting, ...fighter.buffer];
     }
 
+    // 一位鬥士的一步：計時、閃避、移動、跳躍與重力。
     advanceFighter(fighter, opponent, controls, dt) {
       fighter.specialCooldown = decay(fighter.specialCooldown, dt);
       fighter.skill2Cooldown = decay(fighter.skill2Cooldown, dt);
@@ -542,6 +562,7 @@
       // 按住「後退」也能防禦（玩家的輸入才有，電腦一律自己決定何時防禦）
       const back =
         controls.direction !== 0 && controls.direction === -fighter.face;
+      // 電腦與觸控的自動防禦。
       const holdingBack = Boolean(controls.autoGuard && back && grounded);
       const bracing = Boolean(controls.guard || holdingBack);
       // 電腦的一般防禦（steady）不算精準防禦，要刻意抓時機才算
@@ -563,6 +584,7 @@
         fighter.crouch = controls.crouch;
       }
 
+      // 閃避。
       if (fighter.dodge) {
         fighter.dodge.elapsed += dt;
         const { elapsed } = fighter.dodge;
@@ -572,6 +594,7 @@
         if (elapsed >= DODGE_TIME || (elapsed >= DODGE_CANCEL && wantsAct))
           fighter.dodge = null;
       }
+      // 衝刺。
       if (fighter.dash) {
         fighter.dash.elapsed += dt;
         const { elapsed, time } = fighter.dash;
@@ -581,6 +604,7 @@
       }
 
       let speed = 0;
+      // 可以行動時才接受新動作。
       if (!fighter.move && !fighter.dodge && fighter.stun === 0) {
         if (grounded && !fighter.dash)
           fighter.face =
@@ -588,8 +612,7 @@
             Math.sign(opponent.x - fighter.x) ||
             fighter.face;
         fighter.crouch = grounded && controls.crouch && !fighter.dash;
-        const threatened =
-          holdingBack && this.threatened(fighter, opponent);
+        const threatened = holdingBack && this.threatened(fighter, opponent);
         fighter.guard =
           grounded && !fighter.dash && (controls.guard || threatened);
         if (controls.guard && fighter.guard)
@@ -603,9 +626,7 @@
           !fighter.guard &&
           !fighter.dash;
         const pace = grounded ? (back ? 1.02 : 1.2) : 1.14;
-        speed = canWalk
-          ? controls.direction * fighter.profile.speed * pace
-          : 0;
+        speed = canWalk ? controls.direction * fighter.profile.speed * pace : 0;
         fighter.walking = grounded && speed !== 0;
       } else {
         fighter.dash = null;
@@ -661,6 +682,7 @@
         }
       }
       fighter.knock *= Math.max(0, 1 - 7 * dt);
+      // 重力與落地。
       if (airborne) {
         const gravity =
           fighter.jumping && fighter.stun === 0 ? JUMP_GRAVITY : GRAVITY;
@@ -741,6 +763,7 @@
       this.events.push({ type: "dash", fighter, forward });
     }
 
+    // 招式能不能用（冷卻與能量）。
     ready(fighter, action) {
       if (action === "super") return fighter.meter >= 100;
       const key = COOLDOWN_KEY[action];
@@ -848,6 +871,7 @@
       fighter.dash = null;
       fighter.guard = false;
       fighter.crouch = Boolean(spec.low);
+      // 開始一個招式。
       fighter.move = {
         spec,
         action,
@@ -894,6 +918,7 @@
       }
     }
 
+    // 推進招式，時間到就產生攻擊判定。
     advanceAttack(fighter, target, contacts, dt) {
       const move = fighter.move;
       if (!move) return;
@@ -962,6 +987,7 @@
         fighter.move = null;
     }
 
+    // 能不能抓住對手。
     tryGrab(fighter, target, range, move) {
       const free =
         target.y === 0 &&
@@ -982,13 +1008,14 @@
         target.face = -fighter.face;
         this.events.push({ type: "grab", fighter, target });
       } else {
-        // A missed throw leaves a long, punishable recovery.
+        // 摔空會有很長、容易被處罰的收招。
         move.duration = move.spec.whiffDuration ?? move.spec.duration;
         move.next = move.spec.events.length;
         this.events.push({ type: "whiff", fighter });
       }
     }
 
+    // 爆氣把對手彈開。
     burst(fighter, target, range) {
       const direction = Math.sign(target.x - fighter.x) || fighter.face;
       if (
@@ -1005,6 +1032,7 @@
       this.events.push({ type: "burst", fighter });
     }
 
+    // 瞬移到對手背後。
     blink(fighter, target, range) {
       const from = fighter.x;
       const delta = target.x - from;
@@ -1081,8 +1109,10 @@
       return true;
     }
 
+    // 發射飛行道具。
     spawnProjectile(fighter, strike, action) {
       const { speed, height, radius, shape, life } = strike.projectile;
+      // 飛行道具的資料。
       const shot = {
         owner: fighter,
         strike,
@@ -1102,7 +1132,9 @@
       this.events.push({ type: "projectile", shot });
     }
 
+    // 放置陷阱。
     spawnTrap(fighter, target, event, action) {
+      // 陷阱的資料。
       const trap = {
         owner: fighter,
         x: stageX(target.x),
@@ -1117,6 +1149,7 @@
       this.events.push({ type: "trap", fighter, trap });
     }
 
+    // 推進陷阱。
     advanceTraps(contacts, dt) {
       for (const trap of this.traps) {
         if (trap.erupted) {
@@ -1151,6 +1184,7 @@
       );
     }
 
+    // 推進飛行道具。
     advanceProjectiles(contacts, dt) {
       for (const shot of this.projectiles) {
         const previous = shot.x;
@@ -1183,6 +1217,7 @@
         }
       }
       // 雙方的飛行道具相撞就互相抵銷
+      // 兩邊的飛行道具相撞就抵銷。
       for (const a of this.projectiles) {
         for (const b of this.projectiles) {
           if (a.owner === b.owner || a.life <= 0 || b.life <= 0) continue;
@@ -1205,6 +1240,7 @@
       );
     }
 
+    // 處理一次命中：閃避、反擊、防禦、霸體、傷害與擊退。
     applyContact(contact) {
       const { attacker, target, strike, direction, action, height } = contact;
       if (target.hp <= 0) return;
@@ -1228,6 +1264,7 @@
         !target.move.countered &&
         !contact.unblockable
       ) {
+        // 反擊招的動作。
         target.move = {
           spec: COUNTER_STRIKE,
           action: "skill2",
@@ -1251,6 +1288,7 @@
       const facing =
         target.guard && target.face === -direction && !contact.unblockable;
       // 防禦的高度不對，下段與中段攻擊就會打中
+      // 防禦方向或高低不對就擋不住。
       const wrongHeight =
         facing &&
         ((contact.kind === "low" && !target.crouch) ||
@@ -1268,6 +1306,7 @@
         });
       }
 
+      // 精準防禦。
       if (blocked && this.elapsed - target.guardStart < PERFECT_GUARD) {
         target.meter = Math.min(100, target.meter + 14);
         attacker.knock = (-direction * 260) / attacker.profile.weight;
@@ -1290,6 +1329,7 @@
         !contact.unblockable &&
         within(target.move, "armor") &&
         target.move.armorHits < 2;
+      // 打斷對手出招算反擊命中。
       const counterHit =
         !blocked &&
         !armored &&
@@ -1349,14 +1389,14 @@
       target.knock =
         (direction * strike.knock * (blocked ? 0.85 : 1)) /
         target.profile.weight;
-      const walled =
-        target.x <= FIELD.left + 4 || target.x >= FIELD.right - 4;
+      const walled = target.x <= FIELD.left + 4 || target.x >= FIELD.right - 4;
       if (walled && !strike.projectile && attacker.y === 0)
         attacker.knock = -direction * strike.knock * WALL_PUSH;
       // 連擊越長，對手恢復得越快，不會有打不完的連段
       const tired = continuingCombo
         ? Math.max(0.4, 1 - 0.07 * Math.max(0, attacker.combo - 6))
         : 1;
+      // 硬直時間；連段越長越短。
       target.stun = Math.max(
         target.stun,
         blocked ? 0.12 : strike.stun * tired + (counterHit ? 0.12 : 0),
@@ -1371,11 +1411,13 @@
       if (ko) stop = 0.3;
       this.hitStop = Math.max(this.hitStop, stop);
 
+      // 沒有擋住：擊退、擊飛與連段計算。
       if (!blocked) {
-        if (attacker.move) attacker.move.connected = attacker.move.touched = true;
+        if (attacker.move)
+          attacker.move.connected = attacker.move.touched = true;
         target.blockStun = 0;
         if (floating) target.juggle += 1;
-        // A thrower hit mid-grab lets go.
+        // 抓人途中被打到就放手。
         if (target.move?.grabbed) target.move.grabbed.heldBy = null;
         target.flash = 0.12;
         target.flashColor = "#ffffff";
@@ -1420,6 +1462,7 @@
       });
     }
 
+    // 回合結束，判定勝負。
     finishRound(reason) {
       const [first, second] = this.fighters;
       const winner =
@@ -1442,6 +1485,7 @@
       });
     }
 
+    // 下一回合或整場結束。
     advanceRound() {
       if (this.score.includes(ROUNDS_TO_WIN)) {
         this.phase = "over";

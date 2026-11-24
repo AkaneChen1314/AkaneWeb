@@ -2,13 +2,17 @@
  * 檔案導讀：金融模擬的純規則引擎：資產、借款、交易與事件計算集中在這裡。
  * 介面操作在 app.js；引擎資料中的數值與商品皆為遊戲設定。
  */
-/* Pure game simulation. All securities and prices are fictional. No network calls. */
+// 純遊戲模擬。所有股票與價格都是虛構的，不會連上網路。
 (function (root) {
   "use strict";
   const codec =
     root.pako ||
     (typeof require === "function" ? require("./vendor/pako.js") : null);
   const INITIAL = 10000000000;
+
+  // ---------- 遊戲資料：商品、成就、劇情、借款、身體、工作 ----------
+
+  // 可以買賣的商品：price 起始價、vol 波動大小、kind 種類、note 給玩家看的說明。
   const ASSETS = [
     {
       id: "sky",
@@ -277,6 +281,7 @@
       note: "<b>虛構演算法合約。</b> 模型說勝率很高，並沒有說是哪一邊的勝率。",
     },
   );
+  // 成就清單。
   const ACHIEVEMENTS = [
     { id: "first", name: "第一次買進", description: "把第一筆錢放進股票。" },
     { id: "leverage", name: "百倍勇氣", description: "使用 100 倍槓桿。" },
@@ -293,6 +298,7 @@
     { id: "negative", name: "負翁人生", description: "淨值跌到零以下。" },
     { id: "end", name: "離開牌桌", description: "完成破產結局。" },
   ];
+  // 固定日期會跳出的劇情；key 是第幾天，choices 是選項，action 決定後果。
   const EVENTS = {
     4: {
       title: "內線群組向你招手",
@@ -465,6 +471,7 @@
       ],
     },
   };
+  // 三種借款管道：rate 每日利率、fee 手續費、days 天數、cap 上限。
   const LOAN_TYPES = {
     bank: {
       name: "銀行借款",
@@ -494,6 +501,7 @@
       color: "red",
     },
   };
+  // 身體部件：price 價格、damage 健康損失、cap 之後的健康上限。全為虛構情節。
   const ORGANS = [
     {
       id: "kidney_left",
@@ -660,6 +668,7 @@
       note: "虛構交換：永久健康上限 72，健康立即 −15。",
     },
   );
+  // 打工：pay 薪水、damage 疲勞、rounds 要答對幾題。
   const JOBS = [
     {
       id: "cashier",
@@ -758,6 +767,10 @@
     { id: "rest", name: "今天不盯盤", description: "休息一天。" },
     { id: "death", name: "最後一個通知", description: "走到死亡結局。" },
   );
+
+  // ---------- 狀態與共用工具 ----------
+
+  // 可重現的亂數：同一個種子會得到同樣的結果，方便測試與存檔。
   function random(s) {
     let t = (s.rng += 0x6d2b79f5);
     t = Math.imul(t ^ (t >>> 15), t | 1);
@@ -765,17 +778,22 @@
     s.rng = s.rng >>> 0;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   }
+  // 新增一則人生紀錄。
   function log(s, text, type = "info") {
     s.logs.unshift({ day: s.day, text, type });
   }
+  // 新增一則新聞，只保留最近 20 則。
   function news(s, text, tag = "今日消息") {
     s.news.unshift({ day: s.day, text, tag });
     s.news = s.news.slice(0, 20);
   }
+  // 解鎖成就。
   function unlock(s, id) {
     if (!s.achievements.includes(id)) s.achievements.push(id);
   }
+  // 建立一局新遊戲；practice 是練習帳戶。
   function create(seed = Date.now() >>> 0, practice = false) {
+    // 整局遊戲的狀態，存檔就是存這個物件。
     const s = {
       version: 5,
       playerName: "百億新手",
@@ -834,6 +852,7 @@
       practice,
       endType: null,
     };
+    // 為每個商品產生開局前的 32 根歷史 K 線。
     for (const a of ASSETS) {
       let p = a.price * 0.79,
         bars = [];
@@ -849,6 +868,7 @@
           day: i - 31,
         });
       }
+      // 把歷史價格等比例調整，讓最後一根剛好等於目前價格。
       const ratio = a.price / p;
       for (const b of bars)
         for (const k of ["open", "close", "high", "low"]) b[k] *= ratio;
@@ -876,18 +896,22 @@
     );
     return s;
   }
+  // 一筆部位目前值多少錢（不會低於 0）。
   function value(s, p, price = s.markets[p.asset].price) {
     return Math.max(
       0,
       p.margin * (1 + p.leverage * p.sign * (price / p.entry - 1)) - p.funding,
     );
   }
+  // 總資產＝現金＋部位－負債。
   function equity(s) {
     return s.cash + positionTotal(s) - s.debt;
   }
+  // 所有部位的價值總和。
   function positionTotal(s) {
     return s.positions.reduce((n, p) => n + value(s, p), 0);
   }
+  // 花錢；現金不夠的部分變成負債。
   function spend(s, amount) {
     if (amount <= s.cash) s.cash -= amount;
     else {
@@ -896,35 +920,45 @@
     }
     if (s.cash < 0.001) s.cash = 0;
   }
+  // 調整健康與壓力，並限制在合理範圍。
   function health(s, amount, stress = 0) {
     s.health = Math.max(0, Math.min(s.healthCap, s.health + amount));
     s.stress = Math.max(0, Math.min(100, s.stress + stress));
     if (s.health < 40) unlock(s, "health");
   }
+  // 更新最高資產與相關成就。
   function update(s) {
     const e = equity(s);
     s.peak = Math.max(s.peak, e);
     if (e < INITIAL * 0.5) unlock(s, "half");
     if (e < 0) unlock(s, "negative");
   }
+  // 操作後重新計算當日損益與資產走勢。
   function track(s, before) {
     update(s);
     s.daily += equity(s) - before;
     s.history[s.history.length - 1] = equity(s);
     record(s.equityTape, s, equity(s));
   }
+  // 把一個價格寫進走勢；同一分鐘就覆蓋。
   function record(list, s, price) {
     const last = list[list.length - 1];
     if (last && last.day === s.day && last.minute === s.minute)
       last.price = price;
     else list.push({ day: s.day, minute: s.minute, price });
   }
+  // 下單手續費。
   function orderFee(amount, leverage, product) {
     return amount * leverage * (product === "spot" ? 0.0015 : 0.0008);
   }
+  // 現在能不能操作（沒有劇情、工作或賭局在進行）。
   function ready(s) {
     return !s.ended && !s.pending && !s.job && !s.gamble;
   }
+
+  // ---------- 買賣部位 ----------
+
+  // 開一筆部位：檢查條件 → 扣款 → 建立部位。
   function open(
     s,
     { asset, amount, leverage = 1, product = "spot", direction = "long" },
@@ -940,6 +974,7 @@
       ![1, 2, 5, 10, 25, 50, 100].includes(leverage)
     )
       return { ok: false, message: "請輸入至少 0.0001 億的有效金額。" };
+    // 現貨不能放空，也沒有槓桿。
     if (product === "spot") {
       leverage = 1;
       if (direction === "short")
@@ -958,6 +993,7 @@
     s.cash = Math.max(0, s.cash - amount - fee);
     s.fees += fee;
     s.trades++;
+    // 部位資料；選擇權另外記到期日。
     s.positions.push({
       id: s.nextId++,
       asset,
@@ -981,6 +1017,7 @@
     track(s, before);
     return { ok: true, message: "買好了！盤中價格持續變動，你隨時可以賣掉。" };
   }
+  // 賣掉一筆部位，multiplier 可以打折（例如強制平倉）。
   function close(s, id, multiplier = 1, internal = false) {
     if (!internal && !ready(s))
       return { ok: false, message: "先處理劇情，再拿回錢。" };
@@ -1004,6 +1041,7 @@
     if (!internal) track(s, before);
     return { ok: true, message: "已賣掉，剩下的錢回到口袋。" };
   }
+  // 賣掉全部部位。
   function closeAll(s, multiplier = 1, internal = false) {
     if (!internal && !ready(s)) return { ok: false, message: "請先處理劇情。" };
     const before = equity(s),
@@ -1015,6 +1053,10 @@
       message: ids.length ? "全部賣掉了。" : "還沒有買任何東西。",
     };
   }
+
+  // ---------- 借款與還款 ----------
+
+  // 這種借款還能借多少。
   function loanLimit(s, type = "bank") {
     if (s.loans.length >= 16) return 0;
     const t = LOAN_TYPES[type];
@@ -1045,6 +1087,7 @@
       return { ok: false, limit, message: "超過目前借款上限，請調低金額。" };
     return { ok: true, limit };
   }
+  // 借錢：檢查額度與虛構合約 → 現金增加、負債增加。
   function borrow(
     s,
     amount,
@@ -1098,6 +1141,7 @@
     if (!internal) track(s, before);
     return { ok: true, message: "現金變多了，欠款也變多了。記住到期日。" };
   }
+  // 今天要付的利息。
   function interest(s) {
     const loanTotal = s.loans.reduce((n, l) => n + l.balance, 0);
     return (
@@ -1105,6 +1149,7 @@
       s.loans.reduce((n, l) => n + l.balance * loanRate(l), 0)
     );
   }
+  // 還款，可以指定還哪一筆；沒指定就從最急的開始。
   function repay(s, amount, id = null) {
     if (!Number.isFinite(amount) || amount <= 0) return 0;
     let target = id ? s.loans.find((l) => l.id === id) : null;
@@ -1130,6 +1175,7 @@
     log(s, `還回 ${(paid / 1e8).toFixed(3)} 億債務。`);
     return paid;
   }
+  // 玩家主動還款。
   function payDebt(s, amount) {
     if (!ready(s)) return { ok: false, message: "先處理催收畫面。" };
     const before = equity(s),
@@ -1141,6 +1187,10 @@
         paid > 0 ? "還款成功，後續利息變少了。" : "沒有欠款，或沒有足夠現金。",
     };
   }
+
+  // ---------- 身體、神秘股票與打工 ----------
+
+  // 失去一個身體部件（虛構情節）；forced 代表被催收奪走，拿不到錢。
   function sellOrgan(s, id, internal = false, forced = false) {
     if (s.ended || (!internal && (s.pending || s.job || s.gamble)))
       return { ok: false, message: "請先處理目前劇情。" };
@@ -1160,10 +1210,12 @@
       cap: Math.min(s.healthCap, o.cap),
     });
     if (!forced) s.cash += o.price;
+    // 健康上限永久降低。
     s.healthCap = Math.min(s.healthCap, o.cap);
     if (s.organs.includes("kidney_left") && s.organs.includes("kidney_right"))
       s.healthCap = Math.min(s.healthCap, 22);
     health(s, -o.damage, 22);
+    // 致命的組合會直接結束人生。
     if (
       id === "liver_whole" ||
       (s.organs.includes("lung") && s.organs.includes("lung_right"))
@@ -1189,6 +1241,7 @@
       ended: s.ended,
     };
   }
+  // 花 1 億抽神秘股票，一天一次。
   function mystery(s) {
     if (!ready(s)) return { ok: false, message: "先處理劇情。" };
     if (s.cash < 1e8)
@@ -1220,6 +1273,7 @@
         : "上市延期。這次你又成了接盤的人。",
     };
   }
+  // 洗牌。
   function shuffle(s, list) {
     for (let i = list.length - 1; i > 0; i--) {
       const j = Math.floor(random(s) * (i + 1));
@@ -1227,6 +1281,7 @@
     }
     return list;
   }
+  // 產生一題打工任務與選項。
   function jobTask(s, id) {
     if (id === "cashier") {
       const cost = (2 + Math.floor(random(s) * 17)) * 5,
@@ -1267,6 +1322,7 @@
       options: cups.map((label) => ({ id: label, label })),
     };
   }
+  // 開始打工，一天一份。
   function work(s, id = "cashier") {
     if (!ready(s)) return { ok: false, message: "先完成目前的任務或劇情。" };
     if (s.lastWorkDay === s.day)
@@ -1276,6 +1332,7 @@
     s.job = { id, day: s.day, done: 0, mistakes: 0, task: jobTask(s, id) };
     return { ok: true, message: "開始工作，完成全部任務才領薪水。" };
   }
+  // 回答打工題目；答錯會扣薪水。
   function jobInput(s, input) {
     const j = s.job;
     if (!j || s.ended) return { ok: false, message: "目前沒有工作任務。" };
@@ -1288,6 +1345,7 @@
         message: "選錯了，看看提示再試。每次失誤會扣 5% 薪水，最多扣 40%。",
       };
     }
+    // 咖啡店要依順序完成三個步驟。
     if (j.id === "cafe" && j.task.step < 2) {
       j.task.step++;
       j.task.answer = j.task.sequence[j.task.step];
@@ -1302,6 +1360,7 @@
       j.task = jobTask(s, j.id);
       return { ok: true, message: "這筆完成，下一位！" };
     }
+    // 全部做完，依失誤次數計算薪水。
     const before = equity(s),
       pay = Math.round(
         job.pay *
@@ -1332,16 +1391,22 @@
       message: "今日工作完成！實領 " + (pay / 1e4).toFixed(0) + " 萬遊戲薪水。",
     };
   }
+  // 離開工作，不領薪水。
   function quitWork(s) {
     if (!s.job) return { ok: false, message: "沒有工作。" };
     s.job = null;
     return { ok: true, message: "離開工作，未完成不領薪水。今天可重新接班。" };
   }
+
+  // ---------- 時間前進 ----------
+
+  // 盤中前進 5 分鐘：價格變動、檢查爆倉、到午夜就換日。
   function tick(s, internal = false) {
     if ((!internal && !ready(s)) || s.ended || s.practice)
       return { ok: false, message: "目前沒有盤中行情。" };
     const before = equity(s);
     s.minute = Math.min(1440, s.minute + 5);
+    // 每個商品依自己的波動更新價格與當日 K 線。
     for (const a of ASSETS) {
       const m = s.markets[a.id],
         b = m.bars[m.bars.length - 1],
@@ -1397,6 +1462,7 @@
     name: "真正做完才算",
     description: "完成一次互動打工。",
   });
+  // 人生結束：清掉部位與現金，記下結局。
   function finish(s, type, reason) {
     s.ended = true;
     s.pending = null;
@@ -1423,6 +1489,7 @@
     s.history[s.history.length - 1] = equity(s);
     record(s.equityTape, s, equity(s));
   }
+  // 檢查有沒有走到結局，或只剩下求生選項。
   function checkEnd(s) {
     if (s.ended || s.practice) return s.ended;
     if (s.health <= 0) {
@@ -1444,12 +1511,14 @@
     }
     return false;
   }
+  // 檢查爆倉、選擇權到期與股息，回傳被清算的筆數。
   function settlePositions(s, alreadyFunded = false, intraday = false) {
     let wiped = 0;
     for (const p of [...s.positions]) {
       const m = s.markets[p.asset],
         bar = m.bars[m.bars.length - 1],
         a = ASSETS.find((x) => x.id === p.asset);
+      // 槓桿部位：付資金費，跌破保證金就清算。
       if (p.product !== "spot") {
         const funding = alreadyFunded ? 0 : p.margin * p.leverage * 0.0005;
         p.funding += funding;
@@ -1501,12 +1570,13 @@
     }
     return wiped;
   }
-  // Manual advance resolves the remainder of this day; normal ticks use the same midnight settlement.
+  // 手動跳過會把當天剩下的時間跑完；一般流程也用同一套午夜結算。
   function nextDay(s, { rest = false } = {}) {
     if (!ready(s)) return { ok: false, message: "先完成目前事件或任務。" };
     while (!s.practice && s.minute < 1440) tick(s, true);
     return rollover(s, rest);
   }
+  // 換日：更新價格 → 生活費與利息 → 健康 → 新聞 → 隔天劇情。
   function rollover(s, rest = false) {
     if (s.health <= 0 && !s.practice) {
       finish(s, "death", "午夜前健康耗盡。身體先停止，交易也走到終點。");
@@ -1532,6 +1602,7 @@
     const before = equity(s);
     s.day++;
     s.minute = 0;
+    // 開盤跳空與新的 K 線。
     for (const a of ASSETS) {
       const m = s.markets[a.id],
         o = m.price;
@@ -1562,6 +1633,7 @@
       record(m.series, s, m.price);
     }
     let wiped = settlePositions(s);
+    // 生活費、利息與健康壓力。
     if (!s.practice) {
       const living =
           Math.min(2e9, 8e6 * Math.pow(1.13, s.day - 1)) * s.expenseFactor,
@@ -1578,6 +1650,7 @@
           Math.min(18, loss * 190) +
           s.loans.reduce((n, l) => n + LOAN_TYPES[l.type].stress, 0) * 0.5 +
           (wiped ? 8 : 0);
+      // 健康損失與壓力增加，會受部件與日子影響。
       health(
         s,
         -(
@@ -1620,6 +1693,7 @@
     update(s);
     s.daily = equity(s) - before;
     s.history.push(equity(s));
+    // 檢查死亡、到期借款、劇情與假斷線。
     if (!s.practice) {
       if (s.health <= 0)
         finish(
@@ -1643,6 +1717,7 @@
               (s.organs.some((id) => id.startsWith("cornea")) &&
                 random(s) < 0.25))
           ) {
+            // 遊戲內的「假斷線」事件：看得到獲利卻不能操作。
             s.pending = {
               type: "glitch",
               shownProfit: Math.max(
@@ -1670,6 +1745,7 @@
       daily: s.daily,
     };
   }
+  // 重新連線：價格已經變了。
   function resolveGlitch(s) {
     if (!s.pending || s.pending.type !== "glitch")
       return { ok: false, message: "沒有待恢復的斷線。" };
@@ -1717,6 +1793,10 @@
       ended: s.ended,
     };
   }
+
+  // ---------- 劇情選擇、社交與催收 ----------
+
+  // 玩家選了劇情的第 index 個選項，依 action 套用後果。
   function choose(s, index) {
     if (!Number.isInteger(index) || index < 0 || !s.pending)
       return { ok: false, message: "沒有這個選項。" };
@@ -1724,6 +1804,7 @@
       before = equity(s);
     if (pending.type === "glitch")
       return { ok: false, message: "請按重新連線。" };
+    // 求生選項：結束、再借、失去部件。
     if (pending.type === "survival") {
       if (index > 2) return { ok: false, message: "沒有這個選項。" };
       if (index === 0) {
@@ -1822,6 +1903,7 @@
         case "halfclose":
           for (const p of [...s.positions]) {
             const half = value(s, p) / 2,
+              // 這筆部位的一半要付的手續費。
               fee = Math.min(
                 half,
                 (p.margin *
@@ -1918,6 +2000,7 @@
       ended: s.ended,
     };
   }
+  // 設定角色名字，過濾控制字元與長度。
   function setName(s, name) {
     if (typeof name !== "string")
       return { ok: false, message: "請填角色名字。" };
@@ -1930,15 +2013,18 @@
     log(s, `${name}，你的百億人生開盤了。`);
     return { ok: true };
   }
+  // 一筆借款目前的利率。
   function loanRate(l) {
     return l.rate ?? LOAN_TYPES[l.type].rate;
   }
+  // 這個部件還在不在。
   function organAvailable(s, o) {
     return (
       !s.organs.includes(o.id) &&
       !(o.id === "liver" && s.organs.includes("liver_whole"))
     );
   }
+  // 失去這個部件會不會致命。
   function organFatal(s, o) {
     return (
       o.id === "core" ||
@@ -1948,10 +2034,12 @@
       s.health <= o.damage
     );
   }
+  // 新增一則虛構社群貼文。
   function post(s, who, text) {
     s.social.unshift({ day: s.day, who, text });
     s.social = s.social.slice(0, 40);
   }
+  // 找朋友聊聊，一天一次，降低壓力。
   function support(s) {
     if (!ready(s)) return { ok: false, message: "先完成目前的事情。" };
     if (s.lastSupportDay === s.day)
@@ -1966,11 +2054,13 @@
     );
     return { ok: true, message: "和朋友聊過了：名譽 +6、壓力 −10。" };
   }
+  // 開始一段催收對話，階段最多四級。
   function beginCollection(s, l) {
     l.stage = Math.min(4, (l.stage || 0) + 1);
     s.collectionCount++;
     s.pending = { type: "debt", loanId: l.id, turn: 0, transcript: [] };
   }
+  // 依借款種類與階段，組出催收畫面的內容。
   function collectionScene(s) {
     const l = s.pending && s.loans.find((x) => x.id === s.pending.loanId);
     if (!l) return null;
@@ -2030,6 +2120,7 @@
       lines,
     };
   }
+  // 玩家在催收對話裡的回覆。
   function collectorReply(s, key) {
     const scene = collectionScene(s);
     if (
@@ -2057,6 +2148,7 @@
     log(s, `${scene.who}對話 ${p.turn}/3：${s.playerName}已回覆。`, "event");
     return { ok: true, done: p.turn >= 3 };
   }
+  // 這一輪不付錢會發生什麼事（說明文字）。
   function collectionPenalty(s, l) {
     if (l.type === "bank") return "未付本輪：延期費用照算。";
     if (l.type === "online")
@@ -2069,6 +2161,7 @@
         ? "未付本輪：暴力劇情，健康 −20、壓力 +20，日息再 +3 個百分點。"
         : "未付本輪：堵門威脅，健康 −3、壓力 +10。";
   }
+  // 這一輪不付錢的後果。
   function collectorConsequence(s, l) {
     if (l.type === "online") {
       if (l.stage >= 2) {
@@ -2122,6 +2215,10 @@
       if (l.stage >= 2) l.rate = Math.min(0.3, loanRate(l) + 0.03);
     }
   }
+
+  // ---------- 小賭局 ----------
+
+  // 三種小賭局。
   const CASINO = [
     {
       id: "dice",
@@ -2145,6 +2242,7 @@
         "翻開安全格增加返還倍數，隨時收手。踩雷整筆歸零；晚期地雷會變多。",
     },
   ];
+  // 抽一張撲克牌。
   function card(s) {
     const rank = 1 + Math.floor(random(s) * 13);
     return {
@@ -2161,11 +2259,13 @@
                 : String(rank),
     };
   }
+  // 21 點的點數，A 可以當 1 或 11。
   function handScore(cards) {
     let v = cards.reduce((n, c) => n + Math.min(10, c.rank), 0);
     if (cards.some((c) => c.rank === 1) && v + 10 <= 21) v += 10;
     return v;
   }
+  // 開始一局，先扣下注金額。
   function startGamble(s, id, stake) {
     if (!ready(s)) return { ok: false, message: "先完成目前的事件。" };
     if (
@@ -2185,6 +2285,7 @@
     const before = equity(s);
     s.cash -= stake;
     s.casinoToday++;
+    // 賭局的狀態。
     s.gamble = {
       id,
       stake,
@@ -2210,6 +2311,7 @@
     unlock(s, "casino");
     return { ok: true, message: "本金已下注，完成或放棄才能離開本局。" };
   }
+  // 結算賭局：付錢、記錄統計、調整壓力。
   function settleGamble(s, payout, reason) {
     const g = s.gamble,
       before = equity(s);
@@ -2234,11 +2336,13 @@
       message: reason,
     };
   }
+  // 玩家在賭局中的動作，依玩法分開處理。
   function gambleAction(s, key, index) {
     const g = s.gamble;
     if (!g || s.ended) return { ok: false, message: "目前沒有賭局。" };
     if (key === "forfeit")
       return settleGamble(s, 0, "放棄本局，本金留在賭桌。");
+    // 骰子：猜大小後擲三顆。
     if (g.id === "dice") {
       if (["big", "small"].includes(key)) {
         g.guess = key;
@@ -2262,6 +2366,7 @@
         `三顆骰子共 ${sum} 點。${win ? "這次猜中了。" : "莊家收走本金。"}`,
       );
     }
+    // 21 點：要牌或停牌。
     if (g.id === "cards") {
       if (!["hit", "stand"].includes(key))
         return { ok: false, message: "請選要牌或停牌。" };
@@ -2288,6 +2393,7 @@
         `你 ${p} 點，莊家 ${d} 點。${win ? "這局勝出。" : "莊家勝出（同點也是莊家贏）。"}`,
       );
     }
+    // 掃雷：翻開安全格會提高倍率，隨時可以拿錢走人。
     if (g.id === "mines") {
       if (key === "cashout") {
         if (!g.revealed.length)
@@ -2319,6 +2425,7 @@
     }
     return { ok: false, message: "未知玩法。" };
   }
+  // 掃雷翻到第 n 格的倍率。
   function mineMultiplier(n) {
     return [1, 1.15, 1.35, 1.6, 2, 2.5, 3.1][Math.min(6, n)];
   }
@@ -2335,6 +2442,10 @@
       description: "遇到強行部件抵債劇情。",
     },
   );
+
+  // ---------- 存檔檢查、搬移與壓縮 ----------
+
+  // 檢查存檔內容是否合理，任何一項不對就拒絕讀取。
   function validate(s) {
     if (
       !s ||
@@ -2354,6 +2465,7 @@
       !Array.isArray(s.organRecords)
     )
       return false;
+    // 這些欄位都必須是有效數字。
     const finite = [
       "rng",
       "cash",
@@ -2544,6 +2656,7 @@
       s.news.every((n) => typeof n.text === "string")
     );
   }
+  // 走勢資料是否合理。
   function validTape(t) {
     return (
       Array.isArray(t) &&
@@ -2561,6 +2674,7 @@
       )
     );
   }
+  // 把舊版存檔升級到第 5 版。
   function migrate(old) {
     if (!old || ![2, 3, 4].includes(old.version)) return old;
     if (old.version === 4) {
@@ -2579,6 +2693,7 @@
     }
     const s = JSON.parse(JSON.stringify(old)),
       fresh = create(s.rng);
+    // 第 2 版沒有盤中時間與工作，補上預設值。
     if (s.version === 2) {
       s.minute = 540;
       s.job = null;
@@ -2650,9 +2765,9 @@
       " 新增商品從升級當天開始記錄，沒有補造先前行情。";
     return s;
   }
-  // Archives use compressed per-day Float32 snapshots. Trading still uses full precision.
-  // Cached closed days avoid recompressing the entire 60-day archive every second.
-  // Fifteen bits per safe Unicode character halve localStorage's UTF-16 overhead.
+  // 歷史資料以「每天一份壓縮的 Float32」保存，交易仍用完整精度。已結束的日子會
+  // 快取，不必每秒重新壓縮整個 60 天；每個安全的 Unicode 字元放 15 位元，把
+  // localStorage 的 UTF-16 浪費減半。
   function encodeBytes(bytes) {
     let buffer = 0,
       bits = 0,
@@ -2670,6 +2785,7 @@
     if (bits) out += String.fromCharCode(0x3400 + (buffer << padding));
     return String.fromCharCode(0x3400 + padding) + out;
   }
+  // 把壓縮文字還原成位元組（每個字元存 15 位元）。
   function decodeBytes(text) {
     const padding = text.charCodeAt(0) - 0x3400,
       bitCount = (text.length - 1) * 15 - padding;
@@ -2693,6 +2809,7 @@
     return bytes;
   }
   const tapeCache = new WeakMap();
+  // 把走勢依天分組後壓縮，存檔才不會太大。
   function encodeTape(tape) {
     const groups = new Map();
     for (const p of tape) {
@@ -2700,6 +2817,7 @@
       groups.get(p.day).push(p);
     }
     let cache = tapeCache.get(tape);
+    // 已經壓過的日子放進快取，不用每次重算。
     if (!cache) {
       cache = new Map();
       tapeCache.set(tape, cache);
@@ -2728,7 +2846,7 @@
           scalar.setFloat32(0, p.price, true);
           const bits = scalar.getUint32(0, true),
             delta = (bits ^ previous) >>> 0;
-          // Byte planes expose the slowly changing exponent to compression.
+          // 按位元組分層，變化很慢的指數部分比較好壓縮。
           for (let plane = 0; plane < 4; plane++)
             bytes[plane * n + i] = (delta >>> (plane * 8)) & 255;
           view.setUint16(n * 4 + i * 2, p.minute, true);
@@ -2743,6 +2861,7 @@
       }),
     };
   }
+  // 把壓縮的走勢還原。
   function decodeTape(tape) {
     if (Array.isArray(tape))
       return tape.map((p) =>
@@ -2791,6 +2910,7 @@
       return points;
     });
   }
+  // 存檔前：壓縮所有走勢。
   function pack(s) {
     return {
       ...s,
@@ -2803,12 +2923,14 @@
       ),
     };
   }
+  // 讀檔後：還原所有走勢。
   function unpack(s) {
     if (!s || ![4, 5].includes(s.version)) return s;
     s.equityTape = decodeTape(s.equityTape);
     for (const m of Object.values(s.markets)) m.series = decodeTape(m.series);
     return s;
   }
+  // 給 app.js 與測試使用的全部功能。
   root.BillionEngine = {
     GAME_VERSION: "1.2",
     INITIAL,

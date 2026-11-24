@@ -27,6 +27,8 @@ body.sb-battle main {
   padding: 0;
 }
 
+/* ---------- 戰鬥版面 ---------- */
+
 .flight-layout {
   position: relative;
   display: block;
@@ -116,6 +118,7 @@ body.sb-battle main {
   white-space: nowrap;
 }
 
+/* 波次。 */
 .wave-line {
   display: flex;
   align-items: baseline;
@@ -134,6 +137,7 @@ body.sb-battle main {
   color: #cfd8ff;
 }
 
+/* 波次進度。 */
 .flight-wave .wave-progress {
   width: auto;
 }
@@ -214,6 +218,7 @@ body.sb-battle main {
   border-radius: 10px;
 }
 
+/* 武器列。 */
 .weapon-strip {
   position: absolute;
   right: 14px;
@@ -264,6 +269,7 @@ body.sb-battle main {
   color: #ffd78a;
 }
 
+/* 連擊。 */
 .flight-layout .combo-hud {
   left: 16px;
   bottom: 80px;
@@ -324,6 +330,8 @@ body.sb-battle main {
 .flight-layout .touch-move-zone {
   z-index: 3;
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 760px) {
   .flight-top {
@@ -439,6 +447,8 @@ body.sb-battle main {
   }
 }
 
+/* ---------- 手機的觸控 ---------- */
+
 @media (pointer: coarse) and (max-width: 760px) {
   .weapon-strip,
   .flight-layout .objective-hud {
@@ -465,6 +475,8 @@ body.sb-battle main {
 
 /* ── 2. 出航頁 ─────────────────────────────────────────────── */
 
+/* ---------- 首頁 ---------- */
+
 .hero {
   min-height: 0;
 }
@@ -473,6 +485,7 @@ body.sb-battle main {
   font-size: clamp(38px, 5vw, 58px);
 }
 
+/* 面板標題。 */
 .flight-panel .panel-heading small {
   font-size: 13px;
 }
@@ -485,6 +498,7 @@ body.sb-battle main {
   margin-top: 6px;
 }
 
+/* 難度。 */
 .difficulty-config {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -580,6 +594,7 @@ body.sb-battle main {
   margin-top: 6px;
 }
 
+/* 基地提示。 */
 .base-tip-line {
   margin: 14px 0;
   font-size: 13px;
@@ -596,6 +611,7 @@ body.sb-battle main {
   object-fit: contain;
 }
 
+/* 手機的首領預覽。 */
 @media (max-width: 760px) {
   .boss-preview img {
     height: 96px;

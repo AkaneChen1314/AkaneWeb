@@ -33,17 +33,65 @@ const HUD = {
 
   /* ---------- 初始化：抓取元素、建立可重複使用的元素 ---------- */
   init() {
-    const ids = ["hud", "scope", "crosshair", "hitmarker", "dmg-dirs", "world-tags", "top-bar", "timer", "objective", "points",
-      "boss-bar", "boss-name", "boss-fill", "boss-ticks", "boss-warning", "minimap", "killfeed", "announce", "toast",
-      "hp-fill", "hp-text", "armor-fill", "armor-text", "op-name", "weapon-slots", "ammo-mag", "ammo-reserve", "weapon-name",
-      "reload-hint", "skill", "skill-name", "skill-cd", "skill-icon", "nade", "nade-count", "nade-icon",
-      "med", "med-count", "med-icon", "ammo-fill", "kill-icon", "reload-ring", "compass", "race", "death-screen", "death-by",
-      "death-respawn", "scoreboard",
-      "team-left", "team-right", "low-hp"];
+    const ids = [
+      "hud",
+      "scope",
+      "crosshair",
+      "hitmarker",
+      "dmg-dirs",
+      "world-tags",
+      "top-bar",
+      "timer",
+      "objective",
+      "points",
+      "boss-bar",
+      "boss-name",
+      "boss-fill",
+      "boss-ticks",
+      "boss-warning",
+      "minimap",
+      "killfeed",
+      "announce",
+      "toast",
+      "hp-fill",
+      "hp-text",
+      "armor-fill",
+      "armor-text",
+      "op-name",
+      "weapon-slots",
+      "ammo-mag",
+      "ammo-reserve",
+      "weapon-name",
+      "reload-hint",
+      "skill",
+      "skill-name",
+      "skill-cd",
+      "skill-icon",
+      "nade",
+      "nade-count",
+      "nade-icon",
+      "med",
+      "med-count",
+      "med-icon",
+      "ammo-fill",
+      "kill-icon",
+      "reload-ring",
+      "compass",
+      "race",
+      "death-screen",
+      "death-by",
+      "death-respawn",
+      "scoreboard",
+      "team-left",
+      "team-right",
+      "low-hp",
+    ];
+    // 先取得所有要更新的元素，之後不必每一格重新尋找。
     for (const id of ids) this.el[id] = document.getElementById(id);
     this.mapCtx = this.el.minimap.getContext("2d");
 
     // 傷害數字：預先建立 24 個
+    // 預先建立傷害數字與受擊方向的元素，重複使用。
     for (let i = 0; i < 24; i++) {
       const node = Util.el("div", "dmg-num");
       this.el["world-tags"].appendChild(node);
@@ -110,19 +158,26 @@ const HUD = {
     this._set("op-name", p.operator.name + " // " + p.operator.role);
     this._set("skill-name", p.operator.skill.name);
     // 圖示：技能依幹員而不同，手榴彈與醫療包固定
-    this.el["skill-icon"].innerHTML = HUD.ICONS[p.operator.skill.id] || HUD.ICONS.heal;
+    this.el["skill-icon"].innerHTML =
+      HUD.ICONS[p.operator.skill.id] || HUD.ICONS.heal;
     this.el["nade-icon"].innerHTML = HUD.ICONS.grenade;
     this.el["med-icon"].innerHTML = HUD.ICONS.medkit;
-    this.el.hud.style.setProperty("--accent", Util.cssColor(p.operator.look.accent));
+    this.el.hud.style.setProperty(
+      "--accent",
+      Util.cssColor(p.operator.look.accent),
+    );
 
     // 武器欄：每一格有槍的剪影圖、按鍵編號、名稱與彈藥
     this.el["weapon-slots"].innerHTML = "";
     this.slotNodes = p.weapons.map((ws, i) => {
       const icon = WeaponModels.icons[ws.def.id];
-      const node = Util.el("div", "slot",
+      const node = Util.el(
+        "div",
+        "slot",
         `<div class="slot-top"><b>${i + 1}</b><span>${ws.def.short}</span></div>` +
-        (icon ? `<img src="${icon}" alt="">` : "") +
-        `<em class="slot-ammo"></em>`);
+          (icon ? `<img src="${icon}" alt="">` : "") +
+          `<em class="slot-ammo"></em>`,
+      );
       this.el["weapon-slots"].appendChild(node);
       return node;
     });
@@ -153,7 +208,8 @@ const HUD = {
     this.hitT = kill ? 0.4 : 0.18;
     const node = this.el.hitmarker;
     node.className = "show" + (kill ? " kill" : "") + (head ? " head" : "");
-    if (kill) { // 擊殺：準星上方跳出骷髏（爆頭是金色）
+    if (kill) {
+      // 擊殺：準星上方跳出骷髏（爆頭是金色）
       const k = this.el["kill-icon"];
       k.className = head ? "head" : "";
       void k.offsetWidth;
@@ -212,13 +268,20 @@ const HUD = {
 
   // 擊殺訊息（右上角）
   killFeed(killer, victim, weapon, head, weaponId) {
-    const row = Util.el("div", "feed-row" + ((killer && killer.isPlayer) || victim.isPlayer ? " mine" : ""));
-    const k = killer ? `<span style="color:${this.colorOf(killer)}">${killer.name}</span>` : "";
+    const row = Util.el(
+      "div",
+      "feed-row" +
+        ((killer && killer.isPlayer) || victim.isPlayer ? " mine" : ""),
+    );
+    const k = killer
+      ? `<span style="color:${this.colorOf(killer)}">${killer.name}</span>`
+      : "";
     // 有槍的剪影圖就顯示圖示，沒有（手榴彈、近戰、首領招式）就顯示文字
     const icon = WeaponModels.icons[weaponId];
     const what = icon ? `<img src="${icon}" alt="${weapon}">` : weapon;
     const hs = head ? `<b class="hs" title="爆頭">◎</b>` : "";
-    row.innerHTML = `${k}<em>${what}${hs}</em><span style="color:${this.colorOf(victim)}">${victim.name}</span>`;
+    row.innerHTML = /* HTML */ `${k}<em>${what}${hs}</em
+      ><span style="color:${this.colorOf(victim)}">${victim.name}</span>`;
     this.el.killfeed.prepend(row);
     this.feed.unshift({ node: row, life: 5.5 });
     while (this.feed.length > 5) this.feed.pop().node.remove();
@@ -226,7 +289,8 @@ const HUD = {
 
   // 玩家陣亡時顯示是誰用什麼擊殺的
   deathInfo(name, weapon) {
-    this.el["death-by"].innerHTML = `被 <b>${name}</b> 以 <b>${weapon}</b> 擊殺`;
+    this.el["death-by"].innerHTML =
+      `被 <b>${name}</b> 以 <b>${weapon}</b> 擊殺`;
   },
 
   /* ============================================================
@@ -239,52 +303,84 @@ const HUD = {
     const def = ws.def;
 
     /* ---- 生命與護甲 ---- */
+    // 生命值與護甲。
     this._set("hp-text", String(Math.ceil(p.hp)));
     this._set("hp-fill", Math.round((p.hp / p.maxHp) * 100) + "%", "width");
     this._set("armor-text", String(Math.ceil(p.armor)));
-    this._set("armor-fill", Math.round((p.armor / Math.max(1, p.maxArmor, 50)) * 100) + "%", "width");
+    this._set(
+      "armor-fill",
+      Math.round((p.armor / Math.max(1, p.maxArmor, 50)) * 100) + "%",
+      "width",
+    );
     // 護盾恢復中：護盾條會流動發光
-    this.el["armor-fill"].parentNode.parentNode.classList.toggle("regen", !!p.armorRegen);
-    this.el["low-hp"].classList.toggle("show", p.alive && p.hp < p.maxHp * 0.35);
+    this.el["armor-fill"].parentNode.parentNode.classList.toggle(
+      "regen",
+      !!p.armorRegen,
+    );
+    this.el["low-hp"].classList.toggle(
+      "show",
+      p.alive && p.hp < p.maxHp * 0.35,
+    );
     // 復活無敵中：畫面四周一圈淡藍色的護罩光（首領被擊破後的無敵不顯示）
-    this.el.hud.classList.toggle("spawn-shield", p.alive && p.invuln > 0 && p.invuln < 10);
+    this.el.hud.classList.toggle(
+      "spawn-shield",
+      p.alive && p.invuln > 0 && p.invuln < 10,
+    );
 
     /* ---- 武器與彈藥 ---- */
     this._set("ammo-mag", String(ws.ammo));
-    this._set("ammo-reserve", ws.reserve === Infinity ? "∞" : String(ws.reserve));
+    // 彈藥與武器名稱。
+    this._set(
+      "ammo-reserve",
+      ws.reserve === Infinity ? "∞" : String(ws.reserve),
+    );
     // 彈匣剩餘量的細條；換彈時顯示換彈進度
-    const fill = ws.reloading ? 1 - ws.reloadLeft / ws.reloadTotal : ws.ammo / ws.magSize;
+    const fill = ws.reloading
+      ? 1 - ws.reloadLeft / ws.reloadTotal
+      : ws.ammo / ws.magSize;
     this._set("ammo-fill", (fill * 100).toFixed(1) + "%", "width");
     this.el["ammo-fill"].classList.toggle("reload", ws.reloading);
     this._set("weapon-name", def.name + " · " + def.cls);
     const lowAmmo = ws.ammo <= Math.ceil(ws.magSize * 0.25);
     this.el["ammo-mag"].classList.toggle("low", lowAmmo);
     let hint = "";
+    // 中央提示：換彈、沒有子彈等。
     if (ws.reloading) hint = "換彈中…";
-    else if (ws.ammo === 0 && ws.reserve <= 0) hint = "彈藥用盡 — 切換武器或尋找彈藥箱";
+    else if (ws.ammo === 0 && ws.reserve <= 0)
+      hint = "彈藥用盡 — 切換武器或尋找彈藥箱";
     else if (lowAmmo && ws.reserve > 0) hint = "按 R 換彈";
     this._set("reload-hint", hint);
     if (this.cache.slot !== p.weaponIndex) {
       this.cache.slot = p.weaponIndex;
-      this.slotNodes.forEach((n, i) => n.classList.toggle("active", i === p.weaponIndex));
+      this.slotNodes.forEach((n, i) =>
+        n.classList.toggle("active", i === p.weaponIndex),
+      );
     }
     // 每一格下方的彈藥數（只有數字變了才更新）
+    // 武器欄的彈藥數量。
     for (let i = 0; i < p.weapons.length; i++) {
       const w = p.weapons[i];
       const text = w.ammo + " / " + (w.reserve === Infinity ? "∞" : w.reserve);
       if (this.slotAmmo[i] !== text) {
         this.slotAmmo[i] = text;
         this.slotNodes[i].lastChild.textContent = text;
-        this.slotNodes[i].classList.toggle("dry", w.ammo === 0 && w.reserve <= 0);
+        this.slotNodes[i].classList.toggle(
+          "dry",
+          w.ammo === 0 && w.reserve <= 0,
+        );
       }
     }
 
     /* ---- 技能與手榴彈 ---- */
+    // 技能與醫療包的冷卻。
     const skill = p.operator.skill;
     const cdRatio = p.skillCd / (skill.cooldown * p.mods.cooldown);
     this.el.skill.style.setProperty("--cd", (cdRatio * 360).toFixed(0) + "deg");
     this.el.skill.classList.toggle("ready", p.skillCd <= 0);
-    this.el.skill.classList.toggle("active", p.skillActive > 0 || p.healLeft > 0 || p.boostT > 0);
+    this.el.skill.classList.toggle(
+      "active",
+      p.skillActive > 0 || p.healLeft > 0 || p.boostT > 0,
+    );
     this._set("skill-cd", p.skillCd > 0 ? String(Math.ceil(p.skillCd)) : "");
     this._set("nade-count", String(p.grenades));
     this.el.nade.classList.toggle("empty", p.grenades <= 0);
@@ -292,26 +388,44 @@ const HUD = {
     this.el.med.classList.toggle("empty", p.medkits <= 0);
     this.el.med.classList.toggle("active", p.medkitT > 0 || p.medHealLeft > 0);
     // 醫療包使用中：用冷卻遮罩顯示進度
-    this.el.med.style.setProperty("--cd", (Math.max(0, p.medkitT) * 360).toFixed(0) + "deg");
+    this.el.med.style.setProperty(
+      "--cd",
+      (Math.max(0, p.medkitT) * 360).toFixed(0) + "deg",
+    );
 
     /* ---- 準星 ---- */
+    // 準星張開的程度。
     this.spread = Util.damp(this.spread, 0, 7, dt);
     const moving = Math.hypot(p.vel.x, p.vel.z) / CONFIG.MOVE.sprint;
-    const gap = 5 + (def.spreadHip * 3 + this.spread * 26 + moving * 12 + (p.onGround ? 0 : 14)) * (1 - p.ads * 0.8);
+    const gap =
+      5 +
+      (def.spreadHip * 3 +
+        this.spread * 26 +
+        moving * 12 +
+        (p.onGround ? 0 : 14)) *
+        (1 - p.ads * 0.8);
     const cross = this.el.crosshair;
     cross.style.setProperty("--gap", gap.toFixed(1) + "px");
     cross.style.opacity = !p.alive || p.ads > 0.6 || p.sprinting ? 0 : 1;
-    this.el.scope.classList.toggle("show", !!def.scope && p.ads > 0.9 && p.alive);
+    this.el.scope.classList.toggle(
+      "show",
+      !!def.scope && p.ads > 0.9 && p.alive,
+    );
 
+    // 命中標記與公告的消失時間。
     if (this.hitT > 0) {
       this.hitT -= dt;
       if (this.hitT <= 0) this.el.hitmarker.className = "";
     }
 
     /* ---- 提示類的倒數 ---- */
-    if (this.announceT > 0 && (this.announceT -= dt) <= 0) this.el.announce.className = "";
-    if (this.toastT > 0 && (this.toastT -= dt) <= 0) this.el.toast.classList.remove("show");
-    if (this.warnT > 0 && (this.warnT -= dt) <= 0) this.el["boss-warning"].classList.remove("show");
+    if (this.announceT > 0 && (this.announceT -= dt) <= 0)
+      this.el.announce.className = "";
+    if (this.toastT > 0 && (this.toastT -= dt) <= 0)
+      this.el.toast.classList.remove("show");
+    if (this.warnT > 0 && (this.warnT -= dt) <= 0)
+      this.el["boss-warning"].classList.remove("show");
+    // 擊殺訊息的消失時間。
     for (let i = this.feed.length - 1; i >= 0; i--) {
       const f = this.feed[i];
       f.life -= dt;
@@ -323,9 +437,14 @@ const HUD = {
     }
 
     /* ---- 陣亡畫面 ---- */
+    // 死亡畫面與重新部署倒數。
     const dead = !p.alive && Game.state !== "ended";
     this.el["death-screen"].classList.toggle("show", dead);
-    if (dead) this._set("death-respawn", p.respawnT > 0 ? "重新部署：" + Math.ceil(p.respawnT) + " 秒" : "");
+    if (dead)
+      this._set(
+        "death-respawn",
+        p.respawnT > 0 ? "重新部署：" + Math.ceil(p.respawnT) + " 秒" : "",
+      );
 
     this._updateTop();
     this._updateBoss();
@@ -337,9 +456,14 @@ const HUD = {
     /* ---- 換彈圓環：繞著準星，換彈時一圈圈填滿 ---- */
     const rr = this.el["reload-ring"];
     rr.classList.toggle("show", ws.reloading && p.alive);
-    if (ws.reloading) rr.style.setProperty("--p", (1 - ws.reloadLeft / ws.reloadTotal).toFixed(3));
+    if (ws.reloading)
+      rr.style.setProperty(
+        "--p",
+        (1 - ws.reloadLeft / ws.reloadTotal).toFixed(3),
+      );
 
     /* ---- 計分板（按住 Tab）---- */
+    // 按住 Tab 顯示計分板。
     const showBoard = Input.down("Tab");
     this.el.scoreboard.classList.toggle("show", showBoard);
     if (showBoard) {
@@ -354,14 +478,24 @@ const HUD = {
   /* ---- 上方：比分、計時、任務、據點 ---- */
   _updateTop() {
     const s = Game.mode.status();
+    // 只有內容改變時才更新畫面。
     const side = (key, data) => {
-      const html = data ? `<span class="name">${data.name}</span><span class="score">${data.score}</span>` +
-        (data.max ? `<div class="bar"><i style="width:${Math.min(100, (data.score / data.max) * 100)}%"></i></div>` : "") : "";
+      const html = data
+        ? `<span class="name">${data.name}</span><span class="score">${data.score}</span>` +
+          (data.max
+            ? `<div class="bar"><i style="width:${Math.min(100, (data.score / data.max) * 100)}%"></i></div>`
+            : "")
+        : "";
       this._set(key, html, "innerHTML");
     };
     side("team-left", s.left);
     side("team-right", s.right);
-    this._set("timer", s.timer === null || s.timer === undefined ? "∞" : Util.formatTime(s.timer));
+    this._set(
+      "timer",
+      s.timer === null || s.timer === undefined
+        ? "∞"
+        : Util.formatTime(s.timer),
+    );
     this._set("objective", s.text || "");
     if (s.race) this._updateRace(s.race);
 
@@ -378,13 +512,17 @@ const HUD = {
         const node = this.pointNodes[i];
         // 底色：擁有者（我方青、敵方紅、中立灰），整顆填滿
         // 外圈：正在佔領的進度，顏色是「正在佔領的那一隊」
-        const cls = "point"
-          + (pt.owner === 0 ? " ours" : pt.owner === 1 ? " theirs" : "")
-          + (pt.contested ? " contested" : "")
-          + (pt.cap > 0 ? " capturing" : "");
+        const cls =
+          "point" +
+          (pt.owner === 0 ? " ours" : pt.owner === 1 ? " theirs" : "") +
+          (pt.contested ? " contested" : "") +
+          (pt.cap > 0 ? " capturing" : "");
         if (node.className !== cls) node.className = cls;
         node.style.setProperty("--p", (pt.cap * 360).toFixed(0) + "deg");
-        node.style.setProperty("--pc", pt.capTeam === 1 ? "#ff4a5e" : "#35d6ff");
+        node.style.setProperty(
+          "--pc",
+          pt.capTeam === 1 ? "#ff4a5e" : "#35d6ff",
+        );
       });
     }
   },
@@ -401,21 +539,33 @@ const HUD = {
     if (this.cache.bossId !== boss.id) {
       // 新首領登場：寫入名稱並畫出階段刻度
       this.cache.bossId = boss.id;
-      this.el["boss-name"].innerHTML = `<b>${boss.def.name}</b> ${boss.def.cn} — ${boss.def.title}`;
-      this.el["boss-ticks"].innerHTML = boss.def.phases.map((t) => `<i style="left:${t * 100}%"></i>`).join("");
-      this.el["boss-bar"].style.setProperty("--boss", Util.cssColor(boss.def.color));
+      this.el["boss-name"].innerHTML =
+        `<b>${boss.def.name}</b> ${boss.def.cn} — ${boss.def.title}`;
+      this.el["boss-ticks"].innerHTML = boss.def.phases
+        .map((t) => `<i style="left:${t * 100}%"></i>`)
+        .join("");
+      this.el["boss-bar"].style.setProperty(
+        "--boss",
+        Util.cssColor(boss.def.color),
+      );
     }
-    this._set("boss-fill", ((boss.hp / boss.maxHp) * 100).toFixed(1) + "%", "width");
+    this._set(
+      "boss-fill",
+      ((boss.hp / boss.maxHp) * 100).toFixed(1) + "%",
+      "width",
+    );
     this.el["boss-bar"].classList.toggle("stunned", boss.stunT > 0);
   },
 
   /* ---- 受擊方向 ---- */
   _updateDirs(dt, p) {
-    const sin = Math.sin(p.yaw), cos = Math.cos(p.yaw);
+    const sin = Math.sin(p.yaw),
+      cos = Math.cos(p.yaw);
     for (const d of this.dirs) {
       if (d.life <= 0) continue;
       d.life -= dt;
-      const dx = d.x - p.pos.x, dz = d.z - p.pos.z;
+      const dx = d.x - p.pos.x,
+        dz = d.z - p.pos.z;
       const fwd = -dx * sin - dz * cos; // 來源在我前方多遠
       const right = dx * cos - dz * sin; // 來源在我右方多遠
       d.node.style.transform = `rotate(${Math.atan2(right, fwd)}rad)`;
@@ -431,18 +581,29 @@ const HUD = {
   _project(x, y, z) {
     const v = TMP.v1.set(x, y, z).project(Scene3D.camera);
     if (v.z > 1 || v.z < -1) return null;
-    return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight };
+    return {
+      x: (v.x * 0.5 + 0.5) * window.innerWidth,
+      y: (-v.y * 0.5 + 0.5) * window.innerHeight,
+    };
   },
 
   _updateWorld(dt, p) {
     // 每 0.2 秒檢查一次玩家看得到哪些敵人（小地圖與名牌用）
     this.spotT -= dt;
+    // 定時檢查看得到哪些角色。
     if (this.spotT <= 0) {
       this.spotT = 0.2;
       const ey = p.eyeY();
       for (const a of Combat.actors) {
         if (a === p || !a.alive || a.team === p.team) continue;
-        a.spotted = World.los(p.pos.x, ey, p.pos.z, a.pos.x, a.pos.y + a.hit.base + a.hit.h * 0.7, a.pos.z);
+        a.spotted = World.los(
+          p.pos.x,
+          ey,
+          p.pos.z,
+          a.pos.x,
+          a.pos.y + a.hit.base + a.hit.h * 0.7,
+          a.pos.z,
+        );
       }
       // 清掉已經不存在的角色的名牌
       for (const [actor, node] of this.tags) {
@@ -454,38 +615,51 @@ const HUD = {
     }
 
     /* ---- 名牌與血條 ---- */
+    // 隊友與被標記敵人的名牌。
     for (const a of Combat.actors) {
       if (a === p || a.isBoss) continue;
       const ally = a.team === p.team;
       const dist = Util.dist3D(a.pos, p.pos);
       // 隊友：一直顯示名字。敵人：剛被我打到、或被掃描標記時才顯示血條
       const recentlyHit = Game.time - (a.lastHitByPlayer ?? -9) < 2.5;
-      const want = a.alive && (ally ? dist < 50 : (recentlyHit && a.spotted) || a.marked > 0);
+      const want =
+        a.alive &&
+        (ally ? dist < 50 : (recentlyHit && a.spotted) || a.marked > 0);
       let node = this.tags.get(a);
       if (!want) {
         if (node) node.style.display = "none";
         continue;
       }
 
-      const s = this._project(a.pos.x, a.pos.y + a.hit.base + a.hit.h + 0.55 * a.scale, a.pos.z);
+      const s = this._project(
+        a.pos.x,
+        a.pos.y + a.hit.base + a.hit.h + 0.55 * a.scale,
+        a.pos.z,
+      );
       if (!s) {
         if (node) node.style.display = "none";
         continue;
       }
       if (!node) {
-        node = Util.el("div", "tag " + (ally ? "ally" : "enemy"), `<span>${a.name}</span><div class="bar"><i></i></div>`);
+        node = Util.el(
+          "div",
+          "tag " + (ally ? "ally" : "enemy"),
+          `<span>${a.name}</span><div class="bar"><i></i></div>`,
+        );
         this.el["world-tags"].appendChild(node);
         this.tags.set(a, node);
       }
       node.style.display = "block";
       node.style.transform = `translate(${s.x.toFixed(0)}px, ${s.y.toFixed(0)}px) translate(-50%, -100%)`;
       node.classList.toggle("marked", a.marked > 0);
-      node.lastChild.firstChild.style.width = Math.max(0, (a.hp / a.maxHp) * 100) + "%";
+      node.lastChild.firstChild.style.width =
+        Math.max(0, (a.hp / a.maxHp) * 100) + "%";
       node.style.opacity = ally ? Util.clamp(1.3 - dist / 45, 0.35, 0.9) : 1;
     }
 
     /* ---- 補給的重生倒數：被撿走的補給上方顯示還要幾秒才會再出現 ---- */
     this.pickupTags = this.pickupTags || new Map();
+    // 附近補給的圖示。
     for (const pk of Combat.pickups) {
       let node = this.pickupTags.get(pk);
       const near = !pk.active && Util.dist2D(pk.x, pk.z, p.pos.x, p.pos.z) < 40;
@@ -499,16 +673,22 @@ const HUD = {
         this.el["world-tags"].appendChild(node);
         this.pickupTags.set(pk, node);
       }
-      const icon = { health: "✚", armor: "⛨", ammo: "▤", grenade: "●" }[pk.type];
+      const icon = { health: "✚", armor: "⛨", ammo: "▤", grenade: "●" }[
+        pk.type
+      ];
       const text = icon + " " + Math.ceil(pk.timer);
       if (node.textContent !== text) node.textContent = text;
       node.style.display = "block";
       node.style.transform = `translate(${s.x.toFixed(0)}px, ${s.y.toFixed(0)}px) translate(-50%, -50%)`;
       // 倒數的進度條（用背景漸層畫）
-      node.style.setProperty("--t", ((1 - pk.timer / (pk.maxTimer || 26)) * 100).toFixed(0) + "%");
+      node.style.setProperty(
+        "--t",
+        ((1 - pk.timer / (pk.maxTimer || 26)) * 100).toFixed(0) + "%",
+      );
     }
 
     /* ---- 傷害數字 ---- */
+    // 傷害數字往上飄並淡出。
     for (const n of this.numbers) {
       if (n.life <= 0) continue;
       n.life -= dt;
@@ -525,6 +705,7 @@ const HUD = {
 
     /* ---- 據點的世界標記 ---- */
     const status = Game.mode.status();
+    // 據點的方向與距離。
     if (status.points) {
       if (!this.pointTags) this.pointTags = [];
       status.points.forEach((pt, i) => {
@@ -541,8 +722,14 @@ const HUD = {
         }
         node.style.display = "block";
         node.style.transform = `translate(${s.x.toFixed(0)}px, ${s.y.toFixed(0)}px) translate(-50%, -50%)`;
-        node.textContent = pt.name + " " + Math.round(Util.dist2D(pt.x, pt.z, p.pos.x, p.pos.z)) + "m";
-        node.className = "point-tag" + (pt.owner === 0 ? " ours" : pt.owner === 1 ? " theirs" : "");
+        node.textContent =
+          pt.name +
+          " " +
+          Math.round(Util.dist2D(pt.x, pt.z, p.pos.x, p.pos.z)) +
+          "m";
+        node.className =
+          "point-tag" +
+          (pt.owner === 0 ? " ours" : pt.owner === 1 ? " theirs" : "");
       });
     } else if (this.pointTags) {
       for (const node of this.pointTags) node.remove();
@@ -565,11 +752,18 @@ const HUD = {
     c.fillStyle = "rgba(20,28,40,0.9)";
     c.fillRect(0, 0, canvas.width, canvas.height);
     // 依高度由低到高畫，高的物件顏色較亮
-    const boxes = World.boxes.filter((b) => b.maxY > 0.9 && b.minY < 2.5 && !(b.tag && b.tag.barrel)).sort((a, b) => a.maxY - b.maxY);
+    const boxes = World.boxes
+      .filter((b) => b.maxY > 0.9 && b.minY < 2.5 && !(b.tag && b.tag.barrel))
+      .sort((a, b) => a.maxY - b.maxY);
     for (const b of boxes) {
       const lum = Math.min(1, 0.35 + b.maxY / 9);
       c.fillStyle = `rgba(${Math.round(90 * lum)},${Math.round(140 * lum)},${Math.round(190 * lum)},1)`;
-      c.fillRect((b.minX + half) * S, (b.minZ + half) * S, (b.maxX - b.minX) * S, (b.maxZ - b.minZ) * S);
+      c.fillRect(
+        (b.minX + half) * S,
+        (b.minZ + half) * S,
+        (b.maxX - b.minX) * S,
+        (b.maxZ - b.minZ) * S,
+      );
     }
     c.strokeStyle = "rgba(120,200,255,0.5)";
     c.lineWidth = 2;
@@ -577,6 +771,7 @@ const HUD = {
     this.mapImage = canvas;
   },
 
+  // 小地圖：以玩家為中心並跟著轉動。
   _drawMinimap(p) {
     const c = this.mapCtx;
     const size = this.el.minimap.width;
@@ -598,6 +793,7 @@ const HUD = {
     c.translate(-p.pos.x * S, -p.pos.z * S);
     c.drawImage(this.mapImage, -half * S, -half * S);
 
+    // 在小地圖畫一個點。
     const dot = (x, z, r, color) => {
       c.fillStyle = color;
       c.beginPath();
@@ -606,16 +802,24 @@ const HUD = {
     };
 
     // 補給（小方塊）
+    // 補給。
     for (const pk of Combat.pickups) {
       if (!pk.active) continue;
-      c.fillStyle = { health: "#ff6a8a", armor: "#5ab8ff", ammo: "#ffd24a", grenade: "#ff9a3a" }[pk.type];
+      c.fillStyle = {
+        health: "#ff6a8a",
+        armor: "#5ab8ff",
+        ammo: "#ffd24a",
+        grenade: "#ff9a3a",
+      }[pk.type];
       c.fillRect(pk.x * S - 2.5, pk.z * S - 2.5, 5, 5);
     }
     // 據點（圓圈）
     const st = Game.mode.status();
+    // 據點。
     if (st.points) {
       for (const pt of st.points) {
-        c.strokeStyle = pt.owner === 0 ? "#35d6ff" : pt.owner === 1 ? "#ff4a5e" : "#e0e0e0";
+        c.strokeStyle =
+          pt.owner === 0 ? "#35d6ff" : pt.owner === 1 ? "#ff4a5e" : "#e0e0e0";
         c.lineWidth = 2;
         c.beginPath();
         c.arc(pt.x * S, pt.z * S, pt.r * S, 0, Math.PI * 2);
@@ -623,10 +827,16 @@ const HUD = {
       }
     }
     // 角色：隊友一直顯示；敵人只有「看得到、剛開槍、被標記」時才出現
+    // 隊友與被發現的敵人。
     for (const a of Combat.actors) {
       if (a === p || !a.alive) continue;
       const ally = a.team === p.team;
-      const shown = ally || a.spotted || a.marked > 0 || Game.time - a.lastShotTime < 2.5 || a.isBoss;
+      const shown =
+        ally ||
+        a.spotted ||
+        a.marked > 0 ||
+        Game.time - a.lastShotTime < 2.5 ||
+        a.isBoss;
       if (!shown) continue;
       if (a.isBoss) {
         dot(a.pos.x, a.pos.z, 8, "#ff9a3a");
@@ -657,7 +867,11 @@ const HUD = {
     c.font = "bold 12px sans-serif";
     c.textAlign = "center";
     c.textBaseline = "middle";
-    c.fillText("N", R + Math.sin(-p.yaw) * (R - 12) * -1, R - Math.cos(-p.yaw) * (R - 12));
+    c.fillText(
+      "N",
+      R + Math.sin(-p.yaw) * (R - 12) * -1,
+      R - Math.cos(-p.yaw) * (R - 12),
+    );
   },
 
   /* ============================================================
@@ -672,7 +886,8 @@ const HUD = {
   _updateRace(race) {
     const box = this.el.race;
     if (!this.raceNodes) {
-      box.innerHTML = `<div class="race-track"><i class="race-lead"></i></div>` +
+      box.innerHTML =
+        `<div class="race-track"><i class="race-lead"></i></div>` +
         `<span class="race-end">${race.limit} 殺勝利</span>`;
       this.raceTrack = box.firstChild;
       this.raceLead = this.raceTrack.firstChild;
@@ -683,7 +898,11 @@ const HUD = {
     for (const e of race.list) {
       let node = this.raceNodes.get(e.id);
       if (!node) {
-        node = Util.el("div", "race-dot" + (e.me ? " me" : ""), e.me ? `<b>你 <span>0</span></b>` : "");
+        node = Util.el(
+          "div",
+          "race-dot" + (e.me ? " me" : ""),
+          e.me ? `<b>你 <span>0</span></b>` : "",
+        );
         node.style.setProperty("--c", e.color);
         this.raceTrack.appendChild(node);
         this.raceNodes.set(e.id, node);
@@ -702,7 +921,8 @@ const HUD = {
     }
     // 第一名已經跑到哪裡：賽道上淡淡的一段
     const top = race.list[0];
-    this.raceLead.style.width = Math.min(100, (top.kills / race.limit) * 100) + "%";
+    this.raceLead.style.width =
+      Math.min(100, (top.kills / race.limit) * 100) + "%";
   },
 
   /* ============================================================
@@ -713,7 +933,8 @@ const HUD = {
    * ============================================================ */
   _drawCompass(p) {
     const c = this.el.compass.getContext("2d");
-    const W = this.el.compass.width, H = this.el.compass.height;
+    const W = this.el.compass.width,
+      H = this.el.compass.height;
     const PX = 3.6;
     const heading = ((((-p.yaw * 180) / Math.PI) % 360) + 360) % 360;
     // 某個方位在羅盤上的 x 位置（超出範圍回傳 null）
@@ -734,6 +955,7 @@ const HUD = {
     c.textAlign = "center";
     c.textBaseline = "middle";
     // 刻度與文字
+    // 每 15 度一個刻度。
     for (let deg = 0; deg < 360; deg += 15) {
       const x = xOf(deg);
       if (x === null) continue;
@@ -742,8 +964,14 @@ const HUD = {
       c.globalAlpha = 0.35 + fade * 0.65;
       c.fillStyle = main ? "#ffffff" : "#8fa3b8";
       if (deg % 45 === 0) {
-        c.font = main ? "bold 15px Bahnschrift, sans-serif" : "11px Bahnschrift, sans-serif";
-        c.fillText({ 0: "N", 90: "E", 180: "S", 270: "W" }[deg] ?? String(deg), x, H / 2);
+        c.font = main
+          ? "bold 15px Bahnschrift, sans-serif"
+          : "11px Bahnschrift, sans-serif";
+        c.fillText(
+          { 0: "N", 90: "E", 180: "S", 270: "W" }[deg] ?? String(deg),
+          x,
+          H / 2,
+        );
       } else {
         c.fillRect(x - 0.5, H / 2 - 4, 1, 8);
       }
@@ -751,7 +979,8 @@ const HUD = {
     c.globalAlpha = 1;
     // 目標：據點（字母）與首領（橘色菱形），在羅盤上標出方向
     const mark = (tx, tz, color, label) => {
-      const bearing = (Math.atan2(tx - p.pos.x, -(tz - p.pos.z)) * 180) / Math.PI;
+      const bearing =
+        (Math.atan2(tx - p.pos.x, -(tz - p.pos.z)) * 180) / Math.PI;
       const x = xOf(bearing);
       if (x === null) return;
       c.fillStyle = color;
@@ -766,8 +995,17 @@ const HUD = {
       }
     };
     const st = Game.mode.status();
-    if (st.points) for (const pt of st.points) mark(pt.x, pt.z, pt.owner === 0 ? "#35d6ff" : pt.owner === 1 ? "#ff4a5e" : "#e8f1fa", pt.name);
-    if (Game.boss && Game.boss.alive) mark(Game.boss.pos.x, Game.boss.pos.z, "#ff9a3a", "◆");
+    // 據點與首領的方向。
+    if (st.points)
+      for (const pt of st.points)
+        mark(
+          pt.x,
+          pt.z,
+          pt.owner === 0 ? "#35d6ff" : pt.owner === 1 ? "#ff4a5e" : "#e8f1fa",
+          pt.name,
+        );
+    if (Game.boss && Game.boss.alive)
+      mark(Game.boss.pos.x, Game.boss.pos.z, "#ff9a3a", "◆");
     // 中央：目前方位的數字與指針
     c.fillStyle = "#ffffff";
     c.beginPath();
@@ -789,21 +1027,49 @@ const HUD = {
    *  opt.ffa    個人亂鬥：每個人用自己的顏色
    * ============================================================ */
   statsTable(actors, opt = {}) {
-    const rows = actors.slice().sort((a, b) => b.stats.score - a.stats.score || b.stats.kills - a.stats.kills);
+    const rows = actors
+      .slice()
+      .sort(
+        (a, b) =>
+          b.stats.score - a.stats.score || b.stats.kills - a.stats.kills,
+      );
     const topDamage = Math.max(1, ...rows.map((a) => a.stats.damage)); // 傷害長條以全表最高者為 100%
-    const color = (a) => a.isPlayer ? "#7dffb0" : opt.ffa
-      ? Util.cssColor(CONFIG.TEAM_COLORS[a.team % CONFIG.TEAM_COLORS.length]) : this.colorOf(a);
+    // 名字的顏色：玩家綠色，其他依隊伍。
+    const color = (a) =>
+      a.isPlayer
+        ? "#7dffb0"
+        : opt.ffa
+          ? Util.cssColor(
+              CONFIG.TEAM_COLORS[a.team % CONFIG.TEAM_COLORS.length],
+            )
+          : this.colorOf(a);
+    // 表格的一列。
     const line = (a, i) => {
       const s = a.stats;
       const kd = (s.deaths ? s.kills / s.deaths : s.kills).toFixed(1);
       const acc = s.shots ? Math.round((s.hits / s.shots) * 100) + "%" : "-";
       const op = a.operator ? `<small>${a.operator.cn}</small>` : "";
-      const badge = (a === opt.mvp ? `<em class="mvp">MVP</em>` : "") + (a.isPlayer ? `<em class="you">你</em>` : "");
+      const badge =
+        (a === opt.mvp ? `<em class="mvp">MVP</em>` : "") +
+        (a.isPlayer ? `<em class="you">你</em>` : "");
       const dmg = Math.round(s.damage);
-      const name = `<td class="who"><div><i style="background:${color(a)}"></i><span><b style="color:${color(a)}">${a.name}</b>${op}</span>${badge}</div></td>`;
+      const name = /* HTML */ `<td class="who">
+        <div>
+          <i style="background:${color(a)}"></i
+          ><span><b style="color:${color(a)}">${a.name}</b>${op}</span>${badge}
+        </div>
+      </td>`;
       if (!opt.full) {
-        return `<tr class="${a.isPlayer ? "me" : ""}${a.alive ? "" : " dead"}">${name}
-          <td>${s.kills}</td><td>${s.deaths}</td><td>${s.assists}</td><td>${dmg}</td><td>${s.score}</td></tr>`;
+        return /* HTML */ `<tr
+          class="${a.isPlayer ? "me" : ""}${a.alive ? "" : " dead"}"
+        >
+          ${name}
+          <td>${s.kills}</td>
+          <td>${s.deaths}</td>
+          <td>${s.assists}</td>
+          <td>${dmg}</td>
+          <td>${s.score}</td>
+        </tr>`;
       }
       return `<tr class="${a.isPlayer ? "me" : ""}">
         <td class="rank">${i + 1}</td>${name}
@@ -812,21 +1078,38 @@ const HUD = {
         <td>${s.headshots}</td><td>${acc}</td><td>${s.bestStreak}</td><td class="big">${s.score}</td></tr>`;
     };
     const head = opt.full
-      ? `<tr><th>#</th><th>幹員</th><th>擊殺</th><th>死亡</th><th>助攻</th><th>K/D</th><th>傷害</th><th>爆頭</th><th>命中率</th><th>最高連殺</th><th>得分</th></tr>`
+      ? /* HTML */ `<tr>
+          <th>#</th>
+          <th>幹員</th>
+          <th>擊殺</th>
+          <th>死亡</th>
+          <th>助攻</th>
+          <th>K/D</th>
+          <th>傷害</th>
+          <th>爆頭</th>
+          <th>命中率</th>
+          <th>最高連殺</th>
+          <th>得分</th>
+        </tr>`
       : `<tr><th>名稱</th><th>擊殺</th><th>死亡</th><th>助攻</th><th>傷害</th><th>得分</th></tr>`;
     return `<table class="stats-table${opt.full ? " full" : ""}">${head}${rows.map(line).join("")}</table>`;
   },
 
+  // 建立計分板的內容。
   _buildScoreboard() {
     const p = Game.player;
-    const rows = Combat.actors.filter((a) => !a.isBoss && (a.isPlayer || !a.removeOnDeath));
+    const rows = Combat.actors.filter(
+      (a) => !a.isBoss && (a.isPlayer || !a.removeOnDeath),
+    );
     let html = `<h2>${Game.mode.def.name} <small>${Game.mapDef.name} · ${Game.difficulty.name}</small></h2>`;
     if (Game.mode.ffa || rows.length <= 1) {
       html += this.statsTable(rows, { ffa: Game.mode.ffa });
     } else {
       // 團隊模式：我方與敵方各一張表
-      const ours = rows.filter((a) => a.team === p.team), theirs = rows.filter((a) => a.team !== p.team);
-      html += `<div class="cols"><div><h3 class="ours">我方</h3>${this.statsTable(ours)}</div>` +
+      const ours = rows.filter((a) => a.team === p.team),
+        theirs = rows.filter((a) => a.team !== p.team);
+      html +=
+        `<div class="cols"><div><h3 class="ours">我方</h3>${this.statsTable(ours)}</div>` +
         `<div><h3 class="theirs">敵方</h3>${this.statsTable(theirs)}</div></div>`;
     }
     this.el.scoreboard.innerHTML = html;
@@ -839,32 +1122,62 @@ const HUD = {
  * ============================================================ */
 HUD.ICONS = {
   // 手榴彈：圓形彈體、握片與拉環
-  grenade: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">
-    <ellipse cx="22" cy="30" rx="11" ry="12.5"/>
-    <path d="M14 26h16M14 34h16" opacity=".55"/>
-    <rect x="17" y="13" width="10" height="6" rx="1.5"/>
-    <path d="M27 15.5h6l3 9"/>
-    <circle cx="33" cy="10" r="4"/>
+  grenade: /* HTML */ `<svg
+    viewBox="0 0 48 48"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2.6"
+    stroke-linejoin="round"
+    stroke-linecap="round"
+  >
+    <ellipse cx="22" cy="30" rx="11" ry="12.5" />
+    <path d="M14 26h16M14 34h16" opacity=".55" />
+    <rect x="17" y="13" width="10" height="6" rx="1.5" />
+    <path d="M27 15.5h6l3 9" />
+    <circle cx="33" cy="10" r="4" />
   </svg>`,
 
   // 醫療包：急救箱與十字
-  medkit: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">
-    <path d="M18 13v-3h12v3"/>
-    <rect x="6" y="13" width="36" height="26" rx="4"/>
-    <path d="M24 19v14M17 26h14" stroke-width="4.2"/>
+  medkit: /* HTML */ `<svg
+    viewBox="0 0 48 48"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2.6"
+    stroke-linejoin="round"
+    stroke-linecap="round"
+  >
+    <path d="M18 13v-3h12v3" />
+    <rect x="6" y="13" width="36" height="26" rx="4" />
+    <path d="M24 19v14M17 26h14" stroke-width="4.2" />
   </svg>`,
 
   // 戰地急救：心形加上十字
-  heal: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">
-    <path d="M24 41S7 30 7 18a8.5 8.5 0 0 1 17-2 8.5 8.5 0 0 1 17 2c0 12-17 23-17 23z"/>
-    <path d="M24 20v11M18.5 25.5h11" stroke-width="3.4"/>
+  heal: /* HTML */ `<svg
+    viewBox="0 0 48 48"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2.6"
+    stroke-linejoin="round"
+    stroke-linecap="round"
+  >
+    <path
+      d="M24 41S7 30 7 18a8.5 8.5 0 0 1 17-2 8.5 8.5 0 0 1 17 2c0 12-17 23-17 23z"
+    />
+    <path d="M24 20v11M18.5 25.5h11" stroke-width="3.4" />
   </svg>`,
 
   // 相位衝刺：箭頭與速度線
-  dash: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round">
-    <path d="M22 12l12 12-12 12"/>
-    <path d="M32 12l12 12-12 12" opacity=".5"/>
-    <path d="M4 18h12M2 24h18M4 30h12"/>
+  dash: /* HTML */ `<svg
+    viewBox="0 0 48 48"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2.8"
+    stroke-linejoin="round"
+    stroke-linecap="round"
+  >
+    <path d="M22 12l12 12-12 12" />
+    <path d="M32 12l12 12-12 12" opacity=".5" />
+    <path d="M4 18h12M2 24h18M4 30h12" />
   </svg>`,
 
   // 脈衝掃描：雷達圓與掃描扇形
@@ -878,17 +1191,34 @@ HUD.ICONS = {
   </svg>`,
 
   // 力場護盾：盾牌與能量紋
-  shield: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round">
-    <path d="M24 5l16 6v11c0 10-7 17.5-16 21C15 39.5 8 32 8 22V11z"/>
-    <path d="M24 12l9 3.4v7c0 6-4 10.5-9 12.8z" fill="currentColor" opacity=".35" stroke="none"/>
-    <path d="M17 24l5 5 9-10" stroke-width="3" stroke-linecap="round"/>
+  shield: /* HTML */ `<svg
+    viewBox="0 0 48 48"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2.6"
+    stroke-linejoin="round"
+  >
+    <path d="M24 5l16 6v11c0 10-7 17.5-16 21C15 39.5 8 32 8 22V11z" />
+    <path
+      d="M24 12l9 3.4v7c0 6-4 10.5-9 12.8z"
+      fill="currentColor"
+      opacity=".35"
+      stroke="none"
+    />
+    <path d="M17 24l5 5 9-10" stroke-width="3" stroke-linecap="round" />
   </svg>`,
 
   // 軌道打擊：瞄準圈與從天而降的光束
-  strike: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
-    <path d="M24 2v20" stroke-width="5" opacity=".8"/>
-    <ellipse cx="24" cy="36" rx="17" ry="7"/>
-    <ellipse cx="24" cy="36" rx="8" ry="3.2" opacity=".6"/>
-    <path d="M24 26v4M24 42v4M5 36h4M39 36h4"/>
+  strike: /* HTML */ `<svg
+    viewBox="0 0 48 48"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2.4"
+    stroke-linecap="round"
+  >
+    <path d="M24 2v20" stroke-width="5" opacity=".8" />
+    <ellipse cx="24" cy="36" rx="17" ry="7" />
+    <ellipse cx="24" cy="36" rx="8" ry="3.2" opacity=".6" />
+    <path d="M24 26v4M24 42v4M5 36h4M39 36h4" />
   </svg>`,
 };

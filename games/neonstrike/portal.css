@@ -1,4 +1,4 @@
-/* The standalone return bar must not cover the fixed game lobby or HUD. */
+/* 單獨開啟遊戲時顯示的返回列；不能蓋住固定位置的大廳或戰鬥畫面資訊。 */
 .standalone-portal-nav {
   position: fixed;
   inset: 0 0 auto;
@@ -20,6 +20,7 @@
 .standalone-portal-game .setup-shell {
   max-height: calc(100dvh - 164px);
 }
+/* 平板：讓大廳避開返回列。 */
 @media (min-width: 761px) and (max-width: 1100px) {
   #lobby.overlay {
     grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
@@ -35,6 +36,7 @@
     width: 100%;
   }
 }
+/* 手機：只顯示圖示。 */
 @media (max-width: 760px) {
   .standalone-portal-nav span {
     display: none;

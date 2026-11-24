@@ -11,6 +11,7 @@
 
 (() => {
   const room = document.getElementById("chibi-room");
+  // 小茜的造型清單：圖片代號、標題、說明與來源。
   const looks = [
     {
       key: "uniform",
@@ -30,6 +31,7 @@
     },
   ];
   let lookIndex = looks.findIndex((look) => look.key === "uniform");
+  // 換成第 index 款造型，更新圖片、文字與按鈕狀態。
   function chooseLook(index) {
     lookIndex = index;
     const look = looks[index];
@@ -53,12 +55,14 @@
       );
     });
   }
+  // 點小茜本人：換下一款造型。
   document
     .getElementById("chibi-change")
     .addEventListener("click", () =>
       chooseLook((lookIndex + 1) % looks.length),
     );
   document.querySelectorAll("button[data-chibi-look]").forEach((button) => {
+    // 造型選單的按鈕。
     button.addEventListener("click", () =>
       chooseLook(
         looks.findIndex((look) => look.key === button.dataset.chibiLook),
@@ -67,6 +71,7 @@
   });
   document.querySelectorAll("[data-chibi-light]").forEach((button) => {
     if (button.tagName !== "BUTTON") return;
+    // 燈光顏色按鈕。
     button.addEventListener("click", () => {
       room.dataset.chibiLight = button.dataset.chibiLight;
       document
@@ -77,6 +82,7 @@
     });
   });
   document.querySelectorAll("[data-chibi-mode]").forEach((button) => {
+    // 切換六種小玩法；同時通知其他程式目前在哪個玩法。
     button.addEventListener("click", () => {
       document
         .querySelectorAll("[data-chibi-mode]")
@@ -107,6 +113,7 @@
   } catch (_) {
     /* 無法儲存時仍可在本次使用。 */
   }
+  // 送出星星時輪流顯示的短句。
   const starNotes = [
     "一顆星，送給今天認真生活的你，也送給喜歡的茜。",
     "不用急著發光，慢慢走，也是在前進。",
@@ -115,6 +122,7 @@
     "星光收到啦。願你今天有一件值得微笑的小事。",
   ];
   document.getElementById("chibi-star-count").textContent = starCount;
+  // 在小茜周圍灑出小星星；有「減少動態」設定時不灑。
   function littleSparkles() {
     const postcard = room.querySelector(".chibi-postcard");
     postcard
@@ -137,6 +145,7 @@
       setTimeout(() => spark.remove(), 1200);
     });
   }
+  // 「送一顆星」：換一句短句並累計數量。
   document.getElementById("chibi-star").addEventListener("click", () => {
     document.getElementById("chibi-star-note").textContent =
       starNotes[starCount % starNotes.length];
@@ -172,6 +181,7 @@
   const lines = document.getElementById("constellation-lines");
   let pathIndex = 0;
   let connected = 0;
+  // 連星星：畫出星星位置、已連的線與下一顆提示。
   function paintConstellation() {
     const sequence = starPaths[pathIndex];
     starButtons.forEach((button, index) => {
@@ -203,6 +213,7 @@
     board.classList.toggle("constellation-complete", connected === 6);
   }
   starButtons.forEach((button, index) => {
+    // 點星星：順序對了才會連上，六顆連完就完成。
     button.addEventListener("click", () => {
       if (connected === 6) {
         status.textContent = "這束光已完成，按「換一片星空」再玩一次。";
@@ -221,6 +232,7 @@
       if (connected === 6) littleSparkles();
     });
   });
+  // 「換一片星空」。
   document
     .getElementById("constellation-reset")
     .addEventListener("click", () => {
@@ -272,6 +284,7 @@
   let questionIndex = 0;
   let score = 0;
   let answered = false;
+  // 顯示目前這題與四個選項。
   function renderQuestion() {
     const question = questions[questionIndex];
     answered = false;
@@ -291,6 +304,7 @@
     question.options.forEach((option, index) => {
       const button = document.createElement("button");
       button.textContent = option;
+      // 選答案：只能選一次，並標出正確選項。
       button.addEventListener("click", () => {
         if (answered) return;
         answered = true;
@@ -308,6 +322,7 @@
       answers.append(button);
     });
   }
+  // 下一題；全部答完就從頭開始。
   document.getElementById("chibi-quiz-next").addEventListener("click", () => {
     questionIndex++;
     if (questionIndex === questions.length) {
@@ -331,6 +346,7 @@
   let memoryPairs = 0;
   let memoryMoves = 0;
   let memoryTimer = null;
+  // 依狀態（蓋著、翻開、配對成功）更新一張記憶牌。
   function paintMemoryCard(index) {
     const card = memoryDeck[index];
     const visible = card.matched || memoryOpen.includes(index);
@@ -344,6 +360,7 @@
     );
     button.setAttribute("aria-disabled", String(card.matched));
   }
+  // 把翻開但沒配對成功的牌蓋回去。
   function closeUnmatchedCards() {
     clearTimeout(memoryTimer);
     memoryTimer = null;
@@ -351,6 +368,7 @@
     memoryOpen = [];
     previous.forEach(paintMemoryCard);
   }
+  // 重新開始記憶翻牌：洗牌並重畫整個牌面。
   function resetMemory() {
     closeUnmatchedCards();
     memoryPairs = 0;
@@ -359,14 +377,17 @@
       value: i % 4,
       matched: false,
     }));
+    // 洗牌（Fisher–Yates）：由後往前，每張和前面隨機一張交換。
     for (let i = memoryDeck.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [memoryDeck[i], memoryDeck[j]] = [memoryDeck[j], memoryDeck[i]];
     }
     memoryBoard.replaceChildren();
+    // 為每張牌建立按鈕。
     memoryDeck.forEach((card, index) => {
       const button = document.createElement("button");
       button.className = "soft-button memory-card";
+      // 翻牌：翻到兩張時比對，不一樣就過一下再蓋回去。
       button.addEventListener("click", () => {
         if (memoryTimer !== null || card.matched || memoryOpen.includes(index))
           return;
@@ -399,11 +420,13 @@
   document
     .getElementById("chibi-memory-reset")
     .addEventListener("click", resetMemory);
+  // 離開翻牌玩法時，把還沒配對的牌蓋回去。
   room.addEventListener("chibi-mode-change", (event) => {
     if (event.detail !== "memory") closeUnmatchedCards();
   });
   document.addEventListener("zone-change", closeUnmatchedCards);
   document.addEventListener("lounge-visibility", closeUnmatchedCards);
+  // 切到別的分頁時也一樣，避免計時器在背景繼續跑。
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) closeUnmatchedCards();
   });
@@ -430,6 +453,7 @@
   const fortuneIndexes = { rest: 0, courage: 0, focus: 0 };
   let fortuneMood = "rest";
   document.querySelectorAll("[data-chibi-mood]").forEach((button) => {
+    // 選擇今天的心情。
     button.addEventListener("click", () => {
       fortuneMood = button.dataset.chibiMood;
       document
@@ -441,6 +465,7 @@
         "心情選好了，抽一張送給現在的自己。";
     });
   });
+  // 抽一句籤詩；同一種心情會依序換句。
   document
     .getElementById("chibi-fortune-draw")
     .addEventListener("click", () => {
@@ -461,6 +486,7 @@
   const colorSliders = [...document.querySelectorAll("[data-color-channel]")];
   let colorIndex = 0;
   const colorStatus = document.getElementById("chibi-color-status");
+  // 依三個滑桿混出顏色並更新數值。
   function paintMixedColor() {
     const values = colorSliders.map((slider) => Number(slider.value));
     document.getElementById("chibi-color-mix").style.backgroundColor =
@@ -470,6 +496,7 @@
     });
     colorStatus.textContent = "調好了嗎？按「看看相似度」確認。";
   }
+  // 換一個目標顏色，滑桿回到中間。
   function newColorTarget() {
     const target = colorTargets[colorIndex];
     document.getElementById("chibi-color-target").style.backgroundColor =
@@ -487,6 +514,7 @@
   colorSliders.forEach((slider) =>
     slider.addEventListener("input", paintMixedColor),
   );
+  // 比對相似度：用 RGB 的距離換算成百分比。
   document.getElementById("chibi-color-check").addEventListener("click", () => {
     const target = colorTargets[colorIndex];
     const distance = Math.hypot(
@@ -498,12 +526,14 @@
     colorStatus.textContent = `相似度 ${similarity}%${similarity >= 94 ? "，配得很接近了！這一抹茜色送給你。" : "，再輕輕調整一點試試。"}`;
     if (similarity >= 94) littleSparkles();
   });
+  // 顯示調色提示。
   document.getElementById("chibi-color-hint").addEventListener("click", () => {
     const tip = document.getElementById("chibi-color-tip");
     const [r, g, b] = colorTargets[colorIndex].rgb;
     tip.textContent = `調色提示：紅 R ${r}、綠 G ${g}、藍 B ${b}。也可以用方向鍵微調。`;
     tip.hidden = false;
   });
+  // 下一個顏色。
   document.getElementById("chibi-color-next").addEventListener("click", () => {
     colorIndex = (colorIndex + 1) % colorTargets.length;
     newColorTarget();
@@ -512,6 +542,7 @@
 
   // 閱讀超過基本介紹後才出現低調書籤，進遊戲或放大圖片時收起。
   const bookmark = document.getElementById("archive-bookmark");
+  // 黑川茜專區的段落清單，給右下角的書籤使用。
   const sections = [
     ["profile", "人物檔案"],
     ["archive-compass", "閱讀路線"],
@@ -527,6 +558,7 @@
     ["chibi-room", "小茜互動"],
     ["sources", "資料來源"],
   ];
+  // 捲動時決定書籤要不要出現，並標出目前在哪一段。
   function updateBookmark() {
     const show =
       document.body.dataset.zoneView === "akane" &&
@@ -545,6 +577,7 @@
     document.getElementById("bookmark-current").textContent = current[1];
   }
   let scrollQueued = false;
+  // 捲動很頻繁，一幀最多更新一次書籤。
   window.addEventListener(
     "scroll",
     () => {
@@ -557,6 +590,7 @@
     },
     { passive: true },
   );
+  // 切換專區後重新判斷書籤。
   document.addEventListener("zone-change", () =>
     requestAnimationFrame(updateBookmark),
   );
@@ -573,12 +607,14 @@
       bookmark.open = false;
     }),
   );
+  // 按 Esc 收起書籤。
   bookmark.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       bookmark.open = false;
       bookmark.querySelector("summary").focus();
     }
   });
+  // 點到書籤外面就收起來。
   document.addEventListener("pointerdown", (event) => {
     if (bookmark.open && !bookmark.contains(event.target))
       bookmark.open = false;

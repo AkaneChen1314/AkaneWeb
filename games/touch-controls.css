@@ -3,6 +3,8 @@
  *  （搭配 touch-controls.js；只有手機／平板才會出現這些元素）
  * ============================================================ */
 
+/* ---------- 觸控裝置的頁面設定 ---------- */
+
 .akane-touch body {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
@@ -27,7 +29,13 @@
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
-  font-family: system-ui, -apple-system, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    "PingFang TC",
+    "Noto Sans TC",
+    "Microsoft JhengHei",
+    sans-serif;
 }
 .akane-touch-layer[hidden] {
   display: none;
@@ -43,8 +51,14 @@
   margin: calc(-58px * var(--tc-scale)) 0 0 calc(-58px * var(--tc-scale));
   border-radius: 50%;
   border: 2px solid rgba(255, 255, 255, 0.3);
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.04) 40%, rgba(255, 255, 255, 0.13));
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25), inset 0 0 18px rgba(0, 0, 0, 0.25);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.04) 40%,
+    rgba(255, 255, 255, 0.13)
+  );
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.25),
+    inset 0 0 18px rgba(0, 0, 0, 0.25);
   opacity: 0.5;
   pointer-events: none;
   transition: opacity 0.2s;
@@ -55,7 +69,9 @@
 }
 .akane-stick.is-push {
   border-color: var(--tc-accent);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25), 0 0 22px color-mix(in srgb, var(--tc-accent) 55%, transparent);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.25),
+    0 0 22px color-mix(in srgb, var(--tc-accent) 55%, transparent);
 }
 .akane-stick-knob {
   position: absolute;
@@ -66,7 +82,9 @@
   margin: -23% 0 0 -23%;
   border-radius: 50%;
   background: radial-gradient(circle at 36% 30%, #fff, var(--tc-accent) 70%);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45), 0 0 16px color-mix(in srgb, var(--tc-accent) 60%, transparent);
+  box-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.45),
+    0 0 16px color-mix(in srgb, var(--tc-accent) 60%, transparent);
 }
 
 /* ---------- 按鈕 ---------- */
@@ -92,7 +110,10 @@
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.32);
   touch-action: none;
   cursor: pointer;
-  transition: transform 0.08s, background-color 0.12s, opacity 0.2s;
+  transition:
+    transform 0.08s,
+    background-color 0.12s,
+    opacity 0.2s;
 }
 .akane-tbtn b,
 .akane-tbtn small {
@@ -122,17 +143,29 @@
   height: calc(86px * var(--tc-scale));
   font-size: calc(17px * var(--tc-scale));
   border: 2px solid var(--tc-accent);
-  background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--tc-accent) 38%, transparent), rgba(8, 14, 26, 0.55) 72%);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.38), 0 0 18px color-mix(in srgb, var(--tc-accent) 35%, transparent);
+  background: radial-gradient(
+    circle at 50% 38%,
+    color-mix(in srgb, var(--tc-accent) 38%, transparent),
+    rgba(8, 14, 26, 0.55) 72%
+  );
+  box-shadow:
+    0 4px 18px rgba(0, 0, 0, 0.38),
+    0 0 18px color-mix(in srgb, var(--tc-accent) 35%, transparent);
 }
 .akane-tbtn.is-down {
   transform: scale(0.9);
-  background-color: color-mix(in srgb, var(--tc-accent) 42%, rgba(8, 14, 26, 0.5));
+  background-color: color-mix(
+    in srgb,
+    var(--tc-accent) 42%,
+    rgba(8, 14, 26, 0.5)
+  );
 }
 .akane-tbtn.is-on {
   border-color: var(--tc-accent);
   color: var(--tc-accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--tc-accent) 40%, transparent), 0 4px 14px rgba(0, 0, 0, 0.32);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--tc-accent) 40%, transparent),
+    0 4px 14px rgba(0, 0, 0, 0.32);
 }
 .akane-tbtn.is-wait {
   opacity: 0.42;
@@ -172,13 +205,21 @@
   background: rgba(4, 8, 18, 0.94);
   color: #fff;
   text-align: center;
-  font: 600 16px/1.6 system-ui, -apple-system, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  font:
+    600 16px/1.6 system-ui,
+    -apple-system,
+    "PingFang TC",
+    "Noto Sans TC",
+    "Microsoft JhengHei",
+    sans-serif;
 }
+/* 直拿手機時顯示提示。 */
 @media (orientation: portrait) {
   .akane-touch .akane-rotate {
     display: flex;
   }
 }
+/* 提示文字。 */
 .akane-rotate p {
   margin: 0;
   max-width: 18em;
@@ -191,11 +232,21 @@
   box-shadow: inset 0 -8px 0 -5px #fff;
   animation: akane-rotate 2.6s ease-in-out infinite;
 }
+/* 手機旋轉的動畫。 */
 @keyframes akane-rotate {
-  0%, 18% { transform: rotate(0deg); }
-  48%, 78% { transform: rotate(-90deg); }
-  100% { transform: rotate(0deg); }
+  0%,
+  18% {
+    transform: rotate(0deg);
+  }
+  48%,
+  78% {
+    transform: rotate(-90deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
 }
+/* 「直接使用直向」按鈕。 */
 .akane-rotate-keep {
   margin-top: 6px;
   padding: 8px 18px;
@@ -207,6 +258,7 @@
   font-size: 14px;
   font-weight: 500;
 }
+/* 減少動態效果。 */
 @media (prefers-reduced-motion: reduce) {
   .akane-rotate-phone {
     animation: none;

@@ -1,11 +1,16 @@
+/*
+ * 檔案導讀：全部的音效與背景音樂，用 Web Audio 即時合成，不需要音檔。從上到
+ * 下：音訊線路 → 背景音樂 → 合成用的小工具 → 依比賽事件播放音效（cue）。
+ */
 (() => {
   const game = globalThis.Midnight;
   const PREF = "midnight-circuit-sound";
   const SFX_LEVEL = 0.72;
   const MUSIC_LEVEL = 0.2;
+  // 兩個數之間的亂數。
   const rand = (min, max) => min + Math.random() * (max - min);
 
-  // Soft-clip curve: adds grit and loudness to low thumps without harsh digital clipping.
+  // 柔和削波曲線：讓低頻撞擊更有份量，又不會破音。
   function saturation(amount) {
     const curve = new Float32Array(1024);
     for (let i = 0; i < curve.length; i += 1) {
@@ -15,7 +20,9 @@
     return curve;
   }
 
+  // 遊戲的音訊；平常只用 cue() 播放音效、setBattle() 切換音樂。
   class ArcadeAudio {
+    // 讀取音效與音樂的開關。
     constructor() {
       this.enabled = true;
       this.musicEnabled = true;
@@ -25,21 +32,22 @@
       try {
         this.musicEnabled = localStorage.getItem(PREF + "-music") !== "off";
       } catch {
-        /* Storage can be disabled. */
+        // 瀏覽器可能不能儲存。
       }
       try {
         this.enabled = localStorage.getItem(PREF) !== "off";
       } catch {
-        /* Storage can be disabled. */
+        // 瀏覽器可能不能儲存。
       }
     }
 
+    // 音效開關。
     setEnabled(enabled) {
       this.enabled = enabled;
       try {
         localStorage.setItem(PREF, enabled ? "on" : "off");
       } catch {
-        /* The current session still works. */
+        // 不能存也沒關係，這次仍然有效。
       }
       if (enabled) this.activate();
       if (this.master)
@@ -50,6 +58,7 @@
         );
     }
 
+    // 第一次操作後建立音訊線路（瀏覽器規定）。
     activate() {
       if (!this.enabled && !this.musicEnabled) return;
       const Audio = globalThis.AudioContext ?? globalThis.webkitAudioContext;
@@ -61,7 +70,7 @@
           return;
         }
         const ctx = this.context;
-        // Bus layout: sfx → master → compressor → out, with a reverb send and music ducking.
+        // 線路：音效 → 主音量 → 壓縮器 → 輸出，另外有殘響與音樂閃避。
         this.compressor = ctx.createDynamicsCompressor();
         this.compressor.threshold.value = -16;
         this.compressor.knee.value = 8;
@@ -95,6 +104,7 @@
         this.context.resume().catch(() => {});
     }
 
+    // 產生殘響用的雜訊。
     impulse(seconds) {
       const ctx = this.context;
       const length = Math.floor(ctx.sampleRate * seconds);
@@ -107,23 +117,26 @@
       return buffer;
     }
 
+    // 音樂開關。
     setMusicEnabled(enabled) {
       this.musicEnabled = enabled;
       try {
         localStorage.setItem(PREF + "-music", enabled ? "on" : "off");
       } catch {
-        /* Storage can be disabled. */
+        // 瀏覽器可能不能儲存。
       }
       this.activate();
       this.syncMusic();
     }
 
+    // 進入或離開戰鬥。
     setBattle(active) {
       if (this.battle === active) return;
       this.battle = active;
       this.syncMusic();
     }
 
+    // 依狀態開始或停止音樂。
     syncMusic() {
       const play = this.battle && this.musicEnabled && this.context;
       if (this.musicBus)
@@ -142,7 +155,7 @@
       }
     }
 
-    // Briefly pull the music down so big impacts punch through.
+    // 重擊時把音樂短暫壓低，撞擊聲比較清楚。
     duckMusic(depth, hold) {
       if (!this.duck) return;
       const now = this.context.currentTime;
@@ -153,6 +166,7 @@
       gain.setTargetAtTime(1, now + hold, 0.18);
     }
 
+    // 一個音符。
     musicNote(midi, time, length, volume, wave = "triangle") {
       const osc = this.context.createOscillator();
       const gain = this.context.createGain();
@@ -166,6 +180,7 @@
       osc.stop(time + length + 0.01);
     }
 
+    // 一下鼓聲：大鼓、小鼓或銅鈸。
     drum(time, type) {
       const gain = this.context.createGain();
       gain.connect(this.musicBus);
@@ -195,12 +210,13 @@
       }
     }
 
+    // 預先排好接下來的拍子。
     scheduleMusic() {
       if (this.context.state !== "running") {
         this.nextBeat = this.context.currentTime + 0.04;
         return;
       }
-      // Audio-clock scheduling keeps rhythm independent of rendering and timer jitter.
+      // 用音訊時鐘排程，節奏不受畫面與計時誤差影響。
       if (this.nextBeat < this.context.currentTime)
         this.nextBeat = this.context.currentTime + 0.02;
       const stepLength = 60 / (this.intense ? 140 : 132) / 4;
@@ -240,17 +256,19 @@
       }
     }
 
-    // ---------- synthesis building blocks ----------
+    // ---------- 合成用的小工具 ----------
     now(delay = 0) {
       return this.context.currentTime + delay;
     }
 
+    // 音量包絡：快速上升再衰減。
     envelope(gain, start, attack, volume, length) {
       gain.gain.setValueAtTime(0.0001, start);
       gain.gain.linearRampToValueAtTime(volume, start + attack);
       gain.gain.exponentialRampToValueAtTime(0.0001, start + length);
     }
 
+    // 一個滑音。
     tone(
       from,
       to,
@@ -275,7 +293,7 @@
       osc.stop(start + duration + 0.02);
     }
 
-    // Low body thump through saturation: the "weight" of a punch.
+    // 經過削波的低頻撞擊，也就是拳頭的「重量」。
     thump(from, to, duration, volume, delay = 0) {
       this.tone(from, to, duration, volume, "sine", delay, this.shaper);
       this.tone(
@@ -289,6 +307,7 @@
       );
     }
 
+    // 一段濾波雜訊。
     noise({
       type = "bandpass",
       from = 1000,
@@ -319,7 +338,7 @@
       source.stop(start + duration + 0.02);
     }
 
-    // Short broadband transient: the "crack" at the moment of contact.
+    // 很短的寬頻爆點，打到的那一下「啪」。
     click(volume, delay = 0) {
       this.noise({
         type: "highpass",
@@ -331,6 +350,7 @@
       });
     }
 
+    // 揮擊的風聲。
     whoosh(from, to, duration, volume, delay = 0) {
       this.noise({
         type: "bandpass",
@@ -344,6 +364,7 @@
       });
     }
 
+    // 電流的劈啪聲。
     crackle(duration, volume, delay = 0) {
       for (let i = 0; i < 7; i += 1) {
         this.noise({
@@ -364,6 +385,7 @@
       );
     }
 
+    // 清脆的冰晶聲。
     chime(base, volume, delay = 0) {
       for (const ratio of [1, 2.76, 5.4])
         this.tone(
@@ -386,6 +408,7 @@
         );
     }
 
+    // 金屬撞擊聲。
     metal(volume, delay = 0) {
       for (const freq of [523, 1187, 1913, 2741])
         this.tone(
@@ -399,6 +422,7 @@
       this.click(volume * 0.8, delay);
     }
 
+    // 爆炸的轟聲。
     boom(volume, delay = 0) {
       this.thump(120, 28, 0.9, volume, delay);
       this.noise({
@@ -420,6 +444,7 @@
       });
     }
 
+    // 各屬性附加的聲音。
     element(id, power, delay = 0) {
       switch (id) {
         case "thunder":
@@ -453,7 +478,7 @@
       }
     }
 
-    // ---------- game cues ----------
+    // ---------- 比賽事件的音效 ----------
     cue(event) {
       if (!this.enabled || this.context?.state !== "running") return;
       const id = event.fighter?.profile?.id;
@@ -663,7 +688,7 @@
       }
     }
 
-    // Layered impact: transient crack + saturated body thump + mid crunch + element texture.
+    // 打擊聲分層：爆點＋低頻撞擊＋中頻碎裂＋屬性質感。
     hit({ action, effect, counterHit, finisher, ko }) {
       const power =
         action === "light"

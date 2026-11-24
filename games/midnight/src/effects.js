@@ -5,6 +5,7 @@
   const { width: W, height: H, ground: G } = FIELD;
   const TAU = Math.PI * 2;
   const WHITE = "#fff8e4";
+  // 亂數小工具。
   const rand = (min, max) => min + Math.random() * (max - min);
   const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
@@ -22,7 +23,9 @@
     ice: "frost",
   };
 
+  // 共用的戰鬥特效，依比賽事件產生並繪製。
   class CombatEffects {
+    // 建立雨滴與技能特效。
     constructor(motion) {
       this.motion = motion;
       this.lights = new Map();
@@ -36,6 +39,7 @@
       return this.motion.matches;
     }
 
+    // 清空所有特效。
     reset() {
       this.time = 0;
       this.casts = [];
@@ -68,6 +72,7 @@
       return canvas;
     }
 
+    // 畫一團光。
     glow(ctx, x, y, radius, color, alpha = 1) {
       if (radius <= 0 || alpha <= 0) return;
       const previous = ctx.globalAlpha;
@@ -82,6 +87,7 @@
       ctx.globalAlpha = previous;
     }
 
+    // 鬥士或屬性的代表色。
     palette(idOrEffect) {
       return (
         PALETTE[EFFECT_ID[idOrEffect] ?? idOrEffect] ?? {
@@ -115,6 +121,7 @@
       });
     }
 
+    // 一次噴出很多粒子。
     burst(
       x,
       y,
@@ -148,6 +155,7 @@
       }
     }
 
+    // 擴散的圓環。
     wave(
       x,
       y,
@@ -171,6 +179,7 @@
       });
     }
 
+    // 閃電：主幹加上分岔。
     bolt(
       x1,
       y1,
@@ -179,6 +188,7 @@
       color,
       { life = 0.16, jag = 26, width = 3, branches = 2 } = {},
     ) {
+      // 把一段折線反覆切半並隨機偏移。
       const make = (ax, ay, bx, by, depth, rough) => {
         let points = [
           [ax, ay],
@@ -236,6 +246,7 @@
       const f = event.fighter;
       this.skills.cue(event);
       switch (event.type) {
+        // 出招。
         case "attack": {
           if (!event.name || ["sweep", "throw"].includes(event.action)) break;
           const ultimate = event.action === "super";
@@ -270,6 +281,7 @@
           });
           break;
         }
+        // 大招開場。
         case "super-flash": {
           const p = this.palette(f.profile.id);
           this.superFlash = {
@@ -303,6 +315,7 @@
         case "armor":
           this.impact(event);
           break;
+        // 打在護盾或霸體上。
         case "perfect": {
           const x = f.x - event.direction * 30;
           const y = G - event.height;
@@ -325,6 +338,7 @@
           });
           break;
         }
+        // 破防。
         case "guard-break": {
           const y = G - event.height;
           this.impacts.push({
@@ -348,6 +362,7 @@
           });
           break;
         }
+        // 反擊成功。
         case "counter": {
           const p = this.palette("shade");
           const y = G - event.height;
@@ -373,6 +388,7 @@
           });
           break;
         }
+        // 瞬移。
         case "blink": {
           const p = this.palette(f.profile.id);
           this.paths.push({
@@ -416,6 +432,7 @@
           });
           this.wave(f.x, G - 4, 70, "#e6e9f3", 0.25, 0.2, 3);
           break;
+        // 抓住對手。
         case "grab": {
           const x = (f.x + event.target.x) / 2;
           this.impacts.push({
@@ -431,6 +448,7 @@
           });
           break;
         }
+        // 精準防禦。
         case "tech": {
           const x = (f.x + event.attacker.x) / 2;
           this.impacts.push({
@@ -451,6 +469,7 @@
           });
           break;
         }
+        // 爆氣。
         case "burst": {
           const p = this.palette(f.profile.id);
           const y = G - f.y - 120;
@@ -521,6 +540,7 @@
             life: [0.2, 0.35],
           });
           break;
+        // 開始蓄力。
         case "rise": {
           const p = this.palette(f.profile.id);
           this.bolt(f.x, G, f.x + f.face * 40, G - 300, p.main, {
@@ -532,6 +552,7 @@
           this.wave(f.x, G - 4, 130, p.main, 0.35, 0.22, 5);
           break;
         }
+        // 發射飛行道具。
         case "projectile": {
           const { shot } = event;
           const p = this.palette(shot.shape === "quake" ? "lion" : "frost");
@@ -546,6 +567,7 @@
           this.wave(shot.x, G - shot.y, shot.radius * 3, p.core, 0.25, 1, 4);
           break;
         }
+        // 飛行道具相撞。
         case "clash": {
           this.impacts.push({
             kind: "hit",
@@ -580,6 +602,7 @@
       }
     }
 
+    // 放射狀的刺，用在打擊特效。
     spikesFor(count) {
       return Array.from({ length: count }, (_, i) => ({
         angle: (i / count) * TAU + rand(-0.18, 0.18),
@@ -612,6 +635,7 @@
       return this.lightOf(impact.color, impact.x, power);
     }
 
+    // 一盞臨時燈光，給角色的邊緣光用。
     lightOf(color, x, power) {
       const part = (i) => parseInt(color.slice(i, i + 2), 16) / 255;
       return {
@@ -621,11 +645,13 @@
       };
     }
 
+    // 揮擊：拳腳路線的光帶與屬性附加效果。
     swing({ fighter: f, strike, low, high, direction, action, path }) {
       const id = EFFECT_ID[strike.effect] ?? null;
       const p = id ? this.palette(id) : null;
       const color = action === "light" ? WHITE : p ? p.main : f.profile.color;
       const y = G - (high + low) / 2;
+      // 往四周的震波。
       if (strike.radial) {
         const pal = this.palette("lion");
         for (let i = 0; i < 3; i += 1)
@@ -722,6 +748,7 @@
       return local;
     }
 
+    // 打中：依攻擊輕重與屬性產生特效。
     impact(event) {
       const {
         type,
@@ -737,6 +764,7 @@
       const x = fighter.x - direction * 26;
       const y = G - height;
       this.skills.hit(event, x, y);
+      // 被擋下。
       if (type === "block") {
         this.impacts.push({
           kind: "block",
@@ -758,6 +786,7 @@
         });
         return;
       }
+      // 打在霸體上。
       if (type === "armor") {
         this.impacts.push({
           kind: "hit",
@@ -774,6 +803,7 @@
         return;
       }
       const p = this.palette(EFFECT_ID[effect] ?? attacker.profile.id);
+      // 打擊特效的大小。
       const size =
         action === "super"
           ? finisher
@@ -821,6 +851,7 @@
       });
       // 各屬性的碎屑
       const id = EFFECT_ID[effect];
+      // 各屬性的附加效果。
       if (id === "thunder") {
         for (let i = 0; i < (size > 90 ? 3 : 2); i += 1) {
           const a = rand(0, TAU);
@@ -867,6 +898,7 @@
       };
     }
 
+    // 推進所有特效。
     update(dt, fighters = [], match = null) {
       this.time += dt;
       for (const collection of [this.casts, this.impacts, this.paths])
@@ -884,6 +916,7 @@
         if (this.superFlash.age >= this.superFlash.life) this.superFlash = null;
       }
 
+      // 粒子的移動與空氣阻力。
       for (const p of this.particles) {
         p.life -= dt;
         p.vx *= p.drag ** dt;
@@ -900,6 +933,7 @@
       }
       this.particles = this.particles.filter((p) => p.life > 0);
 
+      // 雨滴。
       for (const drop of this.rain) {
         drop.y += drop.speed * drop.depth * dt;
         drop.x += drop.speed * drop.depth * dt * 0.18;
@@ -926,6 +960,7 @@
     ambient(dt, fighters, match) {
       if (this.calm) return;
       const chance = (rate) => Math.random() < rate * dt;
+      // 蓄力中的鬥士。
       for (const cast of this.casts) {
         const f = fighters[cast.index];
         if (!f) continue;
@@ -985,6 +1020,7 @@
           });
         }
       }
+      // 能量滿了的鬥士。
       for (const f of fighters) {
         if (f.meter >= 100 && f.hp > 0 && chance(14)) {
           const p = this.palette(f.profile.id);
@@ -1000,6 +1036,7 @@
         }
       }
       if (!match) return;
+      // 飛行道具的尾跡。
       for (const shot of match.projectiles) {
         const y = G - shot.y;
         const back = shot.x - shot.direction * shot.radius;
@@ -1041,6 +1078,7 @@
             });
         }
       }
+      // 還沒爆發的陷阱。
       for (const trap of match.traps) {
         if (!trap.erupted && chance(35)) {
           this.emit(
@@ -1067,6 +1105,7 @@
       // 雨畫在背景與角色之間
       ctx.strokeStyle = "#a9c2e8";
       ctx.lineCap = "round";
+      // 雨。
       for (const drop of this.rain) {
         ctx.globalAlpha = 0.1 + drop.depth * 0.16;
         ctx.lineWidth = 0.6 + drop.depth;
@@ -1083,6 +1122,7 @@
       const flash = this.superFlash;
       const superCast = this.casts.find((c) => c.ultimate);
       let dim = 0;
+      // 大招時把場景變暗。
       if (flash) dim = Math.min(1, flash.age / 0.08) * 0.62;
       else if (superCast)
         dim = Math.sin((superCast.age / superCast.life) * Math.PI) * 0.3;
@@ -1095,6 +1135,7 @@
 
       this.skills.draw(ctx, "floor", fighters);
       ctx.globalCompositeOperation = "lighter";
+      // 大招開場的放射光。
       if (flash) {
         const f = fighters[flash.index];
         const progress = flash.age / flash.life;
@@ -1127,6 +1168,7 @@
         );
       }
 
+      // 蓄力的光圈。
       for (const cast of this.casts) {
         const f = fighters[cast.index];
         if (!f) continue;
@@ -1194,6 +1236,7 @@
       ctx.restore();
     }
 
+    // 一塊冰晶。
     crystal(ctx, x, y, radius, rotation, color, edge = "#eaffff") {
       ctx.save();
       ctx.translate(x, y);
@@ -1212,6 +1255,7 @@
       ctx.restore();
     }
 
+    // 畫在角色前面的特效。
     front(ctx, fighters, match) {
       ctx.save();
       // 碎石與煙用一般混色才看得清楚
@@ -1242,6 +1286,7 @@
         for (const shot of match.projectiles) this.skills.drawShot(ctx, shot);
       this.skills.draw(ctx, "front", fighters);
 
+      // 瞬移的路線。
       for (const path of this.paths) {
         const fade = 1 - path.age / path.life;
         ctx.globalAlpha = fade * 0.8;
@@ -1258,6 +1303,7 @@
       }
 
       for (const s of this.slashes) this.drawSlash(ctx, s, calmScale);
+      // 擴散的圓環。
       for (const w of this.waves) {
         const progress = 1 - w.life / w.total;
         const r =
@@ -1276,6 +1322,7 @@
       for (const impact of this.impacts)
         this.drawImpact(ctx, impact, calmScale);
 
+      // 粒子。
       for (const p of this.particles) {
         const fade = p.life / p.total;
         if (p.kind === "spark") {
@@ -1340,6 +1387,7 @@
       ctx.restore();
     }
 
+    // 蓄力時手上的光。
     drawCast(ctx, cast, f, calmScale) {
       if (!f) return;
       const progress = cast.age / cast.life;
@@ -1409,6 +1457,7 @@
       const { points } = s;
       const n = points.length;
       const tail = Math.min(0.8, progress * 1.1) * (n - 1);
+      // 光帶的輪廓，thick 是粗細、shift 是偏移。
       const ribbon = (thick, shift) => {
         const left = [];
         const right = [];
@@ -1449,6 +1498,7 @@
       ctx.restore();
     }
 
+    // 畫一道閃電。
     drawBolt(ctx, b) {
       const fade = b.life / b.total;
       const flicker = 0.6 + Math.random() * 0.4;
@@ -1482,6 +1532,7 @@
       ctx.globalAlpha = 1;
     }
 
+    // 畫一個打擊特效。
     drawImpact(ctx, impact, calmScale) {
       const progress = impact.age / impact.life;
       const strength = impact.soft ? 0.5 : 1;
@@ -1490,6 +1541,7 @@
       ctx.globalAlpha = 1;
       this.glow(ctx, x, y, size * (1 + progress * 0.5), color, fade * 0.7);
       this.glow(ctx, x, y, size * 0.35, "#fff7dc", fade * 0.8);
+      // 擋下的弧形。
       if (impact.kind === "block") {
         // 防守者面前的六角護盾
         ctx.save();
@@ -1513,6 +1565,7 @@
         ctx.globalAlpha = 1;
         return;
       }
+      // 精準防禦與反擊的環。
       if (impact.kind === "perfect" || impact.kind === "counter") {
         ctx.strokeStyle = impact.kind === "perfect" ? "#ffffff" : color;
         ctx.lineWidth = 3;
@@ -1527,6 +1580,7 @@
       }
       // 星形的打擊火花：一出現最銳利，接著擴大變淡
       const grow = 0.55 + Math.min(1, progress * 4) * 0.6;
+      // 打中的尖刺。
       for (const [scale, fill, alpha] of [
         [1, color, 0.9],
         [0.42, "#ffffff", 0.9],

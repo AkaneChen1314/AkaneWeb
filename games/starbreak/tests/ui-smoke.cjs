@@ -1,9 +1,15 @@
+/*
+ * 測試：星破的介面流程（出擊、暫停、商店、首領資訊、觸控與特效設定）。
+ */
 const fs = require("node:fs"),
   vm = require("node:vm"),
   assert = require("node:assert/strict");
-// This smoke check exercises DOM event wiring; it does not emulate CSS layout.
+// 只檢查按鈕與事件有沒有接好，不模擬 CSS 排版。
+// 所有假元素。
 let all = [];
+// 假的螢幕大小與偏好設定。
 const viewport = { width: 960, height: 650, coarse: false, reduced: false };
+// 記下畫布上的每一次繪圖。
 const drawingCalls = [];
 const context2d = new Proxy(
   { createRadialGradient: () => ({ addColorStop() {} }) },
@@ -17,6 +23,7 @@ const context2d = new Proxy(
     set: (o, k, v) => ((o[k] = v), true),
   },
 );
+// 假的網頁元素。
 class Element {
   constructor(tag = "div", attrs = {}) {
     this.tagName = tag.toUpperCase();
@@ -130,6 +137,7 @@ class Element {
     this.events.click?.(e);
   }
 }
+// 用實際的 index.html 建立元素。
 const root = new Element("body");
 root.innerHTML = fs.readFileSync("index.html", "utf8");
 const document = {
@@ -142,6 +150,7 @@ const document = {
 const windowEvents = {},
   documentEvents = {};
 document.addEventListener = (k, fn) => (documentEvents[k] = fn);
+// 假的存檔與瀏覽器環境。
 const storage = new Map(),
   sandbox = {
     console,
@@ -180,19 +189,23 @@ const storage = new Map(),
 sandbox.window = sandbox;
 sandbox.devicePixelRatio = 1;
 sandbox.addEventListener = (k, fn) => (windowEvents[k] = fn);
+// 執行遊戲程式。
 vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync("game.js", "utf8"), sandbox);
+// 點擊指定 id 的按鈕。
 function click(id) {
   const e = document.getElementById(id);
   assert(e, `missing #${id}`);
   e.click();
 }
+// 自訂設定：七波、沒有首領、每波 30 隻。
 document.getElementById("wave-count").value = "7";
 document.getElementById("wave-count").onchange();
 document.getElementById("boss-rule").value = "none";
 document.getElementById("boss-rule").onchange();
 document.getElementById("kill-quota").value = "30";
 document.getElementById("kill-quota").onchange();
+// 出擊並看完教學。
 click("launch");
 assert(document.getElementById("guide-launch"));
 click("guide-launch");
@@ -202,6 +215,7 @@ assert.equal(sandbox.Starbreak.engine.r.config.bossRule, "none");
 assert.equal(sandbox.Starbreak.engine.r.config.killsPerWave, 30);
 sandbox.frame(10);
 sandbox.frame(60);
+// 暫停、繼續與圖鑑。
 click("pause");
 assert.equal(sandbox.Starbreak.engine.r.phase, "paused");
 click("resume");
@@ -211,16 +225,19 @@ assert(document.getElementById("dialog").open);
 click("dialog-close");
 assert.equal(sandbox.Starbreak.engine.r.phase, "paused");
 click("resume");
+// 升級選擇。
 sandbox.Starbreak.engine.offerUpgrades("level");
 sandbox.Starbreak.engine.r.pendingLevels = 1;
 document.querySelector('[data-choice="0"]').click();
 assert.equal(sandbox.Starbreak.engine.r.phase, "play");
+// 返回基地後繼續上一場。
 click("return");
 assert(document.getElementById("continue"));
 click("continue");
 assert.equal(sandbox.Starbreak.engine.r.phase, "paused");
 click("resume");
 sandbox.frame(110);
+// 研究、成就、設定與匯出存檔。
 click("return");
 click("research");
 click("dialog-close");
@@ -236,6 +253,7 @@ console.log(
   "PASS DOM smoke: launch, tutorial, canvas draw, pause/resume, codex, upgrade, save/continue, research, achievements, settings and backup export.",
 );
 
+// 商店購買與裝備模組。
 sandbox.Starbreak.profile.credits = 500;
 click("base-shop");
 document.querySelector('[data-module="scanner"]').click();
@@ -246,6 +264,7 @@ assert.equal(
   "深空打撈艙",
 );
 click("dialog-close");
+// 首領詳細資料。
 click("boss-details");
 assert(
   document.getElementById("dialog-content").innerHTML.includes("奇點斬擊"),
@@ -253,6 +272,7 @@ assert(
 click("dialog-close");
 click("continue");
 click("resume");
+// 首領圖片與整備商店。
 const engine = sandbox.Starbreak.engine;
 const boss = engine.spawnEnemy("boss");
 sandbox.frame(300);
@@ -273,7 +293,7 @@ console.log(
   "PASS v1.1 DOM smoke: custom launch settings, module purchase/equip, Boss archive and sprite draw, live market purchase/refresh and next wave.",
 );
 
-// Touch and keyboard events run through the same handlers used by the live UI.
+// 觸控與鍵盤事件走的是遊戲實際使用的處理函式。
 const arena = document.getElementById("arena");
 const pointer = (id, x, y) => ({
   pointerId: id,
@@ -371,7 +391,7 @@ console.log(
   "PASS v1.2 setup smoke: five collapsed categories, exclusive expansion, dependent phase options, independent frequency/enemy quantity persistence and enemy archive.",
 );
 
-// The screenshot regression: an irrelevant interval must not remain visible.
+// 畫面回歸檢查：用不到的間隔設定不可以顯示。
 for (const rule of ["rush", "final", "none"]) {
   document.getElementById("boss-rule").value = rule;
   document.getElementById("boss-rule").onchange();
@@ -490,7 +510,7 @@ console.log(
   "PASS v1.4 shield/setup/HUD smoke: trial preset, shown Boss multipliers, preserved difficulty, shield dependencies, body gate, break feedback and handbook.",
 );
 
-// v1.5 presentation controls are exercised through the actual DOM and draw loop.
+// 用實際的介面與繪圖流程檢查 v1.5 的畫面設定。
 click("return");
 click("settings");
 const effects = document.getElementById("setting-effects");

@@ -1,14 +1,33 @@
+/*
+ * 測試：敵人的尋路、搜索時限與被攻擊後的反應。
+ */
 import assert from "node:assert/strict";
 import { createHarness } from "./test-harness.mjs";
 
+// 敵人要能繞過一道長牆。
 const h = createHarness();
-h.run(`gameState='playing'; yaw.position.set(60,1.68,60); createEnemy(0,-4,0x556677,0); const bot=enemies[0],state=bot.userData.state;
-  state.speed=3;state.avoidSide=1;
-  collisionBoxes.push(new THREE.Box3(new THREE.Vector3(-5,0,-.2),new THREE.Vector3(5,3,.2)));
-  for(let i=0;i<800;i++){
-    const dx=-bot.position.x,dz=4-bot.position.z,dist=Math.hypot(dx,dz);
-    if(dist<.7)break;moveBot(bot,dx/dist,dz/dist,.05);
-  }`);
+h.run(`
+  gameState = "playing";
+  yaw.position.set(60, 1.68, 60);
+  createEnemy(0, -4, 0x556677, 0);
+  const bot = enemies[0],
+    state = bot.userData.state;
+  state.speed = 3;
+  state.avoidSide = 1;
+  collisionBoxes.push(
+    new THREE.Box3(
+      new THREE.Vector3(-5, 0, -0.2),
+      new THREE.Vector3(5, 3, 0.2),
+    ),
+  );
+  for (let i = 0; i < 800; i++) {
+    const dx = -bot.position.x,
+      dz = 4 - bot.position.z,
+      dist = Math.hypot(dx, dz);
+    if (dist < 0.7) break;
+    moveBot(bot, dx / dist, dz / dist, 0.05);
+  }
+`);
 assert.ok(
   h.run("Math.hypot(bot.position.x,bot.position.z-4)") < 1,
   "bot must route around the long wall to its destination",
@@ -22,10 +41,20 @@ console.log(
   "PASS enemy follows the edge of a long wall and reaches its target",
 );
 
+// 走不到的地方不會一直搜索，會回到巡邏。
 const s = createHarness();
-s.run(`gameState='playing';yaw.position.set(60,1.68,60);createEnemy(0,0,0x556677,0);const bot=enemies[0],state=bot.userData.state;
-  state.state='ENGAGE';state.cachedCanSee=false;state.losTimer=0;hasLineOfSight=()=>false;
-  for(let i=0;i<270;i++)updateEnemies(.05,1000+i*50);`);
+s.run(`
+  gameState = "playing";
+  yaw.position.set(60, 1.68, 60);
+  createEnemy(0, 0, 0x556677, 0);
+  const bot = enemies[0],
+    state = bot.userData.state;
+  state.state = "ENGAGE";
+  state.cachedCanSee = false;
+  state.losTimer = 0;
+  hasLineOfSight = () => false;
+  for (let i = 0; i < 270; i++) updateEnemies(0.05, 1000 + i * 50);
+`);
 assert.equal(
   s.run("state.state"),
   "PATROL",
@@ -33,10 +62,17 @@ assert.equal(
 );
 console.log("PASS unreachable search expires and the enemy resumes patrol");
 
+// 被看不到的玩家打中，會開始搜索。
 const hit = createHarness();
-hit.run(`gameState='playing';yaw.position.set(15,1.68,0);createEnemy(0,0,0,0);
-  const bot=enemies[0],state=bot.userData.state;hasLineOfSight=()=>false;
-  damageEnemy(bot,10,null,false,false,true);`);
+hit.run(`
+  gameState = "playing";
+  yaw.position.set(15, 1.68, 0);
+  createEnemy(0, 0, 0, 0);
+  const bot = enemies[0],
+    state = bot.userData.state;
+  hasLineOfSight = () => false;
+  damageEnemy(bot, 10, null, false, false, true);
+`);
 assert.equal(
   hit.run("state.state"),
   "SEARCH",
@@ -53,7 +89,10 @@ assert.equal(
   "SEARCH",
   "the search must not expire on the next update",
 );
-hit.run("state.searchTime=1;damageEnemy(bot,10,null,false,false,true);");
+hit.run(`
+  state.searchTime = 1;
+  damageEnemy(bot, 10, null, false, false, true);
+`);
 assert.equal(
   hit.run("state.searchTime"),
   12,
@@ -68,22 +107,54 @@ console.log(
   "PASS unseen player damage starts and refreshes enemy investigation",
 );
 
+// 巡邏目的地要是走得到的地方。
 const p = createHarness();
-p.run(`yaw.position.set(60,1.68,60);createEnemy(0,0,0x556677,0);const bot=enemies[0],state=bot.userData.state;
-  collisionBoxes.push(new THREE.Box3(new THREE.Vector3(1,0,-20),new THREE.Vector3(1.2,3,20)));
-  for(let i=0;i<100;i++){pickPatrolPoint(bot);if(state.target.x>1)throw Error('patrol target crossed wall');}`);
+p.run(`
+  yaw.position.set(60, 1.68, 60);
+  createEnemy(0, 0, 0x556677, 0);
+  const bot = enemies[0],
+    state = bot.userData.state;
+  collisionBoxes.push(
+    new THREE.Box3(
+      new THREE.Vector3(1, 0, -20),
+      new THREE.Vector3(1.2, 3, 20),
+    ),
+  );
+  for (let i = 0; i < 100; i++) {
+    pickPatrolPoint(bot);
+    if (state.target.x > 1) throw Error("patrol target crossed wall");
+  }
+`);
 console.log("PASS patrol destinations remain on reachable local routes");
 
+// 走到巡邏點後會很快換下一個。
 const arrived = createHarness();
-arrived.run(`gameState='playing';yaw.position.set(60,1.68,60);createEnemy(0,0,0,0);const state=enemies[0].userData.state;
-  hasLineOfSight=()=>false;state.patrolTimer=7;state.patrolWaiting=false;let picks=0;pickPatrolPoint=()=>{picks++;};updateEnemies(.05,1000);`);
+arrived.run(`
+  gameState = "playing";
+  yaw.position.set(60, 1.68, 60);
+  createEnemy(0, 0, 0, 0);
+  const state = enemies[0].userData.state;
+  hasLineOfSight = () => false;
+  state.patrolTimer = 7;
+  state.patrolWaiting = false;
+  let picks = 0;
+  pickPatrolPoint = () => {
+    picks++;
+  };
+  updateEnemies(0.05, 1000);
+`);
 assert.equal(
   arrived.run("picks"),
   1,
   "a bot that reaches its destination immediately requests another route",
 );
 arrived.run(
-  "picks=0;state.patrolWaiting=true;state.patrolTimer=1;updateEnemies(.05,1050);",
+  `
+    picks = 0;
+    state.patrolWaiting = true;
+    state.patrolTimer = 1;
+    updateEnemies(0.05, 1050);
+  `,
 );
 assert.equal(
   arrived.run("picks"),
@@ -92,36 +163,92 @@ assert.equal(
 );
 console.log("PASS reached patrol points are refreshed without a long idle");
 
+// 敵人能離開 U 形的障礙物。
 const u = createHarness();
-u.run(`yaw.position.set(60,1.68,60);createEnemy(0,0,0,0);const bot=enemies[0],state=bot.userData.state;state.speed=3;state.avoidSide=1;
-  collisionBoxes.push(new THREE.Box3(new THREE.Vector3(-3,0,-3),new THREE.Vector3(3,3,-2.8)));
-  collisionBoxes.push(new THREE.Box3(new THREE.Vector3(-3,0,-3),new THREE.Vector3(-2.8,3,3)));
-  collisionBoxes.push(new THREE.Box3(new THREE.Vector3(2.8,0,-3),new THREE.Vector3(3,3,3)));
-  for(let i=0;i<1600;i++){let dx=-bot.position.x,dz=-8-bot.position.z,d=Math.hypot(dx,dz);if(d<1)break;moveBot(bot,dx/d,dz/d,.05);}`);
+u.run(`
+  yaw.position.set(60, 1.68, 60);
+  createEnemy(0, 0, 0, 0);
+  const bot = enemies[0],
+    state = bot.userData.state;
+  state.speed = 3;
+  state.avoidSide = 1;
+  collisionBoxes.push(
+    new THREE.Box3(
+      new THREE.Vector3(-3, 0, -3),
+      new THREE.Vector3(3, 3, -2.8),
+    ),
+  );
+  collisionBoxes.push(
+    new THREE.Box3(
+      new THREE.Vector3(-3, 0, -3),
+      new THREE.Vector3(-2.8, 3, 3),
+    ),
+  );
+  collisionBoxes.push(
+    new THREE.Box3(new THREE.Vector3(2.8, 0, -3), new THREE.Vector3(3, 3, 3)),
+  );
+  for (let i = 0; i < 1600; i++) {
+    let dx = -bot.position.x,
+      dz = -8 - bot.position.z,
+      d = Math.hypot(dx, dz);
+    if (d < 1) break;
+    moveBot(bot, dx / d, dz / d, 0.05);
+  }
+`);
 assert.ok(
   u.run("Math.hypot(bot.position.x,bot.position.z+8)") < 1.1,
   `bot should escape U-shaped cover, got ${u.run("[bot.position.x,bot.position.z]")}`,
 );
 console.log("PASS enemy can escape a U-shaped obstacle");
 
+// 兩個迎面的敵人會互相讓開。
 const crowd = createHarness();
-crowd.run(`yaw.position.set(60,1.68,60);createEnemy(-2,0,0,0);createEnemy(2,0,0,1);
-  const a=enemies[0],b=enemies[1];a.userData.state.speed=b.userData.state.speed=3;
-  a.userData.state.avoidSide=1;b.userData.state.avoidSide=-1;
-  for(let i=0;i<200;i++){moveBot(a,1,0,.05);moveBot(b,-1,0,.05);
-    if(Math.hypot(a.position.x-b.position.x,a.position.z-b.position.z)<.71)throw Error('bots overlap');}`);
+crowd.run(`
+  yaw.position.set(60, 1.68, 60);
+  createEnemy(-2, 0, 0, 0);
+  createEnemy(2, 0, 0, 1);
+  const a = enemies[0],
+    b = enemies[1];
+  a.userData.state.speed = b.userData.state.speed = 3;
+  a.userData.state.avoidSide = 1;
+  b.userData.state.avoidSide = -1;
+  for (let i = 0; i < 200; i++) {
+    moveBot(a, 1, 0, 0.05);
+    moveBot(b, -1, 0, 0.05);
+    if (
+      Math.hypot(a.position.x - b.position.x, a.position.z - b.position.z) <
+      0.71
+    )
+      throw Error("bots overlap");
+  }
+`);
 assert.ok(
   crowd.run("a.position.x") > 1 && crowd.run("b.position.x") < -1,
   `both enemies move past the obstruction: ${crowd.run("[a.position.x,a.position.z,b.position.x,b.position.z]")}`,
 );
 console.log("PASS opposing enemies separate instead of blocking each other");
 
+// 三十個敵人的尋路要分散在不同畫面計算。
 const many = createHarness();
-many.run(`gameState='playing';createArena();spawnEnemies(30,{eliteRate:.3});hasLineOfSight=()=>false;
-  const initial=enemies.map(enemy=>enemy.position.clone());
-  let calls=0,mostCalls=0;const actualPick=pickPatrolPoint;
-  pickPatrolPoint=enemy=>{calls++;actualPick(enemy);};
-  for(let i=0;i<240;i++){calls=0;updateEnemies(.05,1000+i*50);mostCalls=Math.max(mostCalls,calls);}`);
+many.run(`
+  gameState = "playing";
+  createArena();
+  spawnEnemies(30, { eliteRate: 0.3 });
+  hasLineOfSight = () => false;
+  const initial = enemies.map((enemy) => enemy.position.clone());
+  let calls = 0,
+    mostCalls = 0;
+  const actualPick = pickPatrolPoint;
+  pickPatrolPoint = (enemy) => {
+    calls++;
+    actualPick(enemy);
+  };
+  for (let i = 0; i < 240; i++) {
+    calls = 0;
+    updateEnemies(0.05, 1000 + i * 50);
+    mostCalls = Math.max(mostCalls, calls);
+  }
+`);
 assert.ok(
   many.run("mostCalls") <= 1,
   "at most one enemy evaluates patrol candidates per frame",
@@ -134,7 +261,11 @@ assert.ok(
 );
 assert.ok(
   many.run(
-    "enemies.filter((enemy,index)=>enemy.position.distanceTo(initial[index])>1).length",
+    `
+      enemies.filter(
+        (enemy, index) => enemy.position.distanceTo(initial[index]) > 1,
+      ).length;
+    `,
   ) >= 20,
   "most of the crowd should make patrol progress",
 );

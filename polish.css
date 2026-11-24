@@ -6,6 +6,9 @@
   --lavender: #b9b0ff;
   --sunset: #efb6b2;
 }
+
+/* ---------- 背景與封面 ---------- */
+
 body {
   background:
     radial-gradient(ellipse at 88% 10%, #7661ba21, transparent 45%),
@@ -27,6 +30,7 @@ body {
 .archive-intro {
   color: #aabed1;
 }
+/* 封面旁的簡介。 */
 .hero-about {
   border-left: 2px solid #b9b0ff55;
   padding: 3px 0 3px 20px;
@@ -95,6 +99,7 @@ body[data-zone-view="home"] .edge-film {
   height: 100%;
   object-fit: cover;
 }
+/* 播放遊戲時不顯示側邊影片。 */
 body.playing .edge-film {
   display: none;
 }
@@ -114,11 +119,13 @@ body.playing .edge-film {
 .gateway h3 {
   font-size: clamp(23px, 2.1vw, 30px);
 }
+/* 入口卡。 */
 .game-gateway {
   background:
     radial-gradient(ellipse at 83% 55%, #b985aa25, transparent 74%),
     linear-gradient(120deg, #1b355be8, #182742e8);
 }
+/* 入口卡上的人物。 */
 .gateway-guide {
   mask-image: none;
   top: 42px;
@@ -144,6 +151,7 @@ body.playing .edge-film {
   background: linear-gradient(90deg, #0d2540e0, #0e294366 26%, transparent 62%);
   mask-image: radial-gradient(ellipse at center, #000 28%, transparent 80%);
 }
+/* 歡迎手勢的人物。 */
 .welcome-guide {
   top: 62px;
   bottom: 62px;
@@ -168,6 +176,7 @@ body.playing .edge-film {
   background: linear-gradient(90deg, #162d4abd, transparent 50%);
   mask-image: radial-gradient(ellipse at center, #000 24%, transparent 80%);
 }
+/* 入口按鈕。 */
 .gateway-link {
   color: #e5f4ff;
   border-color: #8eabdb66;
@@ -184,6 +193,7 @@ body.playing .edge-film {
   box-shadow: 0 0 25px #87d6ec2a;
   border-color: #b9e2f9;
 }
+/* 人物圖說明。 */
 .guide-caption {
   z-index: 2;
   opacity: 0.55;
@@ -195,6 +205,7 @@ body.playing .edge-film {
   padding: 0;
   margin: 62px 0 45px;
 }
+/* 標題列。 */
 .blue-hour-heading {
   align-items: flex-end;
   margin-bottom: 19px;
@@ -207,6 +218,7 @@ body.playing .edge-film {
 .blue-hour-heading h2 span {
   color: #c6c2f5;
 }
+/* 動態圖的工具按鈕。 */
 .motion-tools {
   display: flex;
   flex-direction: column;
@@ -242,11 +254,13 @@ body.playing .edge-film {
   font-size: 12px;
   line-height: 1.9;
 }
+/* 動態卡的排列。 */
 .moments-grid {
   display: grid;
   grid-template-columns: 1.55fr 1fr 1fr;
   gap: 21px;
 }
+/* 動態卡的畫面、標籤與文字。 */
 .moment-card {
   overflow: hidden;
   border: 1px solid #8ea5d532;
@@ -332,6 +346,7 @@ body.playing .edge-film {
   font-size: 9px;
   color: #92b6d2;
 }
+/* 影片播放失敗時的重試按鈕。 */
 .motion-retry {
   position: absolute;
   bottom: 38px;
@@ -346,6 +361,7 @@ body.playing .edge-film {
   font-size: 11px;
   white-space: nowrap;
 }
+/* 收藏筆記。 */
 .curator-note {
   display: grid;
   grid-template-columns: 65px 1fr auto;
@@ -418,6 +434,7 @@ body.playing .edge-film {
   gap: 22px;
   font-size: 11px;
 }
+/* 設計資料室。 */
 .design-room {
   margin: 52px 0 56px;
 }
@@ -461,6 +478,7 @@ body.playing .edge-film {
   mask-composite: intersect;
   border-radius: 12px;
 }
+/* 圖片放大按鈕。 */
 .reference-zoom {
   position: absolute;
   bottom: 13px;
@@ -479,6 +497,7 @@ body.playing .edge-film {
 .reference-zoom span {
   margin-left: 15px;
 }
+/* 設定圖的說明與筆記分頁。 */
 .design-sheet figcaption {
   font-size: 9px;
   text-align: center;
@@ -531,6 +550,7 @@ body.playing .edge-film {
   line-height: 2;
   margin: 0;
 }
+/* 角色配色。 */
 .akane-palette {
   display: flex;
   gap: 10px;
@@ -545,6 +565,7 @@ body.playing .edge-film {
   border: 1px solid #c2d4df1a;
   box-shadow: 0 4px 15px #03142420;
 }
+/* 筆記註腳。 */
 .design-note-footnote {
   font-size: 10px;
   color: #809eb9;
@@ -574,6 +595,7 @@ body.playing .edge-film {
 .gallery-card[data-season="3"] {
   background: linear-gradient(150deg, #42375255, #11253cdc);
 }
+/* 選取的季數按鈕。 */
 .season-picker button[data-season="1"][aria-pressed="true"] {
   background: linear-gradient(115deg, #6662986e, #284b789c);
   border-color: #b3b8e8;
@@ -582,6 +604,7 @@ body.playing .edge-film {
   background: linear-gradient(115deg, #79567955, #344c859c);
   border-color: #c7b4de;
 }
+/* 設定圖檢視器。 */
 .reference-viewer {
   width: min(1120px, calc(100% - 28px));
   max-height: calc(100dvh - 28px);
@@ -633,6 +656,9 @@ body.playing .edge-film {
   width: 1200px;
   max-width: none;
 }
+
+/* ---------- 平板 ---------- */
+
 @media (max-width: 1100px) {
   .archive-hero {
     min-height: 680px;
@@ -679,6 +705,9 @@ body.playing .edge-film {
     font-size: 43px;
   }
 }
+
+/* ---------- 較小的平板 ---------- */
+
 @media (max-width: 900px) {
   .moments-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -725,6 +754,9 @@ body.playing .edge-film {
     padding: 7px 14px;
   }
 }
+
+/* ---------- 手機 ---------- */
+
 @media (max-width: 760px) {
   .archive-hero {
     min-height: 0;
@@ -906,6 +938,9 @@ body.playing .edge-film {
     max-height: 60dvh;
   }
 }
+
+/* ---------- 小手機 ---------- */
+
 @media (max-width: 520px) {
   .moments-grid {
     grid-template-columns: 1fr;
@@ -940,6 +975,9 @@ body.playing .edge-film {
     gap: 18px;
   }
 }
+
+/* ---------- 最窄的手機 ---------- */
+
 @media (max-width: 360px) {
   .hero-about h2 {
     font-size: 19px;
@@ -960,6 +998,9 @@ body.playing .edge-film {
     font-size: 22px;
   }
 }
+
+/* ---------- 減少動態效果 ---------- */
+
 @media (prefers-reduced-motion: reduce) {
   .gateway-guide img {
     transition: none;

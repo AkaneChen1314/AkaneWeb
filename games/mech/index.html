@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <!--
   鋼鐵廢墟 ─ 機甲戰線
   這個檔案只負責「畫面上有哪些區塊」，外觀在 css/style.css，行為在 js/ 資料夾。
@@ -6,204 +6,365 @@
   class="hidden" 的區塊預設看不到，由 js/main.js 的 show() 切換顯示。
 -->
 <html lang="zh-Hant">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>鋼鐵廢墟 ─ 機甲戰線</title>
-<link rel="stylesheet" href="css/style.css?v=20261121-r15c">
-<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../../shared/portal.css?v=20261121-r15c">
-<link rel="stylesheet" href="../game-portal.css?v=20261121-r15c">
-<link rel="stylesheet" href="../touch-controls.css?v=20261121-r15c">
-<script src="../../shared/portal.js?v=20261121-r15c"></script>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <title>鋼鐵廢墟 ─ 機甲戰線</title>
+    <link
+      rel="stylesheet"
+      href="css/style.css?v=20261121-r15c"
+    />
+    <link
+      rel="icon"
+      href="../../assets/favicon.svg"
+      type="image/svg+xml"
+    />
+    <link
+      rel="stylesheet"
+      href="../../shared/portal.css?v=20261121-r15c"
+    />
+    <link
+      rel="stylesheet"
+      href="../game-portal.css?v=20261121-r15c"
+    />
+    <link
+      rel="stylesheet"
+      href="../touch-controls.css?v=20261121-r15c"
+    />
+    <script src="../../shared/portal.js?v=20261121-r15c"></script>
+  </head>
+  <body>
+    <!-- 兩張鋪滿整個視窗的畫布：game 畫 3D 場景；overlay 疊在上面，畫敵人血條、傷害數字、道具標籤 -->
+    <canvas id="game"></canvas>
+    <canvas id="overlay"></canvas>
 
-</head>
-<body>
-<!-- 兩張鋪滿整個視窗的畫布：game 畫 3D 場景；overlay 疊在上面，畫敵人血條、傷害數字、道具標籤 -->
-<canvas id="game"></canvas>
-<canvas id="overlay"></canvas>
-
-<!-- ================= 載入畫面（啟動完成後隱藏；啟動失敗時 ld-msg 會顯示錯誤訊息）================= -->
-<div id="loading">
-  <div class="ld-box">
-    <h1>鋼鐵廢墟</h1>
-    <h2>MECH FRONTLINE</h2>
-    <div class="ld-bar"><i></i></div>
-    <p id="ld-msg">系統啟動中…</p>
-  </div>
-</div>
-
-<!-- ================= 機庫（選模式、機體、武器、技能、小兵的畫面）================= -->
-<div id="hangar" class="hidden">
-  <!-- 上方：標題、七個分頁、右上角的設定（難度 / 畫質 / 音量） -->
-  <header class="hg-top">
-    <div class="logo"><b>鋼鐵廢墟</b><span>MECH FRONTLINE ／ 機庫整備</span></div>
-    <nav id="tabs"></nav>
-    <div class="hg-set">
-      <div class="setrow"><label>難度</label><div id="diff" class="seg"></div></div>
-      <div class="setrow"><label>畫質</label><div id="quality" class="seg"></div></div>
-      <div class="setrow"><label>音樂</label><input type="range" id="vol-music" min="0" max="100" step="1"></div>
-      <div class="setrow"><label>音效</label><input type="range" id="vol-sfx" min="0" max="100" step="1"></div>
+    <!-- ================= 載入畫面（啟動完成後隱藏；啟動失敗時 ld-msg 會顯示錯誤訊息）================= -->
+    <div id="loading">
+      <div class="ld-box">
+        <h1>鋼鐵廢墟</h1>
+        <h2>MECH FRONTLINE</h2>
+        <div class="ld-bar"><i></i></div>
+        <p id="ld-msg">系統啟動中…</p>
+      </div>
     </div>
-  </header>
 
-  <!-- 左側：目前分頁的選項清單。picks 是多選分頁（技能 / 小兵）才會出現的「已選欄」 -->
-  <section class="hg-left panel">
-    <div class="ph"><span id="tabtitle"></span><em id="tabhint"></em></div>
-    <div id="picks"></div>
-    <div id="items"></div>
-  </section>
+    <!-- ================= 機庫（選模式、機體、武器、技能、小兵的畫面）================= -->
+    <div
+      id="hangar"
+      class="hidden"
+    >
+      <!-- 上方：標題、七個分頁、右上角的設定（難度 / 畫質 / 音量） -->
+      <header class="hg-top">
+        <div class="logo">
+          <b>鋼鐵廢墟</b><span>MECH FRONTLINE ／ 機庫整備</span>
+        </div>
+        <nav id="tabs"></nav>
+        <div class="hg-set">
+          <div class="setrow">
+            <label>難度</label>
+            <div
+              id="diff"
+              class="seg"
+            ></div>
+          </div>
+          <div class="setrow">
+            <label>畫質</label>
+            <div
+              id="quality"
+              class="seg"
+            ></div>
+          </div>
+          <div class="setrow">
+            <label>音樂</label
+            ><input
+              type="range"
+              id="vol-music"
+              min="0"
+              max="100"
+              step="1"
+            />
+          </div>
+          <div class="setrow">
+            <label>音效</label
+            ><input
+              type="range"
+              id="vol-sfx"
+              min="0"
+              max="100"
+              step="1"
+            />
+          </div>
+        </div>
+      </header>
 
-  <!-- 右側：目前的出擊配置摘要、機體性能條、滑鼠指到的選項的詳細資料 -->
-  <section class="hg-right panel">
-    <div class="ph"><span>出擊配置</span><em>點擊欄位可快速切換分頁</em></div>
-    <div id="slotsum"></div>
-    <div class="ph sm"><span>機體性能</span></div>
-    <div id="stats"></div>
-    <div class="ph sm"><span>詳細資料</span></div>
-    <div id="detail"></div>
-  </section>
+      <!-- 左側：目前分頁的選項清單。picks 是多選分頁（技能 / 小兵）才會出現的「已選欄」 -->
+      <section class="hg-left panel">
+        <div class="ph"><span id="tabtitle"></span><em id="tabhint"></em></div>
+        <div id="picks"></div>
+        <div id="items"></div>
+      </section>
 
-  <!-- 下方：步驟進度、模式說明、上一步 / 下一步（最後一步會變成「出擊」）、最佳紀錄 -->
-  <footer class="hg-bottom">
-    <div id="stepline"></div>
-    <div id="modeline"></div>
-    <div class="navrow">
-      <button id="prev" class="ghost">◀ 上一步</button>
-      <button id="launch" class="next"><span>下一步</span><small></small></button>
+      <!-- 右側：目前的出擊配置摘要、機體性能條、滑鼠指到的選項的詳細資料 -->
+      <section class="hg-right panel">
+        <div class="ph">
+          <span>出擊配置</span><em>點擊欄位可快速切換分頁</em>
+        </div>
+        <div id="slotsum"></div>
+        <div class="ph sm"><span>機體性能</span></div>
+        <div id="stats"></div>
+        <div class="ph sm"><span>詳細資料</span></div>
+        <div id="detail"></div>
+      </section>
+
+      <!-- 下方：步驟進度、模式說明、上一步 / 下一步（最後一步會變成「出擊」）、最佳紀錄 -->
+      <footer class="hg-bottom">
+        <div id="stepline"></div>
+        <div id="modeline"></div>
+        <div class="navrow">
+          <button
+            id="prev"
+            class="ghost"
+          >
+            ◀ 上一步
+          </button>
+          <button
+            id="launch"
+            class="next"
+          >
+            <span>下一步</span><small></small>
+          </button>
+        </div>
+        <div id="best"></div>
+      </footer>
+      <div class="hg-hint">按住滑鼠拖曳可旋轉機體</div>
     </div>
-    <div id="best"></div>
-  </footer>
-  <div class="hg-hint">按住滑鼠拖曳可旋轉機體</div>
-</div>
 
-<!-- ================= 戰鬥 HUD（戰鬥中疊在畫面上的資訊）================= -->
-<div id="hud" class="hidden">
-  <!-- 畫面邊緣的受傷紅光、準星、命中標記 -->
-  <div id="vignette"></div>
-  <div id="crosshair"><i></i><i></i><i></i><i></i><b></b></div>
-  <div id="hitmark"></div>
+    <!-- ================= 戰鬥 HUD（戰鬥中疊在畫面上的資訊）================= -->
+    <div
+      id="hud"
+      class="hidden"
+    >
+      <!-- 畫面邊緣的受傷紅光、準星、命中標記 -->
+      <div id="vignette"></div>
+      <div id="crosshair"><i></i><i></i><i></i><i></i><b></b></div>
+      <div id="hitmark"></div>
 
-  <!-- 左上：模式與分數 -->
-  <div id="hud-tl" class="hpanel">
-    <div id="modechip"></div>
-    <div id="score"></div>
-  </div>
+      <!-- 左上：模式與分數 -->
+      <div
+        id="hud-tl"
+        class="hpanel"
+      >
+        <div id="modechip"></div>
+        <div id="score"></div>
+      </div>
 
-  <!-- 上方中央：第幾波、剩餘敵人、Boss 血條 -->
-  <div id="top">
-    <div id="waveinfo"></div>
-    <div id="enemyinfo"></div>
-    <div id="bossbar" class="hidden">
-      <div class="bn"><span id="bossname"></span><em id="bosstitle"></em></div>
-      <div class="bar"><i id="bosshp"></i></div>
+      <!-- 上方中央：第幾波、剩餘敵人、Boss 血條 -->
+      <div id="top">
+        <div id="waveinfo"></div>
+        <div id="enemyinfo"></div>
+        <div
+          id="bossbar"
+          class="hidden"
+        >
+          <div class="bn">
+            <span id="bossname"></span><em id="bosstitle"></em>
+          </div>
+          <div class="bar"><i id="bosshp"></i></div>
+        </div>
+      </div>
+
+      <!-- 右上：小地圖 -->
+      <div id="mapbox">
+        <canvas
+          id="minimap"
+          width="220"
+          height="220"
+        ></canvas>
+        <div class="mapring"></div>
+        <span class="mapn">前</span>
+      </div>
+
+      <!-- 左下：機體狀態（裝甲、護盾、能量、指揮點數） -->
+      <div
+        id="vitals"
+        class="hpanel"
+      >
+        <div class="vhead"><span id="v-name"></span><em id="v-cls"></em></div>
+        <div class="vbig">
+          <b id="t-hp"></b><small id="t-hpmax"></small><span id="t-sh"></span>
+        </div>
+        <div class="bar sh"><i id="b-shield"></i></div>
+        <div class="bar hp"><i id="b-hp"></i></div>
+        <div class="vrow">
+          <label>能量</label>
+          <div class="bar en"><i id="b-en"></i></div>
+        </div>
+        <div class="vrow">
+          <label>指揮</label>
+          <div class="bar cp"><i id="b-cp"></i></div>
+          <span id="t-cp"></span>
+        </div>
+      </div>
+
+      <!-- 下方中央：增益圖示，以及技能（Q E F）與小兵（1 2）的按鍵格 -->
+      <div id="center-b">
+        <div id="buffs"></div>
+        <div id="slots"></div>
+      </div>
+
+      <!-- 右下：主武器與副武器（名稱、彈藥 / 冷卻） -->
+      <div
+        id="weap"
+        class="hpanel"
+      >
+        <div
+          id="w-pri"
+          class="wrow"
+        >
+          <em>左鍵</em><span class="wn"></span><span class="wa"></span>
+        </div>
+        <div class="abar"><i id="b-ammo"></i></div>
+        <div
+          id="w-sec"
+          class="wrow"
+        >
+          <em>右鍵</em><span class="wn"></span><span class="wa"></span>
+        </div>
+        <div class="abar sec"><i id="b-sec"></i></div>
+      </div>
+
+      <!-- 每波結束時的三選一強化 -->
+      <div
+        id="upg"
+        class="hidden"
+      >
+        <div class="upt">選擇一項強化<em id="upg-t"></em></div>
+        <div id="upg-cards"></div>
+      </div>
+      <!-- 畫面中央的橫幅、右側的道具提示、左側的戰鬥紀錄、滑鼠未鎖定時的提示 -->
+      <div id="banner"></div>
+      <div id="toasts"></div>
+      <div id="log"></div>
+      <div
+        id="lockhint"
+        class="hidden"
+      >
+        點擊畫面以鎖定滑鼠並繼續戰鬥
+      </div>
     </div>
-  </div>
 
-  <!-- 右上：小地圖 -->
-  <div id="mapbox">
-    <canvas id="minimap" width="220" height="220"></canvas>
-    <div class="mapring"></div>
-    <span class="mapn">前</span>
-  </div>
-
-  <!-- 左下：機體狀態（裝甲、護盾、能量、指揮點數） -->
-  <div id="vitals" class="hpanel">
-    <div class="vhead"><span id="v-name"></span><em id="v-cls"></em></div>
-    <div class="vbig"><b id="t-hp"></b><small id="t-hpmax"></small><span id="t-sh"></span></div>
-    <div class="bar sh"><i id="b-shield"></i></div>
-    <div class="bar hp"><i id="b-hp"></i></div>
-    <div class="vrow"><label>能量</label><div class="bar en"><i id="b-en"></i></div></div>
-    <div class="vrow"><label>指揮</label><div class="bar cp"><i id="b-cp"></i></div><span id="t-cp"></span></div>
-  </div>
-
-  <!-- 下方中央：增益圖示，以及技能（Q E F）與小兵（1 2）的按鍵格 -->
-  <div id="center-b">
-    <div id="buffs"></div>
-    <div id="slots"></div>
-  </div>
-
-  <!-- 右下：主武器與副武器（名稱、彈藥 / 冷卻） -->
-  <div id="weap" class="hpanel">
-    <div id="w-pri" class="wrow"><em>左鍵</em><span class="wn"></span><span class="wa"></span></div>
-    <div class="abar"><i id="b-ammo"></i></div>
-    <div id="w-sec" class="wrow"><em>右鍵</em><span class="wn"></span><span class="wa"></span></div>
-    <div class="abar sec"><i id="b-sec"></i></div>
-  </div>
-
-  <!-- 每波結束時的三選一強化 -->
-  <div id="upg" class="hidden">
-    <div class="upt">選擇一項強化<em id="upg-t"></em></div>
-    <div id="upg-cards"></div>
-  </div>
-  <!-- 畫面中央的橫幅、右側的道具提示、左側的戰鬥紀錄、滑鼠未鎖定時的提示 -->
-  <div id="banner"></div>
-  <div id="toasts"></div>
-  <div id="log"></div>
-  <div id="lockhint" class="hidden">點擊畫面以鎖定滑鼠並繼續戰鬥</div>
-</div>
-
-<!-- ================= 暫停選單（操作說明、音量、繼續 / 返回機庫）================= -->
-<div id="pause" class="overlay hidden">
-  <div class="panel pbox">
-    <h2>暫　停</h2>
-    <div class="keys">
-      <div><kbd>W A S D</kbd> 移動</div>
-      <div><kbd>滑鼠</kbd> 瞄準</div>
-      <div><kbd>左鍵</kbd> 主武器</div>
-      <div><kbd>右鍵</kbd> 副武器</div>
-      <div><kbd>Shift</kbd> 推進加速</div>
-      <div><kbd>空白鍵</kbd> 噴射跳躍 / 飛行</div>
-      <div><kbd>Q</kbd> <kbd>E</kbd> <kbd>F</kbd> 技能</div>
-      <div><kbd>1</kbd> <kbd>2</kbd> 派出小兵</div>
-      <div><kbd>Z</kbd> <kbd>X</kbd> <kbd>C</kbd> 選擇強化</div>
-      <div><kbd>R</kbd> 換彈　<kbd>Esc</kbd> 暫停</div>
+    <!-- ================= 暫停選單（操作說明、音量、繼續 / 返回機庫）================= -->
+    <div
+      id="pause"
+      class="overlay hidden"
+    >
+      <div class="panel pbox">
+        <h2>暫　停</h2>
+        <div class="keys">
+          <div><kbd>W A S D</kbd> 移動</div>
+          <div><kbd>滑鼠</kbd> 瞄準</div>
+          <div><kbd>左鍵</kbd> 主武器</div>
+          <div><kbd>右鍵</kbd> 副武器</div>
+          <div><kbd>Shift</kbd> 推進加速</div>
+          <div><kbd>空白鍵</kbd> 噴射跳躍 / 飛行</div>
+          <div><kbd>Q</kbd> <kbd>E</kbd> <kbd>F</kbd> 技能</div>
+          <div><kbd>1</kbd> <kbd>2</kbd> 派出小兵</div>
+          <div><kbd>Z</kbd> <kbd>X</kbd> <kbd>C</kbd> 選擇強化</div>
+          <div><kbd>R</kbd> 換彈　<kbd>Esc</kbd> 暫停</div>
+        </div>
+        <div class="volrow">
+          <label>音樂音量</label
+          ><input
+            type="range"
+            id="vol-music2"
+            min="0"
+            max="100"
+            step="1"
+          />
+        </div>
+        <div class="volrow">
+          <label>音效音量</label
+          ><input
+            type="range"
+            id="vol-sfx2"
+            min="0"
+            max="100"
+            step="1"
+          />
+        </div>
+        <button id="btn-resume">繼續戰鬥</button>
+        <button
+          id="btn-quit"
+          class="ghost"
+        >
+          返回機庫
+        </button>
+      </div>
     </div>
-    <div class="volrow"><label>音樂音量</label><input type="range" id="vol-music2" min="0" max="100" step="1"></div>
-    <div class="volrow"><label>音效音量</label><input type="range" id="vol-sfx2" min="0" max="100" step="1"></div>
-    <button id="btn-resume">繼續戰鬥</button>
-    <button id="btn-quit" class="ghost">返回機庫</button>
-  </div>
-</div>
 
-<!-- ================= 結算畫面（勝利或陣亡後顯示成績）================= -->
-<div id="result" class="overlay hidden">
-  <div class="panel pbox wide">
-    <div id="res-mode"></div>
-    <h2 id="res-title"></h2>
-    <div id="res-body"></div>
-    <div id="res-ups"></div>
-    <div class="btnrow">
-      <button id="btn-again">再次出擊</button>
-      <button id="btn-back" class="ghost">返回機庫</button>
+    <!-- ================= 結算畫面（勝利或陣亡後顯示成績）================= -->
+    <div
+      id="result"
+      class="overlay hidden"
+    >
+      <div class="panel pbox wide">
+        <div id="res-mode"></div>
+        <h2 id="res-title"></h2>
+        <div id="res-body"></div>
+        <div id="res-ups"></div>
+        <div class="btnrow">
+          <button id="btn-again">再次出擊</button>
+          <button
+            id="btn-back"
+            class="ghost"
+          >
+            返回機庫
+          </button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<!-- 3D 引擎 Three.js 與光暈後製需要的元件（從網路載入，所以第一次開啟需要網路） -->
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/CopyShader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/GammaCorrectionShader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/EffectComposer.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/RenderPass.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/ShaderPass.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <!-- 3D 引擎 Three.js 與光暈後製需要的元件（從網路載入，所以第一次開啟需要網路） -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/GammaCorrectionShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 
-<!-- 遊戲本體。順序不能亂換：後面的檔案會用到前面檔案定義的東西 -->
-<script src="js/util.js?v=20261121-r15c"></script>      <!-- 通用小工具（數學、亂數、幾何合併） -->
-<script src="js/data.js?v=20261121-r15c"></script>      <!-- 所有數值資料：機體、武器、技能、敵人、Boss、模式、道具 -->
-<script src="js/textures.js?v=20261121-r15c"></script>  <!-- 用程式畫出來的貼圖 -->
-<script src="js/models.js?v=20261121-r15c"></script>    <!-- 建模工具、武器模型、五台玩家機體 -->
-<script src="js/units.js?v=20261121-r15c"></script>     <!-- 敵人、小兵、Boss 的模型 -->
-<script src="js/world.js?v=20261121-r15c"></script>     <!-- 地圖生成、碰撞、尋路 -->
-<script src="js/effects.js?v=20261121-r15c"></script>   <!-- 粒子與各種特效 -->
-<script src="js/audio.js?v=20261121-r15c"></script>     <!-- 音效與背景音樂 -->
-<script src="js/game.js?v=20261121-r15c"></script>      <!-- 戰鬥核心：玩家、武器、技能、敵人 AI、波次 -->
-<script src="js/ui.js?v=20261121-r15c"></script>        <!-- 機庫選單與戰鬥 HUD -->
-<script src="js/main.js?v=20261121-r15c"></script>      <!-- 啟動、輸入、主迴圈 -->
-<script src="js/portal-bridge.js?v=20261121-r15c"></script> <!-- 網站橋接：返回遊戲館時暫停與靜音 -->
-<script src="../touch-controls.js?v=20261121-r15c"></script>  <!-- 手機觸控共用元件 -->
-<script src="js/touch.js?v=20261121-r15c"></script>        <!-- 手機觸控：搖桿、按鈕、點選強化卡片 -->
-</body>
+    <!-- 遊戲本體。順序不能亂換：後面的檔案會用到前面檔案定義的東西 -->
+    <!-- 通用小工具（數學、亂數、幾何合併） -->
+    <script src="js/util.js?v=20261121-r15c"></script>
+    <!-- 所有數值資料：機體、武器、技能、敵人、Boss、模式、道具 -->
+    <script src="js/data.js?v=20261121-r15c"></script>
+    <!-- 用程式畫出來的貼圖 -->
+    <script src="js/textures.js?v=20261121-r15c"></script>
+    <!-- 建模工具、武器模型、五台玩家機體 -->
+    <script src="js/models.js?v=20261121-r15c"></script>
+    <!-- 敵人、小兵、Boss 的模型 -->
+    <script src="js/units.js?v=20261121-r15c"></script>
+    <!-- 地圖生成、碰撞、尋路 -->
+    <script src="js/world.js?v=20261121-r15c"></script>
+    <!-- 粒子與各種特效 -->
+    <script src="js/effects.js?v=20261121-r15c"></script>
+    <!-- 音效與背景音樂 -->
+    <script src="js/audio.js?v=20261121-r15c"></script>
+    <!-- 戰鬥核心：玩家、武器、技能、敵人 AI、波次 -->
+    <script src="js/game.js?v=20261121-r15c"></script>
+    <!-- 機庫選單與戰鬥 HUD -->
+    <script src="js/ui.js?v=20261121-r15c"></script>
+    <!-- 啟動、輸入、主迴圈 -->
+    <script src="js/main.js?v=20261121-r15c"></script>
+    <!-- 網站橋接：返回遊戲館時暫停與靜音 -->
+    <script src="js/portal-bridge.js?v=20261121-r15c"></script>
+    <!-- 手機觸控共用元件 -->
+    <script src="../touch-controls.js?v=20261121-r15c"></script>
+    <!-- 手機觸控：搖桿、按鈕、點選強化卡片 -->
+    <script src="js/touch.js?v=20261121-r15c"></script>
+  </body>
 </html>

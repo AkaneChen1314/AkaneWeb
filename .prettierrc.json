@@ -6,7 +6,13 @@
   "singleQuote": false,
   "trailingComma": "all",
   "endOfLine": "lf",
-  "htmlWhitespaceSensitivity": "strict",
+  "htmlWhitespaceSensitivity": "css",
   "singleAttributePerLine": true,
-  "embeddedLanguageFormatting": "off"
+  "embeddedLanguageFormatting": "off",
+  "overrides": [
+    {
+      "files": "*.html",
+      "options": { "embeddedLanguageFormatting": "auto" }
+    }
+  ]
 }

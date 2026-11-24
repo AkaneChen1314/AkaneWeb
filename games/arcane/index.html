@@ -12,6 +12,7 @@
       content="#080b22"
     />
     <title>蒼穹決戰：星界牌陣 1.2</title>
+    <!-- 樣式：基本外觀、各種螢幕大小、戰鬥特效。後面的會蓋過前面的。 -->
     <link
       rel="stylesheet"
       href="style.css?v=20261104-blueworld-r14-source"
@@ -24,6 +25,7 @@
       rel="stylesheet"
       href="spectacle.css?v=20261104-blueworld-r14-source"
     />
+    <!-- 返回遊戲館的共用樣式、程式與字型。 -->
     <link
       rel="stylesheet"
       href="../../shared/portal.css?v=1.2"
@@ -35,12 +37,17 @@
     />
   </head>
   <body>
+    <!-- 背景光點。 -->
     <div class="ambient">
       <i> </i>
       <i> </i>
       <i> </i>
     </div>
+
+    <!-- ===== 各個畫面：有 active 的才會顯示，由 game.js 切換 ===== -->
+
     <main id="app">
+      <!-- 畫面一：首頁。 -->
       <section
         id="startScreen"
         class="screen active home-screen"
@@ -66,9 +73,11 @@
             <button
               class="btn ghost"
               id="rulesBtn"
-              >玩法說明</button
             >
+              玩法說明
+            </button>
           </div>
+          <!-- 第一次遊玩的說明。 -->
           <div class="home-guide glass">
             <span>
               <b>01</b>
@@ -91,6 +100,7 @@
               <small>觀察敵方意圖，在上限內安排卡牌順序</small>
             </span>
           </div>
+          <!-- 遊戲特色。 -->
           <div class="feature-row">
             <span>✦ 六種職業</span>
             <span>✦ 角色專屬牌組</span>
@@ -98,6 +108,7 @@
             <span>✦ 完全離線</span>
           </div>
         </div>
+        <!-- 右側的主圖。 -->
         <div class="home-art">
           <div class="moon"></div>
           <div class="poster poster-back">
@@ -116,6 +127,7 @@
           <div class="floating-card">✦<small>STARFALL</small></div>
         </div>
       </section>
+      <!-- 畫面二：選擇角色。 -->
       <section
         id="selectScreen"
         class="screen selection-screen"
@@ -131,9 +143,11 @@
           <button
             class="btn ghost"
             data-back="startScreen"
-            >返回首頁</button
           >
+            返回首頁
+          </button>
         </header>
+        <!-- 數值的意思。 -->
         <details class="stat-help">
           <summary>選角數值怎麼看？</summary>
           <div class="stat-guide glass">
@@ -161,10 +175,12 @@
             </span>
           </div>
         </details>
+        <!-- 角色卡由程式產生。 -->
         <div
           id="fighterGrid"
           class="fighter-grid"
         ></div>
+        <!-- 底部操作列。 -->
         <div class="dock glass">
           <div>
             <small>目前選擇</small>
@@ -179,6 +195,7 @@
           </button>
         </div>
       </section>
+      <!-- 畫面三：選擇支援技能。 -->
       <section
         id="supportScreen"
         class="screen selection-screen"
@@ -194,9 +211,11 @@
           <button
             class="btn ghost"
             data-back="selectScreen"
-            >返回選角</button
           >
+            返回選角
+          </button>
         </header>
+        <!-- 技能篩選。 -->
         <div class="support-toolbar">
           <div
             class="filter-tabs"
@@ -225,14 +244,17 @@
           <button
             class="btn ghost compact"
             id="clearSupportsBtn"
-            >清空</button
           >
+            清空
+          </button>
         </div>
+        <!-- 技能卡由程式產生。 -->
         <div
           id="supportGrid"
           class="support-grid scroll-region"
           aria-label="支援技能清單"
         ></div>
+        <!-- 已選的技能與下一步。 -->
         <div class="dock glass support-dock">
           <div class="loadout-summary">
             <div>
@@ -259,6 +281,7 @@
           </div>
         </div>
       </section>
+      <!-- 畫面四：選擇挑戰、難度與首領。 -->
       <section
         id="challengeScreen"
         class="screen selection-screen challenge-screen"
@@ -279,6 +302,7 @@
           </button>
         </header>
         <div class="challenge-content scroll-region">
+          <!-- 挑戰模式。 -->
           <div class="mode-section">
             <h3>本次玩法</h3>
             <div class="mode-grid">
@@ -300,6 +324,7 @@
               </button>
             </div>
           </div>
+          <!-- 難度。 -->
           <div class="difficulty-section">
             <div class="difficulty-heading">
               <span class="eyebrow">BATTLE LEVEL</span>
@@ -335,6 +360,7 @@
               </button>
             </div>
           </div>
+          <!-- 首領卡由程式產生。 -->
           <div class="villain-section">
             <div class="difficulty-heading">
               <span class="eyebrow">WANTED REALM</span>
@@ -356,8 +382,9 @@
             <button
               class="btn ghost"
               id="randomBossBtn"
-              >隨機反派</button
             >
+              隨機反派
+            </button>
             <button
               class="btn primary"
               id="battleBtn"
@@ -368,12 +395,14 @@
           </div>
         </div>
       </section>
+      <!-- 畫面五：戰鬥。 -->
       <section
         id="battleScreen"
         class="screen battle-screen"
       >
         <div class="battle-bg"></div>
         <div class="battle-vignette"></div>
+        <!-- 上方：場地、回合與功能按鈕。 -->
         <header class="battle-top glass">
           <div class="battle-context">
             <span class="eyebrow">ASTRAL RIFT</span>
@@ -409,7 +438,9 @@
             </button>
           </div>
         </header>
+        <!-- 中間：玩家、敵人下一步與敵人。 -->
         <div class="battle-field">
+          <!-- 玩家。 -->
           <article class="unit player-unit">
             <div class="unit-art">
               <img
@@ -466,6 +497,7 @@
               </div>
             </div>
           </article>
+          <!-- 敵人下一步與牌庫數量。 -->
           <div class="center-info">
             <button
               id="encounterInfo"
@@ -492,6 +524,7 @@
               戰鬥紀錄
             </button>
           </div>
+          <!-- 敵人。 -->
           <article class="unit enemy-unit">
             <div class="unit-art">
               <img
@@ -538,6 +571,7 @@
             </div>
           </article>
         </div>
+        <!-- 下方：行動點數、支援技能與手牌。 -->
         <div class="card-console">
           <div class="turn-tools glass">
             <div class="ap-orb">
@@ -547,8 +581,9 @@
             <div
               class="turn-rule"
               id="turnRule"
-              >本回合 0 / 4 張</div
             >
+              本回合 0 / 4 張
+            </div>
             <div
               id="supportMini"
               class="support-mini"
@@ -556,14 +591,17 @@
             <button
               class="btn end-turn"
               id="endTurnBtn"
-              >結束回合</button
             >
+              結束回合
+            </button>
           </div>
+          <!-- 手牌由程式產生。 -->
           <div
             id="hand"
             class="hand"
           ></div>
         </div>
+        <!-- 剛剛使用的招式。 -->
         <div
           class="combat-caption"
           id="combatCaption"
@@ -573,6 +611,7 @@
           <strong id="combatName"> </strong>
           <span id="combatOutcome"> </span>
         </div>
+        <!-- 戰鬥特效：粒子、文字與大招切入畫面，由 spectacle.js 繪製。 -->
         <canvas
           id="battleFX"
           aria-hidden="true"
@@ -595,6 +634,7 @@
             <strong id="cutinName"> </strong>
           </div>
         </div>
+        <!-- 戰鬥紀錄。 -->
         <aside
           class="battle-log glass"
           id="logPanel"
@@ -605,8 +645,9 @@
             <button
               id="closeLog"
               aria-label="關閉戰鬥紀錄"
-              >×</button
             >
+              ×
+            </button>
           </div>
           <div
             id="battleLog"
@@ -614,6 +655,7 @@
           ></div>
         </aside>
       </section>
+      <!-- 畫面六：試煉的獎勵。 -->
       <section
         id="rewardScreen"
         class="screen selection-screen reward-screen"
@@ -649,6 +691,7 @@
           </button>
         </div>
       </section>
+      <!-- 畫面七：結算。 -->
       <section
         id="resultScreen"
         class="screen result-screen"
@@ -664,8 +707,9 @@
           <div
             id="resultRank"
             class="rank"
-            >S</div
           >
+            S
+          </div>
           <h1 id="resultTitle">界域淨化完成</h1>
           <p id="resultText"></p>
           <div
@@ -676,17 +720,20 @@
             <button
               class="btn primary"
               id="againBtn"
-              >再次挑戰</button
             >
+              再次挑戰
+            </button>
             <button
               class="btn ghost"
               id="homeBtn"
-              >返回首頁</button
             >
+              返回首頁
+            </button>
           </div>
         </div>
       </section>
     </main>
+    <!-- 規則書。 -->
     <div
       class="modal"
       id="rulesModal"
@@ -696,8 +743,9 @@
         <button
           class="modal-x"
           id="closeRules"
-          >×</button
         >
+          ×
+        </button>
         <span class="eyebrow">COMPLETE GUIDE</span>
         <h2>星界牌陣完整玩法</h2>
         <div class="trial-guide">
@@ -788,6 +836,7 @@
         </div>
       </div>
     </div>
+    <!-- 一張牌的詳細說明。 -->
     <div
       class="modal"
       id="cardDetailModal"
@@ -812,16 +861,19 @@
         <button
           class="btn primary"
           id="playDetailCard"
-          >使用這張牌</button
         >
+          使用這張牌
+        </button>
       </div>
     </div>
+    <!-- 提示訊息。 -->
     <div
       class="toast"
       id="toast"
       role="status"
       aria-live="polite"
     ></div>
+    <!-- 先載入特效，再載入遊戲主程式。 -->
     <script src="spectacle.js?v=20261104-blueworld-r14-source"></script>
     <script src="game.js?v=20261104-blueworld-r14-source"></script>
   </body>

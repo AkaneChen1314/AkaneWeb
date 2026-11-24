@@ -4,6 +4,7 @@
   font-size: 10px;
   letter-spacing: 0.025em;
 }
+/* 特效設定。 */
 .effects-setting {
   justify-content: space-between;
   gap: 18px;
@@ -17,9 +18,13 @@
   padding: 9px 12px;
   min-height: 44px;
 }
+/* 區域名稱。 */
 #sector-label {
   overflow-wrap: anywhere;
 }
+
+/* ---------- 手機 ---------- */
+
 @media (max-width: 760px) {
   .boss-hud-info > .boss-adaptation {
     font-size: 9px;
@@ -32,11 +37,17 @@
     max-width: 100%;
   }
 }
+
+/* ---------- 橫拿手機 ---------- */
+
 @media (max-height: 500px) and (orientation: landscape) {
   .boss-hud-info > .boss-adaptation {
     display: none;
   }
 }
+
+/* ---------- 減少動態效果 ---------- */
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

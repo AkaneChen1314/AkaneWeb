@@ -1,3 +1,6 @@
+/*
+ * 測試：手榴彈的拋物線、反彈、落地與預覽線。
+ */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
@@ -10,11 +13,14 @@ import {
   GRENADE_BLAST_RADIUS,
 } from "../grenade-trajectory.js";
 
+// 兩個數字要夠接近。
 const close = (a, b, label) =>
   assert.ok(Math.abs(a - b) < 1e-7, `${label}: ${a} != ${b}`);
+// 投擲的起點與方向。
 const origin = { x: 0, y: 1.68, z: 0 },
   direction = { x: 0, y: 0.25, z: -Math.sqrt(1 - 0.25 * 0.25) };
 
+// 往上丟會先升高，最後落在地上。
 const airborne = createGrenadeMotion(origin, direction);
 advanceGrenadeMotion(airborne, 0.3);
 assert.ok(
@@ -29,6 +35,7 @@ assert.ok(
 );
 console.log("PASS ballistic launch, fuse and floor contact");
 
+// 碰到薄牆會彈回，不會穿過去。
 const wall = { min: { x: -2, y: 0, z: -4.05 }, max: { x: 2, y: 4, z: -4 } };
 const blocked = createGrenadeMotion(origin, { x: 0, y: 0, z: -1 }, [wall]);
 advanceGrenadeMotion(blocked, 0.4, [wall]);
@@ -39,6 +46,7 @@ assert.ok(
 );
 console.log("PASS swept wall collision and bounce");
 
+// 貼著牆丟時，起點不能在牆裡。
 const nearWall = {
   min: { x: -2, y: 0, z: -0.5 },
   max: { x: 2, y: 4, z: -0.45 },
@@ -50,6 +58,7 @@ assert.ok(
 );
 console.log("PASS launch clearance near cover");
 
+// 預覽的落點要和實際丟出的結果一樣。
 const prediction = predictGrenadePath(origin, direction, [wall]);
 for (const dt of [1 / 30, 1 / 60, 0.05]) {
   const actual = createGrenadeMotion(origin, direction, [wall]);
@@ -68,6 +77,7 @@ assert.ok(
 );
 console.log("PASS preview endpoint matches live physics across frame rates");
 
+// 低速落地後會靜止，引信仍在倒數。
 const downward = createGrenadeMotion(origin, {
   x: 0,
   y: -0.7,
@@ -99,6 +109,7 @@ console.log(
   "PASS low-speed floor contact settles with friction and a live fuse",
 );
 
+// 預覽主線停在第一次碰撞的地方，但爆炸點仍是最後的位置。
 const wallPreview = predictGrenadePath(origin, { x: 0, y: 0, z: -1 }, [wall]);
 assert.ok(wallPreview.firstImpact, "wall contact is exposed separately");
 assert.ok(
@@ -126,6 +137,7 @@ console.log(
   "PASS preview draws one primary arc while retaining the final physics endpoint",
 );
 
+// 能停在箱子上；箱子消失後會往下掉。
 const platform = { min: { x: -3, y: 0, z: -3 }, max: { x: 3, y: 1, z: 3 } };
 const onTop = createGrenadeMotion(
   { x: 0, y: 1.6, z: 0 },
@@ -148,6 +160,7 @@ assert.equal(onTop.grounded, false, "destroyed support releases the grenade");
 assert.ok(onTop.position.y < 1.1, "grenade falls after its support disappears");
 console.log("PASS box-top settling and removal of supporting scenery");
 
+// 滑出邊緣會往下掉。
 const ledge = { min: { x: -0.5, y: 0, z: -2 }, max: { x: 0.5, y: 1, z: 2 } };
 const sliding = createGrenadeMotion(
   { x: 0, y: 1.6, z: 0 },
@@ -165,6 +178,7 @@ assert.ok(
 );
 console.log("PASS grenade sliding off raised cover obeys gravity");
 
+// 在空中爆炸時不會假裝碰到地面。
 const overhead = predictGrenadePath(origin, { x: 0, y: 1, z: 0 });
 assert.equal(overhead.firstImpact, null);
 assert.equal(overhead.grounded, false);
@@ -184,6 +198,7 @@ close(
 );
 console.log("PASS first-contact timing and airborne explosion prediction");
 
+// 從主程式取出預覽相關的函式來測試。
 const mainSource = readFileSync(new URL("../main.js", import.meta.url), "utf8");
 const previewFunctions = [
   "getGrenadeAim",
@@ -198,6 +213,7 @@ const previewFunctions = [
     return match[0];
   })
   .join("\n");
+// 假的提示文字節點。
 const labelNodes = new Map();
 const hintClasses = new Set();
 const hint = {
@@ -216,6 +232,7 @@ const hint = {
     return labelNodes.get(selector);
   },
 };
+// 假的場景與遊戲狀態。
 const scene = new THREE.Scene(),
   camera = new THREE.PerspectiveCamera();
 camera.position.copy(origin);
@@ -240,6 +257,7 @@ const context = vm.createContext({
     ),
   ],
 });
+// 重複建立也只有一組預覽。
 vm.runInContext(previewFunctions, context);
 vm.runInContext(
   "createGrenadePreview();createGrenadePreview();updateGrenadePreview(1000,true);",
@@ -258,6 +276,7 @@ assert.equal(
 assert.match(labelNodes.get("small").textContent, /首次撞牆/);
 assert.match(labelNodes.get("em").textContent, /自身爆炸範圍/);
 assert.equal(hintClasses.has("danger"), true);
+// 沒有移動時沿用上一次的結果。
 const cached = context.grenadePreview.prediction;
 vm.runInContext("updateGrenadePreview(1050);", context);
 assert.equal(
@@ -265,6 +284,7 @@ assert.equal(
   cached,
   "still aim reuses the physics result",
 );
+// 移動後重新計算。
 camera.position.x = 0.2;
 vm.runInContext("updateGrenadePreview(1100);", context);
 assert.notEqual(
@@ -272,6 +292,7 @@ assert.notEqual(
   cached,
   "moving refreshes the physics result",
 );
+// 掩體消失後重新計算。
 const moved = context.grenadePreview.prediction;
 vm.runInContext("collisionBoxes.length=0;updateGrenadePreview(1150);", context);
 assert.notEqual(
@@ -279,6 +300,7 @@ assert.notEqual(
   moved,
   "destroying cover refreshes the prediction",
 );
+// 爆炸範圍標記在預測的落點。
 for (const axis of ["x", "z"])
   close(
     context.grenadePreview.blastMarker.position[axis],
@@ -288,6 +310,7 @@ for (const axis of ["x", "z"])
 console.log(
   "PASS preview caches still aim, invalidates changed cover and warns about close blasts",
 );
+// 放開後清除所有預覽。
 vm.runInContext(
   "grenadeAiming=false;updateGrenadePreview(1100,true);",
   context,
@@ -308,6 +331,7 @@ assert.equal(
   false,
   "release hides the blast marker",
 );
+// 暫停時不會再出現預覽。
 vm.runInContext(
   "grenadeAiming=true;gameState='paused';updateGrenadePreview(1200,true);",
   context,

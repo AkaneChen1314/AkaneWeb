@@ -24,6 +24,7 @@
       content="0"
     />
     <title>深境冒險 1.2｜職業戰鬥 RPG</title>
+    <!-- 圖示、樣式與返回遊戲館的共用程式。 -->
     <link
       rel="icon"
       href="../../assets/favicon.svg"
@@ -44,8 +45,11 @@
     />
   </head>
   <body>
+    <!-- 背景極光。 -->
     <div class="aurora"></div>
     <main class="game-shell">
+      <!-- ===== 上方列：遊戲名稱、目前樓層與功能按鈕 ===== -->
+
       <header class="topbar glass">
         <div class="brand">
           <span class="brand-mark">⚜</span>
@@ -78,39 +82,49 @@
             class="icon-btn"
             id="helpBtn"
             aria-label="玩法說明"
-            >?</button
           >
+            ?
+          </button>
           <button
             class="icon-btn"
             id="resetBtn"
-            >↻</button
           >
+            ↻
+          </button>
         </div>
       </header>
+
+      <!-- ===== 三欄版面：左邊角色、中間戰鬥、右邊背包 ===== -->
+
       <section class="layout">
+        <!-- 左欄：角色。 -->
         <aside class="hero-panel glass">
           <div class="hero-card">
             <div class="portrait-wrap">
               <div
                 class="portrait"
                 id="playerPortrait"
-                >⚔️</div
               >
+                ⚔️
+              </div>
               <span class="level-badge">Lv.<b id="levelText">1</b> </span>
             </div>
             <div>
               <p
                 class="eyebrow"
                 id="classText"
-                >騎士</p
               >
+                騎士
+              </p>
               <h2>冒險者</h2>
             </div>
           </div>
+          <!-- 角色身上的狀態效果。 -->
           <div
             class="effects player-status"
             id="playerEffects"
           ></div>
+          <!-- 血量、能量與經驗條，由 game.js 更新。 -->
           <div class="meter-block">
             <div class="meter-label">
               <span>生命 HP</span>
@@ -143,6 +157,7 @@
               >距離升級還差 100 EXP</small
             >
           </div>
+          <!-- 角色數值。 -->
           <div class="stats-grid">
             <div>
               <small>攻擊</small>
@@ -161,6 +176,7 @@
               <b id="speedText">8</b>
             </div>
           </div>
+          <!-- 目前裝備；點一下可以查看。 -->
           <div class="equipment">
             <p class="section-label">目前裝備</p>
             <button
@@ -185,11 +201,13 @@
             </button>
           </div>
         </aside>
+        <!-- 中欄：戰鬥與探索。 -->
         <section class="battle-column">
           <div
             class="arena glass"
             id="arena"
           >
+            <!-- 目前的區域與樓層。 -->
             <div class="zone-line">
               <span id="zoneText">翠葉森林</span>
               <span id="weatherText">探索狀態</span>
@@ -201,6 +219,7 @@
               <i> </i>
               <i> </i>
             </div>
+            <!-- 敵人下一步的預告與建議。 -->
             <div
               class="enemy-intent hidden"
               id="enemyIntent"
@@ -212,6 +231,7 @@
                 <em id="intentAdvice">推薦：防禦架勢</em>
               </div>
             </div>
+            <!-- 敵人的圖與狀態。 -->
             <div
               class="enemy-wrap"
               id="enemyWrap"
@@ -220,9 +240,11 @@
               <div
                 class="enemy-sprite"
                 id="enemySprite"
-                >🐺</div
               >
+                🐺
+              </div>
             </div>
+            <!-- 敵人的名稱、血量與說明。 -->
             <div
               class="enemy-card hidden"
               id="enemyCard"
@@ -246,6 +268,7 @@
                 id="enemyNote"
               ></div>
             </div>
+            <!-- 沒有敵人時的場景文字。 -->
             <div
               class="scene-copy"
               id="sceneCopy"
@@ -254,6 +277,7 @@
               <h2>前方的道路被迷霧籠罩</h2>
               <p>選擇探索後將遇到魔物、寶箱或特殊事件。</p>
             </div>
+            <!-- 跳出的傷害數字。 -->
             <div
               class="float-layer"
               id="floatLayer"
@@ -284,6 +308,7 @@
               </div>
             </div>
           </div>
+          <!-- 目前輪到誰，以及剩下的行動資源。 -->
           <div class="turn-strip glass">
             <div>
               <small id="turnKicker">探索階段</small>
@@ -301,9 +326,11 @@
             <button
               class="end-turn hidden"
               id="fleeBtn"
-              >嘗試逃跑</button
             >
+              嘗試逃跑
+            </button>
           </div>
+          <!-- 技能列；職業技能由程式產生。 -->
           <div
             class="skill-bar hidden"
             id="skillBar"
@@ -325,6 +352,7 @@
               class="class-skills"
             ></div>
           </div>
+          <!-- 戰術與道具。 -->
           <section
             class="tactic-panel hidden"
             id="tacticPanel"
@@ -351,6 +379,7 @@
               <small>一次可選 1～3 種，整批只消耗 1 回合</small>
             </div>
           </button>
+          <!-- 選擇藥水的視窗（一次可以選一到三種）。 -->
           <div
             class="potion-mode-backdrop hidden"
             id="potionModeBackdrop"
@@ -382,10 +411,12 @@
               <button
                 class="primary"
                 id="confirmPotions"
-                >確認使用</button
               >
+                確認使用
+              </button>
             </div>
           </section>
+          <!-- 探索選項：不在戰鬥時顯示。 -->
           <div
             class="explore-actions"
             id="exploreActions"
@@ -425,7 +456,9 @@
             </button>
           </div>
         </section>
+        <!-- 右欄：背包、商店、強化與紀錄。 -->
         <aside class="inventory-panel glass">
+          <!-- 分頁按鈕。 -->
           <div class="tabs">
             <button
               class="tab active"
@@ -436,19 +469,23 @@
             <button
               class="tab"
               data-tab="shop"
-              >商店</button
             >
+              商店
+            </button>
             <button
               class="tab"
               data-tab="upgrade"
-              >強化</button
             >
+              強化
+            </button>
             <button
               class="tab"
               data-tab="log"
-              >戰報</button
             >
+              戰報
+            </button>
           </div>
+          <!-- 分頁：背包。 -->
           <div
             class="tab-page active"
             id="bagPage"
@@ -457,34 +494,40 @@
               <button
                 class="filter active"
                 data-filter="all"
-                >全部</button
               >
+                全部
+              </button>
               <button
                 class="filter"
                 data-filter="potion"
-                >藥品</button
               >
+                藥品
+              </button>
               <button
                 class="filter"
                 data-filter="weapon"
-                >武器</button
               >
+                武器
+              </button>
               <button
                 class="filter"
                 data-filter="armor"
-                >盔甲</button
               >
+                盔甲
+              </button>
               <button
                 class="filter"
                 data-filter="material"
-                >素材</button
               >
+                素材
+              </button>
             </div>
             <div
               class="inventory-list"
               id="inventoryList"
             ></div>
           </div>
+          <!-- 分頁：商店。 -->
           <div
             class="tab-page"
             id="shopPage"
@@ -527,6 +570,7 @@
               id="shopList"
             ></div>
           </div>
+          <!-- 分頁：強化。 -->
           <div
             class="tab-page"
             id="upgradePage"
@@ -540,6 +584,7 @@
               id="upgradeList"
             ></div>
           </div>
+          <!-- 分頁：戰鬥紀錄。 -->
           <div
             class="tab-page combat-log"
             id="logPage"
@@ -547,6 +592,9 @@
         </aside>
       </section>
     </main>
+
+    <!-- ===== 視窗（平常隱藏，加上 open 才會顯示） ===== -->
+
     <div
       class="modal open"
       id="startModal"
@@ -561,8 +609,9 @@
         <button
           class="intro-open"
           id="introBtn"
-          >📖 這個遊戲在玩什麼？</button
         >
+          📖 這個遊戲在玩什麼？
+        </button>
         <div
           class="difficulty"
           id="difficultyButtons"
@@ -590,6 +639,7 @@
         </button>
       </div>
     </div>
+    <!-- 道具的詳細資料。 -->
     <div
       class="modal"
       id="itemModal"
@@ -598,18 +648,21 @@
         <button
           class="modal-close"
           data-close="itemModal"
-          >×</button
         >
+          ×
+        </button>
         <div
           class="detail-icon"
           id="itemIcon"
-          >🧪</div
         >
+          🧪
+        </div>
         <p
           class="rarity"
           id="itemRarity"
-          >普通</p
         >
+          普通
+        </p>
         <h2 id="itemTitle">道具</h2>
         <p
           class="muted"
@@ -625,6 +678,7 @@
         ></div>
       </div>
     </div>
+    <!-- 首領對話。 -->
     <div
       class="modal boss-dialogue-modal"
       id="bossDialogueModal"
@@ -648,8 +702,9 @@
             <p
               class="eyebrow"
               id="bossDialogueRank"
-              >第 50 層 · 深境首領</p
             >
+              第 50 層 · 深境首領
+            </p>
             <small id="bossDialogueChapter">古森的審判</small>
             <h2 id="bossDialogueName">巨木守護者</h2>
           </div>
@@ -684,6 +739,7 @@
         </button>
       </div>
     </div>
+    <!-- 探索時的事件。 -->
     <div
       class="modal"
       id="eventModal"
@@ -699,13 +755,15 @@
         <div
           class="event-icon"
           id="eventIcon"
-          >✨</div
         >
+          ✨
+        </div>
         <p
           class="eyebrow"
           id="eventKicker"
-          >特殊事件</p
         >
+          特殊事件
+        </p>
         <h2 id="eventTitle">事件</h2>
         <p
           class="muted"
@@ -722,6 +780,7 @@
         ></div>
       </div>
     </div>
+    <!-- 第一次遊玩的介紹。 -->
     <div
       class="modal"
       id="introModal"
@@ -730,8 +789,9 @@
         <button
           class="modal-close"
           data-close="introModal"
-          >×</button
         >
+          ×
+        </button>
         <p class="eyebrow">遊戲說明</p>
         <h2>深入未知深境，打造最強冒險者</h2>
         <p class="muted">
@@ -790,6 +850,7 @@
         </button>
       </div>
     </div>
+    <!-- 玩法說明。 -->
     <div
       class="modal"
       id="helpModal"
@@ -798,8 +859,9 @@
         <button
           class="modal-close"
           data-close="helpModal"
-          >×</button
         >
+          ×
+        </button>
         <p class="eyebrow">冒險指南</p>
         <h2>戰鬥方式</h2>
         <ul>
@@ -856,10 +918,12 @@
         <button
           class="primary wide"
           data-close="helpModal"
-          >知道了</button
         >
+          知道了
+        </button>
       </div>
     </div>
+    <!-- 怪物圖鑑。 -->
     <div
       class="modal"
       id="codexModal"
@@ -899,6 +963,7 @@
         ></div>
       </div>
     </div>
+    <!-- 設定。 -->
     <div
       class="modal"
       id="settingsModal"
@@ -941,6 +1006,7 @@
         </button>
       </div>
     </div>
+    <!-- 隱藏職業的啟用視窗。 -->
     <div
       class="modal"
       id="godModal"
@@ -949,8 +1015,9 @@
         <button
           class="modal-close"
           data-close="godModal"
-          >×</button
         >
+          ×
+        </button>
         <div class="god-symbol">👁️</div>
         <p class="eyebrow">TEST CLASS</p>
         <h2>上帝模式</h2>
@@ -971,10 +1038,12 @@
         <button
           class="primary wide"
           id="godUnlockBtn"
-          >解鎖上帝模式</button
         >
+          解鎖上帝模式
+        </button>
       </div>
     </div>
+    <!-- 提示訊息與共用的說明框。 -->
     <div
       class="toast-stack"
       id="toastStack"
@@ -984,6 +1053,7 @@
       id="globalTooltip"
       role="tooltip"
     ></div>
+    <!-- 遊戲主程式。 -->
     <script src="./game.js?v=20261113-blueworld-r14-abyss"></script>
   </body>
 </html>

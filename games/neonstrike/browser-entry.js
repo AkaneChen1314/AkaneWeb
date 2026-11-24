@@ -11,7 +11,7 @@ import shell from "./assets/audio/shell.ogg";
 import step0 from "./assets/audio/step-0.wav";
 import step1 from "./assets/audio/step-1.wav";
 
-// A classic bundle and embedded samples also work when the site is opened from disk.
+// 打包成一般腳本並內嵌音效，直接從檔案開啟也能玩。
 globalThis.neonAudioAssets = Object.freeze({
   rifle0,
   rifle1,

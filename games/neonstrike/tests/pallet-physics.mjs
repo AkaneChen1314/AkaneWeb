@@ -1,19 +1,27 @@
+/*
+ * 測試：港區棧板可以踩、可以跳，而且不擋敵人與子彈。
+ */
 import assert from "node:assert/strict";
 import { createHarness, THREE } from "./test-harness.mjs";
 
-// Inspect the actual scene and collision bounds, including each rotated pallet.
+// 檢查實際的場景與碰撞範圍，包含轉了角度的棧板。
 const h = createHarness();
-h.run(`buildSelectedArena(0);scene.updateMatrixWorld(true);`);
+h.run(`
+  buildSelectedArena(0);
+  scene.updateMatrixWorld(true);
+`);
 const pallets = h.run("scene.getObjectByName('harbor-pallets')");
 const boxes = Array.from(
   h.run("collisionBoxes.filter(box=>box.userData?.pallet)"),
 );
 assert.equal(pallets.count, 9);
 assert.equal(boxes.length, pallets.count);
+// 讀取每一塊棧板位置用的暫存物件。
 const matrix = new THREE.Matrix4(),
   position = new THREE.Vector3(),
   quaternion = new THREE.Quaternion(),
   scale = new THREE.Vector3();
+// 九塊棧板都要有對應的碰撞範圍。
 for (let i = 0; i < pallets.count; i++) {
   pallets.getMatrixAt(i, matrix);
   matrix.decompose(position, quaternion, scale);
@@ -27,14 +35,30 @@ for (let i = 0; i < pallets.count; i++) {
   );
   assert.equal(
     h.run(
-      `bodyOverlapsCollider(collisionBoxes.filter(box=>box.userData?.pallet)[${i}],${position.x},${position.z},.34,.22,1.85)`,
+      `
+        bodyOverlapsCollider(
+          collisionBoxes.filter((box) => box.userData?.pallet)[${i}],
+          ${position.x},
+          ${position.z},
+          0.34,
+          0.22,
+          1.85,
+        );
+      `,
     ),
     false,
     "low pallet cannot block an enemy",
   );
   assert.ok(
     h.run(
-      `sweepSphereCollider({x:${position.x},y:.7,z:${position.z}},{x:0,y:-1,z:0},collisionBoxes.filter(box=>box.userData?.pallet)[${i}],.12)`,
+      `
+        sweepSphereCollider(
+          { x: ${position.x}, y: 0.7, z: ${position.z} },
+          { x: 0, y: -1, z: 0 },
+          collisionBoxes.filter((box) => box.userData?.pallet)[${i}],
+          0.12,
+        );
+      `,
     ),
     "grenades hit the top",
   );
@@ -46,15 +70,38 @@ assert.equal(
 );
 assert.equal(
   h.run(
-    "pickups.some(item=>collisionBoxes.filter(box=>box.userData?.pallet).some(box=>bodyOverlapsCollider(box,item.root.position.x,item.root.position.z,.7,.15,1.75)))",
+    `
+      pickups.some((item) =>
+        collisionBoxes
+          .filter((box) => box.userData?.pallet)
+          .some((box) =>
+            bodyOverlapsCollider(
+              box,
+              item.root.position.x,
+              item.root.position.z,
+              0.7,
+              0.15,
+              1.75,
+            ),
+          ),
+      );
+    `,
   ),
   false,
   "supply pads must not overlap a pallet",
 );
 
+// 走上棧板再走下來。
 const walk = createHarness();
 walk.run(
-  `scene.add(camera);createWeapon();createInstancedProps();gameState='playing';yaw.position.set(-39,1.68,-12.9);keys.KeyW=true;`,
+  `
+    scene.add(camera);
+    createWeapon();
+    createInstancedProps();
+    gameState = "playing";
+    yaw.position.set(-39, 1.68, -12.9);
+    keys.KeyW = true;
+  `,
 );
 let highest = 0;
 for (let i = 0; i < 90; i++) {
@@ -74,9 +121,18 @@ assert.ok(
   "the player returns to ground level",
 );
 
+// 跳過棧板。
 const jump = createHarness();
 jump.run(
-  `scene.add(camera);createWeapon();createInstancedProps();gameState='playing';yaw.position.set(-39,1.68,-12.9);keys.KeyW=true;jump();`,
+  `
+    scene.add(camera);
+    createWeapon();
+    createInstancedProps();
+    gameState = "playing";
+    yaw.position.set(-39, 1.68, -12.9);
+    keys.KeyW = true;
+    jump();
+  `,
 );
 for (let i = 0; i < 90; i++) jump.run(`updatePlayer(1/60,${1000 + i * 16});`);
 assert.ok(

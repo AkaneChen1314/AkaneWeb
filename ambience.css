@@ -2,10 +2,14 @@
 body {
   background: #060f22;
 }
+/* 遊戲專區的起點。 */
 #lounge {
   position: relative;
   z-index: 1;
 }
+
+/* ---------- 背景氣氛 ---------- */
+
 .ambient-scene {
   position: fixed;
   inset: 0;
@@ -38,6 +42,7 @@ body {
   opacity: 0.48;
   border-radius: 50%;
 }
+/* 極光。 */
 .aurora-left {
   left: -400px;
   top: -150px;
@@ -50,12 +55,14 @@ body {
   background: radial-gradient(ellipse, #395e9f, #182e65 45%, transparent 68%);
   transform: rotate(20deg);
 }
+/* 星點畫布。 */
 #star-field {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
+/* 軌道。 */
 .orbit {
   position: absolute;
   width: 480px;
@@ -83,6 +90,7 @@ body {
   right: -340px;
   top: 65%;
 }
+/* 跟著滑鼠的光。 */
 .pointer-glow {
   position: absolute;
   inset: 0;
@@ -97,9 +105,11 @@ body {
 body.pointer-active .pointer-glow {
   opacity: 1;
 }
+/* 播放遊戲時不顯示。 */
 body.playing .ambient-scene {
   visibility: hidden;
 }
+/* 頁首在背景之上。 */
 .site-header {
   position: relative;
 }
@@ -111,6 +121,9 @@ body.playing .ambient-scene {
 .site-header nav a:hover {
   border-color: #69c4ff;
 }
+
+/* ---------- 首屏 ---------- */
+
 .hero {
   box-shadow:
     0 24px 70px #0004,
@@ -149,6 +162,7 @@ body.playing .ambient-scene {
   left: 85%;
   animation-delay: -3s;
 }
+/* 星星的呼吸動畫。 */
 @keyframes star-breathe {
   from {
     opacity: 0.25;
@@ -159,6 +173,9 @@ body.playing .ambient-scene {
     transform: translateY(-9px);
   }
 }
+
+/* ---------- 故事條 ---------- */
+
 .story-strip {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -182,6 +199,9 @@ body.playing .ambient-scene {
   letter-spacing: 1.9px;
   margin-bottom: 5px;
 }
+
+/* ---------- 心情推薦 ---------- */
+
 .mood-picker {
   display: flex;
   align-items: center;
@@ -236,6 +256,7 @@ body.playing .ambient-scene {
   border-color: #8dcfff;
   color: #fff;
 }
+/* 隨機推薦按鈕。 */
 .surprise-button {
   flex-shrink: 0;
   background: transparent;
@@ -248,12 +269,16 @@ body.playing .ambient-scene {
 .surprise-button span {
   margin-left: 7px;
 }
+/* 推薦結果。 */
 .mood-result {
   font-size: 12px;
   color: #99b8d1;
   min-height: 21px;
   margin: 12px 6px 24px;
 }
+
+/* ---------- 遊戲卡 ---------- */
+
 .game-card {
   position: relative;
   isolation: isolate;
@@ -282,12 +307,14 @@ body.playing .ambient-scene {
     0 0 0 1px #7ecbff33,
     0 8px 36px #41a4ff19;
 }
+/* 封面圖。 */
 .card-visual {
   aspect-ratio: 1.6;
 }
 .card-visual::after {
   background: linear-gradient(0deg, #091b35f2, #07132600 60%);
 }
+/* 封面文字。 */
 .cover-caption {
   position: absolute;
   z-index: 1;
@@ -326,6 +353,9 @@ body.playing .ambient-scene {
 .card-button {
   background: linear-gradient(100deg, #1a4265, #163654);
 }
+
+/* ---------- 小茜的房間 ---------- */
+
 .akane-room {
   display: grid;
   grid-template-columns: 0.85fr 1.15fr;
@@ -335,6 +365,7 @@ body.playing .ambient-scene {
   border-radius: 22px;
   background: linear-gradient(110deg, #122c4b, #0a1d34e8);
 }
+/* 肖像。 */
 .room-portrait {
   position: relative;
   min-height: 410px;
@@ -377,6 +408,7 @@ body.playing .ambient-scene {
   font-size: 45px;
   text-shadow: 0 0 22px #acdfff;
 }
+/* 介紹文字。 */
 .room-content {
   padding: 42px 45px;
 }
@@ -422,6 +454,9 @@ body.playing .ambient-scene {
 .welcome-note {
   background: linear-gradient(100deg, #0e2843c9, #0b1e3680);
 }
+
+/* ---------- 平板 ---------- */
+
 @media (max-width: 1100px) {
   .mood-picker {
     flex-wrap: wrap;
@@ -446,6 +481,9 @@ body.playing .ambient-scene {
     letter-spacing: 1.1px;
   }
 }
+
+/* ---------- 手機 ---------- */
+
 @media (max-width: 680px) {
   .site-header nav a[href="#about"] {
     display: none;
@@ -528,6 +566,9 @@ body.playing .ambient-scene {
     font-size: 27px;
   }
 }
+
+/* ---------- 觸控裝置：不顯示滑過效果 ---------- */
+
 @media (hover: none), (pointer: coarse) {
   .pointer-glow {
     display: none;
@@ -539,6 +580,9 @@ body.playing .ambient-scene {
     transform: none;
   }
 }
+
+/* ---------- 減少動態效果 ---------- */
+
 @media (prefers-reduced-motion: reduce) {
   .pointer-glow {
     display: none;

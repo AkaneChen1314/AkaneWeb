@@ -38,13 +38,16 @@
     speed: 9 + (i % 3) * 5,
   }));
 
+  // 雨夜天台：底圖、燈光、閃電與霧。
   class Stage {
+    // 記下底圖。
     constructor(image) {
       this.image = image;
       this.sprites = new Map();
       this.reset();
     }
 
+    // 重設時間與燈光。
     reset() {
       this.time = 0;
       this.nextBolt = 6 + Math.random() * 6;
@@ -71,6 +74,7 @@
       return canvas;
     }
 
+    // 畫一團光。
     glow(ctx, color, x, y, rx, ry, alpha) {
       ctx.globalAlpha = alpha;
       ctx.drawImage(this.light(color), x - rx, y - ry, rx * 2, ry * 2);
@@ -89,6 +93,7 @@
       };
     }
 
+    // 推進燈光閃爍與閃電。
     update(dt, calm) {
       this.time += dt;
       const t = this.time;
@@ -123,6 +128,7 @@
       return { age: 0, points };
     }
 
+    // 畫出整個背景。
     draw(ctx, calm) {
       const { time: t } = this;
       ctx.drawImage(this.image, 0, 0, W, H);
@@ -152,6 +158,7 @@
       }
 
       // 霧在欄杆後面慢慢飄
+      // 飄過的霧。
       for (const mist of MISTS) {
         const span = W + 2 * mist.size + 100;
         const x = ((mist.x + t * mist.speed) % span) - mist.size;
@@ -168,6 +175,7 @@
 
       // 路燈：光暈、照在牆上與地上的光
       const breath = calm ? 1 : 0.94 + 0.06 * Math.sin(t * 2.3);
+      // 路燈。
       for (const lamp of LAMPS) {
         const power = breath * (lamp.faulty ? this.flicker : 1);
         const { x, y, size } = lamp;
@@ -188,6 +196,7 @@
       );
 
       // 積水的波光
+      // 地上的積水反光。
       if (!calm)
         for (const [i, [x, y, size, color]] of PUDDLES.entries()) {
           const a = 0.05 + 0.045 * Math.sin(t * 1.7 + i * 2.1);

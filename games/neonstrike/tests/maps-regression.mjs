@@ -1,11 +1,16 @@
+/*
+ * 測試：切換地圖時，場景、碰撞、補給、區域與敵人都會重建。
+ */
 import assert from "node:assert/strict";
 import { createHarness } from "./test-harness.mjs";
 
+// 先建立港區。
 const h = createHarness();
 h.run("buildSelectedArena(0);");
 assert.equal(h.run("builtMap"), 0);
 assert.equal(h.run("pickups.length"), 16);
 assert.ok(h.run("scene.children.some(item=>item.name==='harbor-wayfinding')"));
+// 換成熔火工廠；舊地圖要移除。
 const old = h.run("arenaObjects[0]");
 assert.equal(h.run("setSelectedMap(1)"), true);
 assert.equal(h.storage.get("neonMap"), "1");
@@ -27,17 +32,33 @@ assert.equal(
 );
 assert.equal(
   h.run(
-    "pickups.every(item=>!collisionBoxes.some(box=>bodyOverlapsCollider(box,item.root.position.x,item.root.position.z,.35,.15,1.4)))",
+    `
+      pickups.every(
+        (item) =>
+          !collisionBoxes.some((box) =>
+            bodyOverlapsCollider(
+              box,
+              item.root.position.x,
+              item.root.position.z,
+              0.35,
+              0.15,
+              1.4,
+            ),
+          ),
+      );
+    `,
   ),
   true,
   "all supply placements remain accessible",
 );
+// 來回切換不會留下舊資料。
 h.run("setSelectedMap(0);prepareSelectedMap();");
 assert.equal(h.run("builtMap"), 0);
 assert.ok(h.run("scene.children.some(item=>item.name==='harbor-wayfinding')"));
 h.run("setSelectedMap(1);prepareSelectedMap();");
 assert.equal(h.run("pickups.length"), 16);
 assert.equal(h.run("explosiveBarrels.length"), 6);
+// 敵人出生在可以走的位置。
 h.run("matchTotalEnemies=12;spawnEnemies(12);");
 assert.equal(h.run("enemies.length"), 12);
 assert.equal(
@@ -47,6 +68,7 @@ assert.equal(
   true,
 );
 assert.equal(h.run("setSelectedMap(99)"), false);
+// 戰鬥中不能換地圖。
 h.run("gameState='playing';");
 assert.equal(
   h.run("setSelectedMap(0)"),

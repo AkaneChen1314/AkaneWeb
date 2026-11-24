@@ -16,6 +16,7 @@
       content="百億炒股人生 1.2：跟著手指學會買股，體驗反轉、假斷線、債務與健康崩壞的虛構人生遊戲。"
     />
     <title>百億炒股人生 1.2｜再拚一次？</title>
+    <!-- 圖示與樣式。 -->
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ffdc66'/%3E%3Cpath d='M6 9l7 5 5-2 8 12M20 24h6v-6' stroke='%230b1020' stroke-width='3' fill='none'/%3E%3C/svg%3E"
@@ -24,6 +25,7 @@
       rel="stylesheet"
       href="styles.css?v=20261104-blueworld-r14-source"
     />
+    <!-- 程式：壓縮工具（存檔用）、遊戲規則、畫面。順序不要更動。 -->
     <script
       src="vendor/pako.js"
       defer
@@ -36,6 +38,7 @@
       src="app.js?v=20261104-blueworld-r14-source"
       defer
     ></script>
+    <!-- 返回遊戲館的共用樣式、程式與字型。 -->
     <link
       rel="stylesheet"
       href="../../shared/portal.css?v=1.2-blueworld-r8"
@@ -48,6 +51,8 @@
   </head>
   <body>
     <div class="game-shell">
+      <!-- ===== 上方列：遊戲名稱與功能按鈕 ===== -->
+
       <header class="topbar">
         <a
           class="brand"
@@ -61,8 +66,9 @@
           <button
             id="sound-button"
             class="ghost"
-            >♪ 音效關</button
           >
+            ♪ 音效關
+          </button>
           <button
             id="motion-button"
             class="ghost"
@@ -80,15 +86,18 @@
           <button
             id="help-button"
             class="ghost"
-            >怎麼玩？</button
           >
+            怎麼玩？
+          </button>
         </div>
       </header>
       <main>
+        <!-- 玩家名稱與遊戲時間。 -->
         <div class="player-ribbon">
           <span>🎭 <b id="player-name">百億新手</b>的人生</span>
           <span class="ribbon-note">24 小時人生 · 每秒 5 分鐘</span>
         </div>
+        <!-- 目前的章節與日期。 -->
         <section class="life-hero">
           <div class="hero-copy">
             <span
@@ -110,6 +119,7 @@
             <small>最多 60 天，一路走到結局</small>
           </div>
         </section>
+        <!-- 資產總覽：總身家、現金、持有的東西、欠款與信譽。 -->
         <section class="money-dashboard">
           <article class="wealth-card">
             <div class="wealth-label">
@@ -144,6 +154,7 @@
             <small id="reputation-caption">訊息還沒有越過你的房門</small>
           </article>
         </section>
+        <!-- 手機的底部導覽。 -->
         <nav
           class="mobile-nav"
           aria-label="遊戲區域"
@@ -153,13 +164,18 @@
           <button data-jump="body">❤️ 身體</button>
           <button data-jump="holdings">💼 持有</button>
         </nav>
+        <!-- 狀態不好時的警告。 -->
         <div
           id="dread-banner"
           class="dread-banner"
           role="status"
           hidden
         ></div>
+
+        <!-- ===== 三欄版面：左邊人生、中間市場、右邊下單 ===== -->
+
         <div class="game-grid">
+          <!-- 左欄：角色與借款。 -->
           <aside class="life-column">
             <section class="panel character-panel">
               <div class="panel-title">
@@ -167,9 +183,11 @@
                 <button
                   id="health-help"
                   class="tiny-button"
-                  >看懂身體</button
                 >
+                  看懂身體
+                </button>
               </div>
+              <!-- 角色圖；點一下可以查看身體。 -->
               <div class="character-stage">
                 <button
                   id="avatar"
@@ -183,6 +201,7 @@
                   <p id="character-line">睡得好，覺得自己很會投資。</p>
                 </div>
               </div>
+              <!-- 血量與壓力。 -->
               <div class="meter">
                 <div>
                   <span>❤️ 身體健康</span>
@@ -209,6 +228,7 @@
               >
                 🧬 檢查我的身體 <span>部位圖鑑 ›</span>
               </button>
+              <!-- 身體部位清單。 -->
               <details class="body-inventory">
                 <summary>
                   身體清單 <span id="organ-summary">腎 2 / 2 · 角膜 2 / 2</span>
@@ -220,20 +240,24 @@
                 <p
                   class="body-caption"
                   id="body-caption"
-                  >兩顆腎，各自保留。</p
                 >
+                  兩顆腎，各自保留。
+                </p>
               </details>
+              <!-- 休息、打工、手機與遊戲館。 -->
               <div class="life-actions">
                 <button
                   id="rest-button"
                   class="soft"
-                  >🛌 休息一天</button
                 >
+                  🛌 休息一天
+                </button>
                 <button
                   id="work-button"
                   class="soft"
-                  >🧹 打工補錢</button
                 >
+                  🧹 打工補錢
+                </button>
                 <button
                   id="phone-button"
                   class="ghost"
@@ -243,13 +267,15 @@
                 <button
                   id="casino-button"
                   class="ghost"
-                  >🎰 深夜遊戲館</button
                 >
+                  🎰 深夜遊戲館
+                </button>
               </div>
               <p class="life-footnote">
                 身體、部件與金額皆是荒誕遊戲數值，非醫學或現實交易資訊。
               </p>
             </section>
+            <!-- 借款清單與還款。 -->
             <section class="panel lenders-panel">
               <div class="panel-title">
                 <h2>借條不是免費的錢</h2>
@@ -270,11 +296,13 @@
                 <button
                   id="repay-button"
                   class="ghost"
-                  >主動還款</button
                 >
+                  主動還款
+                </button>
               </div>
             </section>
           </aside>
+          <!-- 中欄：市場、持倉與新聞。 -->
           <div class="market-column">
             <section class="panel market-panel">
               <div class="panel-title">
@@ -282,15 +310,18 @@
                   <span class="section-kicker">第一步</span>
                   <h2>今天想把錢放哪裡？</h2>
                 </div>
+                <!-- 商品分類。 -->
                 <div class="pill-tabs">
                   <button
                     data-filter="stock"
                     class="active"
-                    >普通股票</button
                   >
+                    普通股票
+                  </button>
                   <button data-filter="risk">刺激館</button>
                 </div>
               </div>
+              <!-- 搜尋與篩選商品。 -->
               <div class="asset-discovery">
                 <label
                   class="sr-only"
@@ -315,10 +346,12 @@
                 <span id="asset-count">24 種人生陷阱</span>
                 <span>上下滑動看更多 ↓</span>
               </div>
+              <!-- 商品卡由程式產生。 -->
               <div
                 id="assets"
                 class="asset-cards"
               ></div>
+              <!-- 目前的價格與走勢說明。 -->
               <div class="price-story">
                 <div>
                   <span id="selected-category">半導體</span>
@@ -329,28 +362,33 @@
                   <span id="selected-change">今日 +0%</span>
                 </div>
               </div>
+              <!-- 要看商品的價格，還是自己的身家。 -->
               <div class="chart-tabs">
                 <div class="pill-tabs">
                   <button
                     data-chart="price"
                     class="active"
-                    >它的價格</button
                   >
+                    它的價格
+                  </button>
                   <button data-chart="wealth">我的身家</button>
                 </div>
                 <button
                   id="chart-help"
                   class="tiny-button"
-                  >線怎麼看？</button
                 >
+                  線怎麼看？
+                </button>
               </div>
+              <!-- 圖表的時間範圍與暫停。 -->
               <div class="tape-toolbar">
                 <div class="pill-tabs">
                   <button
                     data-period="day"
                     class="active"
-                    >當天 24 小時</button
                   >
+                    當天 24 小時
+                  </button>
                   <button data-period="five">近 5 天</button>
                   <button data-period="all">全部紀錄</button>
                 </div>
@@ -361,6 +399,7 @@
                   ⏸ 暫停行情
                 </button>
               </div>
+              <!-- 市場時鐘。 -->
               <div class="market-clock">
                 <span id="market-clock">● 第 1 天 00:00 · 全天行情</span>
                 <button
@@ -371,18 +410,21 @@
                   啟用視野輔助
                 </button>
               </div>
+              <!-- 走勢圖由程式繪製。 -->
               <div
                 id="chart"
                 class="chart"
                 tabindex="0"
                 aria-label="價格走勢；用滑鼠、手指或左右方向鍵查看時間及價格"
               ></div>
+              <!-- 回看過去的某一天。 -->
               <div class="archive-controls">
                 <button
                   id="chart-prev"
                   aria-label="回看前一天"
-                  >‹</button
                 >
+                  ‹
+                </button>
                 <label for="chart-day"
                   >回看 <b id="chart-day-label">第 1 天</b>
                   <input
@@ -397,13 +439,15 @@
                 <button
                   id="chart-next"
                   aria-label="回看後一天"
-                  >›</button
                 >
+                  ›
+                </button>
                 <button
                   id="chart-live"
                   class="tiny-button"
-                  >回到現在</button
                 >
+                  回到現在
+                </button>
               </div>
               <p
                 class="chart-hint"
@@ -422,6 +466,7 @@
                 class="asset-note"
               ></div>
             </section>
+            <!-- 持倉、人生紀錄與成就。 -->
             <section class="panel holdings-panel">
               <div class="panel-title">
                 <div class="pill-tabs">
@@ -437,11 +482,13 @@
                 <button
                   id="close-all"
                   class="tiny-button"
-                  >全部賣掉</button
                 >
+                  全部賣掉
+                </button>
               </div>
               <div id="portfolio-content"></div>
             </section>
+            <!-- 市場消息。 -->
             <section class="panel news-panel">
               <div class="panel-title">
                 <h2>📣 今日人生消息</h2>
@@ -450,6 +497,7 @@
               <div id="news"></div>
             </section>
           </div>
+          <!-- 右欄：下單。 -->
           <aside class="action-column">
             <section class="panel order-panel">
               <div class="panel-title">
@@ -463,6 +511,7 @@
                   >天頂晶圓</span
                 >
               </div>
+              <!-- 步驟一：看漲或看跌。 -->
               <div class="step-label"><span>1</span>你覺得價格會怎樣？</div>
               <div class="direction-choices">
                 <button
@@ -479,6 +528,7 @@
                   <small>放大模式才能猜跌</small>
                 </button>
               </div>
+              <!-- 步驟二：投入多少錢。 -->
               <div class="step-label"><span>2</span>這次拿多少錢出來？</div>
               <div class="amount-field">
                 <label
@@ -496,12 +546,14 @@
                 />
                 <span>億</span>
               </div>
+              <!-- 快速金額。 -->
               <div class="budget-presets">
                 <button data-budget="1">1 億</button>
                 <button data-percent="0.1">口袋 10%</button>
                 <button data-percent="0.5">一半</button>
                 <button data-percent="1">全部梭哈</button>
               </div>
+              <!-- 步驟三：商品種類與倍數。 -->
               <div class="step-label"><span>3</span>要玩多刺激？</div>
               <div class="product-choices">
                 <button
@@ -538,6 +590,7 @@
                   <span>100 倍</span>
                 </div>
               </div>
+              <!-- 下單前的預覽與風險提醒。 -->
               <div
                 id="order-preview"
                 class="order-preview"
@@ -549,12 +602,14 @@
               <button
                 id="trade-button"
                 class="primary"
-                >買進 · 猜會漲</button
               >
+                買進 · 猜會漲
+              </button>
               <p class="order-foot">
                 買完盤中行情持續跳動，可以隨時賣出。按「過一天」會結算剩餘行情與帳單。
               </p>
             </section>
+            <!-- 誘惑卡片：風險很高的捷徑。 -->
             <section class="temptation-card">
               <span>🪤 再拚一次？</span>
               <h2>這次應該<br />不會又輸吧。</h2>
@@ -571,6 +626,7 @@
             </section>
           </aside>
         </div>
+        <!-- 頁尾與說明。 -->
         <footer class="footer">
           <p>反炒股黑色幽默遊戲。所有玩法刻意走向破產；無真錢、無真實行情。</p>
           <div>
@@ -582,6 +638,9 @@
         </footer>
       </main>
     </div>
+
+    <!-- ===== 底部操作列與覆蓋畫面 ===== -->
+
     <div class="session-bar">
       <div>
         <b id="session-state">第 1 天，還沒開始結算</b>
@@ -591,8 +650,9 @@
         <button
           id="skip-button"
           class="soft"
-          >快轉 5 天</button
         >
+          快轉 5 天
+        </button>
         <button
           id="next-button"
           class="primary"
@@ -601,10 +661,12 @@
         </button>
       </div>
     </div>
+    <!-- 低血量的氣氛。 -->
     <div
       id="dread-overlay"
       aria-hidden="true"
     ></div>
+    <!-- 成交與獲利的回饋動畫。 -->
     <div
       id="feedback"
       class="feedback"
@@ -618,6 +680,7 @@
         <p id="feedback-caption"></p>
       </div>
     </div>
+    <!-- 新手教學：圈出目標、手指與說明。 -->
     <div
       id="coach-layer"
       class="coach-layer"
@@ -631,8 +694,9 @@
         id="guide-hand"
         class="guide-hand"
         aria-hidden="true"
-        >👆</div
       >
+        👆
+      </div>
       <section
         id="coach-card"
         class="coach-card"
@@ -655,6 +719,7 @@
         </button>
       </section>
     </div>
+    <!-- 故障效果的畫面。 -->
     <div
       id="glitch-screen"
       class="glitch-screen"
@@ -684,12 +749,14 @@
         </button>
       </div>
     </div>
+    <!-- 提示訊息。 -->
     <div
       id="toast-container"
       class="toasts"
       role="status"
       aria-live="polite"
     ></div>
+    <!-- 共用視窗，內容由 app.js 填入。 -->
     <dialog
       id="modal"
       aria-labelledby="modal-title"

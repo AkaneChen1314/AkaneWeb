@@ -24,7 +24,10 @@ const Tex = {
 
   // 整數座標 → 0~1 的固定亂數
   hash(ix, iy, seed) {
-    let h = Math.imul(ix, 374761393) + Math.imul(iy, 668265263) + Math.imul(seed, 982451653);
+    let h =
+      Math.imul(ix, 374761393) +
+      Math.imul(iy, 668265263) +
+      Math.imul(seed, 982451653);
     h = Math.imul(h ^ (h >>> 13), 1274126177);
     h ^= h >>> 16;
     return (h >>> 0) / 4294967296;
@@ -92,7 +95,8 @@ const Tex = {
     const octx = out.getContext("2d");
     const img = octx.createImageData(size, size);
     const dst = img.data;
-    const h = (x, y) => src[(((y + size) % size) * size + ((x + size) % size)) * 4] / 255;
+    const h = (x, y) =>
+      src[(((y + size) % size) * size + ((x + size) % size)) * 4] / 255;
 
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
@@ -100,9 +104,9 @@ const Tex = {
         const dy = (h(x, y - 1) - h(x, y + 1)) * strength;
         const len = Math.hypot(dx, dy, 1);
         const i = (y * size + x) * 4;
-        dst[i] = (dx / len * 0.5 + 0.5) * 255;
-        dst[i + 1] = (-dy / len * 0.5 + 0.5) * 255;
-        dst[i + 2] = (1 / len * 0.5 + 0.5) * 255;
+        dst[i] = ((dx / len) * 0.5 + 0.5) * 255;
+        dst[i + 1] = ((-dy / len) * 0.5 + 0.5) * 255;
+        dst[i + 2] = ((1 / len) * 0.5 + 0.5) * 255;
         dst[i + 3] = 255;
       }
     }
@@ -133,7 +137,8 @@ const Tex = {
       const c = p.ctx;
       c.strokeStyle = "rgba(0,0,0,0.28)";
       c.lineWidth = 2;
-      for (let i = 0; i <= 2; i++) { // 接縫
+      for (let i = 0; i <= 2; i++) {
+        // 接縫
         c.beginPath();
         c.moveTo(0, (i * size) / 2);
         c.lineTo(size, (i * size) / 2);
@@ -146,8 +151,10 @@ const Tex = {
       const rnd = Util.seeded(5);
       c.strokeStyle = "rgba(0,0,0,0.22)";
       c.lineWidth = 1;
-      for (let i = 0; i < 9; i++) { // 裂紋
-        let x = rnd() * size, y = rnd() * size;
+      for (let i = 0; i < 9; i++) {
+        // 裂紋
+        let x = rnd() * size,
+          y = rnd() * size;
         c.beginPath();
         c.moveTo(x, y);
         for (let k = 0; k < 7; k++) {
@@ -166,21 +173,29 @@ const Tex = {
         const big = T.fbm(u, v, 3, 3, 31); // 大片的深淺
         const mid = T.fbm(u, v, 14, 2, 37); // 中等大小的斑駁
         const grain = T.hash(Math.floor(u * size), Math.floor(v * size), 7); // 一顆一顆的石子
-        return 0.6 + (big - 0.5) * 0.22 + (mid - 0.5) * 0.1 + (grain - 0.5) * 0.14;
+        return (
+          0.6 + (big - 0.5) * 0.22 + (mid - 0.5) * 0.1 + (grain - 0.5) * 0.14
+        );
       });
       const c = p.ctx;
       const rnd = Util.seeded(71);
-      for (let i = 0; i < 3; i++) { // 補丁：顏色略深的方塊，邊緣一圈填縫
-        const w = 70 + rnd() * 90, h = 50 + rnd() * 70;
-        const x = rnd() * (size - w), y = rnd() * (size - h);
+      for (let i = 0; i < 3; i++) {
+        // 補丁：顏色略深的方塊，邊緣一圈填縫
+        const w = 70 + rnd() * 90,
+          h = 50 + rnd() * 70;
+        const x = rnd() * (size - w),
+          y = rnd() * (size - h);
         c.fillStyle = `rgba(0,0,0,${0.07 + rnd() * 0.06})`;
         c.fillRect(x, y, w, h);
         c.strokeStyle = "rgba(0,0,0,0.3)";
         c.lineWidth = 2;
         c.strokeRect(x, y, w, h);
       }
-      for (let i = 0; i < 5; i++) { // 填縫的瀝青線：彎彎曲曲的深色粗線
-        let x = rnd() * size, y = rnd() * size, a = rnd() * 6.28;
+      for (let i = 0; i < 5; i++) {
+        // 填縫的瀝青線：彎彎曲曲的深色粗線
+        let x = rnd() * size,
+          y = rnd() * size,
+          a = rnd() * 6.28;
         c.strokeStyle = "rgba(0,0,0,0.32)";
         c.lineWidth = 2.5;
         c.beginPath();
@@ -195,8 +210,10 @@ const Tex = {
       }
       c.strokeStyle = "rgba(0,0,0,0.22)";
       c.lineWidth = 1;
-      for (let i = 0; i < 8; i++) { // 細裂紋
-        let x = rnd() * size, y = rnd() * size;
+      for (let i = 0; i < 8; i++) {
+        // 細裂紋
+        let x = rnd() * size,
+          y = rnd() * size;
         c.beginPath();
         c.moveTo(x, y);
         for (let k = 0; k < 6; k++) {
@@ -217,25 +234,33 @@ const Tex = {
       });
       const c = p.ctx;
       const half = size / 2;
-      for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) {
-        c.strokeStyle = "rgba(0,0,0,0.45)";
-        c.lineWidth = 3;
-        c.strokeRect(i * half + 1.5, j * half + 1.5, half - 3, half - 3);
-        c.strokeStyle = "rgba(255,255,255,0.18)";
-        c.lineWidth = 1;
-        c.strokeRect(i * half + 5, j * half + 5, half - 10, half - 10);
-        c.fillStyle = "rgba(0,0,0,0.5)";
-        for (const [rx, ry] of [[14, 14], [half - 14, 14], [14, half - 14], [half - 14, half - 14]]) {
-          // 鉚釘
-          c.beginPath();
-          c.arc(i * half + rx, j * half + ry, 3, 0, 7);
-          c.fill();
+      for (let i = 0; i < 2; i++)
+        for (let j = 0; j < 2; j++) {
+          c.strokeStyle = "rgba(0,0,0,0.45)";
+          c.lineWidth = 3;
+          c.strokeRect(i * half + 1.5, j * half + 1.5, half - 3, half - 3);
+          c.strokeStyle = "rgba(255,255,255,0.18)";
+          c.lineWidth = 1;
+          c.strokeRect(i * half + 5, j * half + 5, half - 10, half - 10);
+          c.fillStyle = "rgba(0,0,0,0.5)";
+          for (const [rx, ry] of [
+            [14, 14],
+            [half - 14, 14],
+            [14, half - 14],
+            [half - 14, half - 14],
+          ]) {
+            // 鉚釘
+            c.beginPath();
+            c.arc(i * half + rx, j * half + ry, 3, 0, 7);
+            c.fill();
+          }
         }
-      }
       const rnd = Util.seeded(9);
       c.strokeStyle = "rgba(255,255,255,0.14)";
-      for (let i = 0; i < 40; i++) { // 刮痕
-        const x = rnd() * size, y = rnd() * size;
+      for (let i = 0; i < 40; i++) {
+        // 刮痕
+        const x = rnd() * size,
+          y = rnd() * size;
         c.beginPath();
         c.moveTo(x, y);
         c.lineTo(x + (rnd() - 0.5) * 60, y + (rnd() - 0.5) * 14);
@@ -246,16 +271,21 @@ const Tex = {
 
     // 科技地磚：格線 + 內框
     tiles(T, size) {
-      const p = T._paint(size, (u, v) => 0.7 + (T.fbm(u, v, 12, 3, 51) - 0.5) * 0.16);
+      const p = T._paint(
+        size,
+        (u, v) => 0.7 + (T.fbm(u, v, 12, 3, 51) - 0.5) * 0.16,
+      );
       const c = p.ctx;
       const cell = size / 4;
-      for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {
-        c.strokeStyle = "rgba(0,0,0,0.5)";
-        c.lineWidth = 3;
-        c.strokeRect(i * cell + 1.5, j * cell + 1.5, cell - 3, cell - 3);
-        c.fillStyle = "rgba(255,255,255,0.06)";
-        if ((i + j) % 2 === 0) c.fillRect(i * cell + 8, j * cell + 8, cell - 16, cell - 16);
-      }
+      for (let i = 0; i < 4; i++)
+        for (let j = 0; j < 4; j++) {
+          c.strokeStyle = "rgba(0,0,0,0.5)";
+          c.lineWidth = 3;
+          c.strokeRect(i * cell + 1.5, j * cell + 1.5, cell - 3, cell - 3);
+          c.fillStyle = "rgba(255,255,255,0.06)";
+          if ((i + j) % 2 === 0)
+            c.fillRect(i * cell + 8, j * cell + 8, cell - 16, cell - 16);
+        }
       return p;
     },
 
@@ -273,14 +303,20 @@ const Tex = {
     snow(T, size) {
       return T._paint(size, (u, v) => {
         const soft = T.fbm(u, v, 5, 4, 71);
-        const spark = T.hash(Math.floor(u * size), Math.floor(v * size), 13) > 0.985 ? 0.12 : 0;
+        const spark =
+          T.hash(Math.floor(u * size), Math.floor(v * size), 13) > 0.985
+            ? 0.12
+            : 0;
         return 0.84 + (soft - 0.5) * 0.2 + spark;
       });
     },
 
     // 砂岩磚牆：錯位的磚塊
     brick(T, size) {
-      const p = T._paint(size, (u, v) => 0.74 + (T.fbm(u, v, 8, 4, 81) - 0.5) * 0.26);
+      const p = T._paint(
+        size,
+        (u, v) => 0.74 + (T.fbm(u, v, 8, 4, 81) - 0.5) * 0.26,
+      );
       const c = p.ctx;
       const rows = 8;
       const rh = size / rows;
@@ -314,9 +350,12 @@ const Tex = {
       });
       const c = p.ctx;
       const rnd = Util.seeded(17);
-      for (let i = 0; i < 140; i++) { // 刮痕：亮的細線（磨掉漆露出底材）
-        const x = rnd() * size, y = rnd() * size;
-        const len = 6 + rnd() * 34, a = rnd() * Math.PI;
+      for (let i = 0; i < 140; i++) {
+        // 刮痕：亮的細線（磨掉漆露出底材）
+        const x = rnd() * size,
+          y = rnd() * size;
+        const len = 6 + rnd() * 34,
+          a = rnd() * Math.PI;
         c.strokeStyle = `rgba(255,255,255,${0.08 + rnd() * 0.18})`;
         c.lineWidth = rnd() < 0.8 ? 1 : 2;
         c.beginPath();
@@ -324,7 +363,8 @@ const Tex = {
         c.lineTo(x + Math.cos(a) * len, y + Math.sin(a) * len);
         c.stroke();
       }
-      for (let i = 0; i < 24; i++) { // 小凹痕與污點
+      for (let i = 0; i < 24; i++) {
+        // 小凹痕與污點
         c.fillStyle = `rgba(0,0,0,${0.08 + rnd() * 0.12})`;
         c.beginPath();
         c.arc(rnd() * size, rnd() * size, 2 + rnd() * 6, 0, 7);
@@ -335,19 +375,31 @@ const Tex = {
 
     // 科幻面板：大片平整的白色面板、凹槽接縫、小散熱孔與編號條
     panel(T, size) {
-      const p = T._paint(size, (u, v) => 0.86 + (T.fbm(u, v, 6, 3, 121) - 0.5) * 0.06);
+      const p = T._paint(
+        size,
+        (u, v) => 0.86 + (T.fbm(u, v, 6, 3, 121) - 0.5) * 0.06,
+      );
       const c = p.ctx;
       const rnd = Util.seeded(33);
-      const cells = [[0, 0, 0.62, 0.5], [0.62, 0, 0.38, 0.5], [0, 0.5, 0.38, 0.5], [0.38, 0.5, 0.62, 0.5]];
+      const cells = [
+        [0, 0, 0.62, 0.5],
+        [0.62, 0, 0.38, 0.5],
+        [0, 0.5, 0.38, 0.5],
+        [0.38, 0.5, 0.62, 0.5],
+      ];
       for (const [x, y, w, h] of cells) {
-        const X = x * size, Y = y * size, W = w * size, H = h * size;
+        const X = x * size,
+          Y = y * size,
+          W = w * size,
+          H = h * size;
         c.strokeStyle = "rgba(0,0,0,0.5)"; // 凹槽
         c.lineWidth = 4;
         c.strokeRect(X + 2, Y + 2, W - 4, H - 4);
         c.strokeStyle = "rgba(255,255,255,0.35)"; // 凹槽邊緣的反光
         c.lineWidth = 1;
         c.strokeRect(X + 5, Y + 5, W - 10, H - 10);
-        if (rnd() < 0.6) { // 散熱孔
+        if (rnd() < 0.6) {
+          // 散熱孔
           for (let i = 0; i < 6; i++) {
             c.fillStyle = "rgba(0,0,0,0.45)";
             c.fillRect(X + 18, Y + 18 + i * 9, W * 0.3, 4);
@@ -368,7 +420,8 @@ const Tex = {
       });
       const c = p.ctx;
       const rnd = Util.seeded(41);
-      for (let i = 0; i < 30; i++) { // 坑洞
+      for (let i = 0; i < 30; i++) {
+        // 坑洞
         c.fillStyle = `rgba(0,0,0,${0.15 + rnd() * 0.25})`;
         c.beginPath();
         c.arc(rnd() * size, rnd() * size, 2 + rnd() * 7, 0, 7);
@@ -386,8 +439,11 @@ const Tex = {
       });
       const c = p.ctx;
       const rnd = Util.seeded(57);
-      for (let i = 0; i < 16; i++) { // 會分岔的大裂縫
-        let x = rnd() * size, y = rnd() * size, a = rnd() * 6.28;
+      for (let i = 0; i < 16; i++) {
+        // 會分岔的大裂縫
+        let x = rnd() * size,
+          y = rnd() * size,
+          a = rnd() * 6.28;
         c.strokeStyle = "rgba(0,0,0,0.6)";
         c.lineWidth = 1 + rnd() * 2.5;
         c.beginPath();
@@ -408,14 +464,27 @@ const Tex = {
       const p = T._paint(size, (u, v) => {
         const dune = T.fbm(u, v, 3, 4, 161);
         const ripple = Math.sin((u + dune * 0.6) * Math.PI * 2 * 14) * 0.05;
-        return 0.7 + (dune - 0.5) * 0.25 + ripple + (T.hash(Math.floor(u * size), Math.floor(v * size), 5) - 0.5) * 0.08;
+        return (
+          0.7 +
+          (dune - 0.5) * 0.25 +
+          ripple +
+          (T.hash(Math.floor(u * size), Math.floor(v * size), 5) - 0.5) * 0.08
+        );
       });
       const c = p.ctx;
       const rnd = Util.seeded(63);
       for (let i = 0; i < 70; i++) {
         c.fillStyle = `rgba(0,0,0,${0.1 + rnd() * 0.2})`;
         c.beginPath();
-        c.ellipse(rnd() * size, rnd() * size, 1.5 + rnd() * 4, 1 + rnd() * 3, rnd() * 3, 0, 7);
+        c.ellipse(
+          rnd() * size,
+          rnd() * size,
+          1.5 + rnd() * 4,
+          1 + rnd() * 3,
+          rnd() * 3,
+          0,
+          7,
+        );
         c.fill();
       }
       return p;
@@ -423,7 +492,10 @@ const Tex = {
 
     // 六角形裝甲板
     hex(T, size) {
-      const p = T._paint(size, (u, v) => 0.8 + (T.fbm(u, v, 8, 3, 171) - 0.5) * 0.1);
+      const p = T._paint(
+        size,
+        (u, v) => 0.8 + (T.fbm(u, v, 8, 3, 171) - 0.5) * 0.1,
+      );
       const c = p.ctx;
       const r = size / 8;
       const hw = r * Math.sqrt(3);
@@ -445,6 +517,7 @@ const Tex = {
       return p;
     },
 
+    // 浪板：等距的直條紋加上髒污。
     ribbed(T, size) {
       return T._paint(size, (u, v) => {
         const rib = Math.sin(u * Math.PI * 2 * 16) * 0.5 + 0.5;
@@ -459,10 +532,26 @@ const Tex = {
     if (this.cache[name]) return this.cache[name];
     const size = 512;
     const painted = this.PAINTERS[name](this, size);
-    const strength = { metal: 2.2, tiles: 2.4, ribbed: 4.5, brick: 3, sand: 2.2, wear: 1.4, panel: 2.6, rust: 2.4, cracked: 3.2, seabed: 2.4, hex: 2.6 }[name] || 3;
+    const strength =
+      {
+        metal: 2.2,
+        tiles: 2.4,
+        ribbed: 4.5,
+        brick: 3,
+        sand: 2.2,
+        wear: 1.4,
+        panel: 2.6,
+        rust: 2.4,
+        cracked: 3.2,
+        seabed: 2.4,
+        hex: 2.6,
+      }[name] || 3;
     const entry = {
       map: this._toTexture(painted.canvas, true),
-      normalMap: this._toTexture(this._normalFrom(painted.canvas, strength), false),
+      normalMap: this._toTexture(
+        this._normalFrom(painted.canvas, strength),
+        false,
+      ),
     };
     this.cache[name] = entry;
     return entry;
@@ -475,7 +564,14 @@ const Tex = {
     const canvas = document.createElement("canvas");
     canvas.width = canvas.height = size;
     const ctx = canvas.getContext("2d");
-    const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+    const grad = ctx.createRadialGradient(
+      size / 2,
+      size / 2,
+      0,
+      size / 2,
+      size / 2,
+      size / 2,
+    );
     grad.addColorStop(0, "rgba(255,255,255,1)");
     grad.addColorStop(0.25, "rgba(255,255,255,0.75)");
     grad.addColorStop(0.6, "rgba(255,255,255,0.18)");
@@ -523,20 +619,34 @@ const Mats = {
   uvScale: {}, // 貼圖重複一次代表幾公尺（0 表示不使用世界座標貼圖）
 
   init() {
-    const std = (opt) => new THREE.MeshStandardMaterial({ vertexColors: true, ...opt });
+    const std = (opt) =>
+      new THREE.MeshStandardMaterial({ vertexColors: true, ...opt });
     this.kinds.paint = std({ roughness: 0.52, metalness: 0.3 });
     this.kinds.matte = std({ roughness: 0.92, metalness: 0.0 });
     this.kinds.metal = std({ roughness: 0.34, metalness: 0.8 });
     // 玻璃：很淡，紅點鏡的鏡片才不會霧霧的擋住視線
-    this.kinds.glass = std({ roughness: 0.05, metalness: 0.25, transparent: true, opacity: 0.14, depthWrite: false });
+    this.kinds.glass = std({
+      roughness: 0.05,
+      metalness: 0.25,
+      transparent: true,
+      opacity: 0.14,
+      depthWrite: false,
+    });
     // 建築玻璃：不受燈光影響（在很暗的地圖也看得到），透明度由反光條貼圖決定，
     // 沒有反光的地方約兩成不透明、反光條約四成。
     this.kinds.pane = new THREE.MeshBasicMaterial({
-      vertexColors: true, transparent: true, opacity: 0.42, depthWrite: false, alphaMap: this._paneTexture(),
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.42,
+      depthWrite: false,
+      alphaMap: this._paneTexture(),
     });
     this.uvScale.pane = 3; // 反光條每 3 公尺重複一次
     // 發光材質不受燈光影響，顏色可以超過 1（越大越亮、光暈越強）
-    this.kinds.glow = new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false });
+    this.kinds.glow = new THREE.MeshBasicMaterial({
+      vertexColors: true,
+      toneMapped: false,
+    });
     // 模型材質加上「使用痕跡」貼圖與微小的表面起伏
     const wear = Tex.get("wear");
     for (const k of ["paint", "matte", "metal"]) {
@@ -564,7 +674,11 @@ const Mats = {
     const ctx = canvas.getContext("2d");
     const img = ctx.createImageData(SIZE, SIZE);
     // 每道反光條：[位置 0~1, 寬度, 亮度]。一道寬而淡，兩道細而亮
-    const streaks = [[0.3, 0.07, 0.3], [0.44, 0.012, 0.5], [0.8, 0.018, 0.32]];
+    const streaks = [
+      [0.3, 0.07, 0.3],
+      [0.44, 0.012, 0.5],
+      [0.8, 0.018, 0.32],
+    ];
     for (let y = 0; y < SIZE; y++) {
       for (let x = 0; x < SIZE; x++) {
         const v = ((x + y) % SIZE) / SIZE;
@@ -647,6 +761,7 @@ class Builder {
     return this;
   }
 
+  // 還原到上一個原點。
   pop() {
     if (this.stack.length > 1) this.stack.pop();
     return this;
@@ -662,15 +777,30 @@ class Builder {
 
   /* ---------- 核心：把一個幾何體加入對應材質的資料桶 ---------- */
   add(geometry, o = {}) {
+    // 同一種材質的零件收在同一個桶子裡，最後合併成一個模型。
     const kind = o.m || "paint";
-    const bucket = (this.buckets[kind] ||= { pos: [], nor: [], uv: [], col: [], idx: [], count: 0 });
+    const bucket = (this.buckets[kind] ||= {
+      pos: [],
+      nor: [],
+      uv: [],
+      col: [],
+      idx: [],
+      count: 0,
+    });
 
     // 這個零件自己的位置／旋轉／縮放
     const p = o.p || [0, 0, 0];
     const r = o.r || [0, 0, 0];
-    const s = o.s === undefined ? [1, 1, 1] : typeof o.s === "number" ? [o.s, o.s, o.s] : o.s;
+    const s =
+      o.s === undefined
+        ? [1, 1, 1]
+        : typeof o.s === "number"
+          ? [o.s, o.s, o.s]
+          : o.s;
     // o.q 可直接給四元數（limb() 用它把零件對準任意方向），否則用 o.r 的尤拉角
-    const rotation = o.q || Builder._q1.setFromEuler(Builder._e1.set(r[0], r[1], r[2], "XYZ"));
+    const rotation =
+      o.q || Builder._q1.setFromEuler(Builder._e1.set(r[0], r[1], r[2], "XYZ"));
+    // 先套用零件自己的位置、旋轉、縮放，再套用目前的原點。
     const local = Builder._m1.compose(
       Builder._v1.set(p[0], p[1], p[2]),
       rotation,
@@ -682,7 +812,9 @@ class Builder {
     // 顏色（轉成線性色彩空間）；發光材質預設更亮
     const color = Builder._c1.setHex(o.c ?? 0x808080);
     const bright = o.e ?? (kind === "glow" ? 1.8 : 1);
-    const cr = color.r * bright, cg = color.g * bright, cb = color.b * bright;
+    const cr = color.r * bright,
+      cg = color.g * bright,
+      cb = color.b * bright;
 
     const pos = geometry.attributes.position;
     const nor = geometry.attributes.normal;
@@ -690,14 +822,17 @@ class Builder {
     const v = Builder._v3;
 
     // o.ao：依頂點在零件裡的高度調整亮度，最底下暗 ao、最上面不變
+    // ao：讓零件下緣稍微變暗，看起來更有份量。
     const ao = o.ao || 0;
-    let minY = 0, spanY = 1;
+    let minY = 0,
+      spanY = 1;
     if (ao) {
       geometry.computeBoundingBox();
       minY = geometry.boundingBox.min.y;
       spanY = Math.max(1e-6, geometry.boundingBox.max.y - minY);
     }
 
+    // 逐點加入位置、法線與頂點顏色。
     for (let i = 0; i < pos.count; i++) {
       const shade = ao ? 1 - ao * (1 - (pos.getY(i) - minY) / spanY) : 1;
       v.fromBufferAttribute(pos, i).applyMatrix4(world);
@@ -709,9 +844,11 @@ class Builder {
     }
 
     // 三角形索引要加上目前已有的頂點數
+    // 加入三角形索引；沒有索引的幾何體就依序編號。
     const index = geometry.index;
     if (index) {
-      for (let i = 0; i < index.count; i++) bucket.idx.push(index.getX(i) + bucket.count);
+      for (let i = 0; i < index.count; i++)
+        bucket.idx.push(index.getX(i) + bucket.count);
     } else {
       for (let i = 0; i < pos.count; i++) bucket.idx.push(i + bucket.count);
     }
@@ -729,11 +866,22 @@ class Builder {
     if (scale) {
       // BoxGeometry 六個面的順序：+x -x +y -y +z -z，每面 4 個頂點
       const uv = geo.attributes.uv;
-      const dims = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
+      const dims = [
+        [d, h],
+        [d, h],
+        [w, d],
+        [w, d],
+        [w, h],
+        [w, h],
+      ];
       for (let f = 0; f < 6; f++) {
         for (let k = 0; k < 4; k++) {
           const i = f * 4 + k;
-          uv.setXY(i, (uv.getX(i) * dims[f][0]) / scale, (uv.getY(i) * dims[f][1]) / scale);
+          uv.setXY(
+            i,
+            (uv.getX(i) * dims[f][0]) / scale,
+            (uv.getY(i) * dims[f][1]) / scale,
+          );
         }
       }
     }
@@ -757,14 +905,22 @@ class Builder {
       for (let a = 0; a < 3; a++) {
         // 把均勻分布的格點重新排到「平面邊界」上：±half/2 → ±(half - r)
         const t = p[a] / half[a]; // -1, -0.5, 0, 0.5, 1
-        if (Math.abs(Math.abs(t) - 0.5) < 0.01) p[a] = Math.sign(t) * (half[a] - r);
+        if (Math.abs(Math.abs(t) - 0.5) < 0.01)
+          p[a] = Math.sign(t) * (half[a] - r);
         inner[a] = Util.clamp(p[a], -(half[a] - r), half[a] - r);
       }
       // 從內縮的方塊往外推 r，轉角就會變圓
-      const dx = p[0] - inner[0], dy = p[1] - inner[1], dz = p[2] - inner[2];
+      const dx = p[0] - inner[0],
+        dy = p[1] - inner[1],
+        dz = p[2] - inner[2];
       const len = Math.hypot(dx, dy, dz);
       if (len > 1e-6) {
-        pos.setXYZ(i, inner[0] + (dx / len) * r, inner[1] + (dy / len) * r, inner[2] + (dz / len) * r);
+        pos.setXYZ(
+          i,
+          inner[0] + (dx / len) * r,
+          inner[1] + (dy / len) * r,
+          inner[2] + (dz / len) * r,
+        );
         nor.setXYZ(i, dx / len, dy / len, dz / len);
       }
     }
@@ -773,11 +929,22 @@ class Builder {
 
   // 圓柱（rTop ≠ rBot 時是圓錐台）；o.seg 是圓周分段數
   cyl(rTop, rBot, h, o = {}) {
-    return this.add(new THREE.CylinderGeometry(rTop, rBot, h, o.seg || 14, 1, !!o.open), o);
+    return this.add(
+      new THREE.CylinderGeometry(rTop, rBot, h, o.seg || 14, 1, !!o.open),
+      o,
+    );
   }
 
+  // 球體。
   sphere(r, o = {}) {
-    return this.add(new THREE.SphereGeometry(r, o.seg || 14, Math.max(6, Math.round((o.seg || 14) * 0.7))), o);
+    return this.add(
+      new THREE.SphereGeometry(
+        r,
+        o.seg || 14,
+        Math.max(6, Math.round((o.seg || 14) * 0.7)),
+      ),
+      o,
+    );
   }
 
   cone(r, h, o = {}) {
@@ -786,7 +953,10 @@ class Builder {
 
   // 圓環：R 環半徑、tube 管粗；o.arc 可以只做一段弧
   torus(R, tube, o = {}) {
-    return this.add(new THREE.TorusGeometry(R, tube, 8, o.seg || 20, o.arc || Math.PI * 2), o);
+    return this.add(
+      new THREE.TorusGeometry(R, tube, 8, o.seg || 20, o.arc || Math.PI * 2),
+      o,
+    );
   }
 
   // 膠囊（兩端圓頭的圓柱），len 是中段長度
@@ -797,8 +967,13 @@ class Builder {
   // 多邊形柱體：points 是 [[x,y],...] 的輪廓，沿 Z 軸拉出 depth 厚度（置中）
   // 用來做槍托、握把這類不規則側面形狀
   prism(points, depth, o = {}) {
-    const shape = new THREE.Shape(points.map(([x, y]) => new THREE.Vector2(x, y)));
-    const geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false });
+    const shape = new THREE.Shape(
+      points.map(([x, y]) => new THREE.Vector2(x, y)),
+    );
+    const geo = new THREE.ExtrudeGeometry(shape, {
+      depth,
+      bevelEnabled: false,
+    });
     geo.translate(0, 0, -depth / 2);
     return this.add(geo, o);
   }
@@ -807,7 +982,10 @@ class Builder {
   limb(a, b, radius, o = {}) {
     const dir = new THREE.Vector3(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
     const len = dir.length();
-    const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+    const q = new THREE.Quaternion().setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      dir.normalize(),
+    );
     const mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
     if (o.flat) return this.cyl(radius, radius, len, { ...o, p: mid, q }); // 平頭（管線）
     return this.capsule(radius, len, { ...o, p: mid, q });

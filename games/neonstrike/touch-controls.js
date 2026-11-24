@@ -2,7 +2,7 @@
  * 檔案導讀：手機輸入轉接：每根手指用自己的 pointerId，分別管理移動、視角和操作鍵。
  * onLook／onAction 將觸控動作交回 main.js；暫停、取消或失焦時要清除輸入。
  */
-// Pointer IDs keep movement, aiming and action fingers independent.
+// 用指標編號分開移動、瞄準與動作的手指。
 export function supportsTouch(env = globalThis) {
   return (
     (env.navigator?.maxTouchPoints || 0) > 0 ||
@@ -10,6 +10,7 @@ export function supportsTouch(env = globalThis) {
   );
 }
 
+// 建立觸控操作，回傳移動量與控制方法。
 export function createTouchControls({
   root,
   canvas,
@@ -30,6 +31,7 @@ export function createTouchControls({
     sprint: false,
   };
   env.document.body.classList.toggle("neon-touch", state.enabled);
+  // 依螢幕大小調整按鈕比例。
   function updateScale() {
     const width = env.innerWidth || 1,
       height = env.innerHeight || 1;
@@ -45,16 +47,19 @@ export function createTouchControls({
   updateScale();
   env.addEventListener("resize", updateScale);
 
+  // 按鈕的按下狀態。
   function press(button, active) {
     button.classList.toggle("pressed", active);
     if (["aim", "sprint"].includes(button.dataset.touchAction))
       button.setAttribute("aria-pressed", String(active));
   }
+  // 搖桿回到中間。
   function centerMove() {
     state.moveX = state.moveY = 0;
     knob.style.transform = "translate(0px, 0px)";
     pad.classList.remove("pressed");
   }
+  // 手指離開。
   function release(id, cancelled = false) {
     const pointer = pointers.get(id);
     if (!pointer) return;
@@ -69,9 +74,10 @@ export function createTouchControls({
       if (pointer.node.hasPointerCapture?.(id))
         pointer.node.releasePointerCapture(id);
     } catch (_) {
-      /* Already cancelled by the browser. */
+      // 瀏覽器已經取消這個指標。
     }
   }
+  // 放開所有手指。
   function reset() {
     [...pointers.keys()].forEach((id) => release(id, true));
     centerMove();
@@ -81,6 +87,7 @@ export function createTouchControls({
     onAction("grenade-cancel");
     buttons.forEach((button) => press(button, false));
   }
+  // 手指移動。
   function move(event) {
     const pointer = pointers.get(event.pointerId);
     if (!pointer) return;
@@ -104,7 +111,9 @@ export function createTouchControls({
       pointer.y = event.clientY;
     }
   }
+  // 綁定一個按鈕或區域。
   function bind(node, kind) {
+    // 按下。
     node.addEventListener(
       "pointerdown",
       (event) => {
@@ -127,13 +136,13 @@ export function createTouchControls({
         try {
           node.setPointerCapture(event.pointerId);
         } catch (_) {
-          /* Window release remains a fallback. */
+          // 視窗上的放開當作備援。
         }
         if (kind === "move") {
           pad.classList.add("pressed");
           move(event);
         } else if (kind === "look") {
-          /* A second finger can fire while this one looks. */
+          // 一隻手指轉視角時，另一隻可以開火。
         } else if (kind === "aim" || kind === "sprint") {
           const active = node.getAttribute("aria-pressed") !== "true";
           press(node, active);
@@ -164,6 +173,7 @@ export function createTouchControls({
   env.document.addEventListener("visibilitychange", () => {
     if (env.document.hidden) reset();
   });
+  // 螢幕轉向就暫停。
   env.addEventListener("orientationchange", () => {
     reset();
     if (playing) onAction("pause");
@@ -171,6 +181,7 @@ export function createTouchControls({
   root.hidden = true;
   return Object.assign(state, {
     reset,
+    // 遊戲進行中才顯示觸控按鈕。
     setPlaying(active) {
       active = Boolean(active && state.enabled);
       if (active === playing) return;
@@ -179,6 +190,7 @@ export function createTouchControls({
       env.document.body.classList.toggle("neon-touch-playing", active);
       if (!active) reset();
     },
+    // 丟手榴彈時顯示取消鈕。
     setGrenadePreview(active) {
       root.querySelector('[data-touch-action="grenade-cancel"]').hidden =
         !active;

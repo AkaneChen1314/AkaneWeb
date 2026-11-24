@@ -1,24 +1,37 @@
+/*
+ * 測試：低畫面更新率、暫停、碰撞、特效數量與繪製錯誤的處理。
+ */
 import assert from "node:assert/strict";
 import { createHarness, THREE } from "./test-harness.mjs";
 
 const cases = [];
+// 登記一項測試。
 const test = (name, execute) => cases.push({ name, execute });
+// 兩個數字要夠接近。
 const close = (actual, expected, label, tolerance = 1e-8) =>
   assert.ok(
     Math.abs(actual - expected) <= tolerance,
     `${label}: ${actual} != ${expected}`,
   );
 
+// 10 FPS 時會分成幾小步，戰鬥時間不會少算。
 test("10 FPS consumes elapsed combat time in bounded active substeps", () => {
   const h = createHarness();
   h.installFrameStubs();
   h.run(`
-    let consumed=0,bossConsumed=0,largestStep=0;
-    updateCombatTimers=dt=>consumed+=dt;
-    updateBossAttacks=dt=>bossConsumed+=dt;
-    updatePlayer=dt=>largestStep=Math.max(largestStep,dt);
-    clock={getDelta(){return .1;}};gameState='playing';
-    for(let i=0;i<18;i++)animate(1000+i*100);
+    let consumed = 0,
+      bossConsumed = 0,
+      largestStep = 0;
+    updateCombatTimers = (dt) => (consumed += dt);
+    updateBossAttacks = (dt) => (bossConsumed += dt);
+    updatePlayer = (dt) => (largestStep = Math.max(largestStep, dt));
+    clock = {
+      getDelta() {
+        return 0.1;
+      },
+    };
+    gameState = "playing";
+    for (let i = 0; i < 18; i++) animate(1000 + i * 100);
   `);
   close(h.run("consumed"), 1.8, "combat time");
   close(h.run("bossConsumed"), 1.8, "Boss attack time");
@@ -28,17 +41,37 @@ test("10 FPS consumes elapsed combat time in bounded active substeps", () => {
   );
 });
 
+// 10 FPS 時換彈與手榴彈引信的時間不變。
 test("real reload and grenade fuse retain their duration at 10 FPS", () => {
   const h = createHarness();
   h.run("const liveGrenadeUpdate=updateGrenades;");
   h.installFrameStubs();
   h.run(`
-    let detonations=0;updateGrenades=liveGrenadeUpdate;explodeBarrel=()=>detonations++;
-    updateBossAttacks=()=>{};clock={getDelta(){return .1;}};gameState='playing';
-    ammo=0;reserve=30;reloading=true;reloadDuration=1.55;reloadRemaining=1.55;
-    const frag=createGrenadeModel();scene.add(frag);
-    grenades.push({mesh:frag,motion:createGrenadeMotion({x:0,y:1.68,z:0},{x:0,y:0,z:-1})});
-    for(let i=0;i<17;i++)animate(1000+i*100);
+    let detonations = 0;
+    updateGrenades = liveGrenadeUpdate;
+    explodeBarrel = () => detonations++;
+    updateBossAttacks = () => {};
+    clock = {
+      getDelta() {
+        return 0.1;
+      },
+    };
+    gameState = "playing";
+    ammo = 0;
+    reserve = 30;
+    reloading = true;
+    reloadDuration = 1.55;
+    reloadRemaining = 1.55;
+    const frag = createGrenadeModel();
+    scene.add(frag);
+    grenades.push({
+      mesh: frag,
+      motion: createGrenadeMotion(
+        { x: 0, y: 1.68, z: 0 },
+        { x: 0, y: 0, z: -1 },
+      ),
+    });
+    for (let i = 0; i < 17; i++) animate(1000 + i * 100);
   `);
   assert.equal(h.run("ammo"), 30);
   assert.equal(h.run("reserve"), 0);
@@ -58,14 +91,26 @@ test("real reload and grenade fuse retain their duration at 10 FPS", () => {
   assert.equal(h.run("grenades.length"), 0);
 });
 
+// 暫停時換彈、手榴彈與首領攻擊都不會前進。
 test("paused frames cannot advance reload, grenade or Boss attack simulation", () => {
   const h = createHarness();
   h.installFrameStubs();
   h.run(`
-    let grenadeElapsed=0,bossElapsed=0;
-    updateGrenades=dt=>grenadeElapsed+=dt;updateBossAttacks=dt=>bossElapsed+=dt;
-    clock={getDelta(){return .1;}};gameState='paused';reloading=true;reloadDuration=1.55;reloadRemaining=1.3;abilityCooldown=12;
-    for(let i=0;i<100;i++)animate(1000+i*100);
+    let grenadeElapsed = 0,
+      bossElapsed = 0;
+    updateGrenades = (dt) => (grenadeElapsed += dt);
+    updateBossAttacks = (dt) => (bossElapsed += dt);
+    clock = {
+      getDelta() {
+        return 0.1;
+      },
+    };
+    gameState = "paused";
+    reloading = true;
+    reloadDuration = 1.55;
+    reloadRemaining = 1.3;
+    abilityCooldown = 12;
+    for (let i = 0; i < 100; i++) animate(1000 + i * 100);
   `);
   assert.equal(h.run("reloadRemaining"), 1.3);
   assert.equal(h.run("abilityCooldown"), 12);
@@ -73,14 +118,27 @@ test("paused frames cannot advance reload, grenade or Boss attack simulation", (
   assert.equal(h.run("bossElapsed"), 0);
 });
 
+// 畫面卡住時會安全暫停，卡住的時間不算進任務。
 test("a stalled frame pauses safely and excludes the stall from mission clocks", () => {
   const h = createHarness();
   h.installFrameStubs();
   h.setNow(1600);
   h.run(`
-    gameState='playing';gameStart=1000;matchDeadline=181000;lastKillAt=900;
-    speedBoostUntil=7000;damageShieldUntil=8000;reloading=true;reloadDuration=1.55;reloadRemaining=1;
-    clock={getDelta(){return .6;}};animate(1600);
+    gameState = "playing";
+    gameStart = 1000;
+    matchDeadline = 181000;
+    lastKillAt = 900;
+    speedBoostUntil = 7000;
+    damageShieldUntil = 8000;
+    reloading = true;
+    reloadDuration = 1.55;
+    reloadRemaining = 1;
+    clock = {
+      getDelta() {
+        return 0.6;
+      },
+    };
+    animate(1600);
   `);
   assert.equal(h.run("gameState"), "paused");
   assert.equal(h.run("pauseStarted"), 1000);
@@ -98,15 +156,28 @@ test("a stalled frame pauses safely and excludes the stall from mission clocks",
   assert.equal(h.run("damageShieldUntil"), 9100);
 });
 
+// 從隱藏的分頁回來時不會再暫停一次。
 test("resuming flushes a suppressed hidden-tab frame instead of pausing again", () => {
   const h = createHarness();
   h.installFrameStubs();
   h.setNow(2000);
   h.run(`
-    let pendingGap=5,clockSamples=0;
-    clock={getDelta(){clockSamples++;const elapsed=pendingGap;pendingGap=0;return elapsed;}};
-    gameState='paused';pauseStarted=1000;gameStart=1000;matchDeadline=181000;
-    resumeGame();animate(2000);
+    let pendingGap = 5,
+      clockSamples = 0;
+    clock = {
+      getDelta() {
+        clockSamples++;
+        const elapsed = pendingGap;
+        pendingGap = 0;
+        return elapsed;
+      },
+    };
+    gameState = "paused";
+    pauseStarted = 1000;
+    gameStart = 1000;
+    matchDeadline = 181000;
+    resumeGame();
+    animate(2000);
   `);
   assert.equal(h.run("gameState"), "playing");
   assert.equal(
@@ -118,25 +189,44 @@ test("resuming flushes a suppressed hidden-tab frame instead of pausing again", 
   assert.equal(h.run("matchDeadline"), 182000);
 });
 
+// 頂著牆走不會有腳步聲或移動動作。
 test("pressing against solid cover produces no phantom motion or footsteps", () => {
   const h = createHarness();
   h.run(`
-    scene.add(camera);createWeapon();yaw.position.set(0,1.68,1);keys.KeyW=true;
-    collisionBoxes.push(new THREE.Box3(new THREE.Vector3(-2,0,.48),new THREE.Vector3(2,4,.5)));
-    updatePlayer(.05,2000);
+    scene.add(camera);
+    createWeapon();
+    yaw.position.set(0, 1.68, 1);
+    keys.KeyW = true;
+    collisionBoxes.push(
+      new THREE.Box3(
+        new THREE.Vector3(-2, 0, 0.48),
+        new THREE.Vector3(2, 4, 0.5),
+      ),
+    );
+    updatePlayer(0.05, 2000);
   `);
   assert.equal(h.run("playerMoving"), 0);
   assert.equal(h.run("lastFootstep"), 0);
   assert.equal(h.run("yaw.position.z"), 1);
 });
 
+// 長距離衝刺不會穿過薄圍欄。
 test("a long sprint displacement cannot skip a thin fence", () => {
   const h = createHarness();
   h.run(`
-    scene.add(camera);createWeapon();yaw.position.set(0,1.68,2);keys.KeyW=true;keys.ShiftLeft=true;
-    speedBoostUntil=10000;
-    collisionBoxes.push(new THREE.Box3(new THREE.Vector3(-2,0,-.04),new THREE.Vector3(2,4,0)));
-    updatePlayer(.5,3000);
+    scene.add(camera);
+    createWeapon();
+    yaw.position.set(0, 1.68, 2);
+    keys.KeyW = true;
+    keys.ShiftLeft = true;
+    speedBoostUntil = 10000;
+    collisionBoxes.push(
+      new THREE.Box3(
+        new THREE.Vector3(-2, 0, -0.04),
+        new THREE.Vector3(2, 4, 0),
+      ),
+    );
+    updatePlayer(0.5, 3000);
   `);
   assert.ok(
     h.run("yaw.position.z") >= 0.48,
@@ -144,19 +234,36 @@ test("a long sprint displacement cannot skip a thin fence", () => {
   );
 });
 
+// 跳躍會被天花板擋住，落下時能站在低掩體上。
 test("jumping stops below a ceiling and falling lands on compatible low cover", () => {
   const h = createHarness();
   h.run(`
-    scene.add(camera);createWeapon();yaw.position.set(0,1.68,0);verticalVelocity=5;grounded=false;
-    collisionBoxes.push(new THREE.Box3(new THREE.Vector3(-2,2,-2),new THREE.Vector3(2,2.2,2)));
-    updatePlayer(.1,2000);
+    scene.add(camera);
+    createWeapon();
+    yaw.position.set(0, 1.68, 0);
+    verticalVelocity = 5;
+    grounded = false;
+    collisionBoxes.push(
+      new THREE.Box3(
+        new THREE.Vector3(-2, 2, -2),
+        new THREE.Vector3(2, 2.2, 2),
+      ),
+    );
+    updatePlayer(0.1, 2000);
   `);
   assert.ok(h.run("yaw.position.y+.06") <= 2.00001);
   assert.equal(h.run("verticalVelocity"), 0);
   h.run(`
-    collisionBoxes.length=0;
-    collisionBoxes.push(new THREE.Box3(new THREE.Vector3(-2,0,-2),new THREE.Vector3(2,1,2)));
-    yaw.position.set(0,3.4,0);verticalVelocity=-4;updatePlayer(.2,2200);
+    collisionBoxes.length = 0;
+    collisionBoxes.push(
+      new THREE.Box3(
+        new THREE.Vector3(-2, 0, -2),
+        new THREE.Vector3(2, 1, 2),
+      ),
+    );
+    yaw.position.set(0, 3.4, 0);
+    verticalVelocity = -4;
+    updatePlayer(0.2, 2200);
   `);
   close(h.run("yaw.position.y"), 2.68, "eye height on raised cover");
   assert.equal(h.run("grounded"), true);
@@ -168,6 +275,7 @@ test("jumping stops below a ceiling and falling lands on compatible low cover", 
   assert.equal(h.run("grounded"), false);
 });
 
+// 玩家會與體型較大的首領保持距離。
 test("player body spacing respects the larger Boss collision radius", () => {
   const h = createHarness();
   h.run("createEnemy(0,0,0x556677,0,'boss');");
@@ -180,12 +288,19 @@ test("player body spacing respects the larger Boss collision radius", () => {
   );
 });
 
+// 彈道與火花重複使用形狀，不會誤刪還在用的。
 test("tracer and spark budgets reuse geometry without disposing live shared shapes", () => {
   const h = createHarness();
   h.run(`
-    let disposedGeometry=0;
-    for(let i=0;i<100;i++)createTracer(new THREE.Vector3(),new THREE.Vector3(0,0,10),0xffaa00);
-    const shared=tracers[0].mesh.geometry;shared.addEventListener('dispose',()=>disposedGeometry++);
+    let disposedGeometry = 0;
+    for (let i = 0; i < 100; i++)
+      createTracer(
+        new THREE.Vector3(),
+        new THREE.Vector3(0, 0, 10),
+        0xffaa00,
+      );
+    const shared = tracers[0].mesh.geometry;
+    shared.addEventListener("dispose", () => disposedGeometry++);
   `);
   assert.equal(h.run("tracers.length"), 48);
   assert.equal(h.run("tracers.every(t=>t.mesh.geometry===shared)"), true);
@@ -194,7 +309,10 @@ test("tracer and spark budgets reuse geometry without disposing live shared shap
   assert.equal(h.run("tracers.length"), 0);
   assert.equal(h.run("disposedGeometry"), 0);
   h.run(
-    "qualityIndex=2;for(let i=0;i<100;i++)createImpact(new THREE.Vector3());",
+    `
+      qualityIndex = 2;
+      for (let i = 0; i < 100; i++) createImpact(new THREE.Vector3());
+    `,
   );
   assert.equal(
     h.run("particles.length"),
@@ -205,14 +323,22 @@ test("tracer and spark budgets reuse geometry without disposing live shared shap
   assert.equal(h.run("particles.length"), 0);
 });
 
+// 同時多個爆炸，燈光與物件數量有上限。
 test("simultaneous explosion visuals have a bounded light and mesh lifetime", () => {
   const h = createHarness();
   h.run(`
-    for(let i=0;i<20;i++){
-      const fireball=new THREE.Mesh(new THREE.SphereGeometry(.2),new THREE.MeshBasicMaterial({transparent:true}));
-      const ring=new THREE.Mesh(new THREE.RingGeometry(.2,.3),new THREE.MeshBasicMaterial({transparent:true}));
-      const light=new THREE.PointLight();scene.add(fireball,ring,light);
-      explosions.push({fireball,ring,light,life:.72,max:.72});
+    for (let i = 0; i < 20; i++) {
+      const fireball = new THREE.Mesh(
+        new THREE.SphereGeometry(0.2),
+        new THREE.MeshBasicMaterial({ transparent: true }),
+      );
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(0.2, 0.3),
+        new THREE.MeshBasicMaterial({ transparent: true }),
+      );
+      const light = new THREE.PointLight();
+      scene.add(fireball, ring, light);
+      explosions.push({ fireball, ring, light, life: 0.72, max: 0.72 });
     }
     updateEffects(0);
   `);
@@ -229,12 +355,22 @@ test("simultaneous explosion visuals have a bounded light and mesh lifetime", ()
   );
 });
 
+// 煙霧的變化不受畫面更新率影響。
 test("particle drag and smoke expansion do not depend on the render frequency", () => {
   const atRate = (dt) => {
     const h = createHarness();
     h.run(`
-      const smoke=new THREE.Mesh(new THREE.SphereGeometry(.2),new THREE.MeshBasicMaterial({transparent:true}));
-      scene.add(smoke);particles.push({mesh:smoke,velocity:new THREE.Vector3(4,0,2),life:2,smoke:true});
+      const smoke = new THREE.Mesh(
+        new THREE.SphereGeometry(0.2),
+        new THREE.MeshBasicMaterial({ transparent: true }),
+      );
+      scene.add(smoke);
+      particles.push({
+        mesh: smoke,
+        velocity: new THREE.Vector3(4, 0, 2),
+        life: 2,
+        smoke: true,
+      });
     `);
     for (let i = 0; i < Math.round(0.3 / dt); i++)
       h.run(`updateEffects(${dt});`);
@@ -249,15 +385,29 @@ test("particle drag and smoke expansion do not depend on the render frequency", 
   close(slow.scale, fast.scale, "smoke expansion");
 });
 
+// 陰影降低更新次數時，槍口火光仍每格繪製。
 test("shadow throttling retains per-frame layer-1 muzzle flashes and restores render state", () => {
   const h = createHarness();
   h.run(`
-    scene.add(camera);createWeapon();scene.background=new THREE.Color(0x102030);const originalBackground=scene.background;
-    weapon.getObjectByName('flash').visible=true;muzzleFlash.intensity=7;const renders=[];
-    renderer.render=(s,c)=>{
-      renders.push({mask:c.layers.mask,shadows:renderer.shadowMap.autoUpdate,background:s.background,
-        flash:muzzleFlash.layers.test(c.layers)&&muzzleFlash.intensity===7&&weapon.getObjectByName('flash').visible});
-      if(renderer.shadowMap.autoUpdate)renderer.shadowMap.needsUpdate=false;
+    scene.add(camera);
+    createWeapon();
+    scene.background = new THREE.Color(0x102030);
+    const originalBackground = scene.background;
+    weapon.getObjectByName("flash").visible = true;
+    muzzleFlash.intensity = 7;
+    const renders = [];
+    renderer.render = (s, c) => {
+      renders.push({
+        mask: c.layers.mask,
+        shadows: renderer.shadowMap.autoUpdate,
+        background: s.background,
+        flash:
+          muzzleFlash.layers.test(c.layers) &&
+          muzzleFlash.intensity === 7 &&
+          weapon.getObjectByName("flash").visible,
+      });
+      if (renderer.shadowMap.autoUpdate)
+        renderer.shadowMap.needsUpdate = false;
     };
     renderFrame();
   `);
@@ -279,7 +429,14 @@ test("shadow throttling retains per-frame layer-1 muzzle flashes and restores re
   );
   assert.equal(
     h.run(
-      "renders.filter((_,index)=>index%2===1).every(render=>render.flash&&!render.shadows&&render.background===null)",
+      `
+        renders
+          .filter((_, index) => index % 2 === 1)
+          .every(
+            (render) =>
+              render.flash && !render.shadows && render.background === null,
+          );
+      `,
     ),
     true,
   );
@@ -287,13 +444,19 @@ test("shadow throttling retains per-frame layer-1 muzzle flashes and restores re
   assert.equal(h.run("camera.layers.mask"), 1);
   assert.equal(h.run("renderer.shadowMap.autoUpdate"), true);
   h.setNow(1075);
-  h.run("renderer.shadowMap.needsUpdate=true;renderFrame();");
+  h.run(`
+    renderer.shadowMap.needsUpdate = true;
+    renderFrame();
+  `);
   assert.equal(
     h.run("renders.at(-2).shadows"),
     true,
     "quality changes can force an immediate shadow refresh",
   );
-  h.run("renderer.shadowMap.autoUpdate=false;renderFrame();");
+  h.run(`
+    renderer.shadowMap.autoUpdate = false;
+    renderFrame();
+  `);
   assert.equal(
     h.run("renderer.shadowMap.autoUpdate"),
     false,
@@ -301,11 +464,17 @@ test("shadow throttling retains per-frame layer-1 muzzle flashes and restores re
   );
 });
 
+// 繪製失敗時仍會還原背景與鏡頭設定。
 test("render failures still restore background, camera layers and the shadow updater", () => {
   const h = createHarness();
   h.run(`
-    scene.background=new THREE.Color(0x102030);const saved=scene.background;
-    let draws=0;renderer.render=()=>{if(++draws===2)throw new Error('simulated view-model renderer failure');};
+    scene.background = new THREE.Color(0x102030);
+    const saved = scene.background;
+    let draws = 0;
+    renderer.render = () => {
+      if (++draws === 2)
+        throw new Error("simulated view-model renderer failure");
+    };
   `);
   assert.throws(() => h.run("renderFrame();"), /simulated view-model/);
   assert.equal(h.run("scene.background===saved"), true);
@@ -313,6 +482,7 @@ test("render failures still restore background, camera layers and the shadow upd
   assert.equal(h.run("renderer.shadowMap.autoUpdate"), true);
 });
 
+// 執行所有測試。
 let failed = 0;
 for (const { name, execute } of cases) {
   try {

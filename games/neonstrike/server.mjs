@@ -11,6 +11,7 @@ const root = dirname(fileURLToPath(import.meta.url));
 const port = Number(process.env.PORT || 4173);
 const gameUrl = `http://localhost:${port}`;
 const shouldOpen = process.argv.includes("--open");
+// 副檔名對應的內容類型。
 const mime = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -23,6 +24,7 @@ const mime = {
   ".ogg": "audio/ogg",
 };
 
+// 用系統預設瀏覽器打開遊戲。
 function openBrowser() {
   const command =
     process.platform === "win32"
@@ -42,6 +44,7 @@ function openBrowser() {
   }
 }
 
+// 只提供遊戲資料夾裡的檔案，擋掉往上層走的路徑。
 const server = createServer(async (req, res) => {
   try {
     const urlPath = decodeURIComponent((req.url || "/").split("?")[0]);
@@ -64,6 +67,7 @@ const server = createServer(async (req, res) => {
   }
 });
 
+// 連接埠已經被占用時，直接打開現有的遊戲。
 server.on("error", (error) => {
   if (error.code === "EADDRINUSE") {
     console.log(`NEON STRIKE 已在執行：${gameUrl}`);

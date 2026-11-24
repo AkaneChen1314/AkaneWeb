@@ -261,6 +261,7 @@ function openGame(id) {
   });
 }
 
+// 離開遊戲回到遊戲館：先暫停所有遊戲 iframe，再還原原本的捲動位置。
 function returnToLounge() {
   if (!activeGame) return;
   frames.forEach((frame) => {
@@ -295,6 +296,7 @@ function returnToLounge() {
 function showZone() {
   const hash = location.hash.slice(1);
   const seasonMatch = /^season-([123])$/.exec(hash);
+  // 這些網址錨點都屬於「黑川茜專區」。
   const characterSections = [
     "akane",
     "profile",
@@ -319,6 +321,7 @@ function showZone() {
         : hash === "main-content"
           ? selectedZone
           : "home";
+  // 這些錨點切換專區後，還要捲動到對應的段落。
   const sectionHashes = [
     ...characterSections.filter((id) => id !== "akane"),
     "blue-hour",
@@ -357,6 +360,7 @@ function showZone() {
   }
 }
 
+// 依網址決定畫面：#play=遊戲代號 就開遊戲，其他就回到網站並切換專區。
 function syncRoute() {
   const match = /^#play=([a-z]+)$/.exec(location.hash);
   if (match && Object.hasOwn(games, match[1])) openGame(match[1]);
@@ -367,13 +371,16 @@ function syncRoute() {
 }
 
 document.querySelectorAll("[data-details]").forEach((button) => {
+  // 遊戲卡片的「看介紹」按鈕。
   button.addEventListener("click", () =>
     showDetails(button.dataset.details, button),
   );
 });
+// 關閉遊戲介紹視窗。
 document
   .getElementById("close-details")
   .addEventListener("click", () => details.close());
+// 點到視窗外面的暗色背景，也關閉介紹視窗。
 details.addEventListener("click", (event) => {
   if (event.target !== details) return;
   const rect = details.getBoundingClientRect();
@@ -385,9 +392,11 @@ details.addEventListener("click", (event) => {
   )
     details.close();
 });
+// 「開始遊玩」：改網址，由 syncRoute() 負責打開遊戲。
 playButton.addEventListener("click", () => {
   if (selectedGame) location.hash = `play=${selectedGame}`;
 });
+// 「返回遊戲館」：清掉網址裡的 #play，再切回原本的專區。
 document.getElementById("return-lounge").addEventListener("click", () => {
   history.replaceState(
     null,
@@ -398,6 +407,7 @@ document.getElementById("return-lounge").addEventListener("click", () => {
   showZone();
 });
 window.addEventListener("hashchange", syncRoute);
+// 遊戲 iframe 內按返回時會送訊息過來；先確認來源真的是自己的 iframe。
 window.addEventListener("message", (event) => {
   if (location.protocol !== "file:" && event.origin !== location.origin) return;
   if (event.data?.type !== "akane-return") return;
@@ -407,6 +417,7 @@ window.addEventListener("message", (event) => {
     return;
   document.getElementById("return-lounge").click();
 });
+// 離開網頁前，先讓所有遊戲暫停並存檔。
 window.addEventListener("pagehide", () =>
   frames.forEach((frame) => setPaused(frame, true)),
 );
@@ -435,13 +446,16 @@ const hallEmpty = document.querySelector(".hall-empty");
 
 // 卡片一樣大、一排三張（窄螢幕兩張）；最後一排不滿時標上 tail-*，由 games-hall.css 把它們排到中間。
 function centerLastRow(visibleCards) {
-  hallCards.forEach((card) => card.classList.remove("tail3-one", "tail3-two", "tail2-one"));
+  hallCards.forEach((card) =>
+    card.classList.remove("tail3-one", "tail3-two", "tail2-one"),
+  );
   const count = visibleCards.length;
   if (count % 3 === 1) visibleCards[count - 1].classList.add("tail3-one");
   if (count % 3 === 2) visibleCards[count - 2].classList.add("tail3-two");
   if (count % 2 === 1) visibleCards[count - 1].classList.add("tail2-one");
 }
 
+// 依分類篩選遊戲卡片，並更新數量與最後一列的置中。
 function applyHallFilter(filter) {
   const visibleCards = [];
   hallCards.forEach((card) => {
@@ -454,7 +468,10 @@ function applyHallFilter(filter) {
   const shown = visibleCards.length;
   if (hallEmpty) hallEmpty.hidden = shown > 0;
   document.querySelectorAll("[data-filter]").forEach((button) => {
-    button.setAttribute("aria-pressed", String(button.dataset.filter === filter));
+    button.setAttribute(
+      "aria-pressed",
+      String(button.dataset.filter === filter),
+    );
   });
   document.getElementById("mood-result").textContent =
     moodMessages[filter] || moodMessages.all;
@@ -471,7 +488,10 @@ document.querySelectorAll("[data-count]").forEach((badge) => {
   );
 });
 document.querySelectorAll("[data-filter]").forEach((button) => {
-  button.addEventListener("click", () => applyHallFilter(button.dataset.filter));
+  // 分類按鈕。
+  button.addEventListener("click", () =>
+    applyHallFilter(button.dataset.filter),
+  );
 });
 centerLastRow(hallCards);
 
@@ -484,6 +504,7 @@ function markRunningGames() {
 }
 document.addEventListener("lounge-visibility", markRunningGames);
 
+// 「隨機選一款」：隨機打開一個遊戲的介紹。
 document.getElementById("surprise-game").addEventListener("click", (event) => {
   const ids = Object.keys(games);
   showDetails(ids[Math.floor(Math.random() * ids.length)], event.currentTarget);

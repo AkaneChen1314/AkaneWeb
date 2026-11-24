@@ -6,6 +6,7 @@
 "use strict";
 
 (() => {
+  // 表情觀察的資料：圖片、集數、標題與說明。
   const notes = {
     wink: {
       image: "s2-ep16-1",
@@ -42,6 +43,7 @@
   const image = document.getElementById("actor-room-image");
 
   document.querySelectorAll("[data-actor-note]").forEach((button) => {
+    // 點表情按鈕：換圖片與說明。
     button.addEventListener("click", () => {
       const note = notes[button.dataset.actorNote];
       selectedNote = note;
@@ -106,6 +108,7 @@
     },
   ];
   const specialViewer = document.getElementById("special-viewer");
+  // 角色肖像清單。
   const portraitArts = [
     {
       key: "puzzle-casual",
@@ -157,12 +160,14 @@
   ];
   let portraitIndex = 0;
   const portraitRoom = document.getElementById("portrait-room");
+  // 把圖片換成指定的肖像。
   function setPortraitImage(photo, art) {
     photo.src = `assets/akane/${art.image}.webp`;
     photo.alt = art.alt;
     photo.width = art.width;
     photo.height = art.height;
   }
+  // 選第 index 張肖像，頭尾循環，並更新文字與縮圖狀態。
   function choosePortrait(index) {
     portraitIndex = (index + portraitArts.length) % portraitArts.length;
     const art = portraitArts[portraitIndex];
@@ -184,8 +189,10 @@
     });
   }
   document.querySelectorAll("[data-portrait-choice]").forEach((button, i) => {
+    // 肖像縮圖按鈕。
     button.addEventListener("click", () => choosePortrait(i));
   });
+  // 縮圖列支援方向鍵、Home、End 移動。
   portraitRoom
     .querySelector(".portrait-choices")
     .addEventListener("keydown", (event) => {
@@ -205,9 +212,11 @@
         .querySelectorAll("[data-portrait-choice]")
         [portraitIndex].focus({ preventScroll: true });
     });
+  // 上一張肖像。
   document
     .getElementById("portrait-previous")
     .addEventListener("click", () => choosePortrait(portraitIndex - 1));
+  // 下一張肖像。
   document
     .getElementById("portrait-next")
     .addEventListener("click", () => choosePortrait(portraitIndex + 1));
@@ -215,6 +224,7 @@
   let portraitMode = false;
   let specialIndex = 0;
   let specialTrigger = null;
+  // 在放大視窗顯示目前的圖片；肖像與特別圖共用這個視窗。
   function showSpecial() {
     const art = portraitMode
       ? portraitArts[portraitIndex]
@@ -232,6 +242,7 @@
     document.getElementById("special-viewer-source").textContent =
       art.sourceLabel || "官方原頁 ↗";
   }
+  // 放大視窗的上一張／下一張。
   function moveSpecial(direction) {
     if (portraitMode) choosePortrait(portraitIndex + direction);
     else
@@ -240,6 +251,7 @@
     showSpecial();
   }
   document.querySelectorAll("[data-special-art]").forEach((button) => {
+    // 打開特別圖的放大視窗。
     button.addEventListener("click", () => {
       portraitMode = false;
       specialIndex = specialArts.findIndex(
@@ -251,6 +263,7 @@
     });
   });
   document.querySelectorAll("[data-portrait-open]").forEach((button) => {
+    // 打開肖像的放大視窗。
     button.addEventListener("click", () => {
       portraitMode = true;
       specialTrigger = button;
@@ -258,21 +271,26 @@
       specialViewer.showModal();
     });
   });
+  // 關閉放大視窗。
   specialViewer
     .querySelector(".dialog-close")
     .addEventListener("click", () => specialViewer.close());
+  // 放大視窗：上一張。
   document
     .getElementById("special-previous")
     .addEventListener("click", () => moveSpecial(-1));
+  // 放大視窗：下一張。
   document
     .getElementById("special-next")
     .addEventListener("click", () => moveSpecial(1));
+  // 放大視窗支援左右鍵。
   specialViewer.addEventListener("keydown", (event) => {
     if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
       event.preventDefault();
       moveSpecial(event.key === "ArrowLeft" ? -1 : 1);
     }
   });
+  // 關閉後把焦點還給原本的按鈕。
   specialViewer.addEventListener("close", () =>
     specialTrigger?.focus({ preventScroll: true }),
   );

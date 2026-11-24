@@ -11,17 +11,20 @@
   padding: 0;
 }
 /* 整個頁面：鋪滿視窗、不出現捲軸、深色底、不能反白選取文字 */
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
   overflow: hidden;
   background: #05070a;
   color: #d7e3ea;
-  font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", "Segoe UI", sans-serif;
+  font-family:
+    "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", "Segoe UI", sans-serif;
   user-select: none;
 }
 /* 兩張畫布都固定鋪滿整個視窗 */
-canvas#game, canvas#overlay {
+canvas#game,
+canvas#overlay {
   position: fixed;
   inset: 0;
   width: 100%;
@@ -46,12 +49,26 @@ canvas#overlay {
   --bad: #ff4a3c;
   --ok: #6dff8a;
   --vio: #b88cff;
-  --pn: rgba(9, 15, 22, .84);
-  --pn2: rgba(14, 24, 34, .9);
-  --ln: rgba(79, 216, 255, .26);
-  --ln2: rgba(255, 255, 255, .08);
-  --cut: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
-  --cut-s: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px));
+  --pn: rgba(9, 15, 22, 0.84);
+  --pn2: rgba(14, 24, 34, 0.9);
+  --ln: rgba(79, 216, 255, 0.26);
+  --ln2: rgba(255, 255, 255, 0.08);
+  --cut: polygon(
+    0 0,
+    calc(100% - 16px) 0,
+    100% 16px,
+    100% 100%,
+    16px 100%,
+    0 calc(100% - 16px)
+  );
+  --cut-s: polygon(
+    0 0,
+    calc(100% - 9px) 0,
+    100% 9px,
+    100% 100%,
+    9px 100%,
+    0 calc(100% - 9px)
+  );
 }
 /* 捲軸：細細一條 */
 ::-webkit-scrollbar {
@@ -64,7 +81,11 @@ canvas#overlay {
 /* ---------- 共用元件 ---------- */
 /* 面板：半透明深色底 + 切角 */
 .panel {
-  background: linear-gradient(160deg, rgba(14, 24, 34, .95), rgba(9, 15, 22, .93));
+  background: linear-gradient(
+    160deg,
+    rgba(14, 24, 34, 0.95),
+    rgba(9, 15, 22, 0.93)
+  );
   border: 1px solid var(--ln);
   clip-path: var(--cut);
   position: relative;
@@ -87,7 +108,7 @@ canvas#overlay {
   width: 46px;
   height: 3px;
   background: var(--c2);
-  opacity: .8;
+  opacity: 0.8;
 }
 /* 面板裡的小標題列（左邊標題、右邊灰色提示） */
 .ph {
@@ -129,13 +150,14 @@ button {
   letter-spacing: 4px;
   padding: 12px 18px;
   font-size: 16px;
-  transition: .15s;
+  transition: 0.15s;
   clip-path: var(--cut-s);
 }
 button:hover {
   filter: brightness(1.18);
   transform: translateY(-1px);
 }
+/* 次要按鈕。 */
 button.ghost {
   background: transparent;
   color: var(--c);
@@ -148,7 +170,7 @@ kbd {
   color: var(--c);
   font-family: inherit;
   font-size: 12px;
-  background: rgba(0, 0, 0, .45);
+  background: rgba(0, 0, 0, 0.45);
   border-radius: 3px;
 }
 /* 分段選擇鈕（難度、畫質用）；.on 是目前選中的那一格 */
@@ -162,8 +184,8 @@ kbd {
   cursor: pointer;
   font-size: 12px;
   color: #9fb6c2;
-  transition: .12s;
-  background: rgba(0, 0, 0, .3);
+  transition: 0.12s;
+  background: rgba(0, 0, 0, 0.3);
 }
 .seg div:hover {
   border-color: var(--c);
@@ -187,6 +209,7 @@ kbd {
   justify-content: center;
   z-index: 50;
 }
+/* 載入視窗。 */
 .ld-box {
   text-align: center;
 }
@@ -208,7 +231,7 @@ kbd {
   width: 320px;
   height: 3px;
   margin: 0 auto 16px;
-  background: rgba(255, 255, 255, .1);
+  background: rgba(255, 255, 255, 0.1);
   overflow: hidden;
 }
 .ld-bar i {
@@ -219,6 +242,7 @@ kbd {
   box-shadow: 0 0 10px var(--c);
   animation: ld 1.1s infinite ease-in-out;
 }
+/* 載入線的動畫。 */
 @keyframes ld {
   0% {
     transform: translateX(-100%);
@@ -254,9 +278,14 @@ kbd {
   align-items: center;
   gap: 18px;
   padding: 0 26px;
-  background: linear-gradient(180deg, rgba(6, 10, 15, .96), rgba(6, 10, 15, .55));
+  background: linear-gradient(
+    180deg,
+    rgba(6, 10, 15, 0.96),
+    rgba(6, 10, 15, 0.55)
+  );
   border-bottom: 1px solid var(--ln);
 }
+/* 遊戲名稱。 */
 .logo {
   flex: none;
   line-height: 1.15;
@@ -289,9 +318,9 @@ kbd {
   color: #8fa8b6;
   font-size: 14px;
   letter-spacing: 2px;
-  transition: .14s;
+  transition: 0.14s;
   border: 1px solid transparent;
-  background: rgba(255, 255, 255, .025);
+  background: rgba(255, 255, 255, 0.025);
   clip-path: var(--cut-s);
 }
 #tabs div i {
@@ -299,8 +328,8 @@ kbd {
   font-style: normal;
   font-size: 19px;
   margin-bottom: 1px;
-  filter: grayscale(.6);
-  transition: .14s;
+  filter: grayscale(0.6);
+  transition: 0.14s;
 }
 #tabs div small {
   position: absolute;
@@ -312,7 +341,7 @@ kbd {
 }
 #tabs div:hover {
   color: #fff;
-  background: rgba(79, 216, 255, .1);
+  background: rgba(79, 216, 255, 0.1);
 }
 #tabs div:hover i {
   filter: none;
@@ -321,7 +350,7 @@ kbd {
   color: #021018;
   background: var(--c);
   font-weight: 700;
-  box-shadow: 0 0 18px rgba(79, 216, 255, .45);
+  box-shadow: 0 0 18px rgba(79, 216, 255, 0.45);
 }
 #tabs div.on i {
   filter: none;
@@ -338,16 +367,16 @@ kbd {
   align-items: center;
 }
 /* 音量滑桿的外觀 */
-input[type=range] {
+input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   width: 120px;
   height: 4px;
-  background: rgba(255, 255, 255, .18);
+  background: rgba(255, 255, 255, 0.18);
   outline: none;
   cursor: pointer;
 }
-input[type=range]::-webkit-slider-thumb {
+input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 12px;
@@ -420,6 +449,7 @@ input[type=range]::-webkit-slider-thumb {
   gap: 6px;
   margin-bottom: 10px;
 }
+/* 一個裝備格。 */
 .pslot {
   display: flex;
   align-items: center;
@@ -427,7 +457,7 @@ input[type=range]::-webkit-slider-thumb {
   padding: 5px 9px;
   font-size: 13px;
   color: #6f8794;
-  border: 1px dashed rgba(255, 255, 255, .2);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
   white-space: nowrap;
 }
 .pslot kbd {
@@ -437,7 +467,7 @@ input[type=range]::-webkit-slider-thumb {
 .pslot.on {
   color: #fff;
   border: 1px solid var(--c2);
-  background: rgba(255, 178, 60, .14);
+  background: rgba(255, 178, 60, 0.14);
   cursor: pointer;
 }
 .pslot u {
@@ -447,11 +477,12 @@ input[type=range]::-webkit-slider-thumb {
 }
 .pslot.on:hover {
   border-color: var(--bad);
-  background: rgba(255, 74, 60, .16);
+  background: rgba(255, 74, 60, 0.16);
 }
 .pslot.on:hover u {
   color: var(--bad);
 }
+/* 裝備提示。 */
 #pickmsg {
   flex-basis: 100%;
   font-style: normal;
@@ -461,20 +492,24 @@ input[type=range]::-webkit-slider-thumb {
 }
 #picks.warn #pickmsg {
   color: var(--c2);
-  animation: pickwarn .5s;
+  animation: pickwarn 0.5s;
 }
+/* 提示閃爍的動畫。 */
 @keyframes pickwarn {
-  0%, 50% {
+  0%,
+  50% {
     color: var(--bad);
     transform: translateX(5px);
   }
-  25%, 75% {
+  25%,
+  75% {
     transform: translateX(-5px);
   }
   100% {
     transform: none;
   }
 }
+/* 摘要裡的減分或提醒文字。 */
 .ls s {
   text-decoration: none;
   color: var(--bad);
@@ -487,10 +522,10 @@ input[type=range]::-webkit-slider-thumb {
 }
 /* 已選滿時，沒選到的卡片變暗，表示要先取消一個才能再選 */
 .card.dim {
-  opacity: .45;
+  opacity: 0.45;
 }
 .card.dim:hover {
-  opacity: .7;
+  opacity: 0.7;
   transform: none;
 }
 /* 一張選項卡片：.on = 已選取（橘色）；滑鼠移上去會變亮並往右滑一點 */
@@ -502,9 +537,13 @@ input[type=range]::-webkit-slider-thumb {
   margin-bottom: 8px;
   border: 1px solid var(--ln2);
   cursor: pointer;
-  transition: .13s;
+  transition: 0.13s;
   position: relative;
-  background: linear-gradient(100deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .012));
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.045),
+    rgba(255, 255, 255, 0.012)
+  );
   clip-path: var(--cut-s);
 }
 .card::before {
@@ -515,11 +554,15 @@ input[type=range]::-webkit-slider-thumb {
   bottom: 0;
   width: 3px;
   background: transparent;
-  transition: .13s;
+  transition: 0.13s;
 }
 .card:hover {
   border-color: var(--c);
-  background: linear-gradient(100deg, rgba(79, 216, 255, .13), rgba(79, 216, 255, .03));
+  background: linear-gradient(
+    100deg,
+    rgba(79, 216, 255, 0.13),
+    rgba(79, 216, 255, 0.03)
+  );
   transform: translateX(3px);
 }
 .card:hover::before {
@@ -527,7 +570,11 @@ input[type=range]::-webkit-slider-thumb {
 }
 .card.on {
   border-color: var(--c2);
-  background: linear-gradient(100deg, rgba(255, 178, 60, .2), rgba(255, 178, 60, .04));
+  background: linear-gradient(
+    100deg,
+    rgba(255, 178, 60, 0.2),
+    rgba(255, 178, 60, 0.04)
+  );
 }
 .card.on::before {
   background: var(--c2);
@@ -554,14 +601,14 @@ input[type=range]::-webkit-slider-thumb {
   align-items: center;
   justify-content: center;
   font-size: 27px;
-  background: rgba(0, 0, 0, .45);
+  background: rgba(0, 0, 0, 0.45);
   border: 1px solid var(--ln);
   clip-path: var(--cut-s);
 }
 .card .ic.sw {
   border-radius: 50%;
   clip-path: none;
-  border: 2px solid rgba(255, 255, 255, .25);
+  border: 2px solid rgba(255, 255, 255, 0.25);
 }
 /* 卡片的文字部分：.nm 名稱、.ds 說明、.pk 機體特性 */
 .card .bd {
@@ -608,7 +655,7 @@ input[type=range]::-webkit-slider-thumb {
   display: block;
   height: 4px;
   margin-top: 2px;
-  background: rgba(255, 255, 255, .09);
+  background: rgba(255, 255, 255, 0.09);
 }
 .card .mb span b i {
   display: block;
@@ -626,8 +673,8 @@ input[type=range]::-webkit-slider-thumb {
   font-size: 13px;
   border: 1px solid var(--ln);
   color: #b9c9d2;
-  background: rgba(0, 0, 0, .35);
-  transition: .12s;
+  background: rgba(0, 0, 0, 0.35);
+  transition: 0.12s;
 }
 .card .opts div:hover {
   border-color: var(--c2);
@@ -646,20 +693,21 @@ input[type=range]::-webkit-slider-thumb {
   grid-template-columns: 1fr 1fr;
   gap: 6px;
 }
+/* 配置摘要的一格。 */
 .ls {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
   border: 1px solid var(--ln2);
-  background: rgba(0, 0, 0, .3);
+  background: rgba(0, 0, 0, 0.3);
   cursor: pointer;
-  transition: .12s;
+  transition: 0.12s;
   min-width: 0;
 }
 .ls:hover {
   border-color: var(--c);
-  background: rgba(79, 216, 255, .1);
+  background: rgba(79, 216, 255, 0.1);
 }
 .ls.w2 {
   grid-column: span 2;
@@ -709,15 +757,15 @@ input[type=range]::-webkit-slider-thumb {
 .stat .bar {
   flex: 1;
   height: 7px;
-  background: rgba(255, 255, 255, .08);
+  background: rgba(255, 255, 255, 0.08);
   transform: skewX(-20deg);
 }
 .stat .bar i {
   display: block;
   height: 100%;
   background: linear-gradient(90deg, var(--c), #c6f6ff);
-  transition: width .25s;
-  box-shadow: 0 0 8px rgba(79, 216, 255, .5);
+  transition: width 0.25s;
+  box-shadow: 0 0 8px rgba(79, 216, 255, 0.5);
 }
 .stat em {
   width: 34px;
@@ -749,7 +797,7 @@ input[type=range]::-webkit-slider-thumb {
 #detail td {
   padding: 3px 0;
   font-size: 12px;
-  border-bottom: 1px dashed rgba(255, 255, 255, .07);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.07);
 }
 #detail td:last-child {
   text-align: right;
@@ -775,7 +823,7 @@ input[type=range]::-webkit-slider-thumb {
 #stepline i {
   width: 26px;
   height: 4px;
-  background: rgba(255, 255, 255, .16);
+  background: rgba(255, 255, 255, 0.16);
 }
 #stepline i.done {
   background: var(--c);
@@ -809,11 +857,12 @@ input[type=range]::-webkit-slider-thumb {
   justify-content: center;
   gap: 10px;
 }
+/* 上一步按鈕。 */
 #prev {
   padding: 0 16px;
   font-size: 13px;
   letter-spacing: 2px;
-  background: rgba(6, 12, 18, .85);
+  background: rgba(6, 12, 18, 0.85);
 }
 /* 大按鈕：.next = 下一步（青色）；.go = 出擊（橘色、會脈動） */
 #launch {
@@ -839,15 +888,17 @@ input[type=range]::-webkit-slider-thumb {
   display: block;
   font-size: 11px;
   letter-spacing: 3px;
-  opacity: .8;
+  opacity: 0.8;
   margin-top: 1px;
 }
+/* 出擊按鈕的脈動。 */
 @keyframes pulse {
-  0%, 100% {
-    filter: drop-shadow(0 0 6px rgba(255, 160, 40, .5));
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px rgba(255, 160, 40, 0.5));
   }
   50% {
-    filter: drop-shadow(0 0 20px rgba(255, 180, 60, .95));
+    filter: drop-shadow(0 0 20px rgba(255, 180, 60, 0.95));
   }
 }
 /* 最佳紀錄 */
@@ -870,7 +921,7 @@ input[type=range]::-webkit-slider-thumb {
   pointer-events: none !important;
 }
 
-/* ---------- HUD ---------- */
+/* ---------- 戰鬥中的畫面資訊 ---------- */
 /* HUD 鋪滿全畫面但不攔截滑鼠 */
 #hud {
   position: fixed;
@@ -880,7 +931,11 @@ input[type=range]::-webkit-slider-thumb {
 }
 /* HUD 上的小面板共用的底色 */
 .hpanel {
-  background: linear-gradient(120deg, rgba(8, 14, 20, .78), rgba(8, 14, 20, .42));
+  background: linear-gradient(
+    120deg,
+    rgba(8, 14, 20, 0.78),
+    rgba(8, 14, 20, 0.42)
+  );
   border: 1px solid var(--ln2);
   border-left: 3px solid var(--c);
   padding: 10px 14px;
@@ -891,7 +946,7 @@ input[type=range]::-webkit-slider-thumb {
   position: absolute;
   inset: 0;
   box-shadow: inset 0 0 220px 60px rgba(255, 30, 20, 0);
-  transition: box-shadow .12s;
+  transition: box-shadow 0.12s;
 }
 /* 準星：四條短線 + 中心點；.enemy = 瞄到敵人時變紅 */
 #crosshair {
@@ -946,7 +1001,7 @@ input[type=range]::-webkit-slider-thumb {
   top: -30px;
   width: 60px;
   height: 60px;
-  border: 1px solid rgba(79, 216, 255, .25);
+  border: 1px solid rgba(79, 216, 255, 0.25);
   border-radius: 50%;
 }
 #crosshair.enemy i {
@@ -954,7 +1009,7 @@ input[type=range]::-webkit-slider-thumb {
   box-shadow: 0 0 6px var(--bad);
 }
 #crosshair.enemy::after {
-  border-color: rgba(255, 74, 60, .6);
+  border-color: rgba(255, 74, 60, 0.6);
 }
 /* 命中標記：準星上閃一下的白色 X */
 #hitmark {
@@ -966,8 +1021,20 @@ input[type=range]::-webkit-slider-thumb {
   margin: -13px 0 0 -13px;
   opacity: 0;
   background:
-    linear-gradient(45deg, transparent 46%, #fff 46%, #fff 54%, transparent 54%),
-    linear-gradient(-45deg, transparent 46%, #fff 46%, #fff 54%, transparent 54%);
+    linear-gradient(
+      45deg,
+      transparent 46%,
+      #fff 46%,
+      #fff 54%,
+      transparent 54%
+    ),
+    linear-gradient(
+      -45deg,
+      transparent 46%,
+      #fff 46%,
+      #fff 54%,
+      transparent 54%
+    );
 }
 
 /* 左上角：模式與分數 */
@@ -977,6 +1044,7 @@ input[type=range]::-webkit-slider-thumb {
   top: 18px;
   min-width: 210px;
 }
+/* 模式標示。 */
 #modechip {
   font-size: 13px;
   letter-spacing: 2px;
@@ -985,6 +1053,7 @@ input[type=range]::-webkit-slider-thumb {
 #modechip b {
   color: #fff;
 }
+/* 分數。 */
 #score {
   font-size: 13px;
   letter-spacing: 1px;
@@ -1005,6 +1074,7 @@ input[type=range]::-webkit-slider-thumb {
   transform: translateX(-50%);
   text-align: center;
 }
+/* 波次與敵人數。 */
 #waveinfo {
   font-size: 24px;
   letter-spacing: 6px;
@@ -1027,6 +1097,7 @@ input[type=range]::-webkit-slider-thumb {
   justify-content: space-between;
   align-items: baseline;
 }
+/* 首領名稱。 */
 #bossname {
   font-size: 16px;
   letter-spacing: 3px;
@@ -1039,9 +1110,10 @@ input[type=range]::-webkit-slider-thumb {
   letter-spacing: 2px;
   color: var(--bad);
 }
+/* 首領血條。 */
 #bossbar .bar {
   height: 13px;
-  background: rgba(0, 0, 0, .65);
+  background: rgba(0, 0, 0, 0.65);
   border: 1px solid var(--bad);
   margin-top: 3px;
   position: relative;
@@ -1051,13 +1123,17 @@ input[type=range]::-webkit-slider-thumb {
   display: block;
   height: 100%;
   background: linear-gradient(90deg, #ff2a1a, #ff9a3c);
-  box-shadow: 0 0 12px rgba(255, 60, 30, .7);
+  box-shadow: 0 0 12px rgba(255, 60, 30, 0.7);
 }
 #bossbar .bar::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 2px), rgba(0, 0, 0, .7) calc(10% - 2px) 10%);
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 calc(10% - 2px),
+    rgba(0, 0, 0, 0.7) calc(10% - 2px) 10%
+  );
 }
 
 /* 右上角的小地圖：圓形畫布 + 外框 + 上方的「前」字 */
@@ -1068,10 +1144,11 @@ input[type=range]::-webkit-slider-thumb {
   width: 220px;
   height: 220px;
 }
+/* 小地圖。 */
 #minimap {
   width: 220px;
   height: 220px;
-  background: rgba(6, 10, 14, .72);
+  background: rgba(6, 10, 14, 0.72);
   border-radius: 50%;
 }
 .mapring {
@@ -1102,6 +1179,7 @@ input[type=range]::-webkit-slider-thumb {
   bottom: 20px;
   width: 350px;
 }
+/* 機體名稱。 */
 .vhead {
   display: flex;
   justify-content: space-between;
@@ -1144,8 +1222,8 @@ input[type=range]::-webkit-slider-thumb {
 /* 各種長條的共用外觀；下面依類別上色（hp 裝甲、sh 護盾、en 能量、cp 指揮點數） */
 #vitals .bar {
   height: 9px;
-  background: rgba(0, 0, 0, .6);
-  border: 1px solid rgba(255, 255, 255, .16);
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   transform: skewX(-20deg);
   position: relative;
   overflow: hidden;
@@ -1154,7 +1232,7 @@ input[type=range]::-webkit-slider-thumb {
   display: block;
   height: 100%;
   width: 100%;
-  transition: width .08s;
+  transition: width 0.08s;
 }
 #vitals .bar.hp {
   height: 18px;
@@ -1164,11 +1242,16 @@ input[type=range]::-webkit-slider-thumb {
   content: "";
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(90deg, transparent 0 calc(5% - 2px), rgba(0, 0, 0, .55) calc(5% - 2px) 5%);
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 calc(5% - 2px),
+    rgba(0, 0, 0, 0.55) calc(5% - 2px) 5%
+  );
 }
 #vitals .bar.sh {
   height: 6px;
 }
+/* 各種數值條的顏色。 */
 .bar.hp i {
   background: linear-gradient(90deg, #2fd36e, #b6ff6a);
 }
@@ -1221,6 +1304,7 @@ input[type=range]::-webkit-slider-thumb {
   align-items: center;
   gap: 8px;
 }
+/* 增益列。 */
 #buffs {
   display: flex;
   gap: 6px;
@@ -1234,7 +1318,7 @@ input[type=range]::-webkit-slider-thumb {
   padding: 3px 9px 3px 6px;
   font-size: 13px;
   color: #fff;
-  background: rgba(8, 14, 20, .82);
+  background: rgba(8, 14, 20, 0.82);
   border: 1px solid var(--c2);
   font-variant-numeric: tabular-nums;
   clip-path: var(--cut-s);
@@ -1252,6 +1336,7 @@ input[type=range]::-webkit-slider-thumb {
 .buff.r {
   border-color: var(--bad);
 }
+/* 技能格。 */
 #slots {
   display: flex;
   gap: 8px;
@@ -1262,7 +1347,7 @@ input[type=range]::-webkit-slider-thumb {
 .slot {
   width: 68px;
   height: 68px;
-  background: rgba(8, 14, 20, .82);
+  background: rgba(8, 14, 20, 0.82);
   border: 1px solid var(--ln);
   position: relative;
   display: flex;
@@ -1298,7 +1383,10 @@ input[type=range]::-webkit-slider-thumb {
 .slot .cd {
   position: absolute;
   inset: 0;
-  background: conic-gradient(rgba(0, 0, 0, .78) calc(var(--p) * 1%), transparent 0);
+  background: conic-gradient(
+    rgba(0, 0, 0, 0.78) calc(var(--p) * 1%),
+    transparent 0
+  );
 }
 .slot .t {
   position: absolute;
@@ -1309,14 +1397,14 @@ input[type=range]::-webkit-slider-thumb {
 }
 .slot.rdy {
   border-color: var(--c);
-  box-shadow: 0 0 12px rgba(79, 216, 255, .35) inset;
+  box-shadow: 0 0 12px rgba(79, 216, 255, 0.35) inset;
 }
 .slot.act {
   border-color: var(--c2);
-  box-shadow: 0 0 16px rgba(255, 178, 60, .6) inset;
+  box-shadow: 0 0 16px rgba(255, 178, 60, 0.6) inset;
 }
 .slot.no {
-  filter: grayscale(1) brightness(.6);
+  filter: grayscale(1) brightness(0.6);
 }
 
 /* 右下角的武器資訊 */
@@ -1371,13 +1459,14 @@ input[type=range]::-webkit-slider-thumb {
   color: var(--c2);
   font-size: 17px;
 }
+/* 副武器彈藥。 */
 #w-sec .wa {
   font-size: 19px;
 }
 /* 彈藥 / 冷卻的細長條 */
 .abar {
   height: 4px;
-  background: rgba(0, 0, 0, .6);
+  background: rgba(0, 0, 0, 0.6);
   margin: 3px 0 8px;
 }
 .abar i {
@@ -1401,6 +1490,7 @@ input[type=range]::-webkit-slider-thumb {
   transform: translateX(-50%);
   text-align: center;
 }
+/* 升級標題。 */
 .upt {
   font-size: 16px;
   letter-spacing: 6px;
@@ -1416,6 +1506,7 @@ input[type=range]::-webkit-slider-thumb {
   letter-spacing: 1px;
   font-weight: 400;
 }
+/* 升級卡的排列。 */
 #upg-cards {
   display: flex;
   gap: 12px;
@@ -1424,23 +1515,29 @@ input[type=range]::-webkit-slider-thumb {
 .uc {
   width: 200px;
   padding: 12px 12px 14px;
-  background: linear-gradient(180deg, rgba(20, 30, 42, .94), rgba(8, 14, 20, .92));
+  background: linear-gradient(
+    180deg,
+    rgba(20, 30, 42, 0.94),
+    rgba(8, 14, 20, 0.92)
+  );
   border: 1px solid var(--c2);
   clip-path: var(--cut);
-  animation: rise .35s backwards;
+  animation: rise 0.35s backwards;
 }
 .uc:nth-child(2) {
-  animation-delay: .07s;
+  animation-delay: 0.07s;
 }
 .uc:nth-child(3) {
-  animation-delay: .14s;
+  animation-delay: 0.14s;
 }
+/* 卡片升起的動畫。 */
 @keyframes rise {
   from {
     opacity: 0;
     transform: translateY(24px);
   }
 }
+/* 升級卡的按鍵。 */
 .uc kbd {
   font-size: 15px;
   padding: 1px 10px;
@@ -1481,8 +1578,10 @@ input[type=range]::-webkit-slider-thumb {
   letter-spacing: 14px;
   color: #fff;
   opacity: 0;
-  transition: opacity .4s;
-  text-shadow: 0 0 24px var(--c), 0 2px 6px #000;
+  transition: opacity 0.4s;
+  text-shadow:
+    0 0 24px var(--c),
+    0 2px 6px #000;
 }
 #banner small {
   display: block;
@@ -1502,12 +1601,13 @@ input[type=range]::-webkit-slider-thumb {
   gap: 6px;
   align-items: flex-end;
 }
+/* 一則提示。 */
 .toast {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 7px 14px 7px 10px;
-  background: rgba(8, 14, 20, .88);
+  background: rgba(8, 14, 20, 0.88);
   border: 1px solid var(--c2);
   border-right-width: 3px;
   clip-path: var(--cut-s);
@@ -1529,12 +1629,14 @@ input[type=range]::-webkit-slider-thumb {
   font-size: 12px;
   color: #cfe;
 }
+/* 提示滑入的動畫。 */
 @keyframes tin {
   0% {
     opacity: 0;
     transform: translateX(40px);
   }
-  6%, 82% {
+  6%,
+  82% {
     opacity: 1;
     transform: none;
   }
@@ -1556,8 +1658,10 @@ input[type=range]::-webkit-slider-thumb {
 #log div {
   animation: fadeout 4s forwards;
 }
+/* 紀錄淡出的動畫。 */
 @keyframes fadeout {
-  0%, 70% {
+  0%,
+  70% {
     opacity: 1;
   }
   100% {
@@ -1571,7 +1675,7 @@ input[type=range]::-webkit-slider-thumb {
   top: 62%;
   transform: translateX(-50%);
   padding: 10px 22px;
-  background: rgba(0, 0, 0, .7);
+  background: rgba(0, 0, 0, 0.7);
   border: 1px solid var(--c2);
   color: var(--c2);
   letter-spacing: 3px;
@@ -1584,13 +1688,13 @@ input[type=range]::-webkit-slider-thumb {
 }
 #bossbar.shielded .bar i {
   background: linear-gradient(90deg, #1a8a80, #40ffd0);
-  box-shadow: 0 0 12px rgba(64, 255, 208, .7);
+  box-shadow: 0 0 12px rgba(64, 255, 208, 0.7);
 }
 /* 鋪滿全畫面的半透明黑底，中間放一個面板 */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(2, 5, 8, .8);
+  background: rgba(2, 5, 8, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1617,6 +1721,7 @@ input[type=range]::-webkit-slider-thumb {
   width: 100%;
   margin-top: 12px;
 }
+/* 按鈕列。 */
 .btnrow {
   display: flex;
   gap: 12px;
@@ -1649,7 +1754,7 @@ input[type=range]::-webkit-slider-thumb {
 }
 #res-body div {
   padding: 10px 6px;
-  background: rgba(0, 0, 0, .35);
+  background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--ln2);
 }
 #res-body small {
@@ -1710,9 +1815,27 @@ input[type=range]::-webkit-slider-thumb {
   transform: scale(var(--hud-s, 1));
 }
 /* 觸控時 HUD 讓位：左下是搖桿、右下是按鈕，所以機體狀態與武器面板改排在左上；左上角留給「暫停」 */
-.akane-touch #hud-tl { left: 86px; }
-.akane-touch #vitals { top: 92px; bottom: auto; transform: scale(0.85); transform-origin: 0 0; }
-.akane-touch #weap { left: 20px; right: auto; top: 226px; bottom: auto; transform: scale(0.85); transform-origin: 0 0; }
-.akane-touch #log { top: 330px; }
+.akane-touch #hud-tl {
+  left: 86px;
+}
+.akane-touch #vitals {
+  top: 92px;
+  bottom: auto;
+  transform: scale(0.85);
+  transform-origin: 0 0;
+}
+.akane-touch #weap {
+  left: 20px;
+  right: auto;
+  top: 226px;
+  bottom: auto;
+  transform: scale(0.85);
+  transform-origin: 0 0;
+}
+.akane-touch #log {
+  top: 330px;
+}
 /* 機庫可以用手指拖曳旋轉機體：不要讓瀏覽器把拖曳當成捲動 */
-.akane-touch #game { touch-action: none; }
+.akane-touch #game {
+  touch-action: none;
+}

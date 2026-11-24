@@ -4,7 +4,7 @@
  */
 "use strict";
 
-// Visuals have their own clock and random stream; they never alter combat rules.
+// 特效有自己的時鐘與亂數，不會影響戰鬥規則。
 const Spectacle = (() => {
   const canvas = document.getElementById("battleFX");
   const ctx = canvas.getContext("2d");
@@ -27,13 +27,15 @@ const Spectacle = (() => {
   try {
     mode = localStorage.getItem("astral-fx-mode") || "full";
   } catch (_) {
-    /* Storage may be unavailable in file mode. */
+    // 用檔案方式開啟時，瀏覽器可能不能儲存。
   }
   const calm = () => mode === "soft" || reduced.matches;
+  // 固定種子的亂數，特效每次看起來有變化但不影響遊戲規則。
   const random = () => {
     seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
     return seed / 4294967296;
   };
+  // 延後執行，重設時可以一起取消。
   function later(fn, ms) {
     const t = setTimeout(() => {
       timers.delete(t);
@@ -42,6 +44,7 @@ const Spectacle = (() => {
     timers.add(t);
     return t;
   }
+  // 依畫面大小與螢幕密度調整畫布。
   function size() {
     const nextWidth = canvas.clientWidth;
     const nextHeight = canvas.clientHeight;
@@ -57,6 +60,7 @@ const Spectacle = (() => {
     ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
     positionNumbers();
   }
+  // 算出角色圖片在畫布上的中心位置（要考慮圖片裁切方式）。
   function point(side) {
     const img = screen.querySelector(`.${side}-unit .unit-art img`);
     const rect = img.getBoundingClientRect();
@@ -80,6 +84,7 @@ const Spectacle = (() => {
       drawnWidth = img.naturalWidth * fit;
       drawnHeight = img.naturalHeight * fit;
       const position = style.objectPosition.split(" ");
+      // 把 left、50% 這類設定換成 0～1 的比例。
       const fraction = (value) => {
         if (value === "left" || value === "top") return 0;
         if (value === "right" || value === "bottom") return 1;
@@ -97,16 +102,19 @@ const Spectacle = (() => {
         height,
     };
   }
+  // 放好一個傷害數字的位置。
   function positionNumber(node, positions) {
     const p = positions?.[node.dataset.fxSide] || point(node.dataset.fxSide);
     node.style.left = `${p.x + Number(node.dataset.offsetX)}px`;
     node.style.top = `${p.y + Number(node.dataset.offsetY)}px`;
   }
+  // 更新所有傷害數字的位置。
   function positionNumbers(positions) {
     labels
       .querySelectorAll(".fx-number")
       .forEach((node) => positionNumber(node, positions));
   }
+  // 切換「華麗／柔和」特效的外觀與按鈕文字。
   function updateMode() {
     const soft = calm();
     screen.classList.toggle("soft-effects", soft);
@@ -116,6 +124,7 @@ const Spectacle = (() => {
       ? "系統已啟用減少動態效果"
       : "切換華麗／柔和特效";
   }
+  // 使用者切換特效模式，並記住選擇。
   toggle.onclick = () => {
     mode = mode === "full" ? "soft" : "full";
     try {
@@ -124,12 +133,14 @@ const Spectacle = (() => {
     reset();
     updateMode();
   };
+  // 系統的「減少動態」設定改變時跟著更新。
   reduced.addEventListener("change", () => {
     reset();
     updateMode();
   });
   new ResizeObserver(size).observe(screen);
   updateMode();
+  // 清掉所有特效、計時器與文字。
   function reset() {
     cancelAnimationFrame(frame);
     frame = 0;
@@ -147,6 +158,7 @@ const Spectacle = (() => {
       .querySelectorAll(".unit-art")
       .forEach((n) => n.classList.remove("hit", "cast", "heal"));
   }
+  // 戰鬥開始時的初始化與開場字幕。
   function start() {
     reset();
     size();
@@ -158,6 +170,7 @@ const Spectacle = (() => {
       "#94d9ef",
     );
   }
+  // 顯示一段行動字幕。
   function announce(kind, name, outcome, color, enemy = false) {
     caption.classList.toggle("enemy", enemy);
     caption.style.setProperty("--fx-accent", color);
@@ -171,6 +184,7 @@ const Spectacle = (() => {
     }
     announce.timer = later(() => caption.classList.remove("show"), 1300);
   }
+  // 排入一個特效；柔和模式不畫，太多時也不再加。
   function queue(type, side, color, delay = 0, power = 1) {
     if (!ctx || calm() || !screen.classList.contains("active")) return;
     if (events.length > 42) return;
@@ -185,6 +199,7 @@ const Spectacle = (() => {
     });
     if (!frame) frame = requestAnimationFrame(draw);
   }
+  // 跳出一個數字或文字標籤。
   function number(side, value, kind = "damage", note = "", delay = 0) {
     const n = document.createElement("div");
     n.className = `fx-number ${kind}`;
@@ -203,6 +218,7 @@ const Spectacle = (() => {
       later(() => n.remove(), calm() ? 600 : 900);
     }, delay);
   }
+  // 受傷或治療的數字，多段攻擊會錯開時間。
   function pop(side, value, type) {
     if (type === "cast" || String(value).startsWith("盾")) return;
     const delay = (hitIndex++ % 6) * 85;
@@ -223,10 +239,12 @@ const Spectacle = (() => {
     );
     queue("impact", side, type === "heal" ? "#92e9b7" : "#ffae91", delay, 0.6);
   }
+  // 護盾吸收的數字與光效。
   function absorb(side, amount) {
     number(side, `抵擋 ${Math.ceil(amount)}`, "shield", "護盾吸收", 50);
     queue("shield", side, "#80c4eb", 0, 0.7);
   }
+  // 依卡牌內容決定要播哪些特效，並記下出牌前的數值。
   function attack(item, actor, side = "player") {
     hitIndex = 0;
     visualEnd = performance.now() + (item.ultimate && !calm() ? 1080 : 650);
@@ -271,6 +289,7 @@ const Spectacle = (() => {
     }
     return result;
   }
+  // 比較出牌前後，顯示實際造成的結果。
   function outcome(before, actor, side, item, damage) {
     const parts = [];
     if (damage)
@@ -293,6 +312,7 @@ const Spectacle = (() => {
     document.getElementById("combatOutcome").textContent =
       parts.join("　") || "術式已生效";
   }
+  // 畫一個光環。
   function ring(x, y, r, color, alpha = 1, line = 2) {
     ctx.strokeStyle = color;
     ctx.globalAlpha = alpha;
@@ -301,6 +321,7 @@ const Spectacle = (() => {
     ctx.arc(x, y, Math.max(1, r), 0, Math.PI * 2);
     ctx.stroke();
   }
+  // 畫一個法陣。
   function sigil(x, y, r, color, t, sides = 6) {
     ring(x, y, r, color, 0.65, 1.5);
     ring(x, y, r * 0.7, color, 0.3, 1);
@@ -319,6 +340,7 @@ const Spectacle = (() => {
       ring(x + Math.cos(a) * r, y + Math.sin(a) * r, 3, color, 0.6);
     }
   }
+  // 畫四散的火花。
   function sparks(e, t, x, y) {
     const count = width < 721 ? 10 : 20;
     for (let i = 0; i < count; i++) {
@@ -333,11 +355,13 @@ const Spectacle = (() => {
       ctx.fill();
     }
   }
+  // 每一幀重畫所有特效，全部結束就停止。
   function draw(now) {
     ctx.clearRect(0, 0, width, height);
     events = events.filter((e) => now - e.start < e.duration);
     const positions = { player: point("player"), enemy: point("enemy") };
     positionNumbers(positions);
+    // 依特效種類畫不同的圖案。
     for (const e of events) {
       const t = (now - e.start) / e.duration;
       if (t < 0) continue;

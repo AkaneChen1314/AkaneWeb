@@ -27,9 +27,12 @@ const World = {
    * opt.noWalk = true 表示電腦不會把它的頂面當成可以走的地面（例如牆頂）。 */
   addBox(cx, cy, cz, w, h, d, opt = {}) {
     const box = {
-      minX: cx - w / 2, maxX: cx + w / 2,
-      minY: cy - h / 2, maxY: cy + h / 2,
-      minZ: cz - d / 2, maxZ: cz + d / 2,
+      minX: cx - w / 2,
+      maxX: cx + w / 2,
+      minY: cy - h / 2,
+      maxY: cy + h / 2,
+      minZ: cz - d / 2,
+      maxZ: cz + d / 2,
       noWalk: !!opt.noWalk,
       tag: opt.tag || null,
     };
@@ -37,6 +40,7 @@ const World = {
     return box;
   },
 
+  // 移除一個碰撞方塊（例如被打爆的箱子）。
   removeBox(box) {
     const i = this.boxes.indexOf(box);
     if (i >= 0) this.boxes.splice(i, 1);
@@ -83,7 +87,8 @@ const World = {
     let hit = false;
     const boxes = this.boxes;
 
-    for (let pass = 0; pass < 2; pass++) { // 做兩輪，處理同時卡到兩面牆的轉角
+    for (let pass = 0; pass < 2; pass++) {
+      // 做兩輪，處理同時卡到兩面牆的轉角
       for (let i = 0; i < boxes.length; i++) {
         const b = boxes[i];
         if (b.maxY <= stepTop || b.minY >= headTop) continue;
@@ -103,8 +108,10 @@ const World = {
           pos.z += (dz / d) * (r - d);
         } else {
           // 圓心在方塊內：從最近的一面推出去
-          const toMinX = pos.x - b.minX, toMaxX = b.maxX - pos.x;
-          const toMinZ = pos.z - b.minZ, toMaxZ = b.maxZ - pos.z;
+          const toMinX = pos.x - b.minX,
+            toMaxX = b.maxX - pos.x;
+          const toMinZ = pos.z - b.minZ,
+            toMaxZ = b.maxZ - pos.z;
           const m = Math.min(toMinX, toMaxX, toMinZ, toMaxZ);
           if (m === toMinX) pos.x = b.minX - r;
           else if (m === toMaxX) pos.x = b.maxX + r;
@@ -154,7 +161,11 @@ const World = {
       pos.y += vel.y * dt;
       if (vel.y > 0) {
         // 上升中：撞到天花板就停止上升
-        const ceil = this.ceilingAt(pos.x, pos.z, pos.y + body.height - vel.y * dt);
+        const ceil = this.ceilingAt(
+          pos.x,
+          pos.z,
+          pos.y + body.height - vel.y * dt,
+        );
         if (pos.y + body.height > ceil) {
           pos.y = ceil - body.height;
           vel.y = 0;
@@ -182,23 +193,29 @@ const World = {
     if (Math.abs(dx) < 1e-9) dx = 1e-9;
     if (Math.abs(dy) < 1e-9) dy = 1e-9;
     if (Math.abs(dz) < 1e-9) dz = 1e-9;
-    const ix = 1 / dx, iy = 1 / dy, iz = 1 / dz;
+    const ix = 1 / dx,
+      iy = 1 / dy,
+      iz = 1 / dz;
 
     let best = maxDist;
     let bestBox = null;
     let bestAxis = -1;
     const boxes = this.boxes;
 
+    // 逐一檢查每個碰撞方塊：用三個軸的進出距離求交點。
     for (let i = 0; i < boxes.length; i++) {
       const b = boxes[i];
       // 「平板法」：分別算射線進出 X、Y、Z 三組平面的時間
-      let t1 = (b.minX - ox) * ix, t2 = (b.maxX - ox) * ix;
-      let tmin = Math.min(t1, t2), tmax = Math.max(t1, t2);
+      let t1 = (b.minX - ox) * ix,
+        t2 = (b.maxX - ox) * ix;
+      let tmin = Math.min(t1, t2),
+        tmax = Math.max(t1, t2);
       let axis = 0;
 
       t1 = (b.minY - oy) * iy;
       t2 = (b.maxY - oy) * iy;
-      const tyMin = Math.min(t1, t2), tyMax = Math.max(t1, t2);
+      const tyMin = Math.min(t1, t2),
+        tyMax = Math.max(t1, t2);
       if (tyMin > tmin) {
         tmin = tyMin;
         axis = 1;
@@ -208,7 +225,8 @@ const World = {
 
       t1 = (b.minZ - oz) * iz;
       t2 = (b.maxZ - oz) * iz;
-      const tzMin = Math.min(t1, t2), tzMax = Math.max(t1, t2);
+      const tzMin = Math.min(t1, t2),
+        tzMax = Math.max(t1, t2);
       if (tzMin > tmin) {
         tmin = tzMin;
         axis = 2;
@@ -225,6 +243,7 @@ const World = {
     }
 
     // 地面（y = 0 的平面）
+    // 射線往下時，另外檢查與地面的交點。
     if (dy < 0) {
       const t = -oy * iy;
       if (t > 0 && t < best) {
@@ -235,6 +254,7 @@ const World = {
     }
 
     if (bestAxis < 0) return Infinity;
+    // 把命中點、法線與命中的方塊寫進 out。
     if (out) {
       out.x = ox + dx * best;
       out.y = oy + dy * best;
@@ -250,10 +270,23 @@ const World = {
 
   // 兩點之間有沒有被擋住（true = 看得到對方）
   los(ax, ay, az, bx, by, bz) {
-    const dx = bx - ax, dy = by - ay, dz = bz - az;
+    const dx = bx - ax,
+      dy = by - ay,
+      dz = bz - az;
     const dist = Math.hypot(dx, dy, dz);
     if (dist < 0.01) return true;
-    return this.raycast(ax, ay, az, dx / dist, dy / dist, dz / dist, dist - 0.05, null) === Infinity;
+    return (
+      this.raycast(
+        ax,
+        ay,
+        az,
+        dx / dist,
+        dy / dist,
+        dz / dist,
+        dist - 0.05,
+        null,
+      ) === Infinity
+    );
   },
 };
 
@@ -279,7 +312,10 @@ const Nav = {
   MAX_STEP: 0.65,
 
   // A* 用的工作陣列（重複使用，不必每次配置）
-  _g: null, _parent: null, _stamp: null, _stampId: 0,
+  _g: null,
+  _parent: null,
+  _stamp: null,
+  _stampId: 0,
 
   // 世界座標 → 格子編號（超出地圖回傳 -1）
   idx(x, z) {
@@ -306,6 +342,7 @@ const Nav = {
    * seeds：一定走得到的起點（例如出生點）。從這些點「淹水」出去，
    * 淹不到的格子（封閉屋頂、箱子頂）就標記為不可走。 */
   build(seeds) {
+    // 建立地圖格子需要的陣列。
     const half = World.half;
     this.origin = -half;
     this.cols = this.rows = half * 2;
@@ -321,13 +358,16 @@ const Nav = {
     const R = 0.42; // 檢查身體淨空用的半徑
 
     // 第一步：每一格找「最高、且上方有足夠空間站人」的表面
+    // 計算每一格可以站的高度。
     for (let i = 0; i < n; i++) {
-      const x = this.cellX(i), z = this.cellZ(i);
+      const x = this.cellX(i),
+        z = this.cellZ(i);
       // 候選高度：地面 0，加上蓋住格子中心的方塊頂面
       const tops = [0];
       for (const b of boxes) {
         if (b.noWalk || b.maxY > 9) continue;
-        if (x >= b.minX && x <= b.maxX && z >= b.minZ && z <= b.maxZ) tops.push(b.maxY);
+        if (x >= b.minX && x <= b.maxX && z >= b.minZ && z <= b.maxZ)
+          tops.push(b.maxY);
       }
       tops.sort((a, b2) => b2 - a); // 由高到低試
       for (const top of tops) {
@@ -351,12 +391,15 @@ const Nav = {
     }
     // 貼著地圖邊界的格子不可走
     for (let i = 0; i < n; i++) {
-      const c = i % this.cols, r = Math.floor(i / this.cols);
-      if (c < 1 || r < 1 || c >= this.cols - 1 || r >= this.rows - 1) standable[i] = 0;
+      const c = i % this.cols,
+        r = Math.floor(i / this.cols);
+      if (c < 1 || r < 1 || c >= this.cols - 1 || r >= this.rows - 1)
+        standable[i] = 0;
     }
 
     // 第二步：從起點淹水，只有走得到的格子才算 ok
     const queue = [];
+    // 從指定的起點開始，把走得到的格子全部找出來。
     for (const s of seeds) {
       const i = this._nearestIn(standable, s.x, s.z, 8);
       if (i >= 0 && !this.ok[i]) {
@@ -380,6 +423,7 @@ const Nav = {
     this.coverCells = [];
     this.openCells = [];
     this.highCells = [];
+    // 分類：開闊的格子、可當掩體的格子與高處的格子。
     for (let i = 0; i < n; i++) {
       if (!this.ok[i]) continue;
       this.openCells.push(i);
@@ -404,17 +448,20 @@ const Nav = {
   _nearestIn(layer, x, z, maxR) {
     const start = this.idx(
       Util.clamp(x, this.origin + 1, -this.origin - 1),
-      Util.clamp(z, this.origin + 1, -this.origin - 1)
+      Util.clamp(z, this.origin + 1, -this.origin - 1),
     );
     if (start < 0) return -1;
     if (layer[start]) return start;
-    const c0 = start % this.cols, r0 = Math.floor(start / this.cols);
-    let best = -1, bestD = Infinity;
+    const c0 = start % this.cols,
+      r0 = Math.floor(start / this.cols);
+    let best = -1,
+      bestD = Infinity;
     for (let ring = 1; ring <= maxR && best < 0; ring++) {
       for (let dr = -ring; dr <= ring; dr++) {
         for (let dc = -ring; dc <= ring; dc++) {
           if (Math.max(Math.abs(dr), Math.abs(dc)) !== ring) continue; // 只看這一圈的外框
-          const c = c0 + dc, r = r0 + dr;
+          const c = c0 + dc,
+            r = r0 + dr;
           if (c < 0 || r < 0 || c >= this.cols || r >= this.rows) continue;
           const j = r * this.cols + c;
           if (!layer[j]) continue;
@@ -439,11 +486,13 @@ const Nav = {
    * 全部都落在可走格子上、而且高度連續，才算可以直接走過去。 */
   lineClear(x0, z0, x1, z1, wide = false) {
     const layer = wide ? this.wide : this.ok;
-    const dx = x1 - x0, dz = z1 - z0;
+    const dx = x1 - x0,
+      dz = z1 - z0;
     const dist = Math.hypot(dx, dz);
     if (dist < 0.01) return true;
     const steps = Math.ceil(dist / 0.35);
-    const px = (-dz / dist) * 0.3, pz = (dx / dist) * 0.3; // 垂直方向的偏移
+    const px = (-dz / dist) * 0.3,
+      pz = (dx / dist) * 0.3; // 垂直方向的偏移
 
     for (let side = -1; side <= 1; side++) {
       let prevH = null;
@@ -451,7 +500,8 @@ const Nav = {
         const t = s / steps;
         const i = this.idx(x0 + dx * t + px * side, z0 + dz * t + pz * side);
         if (i < 0 || !layer[i]) return false;
-        if (prevH !== null && Math.abs(this.h[i] - prevH) > this.MAX_STEP) return false;
+        if (prevH !== null && Math.abs(this.h[i] - prevH) > this.MAX_STEP)
+          return false;
         prevH = this.h[i];
       }
     }
@@ -462,6 +512,7 @@ const Nav = {
    * 回傳從起點到終點的路徑點陣列 [{x, y, z}, ...]（已拉直簡化）；
    * 找不到路回傳 null。 */
   findPath(sx, sz, gx, gz, wide = false) {
+    // 大型敵人只走寬敞的格子。
     const layer = wide ? this.wide : this.ok;
     const start = this._nearestIn(layer, sx, sz, 6);
     const goal = this._nearestIn(layer, gx, gz, 12);
@@ -469,17 +520,23 @@ const Nav = {
     if (start === goal) return [{ x: gx, y: this.h[goal], z: gz }];
 
     const cols = this.cols;
-    const g = this._g, parent = this._parent, stamp = this._stamp;
+    const g = this._g,
+      parent = this._parent,
+      stamp = this._stamp;
     const id = ++this._stampId; // 用「這次搜尋的編號」取代每次清空陣列
-    const gc = goal % cols, gr = Math.floor(goal / cols);
+    const gc = goal % cols,
+      gr = Math.floor(goal / cols);
+    // 估計還剩多遠（八方向移動的距離）。
     const heuristic = (i) => {
-      const dc = Math.abs((i % cols) - gc), dr = Math.abs(Math.floor(i / cols) - gr);
+      const dc = Math.abs((i % cols) - gc),
+        dr = Math.abs(Math.floor(i / cols) - gr);
       return Math.max(dc, dr) + 0.41 * Math.min(dc, dr); // 八方向距離
     };
 
     // 簡單的二元堆積：每次取出「預估總成本最低」的格子
     const heap = [];
     const heapF = [];
+    // 放進最小堆積：依估計成本排序。
     const push = (i, f) => {
       let k = heap.length;
       heap.push(i);
@@ -492,15 +549,18 @@ const Nav = {
         k = p;
       }
     };
+    // 取出估計成本最低的格子。
     const popMin = () => {
       const top = heap[0];
-      const lastI = heap.pop(), lastF = heapF.pop();
+      const lastI = heap.pop(),
+        lastF = heapF.pop();
       if (heap.length) {
         heap[0] = lastI;
         heapF[0] = lastF;
         let k = 0;
         for (;;) {
-          const l = k * 2 + 1, r = l + 1;
+          const l = k * 2 + 1,
+            r = l + 1;
           let m = k;
           if (l < heap.length && heapF[l] < heapF[m]) m = l;
           if (r < heap.length && heapF[r] < heapF[m]) m = r;
@@ -520,6 +580,7 @@ const Nav = {
     let found = false;
     let iterations = 0;
 
+    // A* 主迴圈：一直取出最接近目標的格子，直到抵達終點。
     while (heap.length && iterations++ < 9000) {
       const cur = popMin();
       if (cur === goal) {
@@ -538,12 +599,17 @@ const Nav = {
           if (Math.abs(this.h[nb] - this.h[cur]) > this.MAX_STEP) continue;
           // 斜走時兩個相鄰的直向格子都必須可走，避免切過牆角
           if (dr && dc) {
-            const a = cur + dc, b = cur + dr * cols;
+            const a = cur + dc,
+              b = cur + dr * cols;
             if (!layer[a] || !layer[b]) continue;
-            if (Math.abs(this.h[a] - this.h[cur]) > this.MAX_STEP || Math.abs(this.h[b] - this.h[cur]) > this.MAX_STEP)
+            if (
+              Math.abs(this.h[a] - this.h[cur]) > this.MAX_STEP ||
+              Math.abs(this.h[b] - this.h[cur]) > this.MAX_STEP
+            )
               continue;
           }
-          const cost = g[cur] + (dr && dc ? 1.414 : 1) + (this.wide[nb] ? 0 : 0.6); // 稍微偏好寬敞的路
+          const cost =
+            g[cur] + (dr && dc ? 1.414 : 1) + (this.wide[nb] ? 0 : 0.6); // 稍微偏好寬敞的路
           if (stamp[nb] === id && cost >= g[nb]) continue;
           stamp[nb] = id;
           g[nb] = cost;
@@ -562,10 +628,19 @@ const Nav = {
     // 拉直：從目前的點出發，盡量直接連到最遠看得到的點
     const path = [];
     let at = 0;
+    // 把鋸齒狀的路徑拉直：能直接走到的中間點就略過。
     while (at < cells.length - 1) {
       let next = at + 1;
       for (let j = Math.min(cells.length - 1, at + 14); j > at + 1; j--) {
-        if (this.lineClear(this.cellX(cells[at]), this.cellZ(cells[at]), this.cellX(cells[j]), this.cellZ(cells[j]), wide)) {
+        if (
+          this.lineClear(
+            this.cellX(cells[at]),
+            this.cellZ(cells[at]),
+            this.cellX(cells[j]),
+            this.cellZ(cells[j]),
+            wide,
+          )
+        ) {
           next = j;
           break;
         }
@@ -586,7 +661,8 @@ const Nav = {
       const a = Math.random() * Math.PI * 2;
       const r = Util.rand(minR, maxR);
       const i = this.idx(x + Math.cos(a) * r, z + Math.sin(a) * r);
-      if (i >= 0 && layer[i]) return { x: this.cellX(i), y: this.h[i], z: this.cellZ(i) };
+      if (i >= 0 && layer[i])
+        return { x: this.cellX(i), y: this.h[i], z: this.cellZ(i) };
     }
     return null;
   },
@@ -595,7 +671,8 @@ const Nav = {
   randomPoint(wide = false) {
     for (let tries = 0; tries < 40; tries++) {
       const i = Util.pick(this.openCells);
-      if (!wide || this.wide[i]) return { x: this.cellX(i), y: this.h[i], z: this.cellZ(i) };
+      if (!wide || this.wide[i])
+        return { x: this.cellX(i), y: this.h[i], z: this.cellZ(i) };
     }
     const i = this.openCells[0];
     return { x: this.cellX(i), y: this.h[i], z: this.cellZ(i) };

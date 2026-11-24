@@ -1,9 +1,16 @@
+/*
+ * 測試：兩張地圖的出生點、補給、通道與建築支撐。
+ */
 import assert from "node:assert/strict";
 import { createHarness, THREE } from "./test-harness.mjs";
 
+// 兩張地圖都要有暢通的出生點、拿得到的補給與正常的敵人生成。
 for (const map of [0, 1]) {
   const h = createHarness();
-  h.run(`buildSelectedArena(${map});scene.updateMatrixWorld(true);`);
+  h.run(`
+    buildSelectedArena(${map});
+    scene.updateMatrixWorld(true);
+  `);
   assert.equal(
     h.run("isPositionBlocked(0,65)"),
     false,
@@ -12,7 +19,20 @@ for (const map of [0, 1]) {
   assert.equal(h.run("pickups.length"), 16);
   assert.equal(
     h.run(
-      "pickups.filter(item=>collisionBoxes.some(box=>bodyOverlapsCollider(box,item.root.position.x,item.root.position.z,.7,.15,1.75))).length",
+      `
+        pickups.filter((item) =>
+          collisionBoxes.some((box) =>
+            bodyOverlapsCollider(
+              box,
+              item.root.position.x,
+              item.root.position.z,
+              0.7,
+              0.15,
+              1.75,
+            ),
+          ),
+        ).length;
+      `,
     ),
     0,
     `map ${map}: supply approach stays open`,
@@ -21,7 +41,11 @@ for (const map of [0, 1]) {
   assert.equal(h.run("enemies.length"), 12);
   assert.equal(
     h.run(
-      "enemies.every(enemy=>!isBotBlocked(enemy.position.x,enemy.position.z,enemy))",
+      `
+        enemies.every(
+          (enemy) => !isBotBlocked(enemy.position.x, enemy.position.z, enemy),
+        );
+      `,
     ),
     true,
   );
@@ -43,8 +67,12 @@ for (const map of [0, 1]) {
   }
 }
 
+// 熔火工廠：設備、煙囪、門架與地面裝飾。
 const h = createHarness();
-h.run("buildSelectedArena(1);scene.updateMatrixWorld(true);");
+h.run(`
+  buildSelectedArena(1);
+  scene.updateMatrixWorld(true);
+`);
 assert.ok(
   h.run("scene.children.some(item=>item.name==='foundry-skyline')"),
   "foundry has its own industrial horizon",
@@ -57,6 +85,7 @@ const stacks = h.run(
 );
 assert.equal(stations.length, 4);
 assert.equal(stacks.length, 4);
+// 設備站在地上、擋得住移動，煙囪有設備支撐。
 for (const station of stations) {
   const bounds = new THREE.Box3().setFromObject(station);
   assert.ok(
@@ -86,6 +115,7 @@ const columns = h.run(
 );
 assert.equal(beams.length, 2);
 assert.equal(columns.length, 4);
+// 每根橫梁要由兩根柱子支撐。
 for (const beam of beams) {
   const bounds = new THREE.Box3().setFromObject(beam);
   const supports = columns.filter((column) =>
@@ -101,6 +131,7 @@ for (const beam of beams) {
       "portal columns touch the ground",
     );
 }
+// 中央通道要保持暢通。
 for (const z of [
   -65, -60, -55, -50, -45, -40, -35, -30, -25, -20, -15, 15, 20, 25, 30, 35, 40,
   45, 50, 55, 60, 65,
@@ -111,6 +142,7 @@ for (const z of [
     `central approach at ${z} remains open`,
   );
 }
+// 裝飾物：不擋路，也不增加射線檢查的負擔。
 const grates = h.run(
   "scene.children.find(item=>item.name==='foundry-floor-grates')",
 );
@@ -125,13 +157,22 @@ assert.equal(slats.count, 96);
 assert.equal(pipes.count, 8);
 assert.equal(
   h.run(
-    "worldMeshes.some(item=>['foundry-floor-grates','foundry-grate-slats','foundry-wall-pipes'].includes(item.name))",
+    `
+      worldMeshes.some((item) =>
+        [
+          "foundry-floor-grates",
+          "foundry-grate-slats",
+          "foundry-wall-pipes",
+        ].includes(item.name),
+      );
+    `,
   ),
   false,
   "decoration does not become extra raycast geometry",
 );
 const transform = new THREE.Matrix4(),
   position = new THREE.Vector3();
+// 地面格柵要貼齊地面。
 for (let i = 0; i < grates.count; i++) {
   grates.getMatrixAt(i, transform);
   position.setFromMatrixPosition(transform);
@@ -145,6 +186,7 @@ for (let i = 0; i < grates.count; i++) {
     "grates do not block movement",
   );
 }
+// 管線要靠在外牆上。
 for (let i = 0; i < pipes.count; i++) {
   pipes.getMatrixAt(i, transform);
   position.setFromMatrixPosition(transform);

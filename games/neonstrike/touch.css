@@ -1,6 +1,7 @@
-/* Touch controls use the same font, border and flat surface throughout. */
+/* 觸控按鈕使用一致的字型、邊框與平面底色。 */
 /* 閱讀提示：觸控專用布局：搖桿、操作鍵、安全區與手機電腦模式縮放；動作邏輯在 touch-controls.js。 */
 
+/* 沒有觸控時隱藏。 */
 #touchControls[hidden] {
   display: none !important;
 }
@@ -18,6 +19,7 @@
   -webkit-user-select: none;
   --touch-edge: max(12px, env(safe-area-inset-right));
 }
+/* 觸控裝置的文字與間距。 */
 .neon-touch :is(#lobby, .hud, .modal) {
   top: 0;
   left: 0;
@@ -98,6 +100,7 @@
 .neon-touch #game canvas {
   touch-action: none;
 }
+/* 按鈕外觀。 */
 #touchControls button {
   pointer-events: auto;
   touch-action: none;
@@ -122,6 +125,7 @@
   outline: 3px solid #b2f6ff;
   outline-offset: 3px;
 }
+/* 移動區。 */
 .touch-move {
   position: absolute;
   width: 124px;
@@ -166,12 +170,14 @@
   font-size: 12px !important;
   white-space: nowrap;
 }
+/* 射擊按鈕。 */
 #touchControls .touch-fire {
   grid-column: 2 / 4;
   min-height: 68px;
   background: #24536bdf;
   font-size: 16px;
 }
+/* 暫停按鈕。 */
 .touch-pause {
   position: absolute;
   top: max(12px, env(safe-area-inset-top));
@@ -204,9 +210,11 @@
     sans-serif;
   text-align: center;
 }
+/* 操作過之後隱藏提示。 */
 #touchControls[data-interacted="true"] .touch-hint {
   display: none;
 }
+/* 觸控時不顯示的項目。 */
 .neon-touch .fallback-hint,
 .neon-touch #fallbackButton {
   display: none;
@@ -345,7 +353,7 @@
 .neon-touch .combat-banner {
   top: 42%;
 }
-/* Sector toast sits above the threat banner, clear of the kill notice. */
+/* 區域提示放在威脅橫幅上方，避開擊殺通知。 */
 .neon-touch .zone-toast {
   top: 31%;
 }
@@ -353,10 +361,12 @@
   top: 56%;
   bottom: auto;
 }
+/* 單獨開啟時的位置。 */
 .standalone-portal-game.neon-touch :is(#touchControls, #lobby, .hud, .modal) {
   top: 46px;
   height: calc((100% - 46px) / var(--touch-scale, 1));
 }
+/* 觸控說明。 */
 .touch-manual {
   margin: 14px 0;
   padding: 12px;
@@ -367,6 +377,9 @@
     14px/1.8 "Noto Sans TC",
     sans-serif;
 }
+
+/* ---------- 橫拿手機 ---------- */
+
 @media (orientation: landscape) and (max-height: 540px) {
   .touch-move {
     width: 106px;

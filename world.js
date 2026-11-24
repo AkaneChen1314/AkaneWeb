@@ -13,6 +13,7 @@
     petal: "一點櫻色，一點溫柔，今天也有新的光。",
   };
   const key = "blue-world-tone-v1";
+  // 套用一種光色，更新按鈕、說明文字，並存成偏好。
   function select(tone) {
     if (!messages[tone]) tone = "ocean";
     document.body.dataset.worldTone = tone;

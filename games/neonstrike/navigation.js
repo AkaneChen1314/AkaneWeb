@@ -9,6 +9,7 @@ export const NAV_NARROW = 1;
 export const NAV_BLOCKED = 2;
 
 const SQRT2 = Math.SQRT2;
+// 八個方向與距離。
 const NEIGHBORS = [
   [1, 0, 1],
   [-1, 0, 1],
@@ -20,6 +21,7 @@ const NEIGHBORS = [
   [-1, -1, SQRT2],
 ];
 
+// 建立導航格；格子大小 0.5 公尺。
 export function createNavGrid({ half = 72, cell = 0.5, limit = half } = {}) {
   const size = Math.ceil((half * 2) / cell);
   const count = size * size;
@@ -32,18 +34,19 @@ export function createNavGrid({ half = 72, cell = 0.5, limit = half } = {}) {
     comp: new Int32Array(count).fill(-1),
     componentSizes: [],
     mainComponent: -1,
-    // A* scratch buffers are reused so long matches do not churn memory.
+    // A* 的暫存陣列重複使用，長時間遊玩也不會一直配置記憶體。
     g: new Float32Array(count),
     parent: new Int32Array(count),
     seen: new Uint32Array(count),
     closed: new Uint32Array(count),
-    // Lazy deletion can push one cell more than once, so the queue has headroom.
+    // 延後刪除會讓同一格放進去不只一次，所以佇列要留空間。
     heap: new Int32Array(count * 4),
     heapF: new Float32Array(count * 4),
     stamp: 0,
   };
 }
 
+// 場景座標換成格子編號。
 export function cellIndex(grid, x, z) {
   const ix = Math.floor((x + grid.half) / grid.cell),
     iz = Math.floor((z + grid.half) / grid.cell);
@@ -51,6 +54,7 @@ export function cellIndex(grid, x, z) {
   return iz * grid.size + ix;
 }
 
+// 格子編號換成中心座標。
 export function cellCenter(grid, index) {
   const ix = index % grid.size,
     iz = (index - ix) / grid.size;
@@ -60,19 +64,18 @@ export function cellCenter(grid, index) {
   };
 }
 
+// 這一格能不能走；大型敵人需要更寬的空間。
 function passable(grid, index, large) {
   return index >= 0 && grid.cls[index] <= (large ? NAV_OPEN : NAV_NARROW);
 }
 
+// 這個位置能不能走。
 export function isWalkable(grid, x, z, large = false) {
   return passable(grid, cellIndex(grid, x, z), large);
 }
 
-/**
- * Mark every cell whose centre would put a body inside a collider.
- * `overlaps(box, x, z, radius)` must use the same body test as the actors.
- * `radii` = [largeRadius, standardRadius] including a safety margin.
- */
+// 標出會讓身體卡進障礙的格子。overlaps(box, x, z, radius) 必須和角色用同一套身
+// 體判定；radii = [大型半徑, 一般半徑]，已含安全距離。
 export function rasterizeColliders(grid, colliders, overlaps, radii, area) {
   const [largeRadius, smallRadius] = radii;
   const { cell, half, size, cls, limit } = grid;
@@ -105,7 +108,10 @@ export function rasterizeColliders(grid, colliders, overlaps, radii, area) {
         box.min.z > area.maxZ + largeRadius)
     )
       continue;
-    const i0 = Math.max(minI, Math.floor((box.min.x - largeRadius + half) / cell)),
+    const i0 = Math.max(
+        minI,
+        Math.floor((box.min.x - largeRadius + half) / cell),
+      ),
       i1 = Math.min(maxI, Math.floor((box.max.x + largeRadius + half) / cell)),
       j0 = Math.max(minJ, Math.floor((box.min.z - largeRadius + half) / cell)),
       j1 = Math.min(maxJ, Math.floor((box.max.z + largeRadius + half) / cell));
@@ -122,7 +128,7 @@ export function rasterizeColliders(grid, colliders, overlaps, radii, area) {
   }
 }
 
-/** Flood-fill walkable regions so patrol goals are never chosen on islands. */
+// 把相連的區域編號，巡邏目標不會選到孤島。
 export function labelComponents(grid) {
   const { size, cls, comp } = grid,
     queue = grid.heap;
@@ -149,7 +155,7 @@ export function labelComponents(grid) {
         if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;
         const next = nz * size + nx;
         if (cls[next] === NAV_BLOCKED || comp[next] >= 0) continue;
-        // No diagonal squeeze between two blocked corners.
+        // 不可以從兩個擋住的角之間斜穿。
         if (
           dx &&
           dz &&
@@ -170,13 +176,20 @@ export function labelComponents(grid) {
   grid.mainComponent = best;
 }
 
+// 這個位置屬於哪個區域。
 export function componentAt(grid, x, z) {
   const index = cellIndex(grid, x, z);
   return index < 0 ? -1 : grid.comp[index];
 }
 
-/** Ring search for the closest usable cell; returns a cell index or -1. */
-export function nearestWalkableIndex(grid, x, z, maxDistance = 4, large = false) {
+// 一圈一圈往外找最近的可用格；找不到回傳 -1。
+export function nearestWalkableIndex(
+  grid,
+  x,
+  z,
+  maxDistance = 4,
+  large = false,
+) {
   const start = cellIndex(grid, x, z);
   if (passable(grid, start, large)) return start;
   const { size, half, cell } = grid,
@@ -205,12 +218,13 @@ export function nearestWalkableIndex(grid, x, z, maxDistance = 4, large = false)
   return -1;
 }
 
+// 最近可以站的位置。
 export function nearestWalkable(grid, x, z, maxDistance = 4, large = false) {
   const index = nearestWalkableIndex(grid, x, z, maxDistance, large);
   return index < 0 ? null : cellCenter(grid, index);
 }
 
-/** Conservative straight-line test across the grid (samples every 0.2 m). */
+// 保守的直線檢查，每 0.2 公尺取樣一次。
 export function lineClear(grid, ax, az, bx, bz, large = false) {
   const dx = bx - ax,
     dz = bz - az,
@@ -227,6 +241,7 @@ export function lineClear(grid, ax, az, bx, bz, large = false) {
   return true;
 }
 
+// 放進最小堆積。
 function heapPush(grid, size, index, f) {
   const heap = grid.heap,
     heapF = grid.heapF;
@@ -243,6 +258,7 @@ function heapPush(grid, size, index, f) {
   return size + 1;
 }
 
+// 取出最小的一個。
 function heapPop(grid, size) {
   const heap = grid.heap,
     heapF = grid.heapF,
@@ -265,10 +281,8 @@ function heapPop(grid, size) {
   return top;
 }
 
-/**
- * A* over the grid. Returns smoothed world waypoints (excluding the start) or
- * null when the goal is unreachable or the search budget runs out.
- */
+// 在格子上做 A* 搜尋，回傳平滑後的路徑點（不含起點）；到不了或搜尋太久就回傳
+// null。
 export function findPath(grid, sx, sz, tx, tz, options = {}) {
   const large = options.large === true,
     maxNodes = options.maxNodes ?? 30000;
@@ -282,12 +296,13 @@ export function findPath(grid, sx, sz, tx, tz, options = {}) {
   const stamp = ++grid.stamp;
   const gx = goal % size,
     gz = (goal - gx) / size;
+  // 到終點的估計距離。
   const heuristic = (index) => {
     const ix = index % size,
       iz = (index - ix) / size,
       dx = Math.abs(ix - gx),
       dz = Math.abs(iz - gz);
-    // Slight overestimate keeps searches short on open ground.
+    // 稍微高估，空曠地方的搜尋比較短。
     return (Math.max(dx, dz) + (SQRT2 - 1) * Math.min(dx, dz)) * 1.08;
   };
   let open = 0,
@@ -322,7 +337,7 @@ export function findPath(grid, sx, sz, tx, tz, options = {}) {
         (cls[iz * size + nx] > limitClass || cls[nz * size + ix] > limitClass)
       )
         continue;
-      // Cells that only fit a slim body cost a little more, keeping routes off walls.
+      // 只容得下瘦身體的格子成本高一點，路徑不會貼著牆。
       const score = base + cost + (cls[next] === NAV_NARROW ? 0.35 : 0);
       if (seen[next] === stamp && score >= g[next]) continue;
       seen[next] = stamp;
@@ -339,7 +354,7 @@ export function findPath(grid, sx, sz, tx, tz, options = {}) {
     if (index === start) break;
   }
   raw.reverse();
-  // String pulling: keep only corners that break a clear straight line.
+  // 拉直路徑：只保留打斷直線的轉角。
   const points = raw.map((index) => cellCenter(grid, index));
   const smooth = [];
   let anchor = { x: sx, z: sz },
@@ -365,7 +380,7 @@ export function findPath(grid, sx, sz, tx, tz, options = {}) {
   return smooth.length ? smooth : [points[points.length - 1]];
 }
 
-/** Evenly spaced patrol anchors on the main walkable region. */
+// 主要區域上平均分布的巡邏點。
 export function samplePatrolPoints(grid, spacing = 7, random = Math.random) {
   const points = [],
     steps = Math.floor((grid.limit * 2) / spacing);
@@ -376,12 +391,16 @@ export function samplePatrolPoints(grid, spacing = 7, random = Math.random) {
       const index = nearestWalkableIndex(grid, x, z, spacing * 0.45, false);
       if (index < 0 || grid.comp[index] !== grid.mainComponent) continue;
       const center = cellCenter(grid, index);
-      points.push({ x: center.x, z: center.z, open: grid.cls[index] === NAV_OPEN });
+      points.push({
+        x: center.x,
+        z: center.z,
+        open: grid.cls[index] === NAV_OPEN,
+      });
     }
   return points;
 }
 
-/** Random reachable point in a ring around (x, z) that shares `component`. */
+// 在 (x, z) 周圍一圈、同一區域裡隨機找一點。
 export function randomPointNear(
   grid,
   x,

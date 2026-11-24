@@ -1,8 +1,15 @@
+/*
+ * 測試：地標的細節（車廂文字、油桶警示與管橋）。
+ */
 import assert from "node:assert/strict";
 import { createHarness, THREE } from "./test-harness.mjs";
 
+// 港區車廂兩側都要有看得清楚的文字。
 const harbor = createHarness();
-harbor.run("buildSelectedArena(0);scene.updateMatrixWorld(true);");
+harbor.run(`
+  buildSelectedArena(0);
+  scene.updateMatrixWorld(true);
+`);
 const labels = [];
 harbor.run("scene").traverse((item) => {
   if (item.name === "harbor-rail-label") labels.push(item);
@@ -12,6 +19,7 @@ assert.equal(
   4,
   "both rail cars need a readable label on each side",
 );
+// 文字貼在貨櫃上，不重疊閃爍，也不增加射線目標。
 for (const label of labels) {
   assert.equal(
     label.parent.userData.container,
@@ -28,9 +36,13 @@ for (const label of labels) {
     "decorative lettering does not add a second shot collider",
   );
 }
+// 兩張地圖的油桶警示要貼著桶身，並避開金屬箍。
 for (const map of [0, 1]) {
   const h = createHarness();
-  h.run(`buildSelectedArena(${map});scene.updateMatrixWorld(true);`);
+  h.run(`
+    buildSelectedArena(${map});
+    scene.updateMatrixWorld(true);
+  `);
   const barrels = Array.from(h.run("explosiveBarrels"));
   assert.ok(barrels.length > 0);
   for (const barrel of barrels) {
@@ -49,8 +61,12 @@ for (const map of [0, 1]) {
     );
   }
 }
+// 熔火工廠的管橋：有柱子支撐，底下可以通行。
 const foundry = createHarness();
-foundry.run("buildSelectedArena(1);scene.updateMatrixWorld(true);");
+foundry.run(`
+  buildSelectedArena(1);
+  scene.updateMatrixWorld(true);
+`);
 const bridges = foundry.run(
   "scene.children.filter(item=>item.name==='foundry-pipe-bridge')",
 );
@@ -59,7 +75,14 @@ for (const bridge of bridges) {
   const bounds = new THREE.Box3().setFromObject(bridge);
   for (const x of [-11, 11]) {
     const support = foundry.run(
-      `worldMeshes.find(item=>Math.abs(item.position.x-(${x}))<.001&&Math.abs(item.position.z-(${bridge.position.z}))<.001&&Math.abs(item.position.y-2.6)<.001)`,
+      `
+        worldMeshes.find(
+          (item) =>
+            Math.abs(item.position.x - ${x}) < 0.001 &&
+            Math.abs(item.position.z - ${bridge.position.z}) < 0.001 &&
+            Math.abs(item.position.y - 2.6) < 0.001,
+        );
+      `,
     );
     assert.ok(
       support &&
@@ -77,7 +100,13 @@ for (const bridge of bridges) {
   );
   assert.ok(
     foundry.run(
-      `collisionBoxes.some(box=>box.min.y>4&&bodyOverlapsCollider(box,0,${bridge.position.z},.1,4.5,4.8))`,
+      `
+        collisionBoxes.some(
+          (box) =>
+            box.min.y > 4 &&
+            bodyOverlapsCollider(box, 0, ${bridge.position.z}, 0.1, 4.5, 4.8),
+        );
+      `,
     ),
     "pipe can block projectiles at its height",
   );

@@ -3,13 +3,20 @@
   "use strict";
   let portalPaused = false;
   const S = window.Serpent,
+    // ---------- 共用小工具 ----------
+
+    // 用 id 找元素、用選擇器找全部的縮寫。
     $ = (id) => document.getElementById(id),
     $$ = (selector) => [...document.querySelectorAll(selector)];
+  // 圖示的 SVG。
   const icon = (name) =>
     `<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;
+  // 小蛇頭像。
   const avatar = (char) =>
     `<span class="mini-snake" style="--c:${char.color}" aria-hidden="true"></span>`;
+  // 數字加上千分位。
   const number = (n) => Math.floor(n).toLocaleString("zh-TW");
+  // 秒數換成 分:秒。
   const timeString = (t) =>
     `${Math.floor(t / 60)
       .toString()
@@ -27,6 +34,7 @@
   const motionPreference = window.matchMedia(
     "(prefers-reduced-motion: reduce)",
   );
+  // 是否要減少動態（遊戲設定或系統設定其中一個有開）。
   const reduced = () =>
     profile.settings.reducedMotion || motionPreference.matches;
   let game = null,
@@ -72,6 +80,7 @@
     fury: "怒焰",
     shield: "護盾",
   };
+  // 道具的簡短說明，撿到時顯示。
   const POWER_SHORT = {
     speed: "速度 +30%・衝刺免費",
     magnet: "吸附範圍 +9",
@@ -80,6 +89,7 @@
     bomb: "吃下就爆炸 90 傷害",
     rainbow: "+250 分・經驗 +14",
   };
+  // 儲存個人檔案；瀏覽器不能存時只提醒一次。
   function save() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
@@ -90,12 +100,14 @@
     }
     $("wallet").textContent = number(profile.crystals);
   }
+  // 畫面上的短訊息。
   function toast(message) {
     $("toast").textContent = message;
     $("toast").classList.add("visible");
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => $("toast").classList.remove("visible"), 3300);
   }
+  // 畫面中央的提示橫幅。
   function banner(message, tone = "") {
     const b = $("run-banner");
     b.textContent = message;
@@ -106,6 +118,7 @@
     clearTimeout(bannerTimer);
     bannerTimer = setTimeout(() => b.classList.remove("visible"), 2600);
   }
+  // 首領登場的介紹。
   function showBossIntro(e) {
     const el = $("boss-intro");
     el.style.setProperty("--boss", e.color || "#ff7a81");
@@ -122,7 +135,12 @@
     sound.note(55, 1.4, 0.2, "sawtooth", 0, 110);
     sound.note(110, 1.2, 0.1, "triangle", 0.2, 55);
   }
+
+  // ---------- 音效 ----------
+
+  // 用 Web Audio 合成音效與背景音樂，不需要音檔。
   class Sound {
+    // 記錄上次播放的時間，避免同一種音效太密集。
     constructor() {
       this.ctx = null;
       this.musicAt = 0;
@@ -130,6 +148,7 @@
       this.lastEat = 0;
       this.lastHit = 0;
     }
+    // 第一次操作後才建立音訊（瀏覽器的規定）。
     init() {
       try {
         if (!this.ctx)
@@ -137,6 +156,7 @@
         if (this.ctx.state === "suspended") this.ctx.resume().catch(() => {});
       } catch (_) {}
     }
+    // 播放一個音：頻率、長度、音量、波形、延遲與滑音。
     note(freq, duration, volume = 0.1, type = "sine", delay = 0, slide = 0) {
       if (!profile.settings.sound || !this.ctx || this.ctx.state !== "running")
         return;
@@ -158,11 +178,13 @@
       g.connect(ctx.destination);
       o.start(now);
       o.stop(now + duration + 0.03);
+      // 播完就斷開，釋放資源。
       o.onended = () => {
         o.disconnect();
         g.disconnect();
       };
     }
+    // 吃到食物。
     eat(type) {
       if (!this.ctx || this.ctx.currentTime - this.lastEat < 0.05) return;
       this.lastEat = this.ctx.currentTime;
@@ -181,6 +203,7 @@
     bite() {
       this.note(340, 0.06, 0.05, "square", 0, 150);
     }
+    // 打中敵人，衝撞的聲音比較重。
     hit(source) {
       if (!this.ctx || this.ctx.currentTime - this.lastHit < 0.04) return;
       this.lastHit = this.ctx.currentTime;
@@ -189,6 +212,7 @@
         this.note(90, 0.2, 0.1, "triangle", 0, 45);
       } else this.note(200, 0.08, 0.05, "triangle", 0, 70);
     }
+    // 纏繞成功。
     coil(n) {
       [392, 523, 659, 880].forEach((f, i) =>
         this.note(f, 0.35, 0.1, "triangle", i * 0.045),
@@ -198,11 +222,13 @@
         this.note(1318, 0.4, 0.08, "sine", 0.2);
       }
     }
+    // 撿到道具。
     power() {
       [660, 880, 1320].forEach((f, i) =>
         this.note(f, 0.22, 0.1, "sine", i * 0.06),
       );
     }
+    // 穿過傳送門。
     portal() {
       this.note(220, 0.45, 0.12, "sine", 0, 880);
       this.note(440, 0.35, 0.06, "triangle", 0.1, 1320);
@@ -210,6 +236,7 @@
     boost() {
       this.note(300, 0.25, 0.07, "sawtooth", 0, 900);
     }
+    // 打破寶箱。
     cache() {
       [784, 988, 1175, 1568].forEach((f, i) =>
         this.note(f, 0.2, 0.08, "triangle", i * 0.05),
@@ -218,10 +245,12 @@
     shield() {
       this.note(900, 0.3, 0.1, "sine", 0, 300);
     }
+    // 爆炸。
     boom() {
       this.note(90, 0.5, 0.25, "triangle", 0, 40);
       this.note(60, 0.6, 0.14, "sawtooth", 0, 30);
     }
+    // 使用技能。
     skill() {
       this.note(130, 0.45, 0.18, "sawtooth", 0, 820);
       this.note(1046, 0.5, 0.08, "sine", 0.1);
@@ -229,16 +258,19 @@
     hurt() {
       this.note(140, 0.22, 0.23, "triangle", 0, 48);
     }
+    // 升級。
     level() {
       [523, 659, 784, 1046].forEach((n, i) =>
         this.note(n, 0.3, 0.12, "sine", i * 0.08),
       );
     }
+    // 結束：勝利往上、失敗往下的音階。
     end(win) {
       (win ? [523, 659, 784, 1046] : [330, 277, 220, 165]).forEach((n, i) =>
         this.note(n, 0.5, 0.12, "triangle", i * 0.14),
       );
     }
+    // 背景音樂：每 0.28 秒依音階彈一個音。
     music() {
       if (!this.ctx || !profile.settings.sound) return;
       const t = this.ctx.currentTime;
@@ -265,6 +297,10 @@
     "先凍住敵人，再繞圈纏繞一網打盡。",
     "血最多，開護盾直接撞進敵群。",
   ];
+
+  // ---------- 大廳 ----------
+
+  // 切換角色，更新介紹、技能與能力條。
   function setCharacter(index) {
     profile.selected = index;
     const c = S.CHARACTERS[index];
@@ -279,8 +315,17 @@
     $("ability-icon").innerHTML = `<use href="#i-${c.icon}"/>`;
     $("character-stats").innerHTML = ["靈巧", "生存", "吸附"]
       .map(
-        (name, i) =>
-          `<div class="stat-row"><span>${name}</span><div class="stat-meter"><span style="transform:scaleX(${c.stats[i] / 100});background:${c.color}"></span></div><b>${c.stats[i]}</b></div>`,
+        (name, i) => /* HTML */ `<div class="stat-row">
+            <span>${name}</span>
+            <div class="stat-meter">
+              <span
+                style="transform:scaleX(${
+                  c.stats[i] / 100
+                });background:${c.color}"
+              ></span>
+            </div>
+            <b>${c.stats[i]}</b>
+          </div>`,
       )
       .join("");
     $("ability-meta").innerHTML = [
@@ -308,6 +353,7 @@
     });
     save();
   }
+  // 切換戰場。
   function setWorld(index) {
     profile.world = index;
     $$(".world-card").forEach((b, i) => {
@@ -317,6 +363,7 @@
     $("world-count").textContent = `0${index + 1} — 03`;
     save();
   }
+  // 切換模式。
   function setMode(mode) {
     profile.mode = mode;
     $$(".mode-card").forEach((b) => {
@@ -328,6 +375,7 @@
       mode === "zen" ? "悠遊秘境沒有敵人，難度不影響。" : "";
     save();
   }
+  // 切換難度。
   function setDifficulty(id) {
     profile.difficulty = S.DIFFICULTIES[id] ? id : "normal";
     const d = S.DIFFICULTIES[profile.difficulty];
@@ -339,6 +387,7 @@
     $("difficulty-desc").textContent = d.desc;
     save();
   }
+  // 切換大廳頁面（大廳、研究所、紀錄）。
   function navigate(next) {
     page = next;
     $$(".nav-button").forEach((b) =>
@@ -349,17 +398,48 @@
     if (next === "lab") renderLab();
     if (next === "records") renderRecords();
   }
+  // 進化研究所：用晶體買永久強化。
   function renderLab() {
-    $("secondary-page").innerHTML =
-      `<div class="page-intro"><p class="section-label">把每次冒險，化為下一次的力量。</p><h1>進化研究所</h1><p>使用遊玩獲得的晶體永久強化蛇靈。升級將在下一局生效，每項最多 5 級。</p></div><div class="lab-grid">${S.META.map(
-        (m) => {
+    $("secondary-page").innerHTML = /* HTML */ `<div class="page-intro">
+        <p class="section-label">把每次冒險，化為下一次的力量。</p>
+        <h1>進化研究所</h1>
+        <p>
+          使用遊玩獲得的晶體永久強化蛇靈。升級將在下一局生效，每項最多 5 級。
+        </p>
+      </div>
+      <div class="lab-grid">
+        ${S.META.map((m) => {
           const lv = profile.upgrades[m.id],
             price = m.base * (lv + 1);
-          return `<article class="lab-card">${icon(m.icon)}<h2>${m.name}</h2><p>${m.description}</p><span class="role-tag">目前等級 ${lv} / 5</span><div class="lab-level">${Array.from({ length: 5 }, (_, i) => `<i class="${i < lv ? "filled" : ""}"></i>`).join("")}</div><button class="primary-button" data-buy="${m.id}" ${lv >= 5 || profile.crystals < price ? "disabled" : ""}>${icon("diamond")}${lv >= 5 ? "已達最高等級" : `${price} 晶體 / ${profile.crystals < price ? "晶體不足" : "升級強化"}`}</button></article>`;
-        },
-      ).join(
-        "",
-      )}</div><p class="help-note">收集金色晶體、打破晶簇寶箱、累積得分、完成挑戰與成就，都能獲得晶體。悠遊秘境也能累積進度。</p>`;
+          return /* HTML */ `<article class="lab-card">
+            ${icon(m.icon)}
+            <h2>${m.name}</h2>
+            <p>${m.description}</p>
+            <span class="role-tag">目前等級 ${lv} / 5</span>
+            <div class="lab-level">
+              ${Array.from(
+                { length: 5 },
+                (_, i) =>
+                  /* HTML */ `<i class="${i < lv ? "filled" : ""}"></i>`,
+              ).join("")}
+            </div>
+            <button
+              class="primary-button"
+              data-buy="${m.id}"
+              ${lv >= 5 || profile.crystals < price ? "disabled" : ""}
+            >
+              ${icon("diamond")}${
+                lv >= 5
+                  ? "已達最高等級"
+                  : `${price} 晶體 / ${profile.crystals < price ? "晶體不足" : "升級強化"}`
+              }
+            </button>
+          </article>`;
+        }).join("")}
+      </div>
+      <p class="help-note">
+        收集金色晶體、打破晶簇寶箱、累積得分、完成挑戰與成就，都能獲得晶體。悠遊秘境也能累積進度。
+      </p>`;
     $$("[data-buy]").forEach(
       (b) =>
         (b.onclick = () => {
@@ -372,6 +452,7 @@
         }),
     );
   }
+  // 冒險紀錄。
   function renderRecords() {
     const stats = [
       [number(profile.best), "歷史最高分"],
@@ -379,9 +460,83 @@
       [number(profile.totalKills), "累計擊退"],
       [profile.wins, "挑戰完成"],
     ];
-    $("secondary-page").innerHTML =
-      `<div class="page-intro"><p class="section-label">每一道軌跡，都值得記住。</p><h1>冒險紀錄</h1></div><div class="record-stats">${stats.map(([n, label]) => `<div class="record-stat"><strong>${n}</strong><span>${label}</span></div>`).join("")}</div><div class="section-row"><h2>成就收藏</h2><span>${profile.achievements.length} / ${S.ACHIEVEMENTS.length}　每項獎勵 10 晶體</span></div><div class="achievement-grid">${S.ACHIEVEMENTS.map((a) => `<article class="achievement ${profile.achievements.includes(a.id) ? "earned" : ""}">${icon("trophy")}<div><h3>${a.name}${profile.achievements.includes(a.id) ? " ✓" : ""}</h3><p>${a.desc}</p></div></article>`).join("")}</div><div class="history"><h2>最近冒險</h2>${profile.history.length ? `<table><thead><tr><th>角色</th><th>模式 / 戰場</th><th>得分</th><th>時間</th><th>結果</th></tr></thead><tbody>${profile.history.map((r) => `<tr><td>${S.CHARACTERS[r.character].name}</td><td>${S.MODES[r.mode].name} / ${S.WORLDS[r.world].name}${r.mode === "zen" ? "" : ` / ${S.DIFFICULTIES[r.difficulty || "normal"].name}`}</td><td>${number(r.score)}</td><td>${timeString(r.time)}</td><td>${r.won ? "完成" : "已結算"}</td></tr>`).join("")}</tbody></table>` : '<p class="empty-note">還沒有冒險紀錄。選一隻蛇靈，展開你的第一趟旅程吧。</p>'}</div>`;
+    $("secondary-page").innerHTML = /* HTML */ `<div class="page-intro">
+        <p class="section-label">每一道軌跡，都值得記住。</p>
+        <h1>冒險紀錄</h1>
+      </div>
+      <div class="record-stats">
+        ${stats
+          .map(
+            ([n, label]) => /* HTML */ `<div class="record-stat">
+                <strong>${n}</strong><span>${label}</span>
+              </div>`,
+          )
+          .join("")}
+      </div>
+      <div class="section-row">
+        <h2>成就收藏</h2>
+        <span
+          >${profile.achievements.length} / ${S.ACHIEVEMENTS.length}　每項獎勵
+          10 晶體</span
+        >
+      </div>
+      <div class="achievement-grid">
+        ${S.ACHIEVEMENTS.map(
+          (a) => /* HTML */ `<article
+              class="achievement ${
+                profile.achievements.includes(a.id) ? "earned" : ""
+              }"
+            >
+              ${icon("trophy")}
+              <div>
+                <h3>
+                  ${a.name}${profile.achievements.includes(a.id) ? " ✓" : ""}
+                </h3>
+                <p>${a.desc}</p>
+              </div>
+            </article>`,
+        ).join("")}
+      </div>
+      <div class="history">
+        <h2>最近冒險</h2>
+        ${
+          profile.history.length
+            ? /* HTML */ `<table>
+              <thead>
+                <tr>
+                  <th>角色</th>
+                  <th>模式 / 戰場</th>
+                  <th>得分</th>
+                  <th>時間</th>
+                  <th>結果</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${profile.history
+                  .map(
+                    (r) => /* HTML */ `<tr>
+                        <td>${S.CHARACTERS[r.character].name}</td>
+                        <td>
+                          ${S.MODES[r.mode].name} /
+                          ${S.WORLDS[r.world].name}${
+                            r.mode === "zen"
+                              ? ""
+                              : ` / ${S.DIFFICULTIES[r.difficulty || "normal"].name}`
+                          }
+                        </td>
+                        <td>${number(r.score)}</td>
+                        <td>${timeString(r.time)}</td>
+                        <td>${r.won ? "完成" : "已結算"}</td>
+                      </tr>`,
+                  )
+                  .join("")}
+              </tbody>
+            </table>`
+            : '<p class="empty-note">還沒有冒險紀錄。選一隻蛇靈，展開你的第一趟旅程吧。</p>'
+        }
+      </div>`;
   }
+  // 清掉所有按住的輸入，避免切換畫面後角色自己動。
   function resetInput() {
     keys.clear();
     dashTouch = false;
@@ -389,11 +544,12 @@
     joystickAngle = null;
     $("joystick").firstElementChild.style.transform = "";
   }
-  // Menus that pop up mid-action (evolution, results) start "guarded": the dialog itself takes focus and
-  // clicks / Space / Enter are ignored briefly, so a held dash key can never pick an option by accident.
+  // 戰鬥中跳出的視窗（升級、結算）一開始會先防誤按：焦點放在視窗本身，短時間內
+  // 不理會點擊、空白鍵與 Enter，按著衝刺鍵不會誤選。
   let modalGuardUntil = 0,
     guardTimer = 0,
     upgradeArmed = false;
+  // 打開視窗；guard 期間不接受鍵盤，避免誤按。
   function showModal(type, html, wide = false, opts = {}) {
     if (!modalType) focusBeforeModal = document.activeElement;
     resetInput();
@@ -426,7 +582,9 @@
       (focusable || $("modal")).focus();
     });
   }
+  // 還在防誤按的時間內嗎。
   const guarded = () => performance.now() < modalGuardUntil;
+  // 關閉視窗，焦點回到原本的元素。
   function closeModal() {
     modalType = null;
     $("modal-backdrop").classList.add("hidden");
@@ -436,6 +594,10 @@
       focusBeforeModal.focus();
     focusBeforeModal = null;
   }
+
+  // ---------- 玩法手冊與新手練習 ----------
+
+  // 完整玩法手冊。
   function help(topic = "start", fromPause = false) {
     sound.init();
     const inRun = !!game && !game.over;
@@ -445,9 +607,59 @@
       : "start";
     showModal(
       "help",
-      `<button class="icon-button modal-close" id="close-help" aria-label="關閉規則">${icon("close")}</button><h2 id="modal-title">霓境蛇行・玩法手冊</h2><p class="modal-subtitle">三個按鍵就能玩：移動、衝刺、技能。咬擊會自動發動。${inRun ? "閱讀中：遊戲與倒數已暫停。" : ""}</p><div class="guide-tabs" role="tablist" aria-label="規則章節">${SerpentGuide.topics.map(([id, label]) => `<button role="tab" id="tab-${id}" aria-selected="${id === selected}" aria-controls="guide-content" tabindex="${id === selected ? 0 : -1}" data-topic="${id}">${label}</button>`).join("")}</div><div id="guide-content" class="guide-content" role="tabpanel" tabindex="0" aria-labelledby="tab-${selected}">${SerpentGuide.content(selected)}</div><div class="modal-actions">${!inRun ? '<button class="primary-button" id="guide-practice">進入八步無傷練習</button>' : ""}<button class="${inRun ? "primary" : "secondary"}-button" id="help-done">${inRun ? "返回暫停選單" : "返回大廳"}</button></div>`,
+      /* HTML */ `<button
+          class="icon-button modal-close"
+          id="close-help"
+          aria-label="關閉規則"
+        >
+          ${icon("close")}
+        </button>
+        <h2 id="modal-title">霓境蛇行・玩法手冊</h2>
+        <p class="modal-subtitle">
+          三個按鍵就能玩：移動、衝刺、技能。咬擊會自動發動。${
+            inRun ? "閱讀中：遊戲與倒數已暫停。" : ""
+          }
+        </p>
+        <div class="guide-tabs" role="tablist" aria-label="規則章節">
+          ${SerpentGuide.topics
+            .map(
+              ([id, label]) => /* HTML */ `<button
+                  role="tab"
+                  id="tab-${id}"
+                  aria-selected="${id === selected}"
+                  aria-controls="guide-content"
+                  tabindex="${id === selected ? 0 : -1}"
+                  data-topic="${id}"
+                >
+                  ${label}
+                </button>`,
+            )
+            .join("")}
+        </div>
+        <div
+          id="guide-content"
+          class="guide-content"
+          role="tabpanel"
+          tabindex="0"
+          aria-labelledby="tab-${selected}"
+        >
+          ${SerpentGuide.content(selected)}
+        </div>
+        <div class="modal-actions">
+          ${
+            !inRun
+              ? '<button class="primary-button" id="guide-practice">進入八步無傷練習</button>'
+              : ""
+          }<button
+            class="${inRun ? "primary" : "secondary"}-button"
+            id="help-done"
+          >
+            ${inRun ? "返回暫停選單" : "返回大廳"}
+          </button>
+        </div>`,
       true,
     );
+    // 關閉手冊，回到原本該顯示的畫面。
     const finish = () =>
       game && !game.over && game.needsUpgrade
         ? showUpgrades()
@@ -458,6 +670,7 @@
     if ($("guide-practice"))
       $("guide-practice").onclick = () => startGame(true);
     const tabs = $$("[data-topic]");
+    // 切換手冊的分頁。
     function selectTopic(id, focus = true) {
       tabs.forEach((b) => {
         const on = b.dataset.topic === id;
@@ -471,6 +684,7 @@
     }
     tabs.forEach((b, i) => {
       b.onclick = () => selectTopic(b.dataset.topic);
+      // 分頁支援方向鍵。
       b.onkeydown = (e) => {
         let next = i;
         if (e.key === "ArrowRight") next = (i + 1) % tabs.length;
@@ -487,34 +701,168 @@
       tabs.find((b) => b.dataset.topic === selected)?.focus(),
     );
   }
-  // ---------- Pre-run briefing: everything you will meet this run, before you start ----------
+  // ---------- 出發前說明：先認識這一局會遇到的東西 ----------
   const briefIcon = {
-    chest: (c) =>
-      `<svg viewBox="0 0 32 32"><rect x="5" y="13" width="22" height="13" rx="2" fill="#7a4a26" stroke="${c}"/><path d="M5 14c0-6 22-6 22 0" fill="#8f5a2e" stroke="${c}"/><path d="M12 9v17M20 9v17" stroke="${c}" stroke-width="2"/><rect x="14" y="16" width="4" height="5" fill="${c}" stroke="none"/></svg>`,
-    spring: (c) =>
-      `<svg viewBox="0 0 32 32"><circle cx="16" cy="18" r="11" fill="#123a33" stroke="${c}" stroke-width="2.5"/><path d="M16 12v12M10 18h12" stroke="#bfffe9" stroke-width="3"/></svg>`,
-    pad: (c) =>
-      `<svg viewBox="0 0 32 32"><rect x="4" y="9" width="24" height="15" rx="2" fill="#33402a" stroke="${c}"/><path d="m9 12 5 4.5-5 4.5M15 12l5 4.5-5 4.5M21 12l4 4.5-4 4.5" stroke="${c}" stroke-width="2"/></svg>`,
-    portal: (c) =>
-      `<svg viewBox="0 0 32 32"><circle cx="9" cy="17" r="6" fill="none" stroke="#c49bff" stroke-width="2.5"/><circle cx="23" cy="17" r="6" fill="none" stroke="#c49bff" stroke-width="2.5"/><path d="M13 13c2-3 4-3 6 0" stroke="${c}" stroke-dasharray="2 2"/></svg>`,
-    zone: (c) =>
-      `<svg viewBox="0 0 32 32"><path d="M5 18c0-7 8-10 13-8s10 3 9 9-9 8-14 7-8-3-8-8Z" fill="${c}" fill-opacity=".45" stroke="${c}"/></svg>`,
-    rock: (c) =>
-      `<svg viewBox="0 0 32 32"><path d="m6 24 4-12 7-5 8 6 2 11Z" fill="#46564f" stroke="${c}"/><path d="M14 28h6M17 7V3" stroke="${c}"/></svg>`,
-    circle: (c) =>
-      `<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="${c}" fill-opacity=".25" stroke="${c}" stroke-width="2" stroke-dasharray="4 3"/><circle cx="16" cy="16" r="6" fill="${c}" fill-opacity=".55" stroke="none"/></svg>`,
-    line: (c) =>
-      `<svg viewBox="0 0 32 32"><path d="M4 22 28 10" stroke="${c}" stroke-width="6" stroke-opacity=".35"/><path d="M4 22 28 10" stroke="${c}" stroke-width="2" stroke-dasharray="4 3"/></svg>`,
-    pool: (c) =>
-      `<svg viewBox="0 0 32 32"><ellipse cx="16" cy="19" rx="12" ry="8" fill="${c}" fill-opacity=".35" stroke="${c}"/><circle cx="12" cy="15" r="2" stroke="${c}"/><circle cx="19" cy="12" r="1.5" stroke="${c}"/></svg>`,
-    ring: (c) =>
-      `<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="none" stroke="${c}" stroke-width="3"/><circle cx="16" cy="16" r="5" fill="none" stroke="${c}" stroke-opacity=".5"/></svg>`,
-    laser: (c) =>
-      `<svg viewBox="0 0 32 32"><path d="M4 26 28 6" stroke="${c}" stroke-width="7" stroke-opacity=".3" stroke-linecap="round"/><path d="M4 26 28 6" stroke="#fff" stroke-width="2"/></svg>`,
-    bullet: (c) =>
-      `<svg viewBox="0 0 32 32"><circle cx="20" cy="14" r="5" fill="${c}" stroke="none"/><path d="M5 23 15 17" stroke="${c}" stroke-opacity=".5" stroke-width="3"/></svg>`,
-    head: (c) =>
-      `<svg viewBox="0 0 32 32"><circle cx="12" cy="16" r="8" fill="#a0f0ba" stroke="none"/><path d="m24 9 5 7-5 7-5-7Z" fill="${c}" stroke="none"/></svg>`,
+    chest: (c) => /* HTML */ `<svg viewBox="0 0 32 32">
+        <rect
+          x="5"
+          y="13"
+          width="22"
+          height="13"
+          rx="2"
+          fill="#7a4a26"
+          stroke="${c}"
+        />
+        <path d="M5 14c0-6 22-6 22 0" fill="#8f5a2e" stroke="${c}" />
+        <path d="M12 9v17M20 9v17" stroke="${c}" stroke-width="2" />
+        <rect x="14" y="16" width="4" height="5" fill="${c}" stroke="none" />
+      </svg>`,
+    spring: (c) => /* HTML */ `<svg viewBox="0 0 32 32">
+        <circle
+          cx="16"
+          cy="18"
+          r="11"
+          fill="#123a33"
+          stroke="${c}"
+          stroke-width="2.5"
+        />
+        <path d="M16 12v12M10 18h12" stroke="#bfffe9" stroke-width="3" />
+      </svg>`,
+    pad: (c) => /* HTML */ `<svg viewBox="0 0 32 32">
+        <rect
+          x="4"
+          y="9"
+          width="24"
+          height="15"
+          rx="2"
+          fill="#33402a"
+          stroke="${c}"
+        />
+        <path
+          d="m9 12 5 4.5-5 4.5M15 12l5 4.5-5 4.5M21 12l4 4.5-4 4.5"
+          stroke="${c}"
+          stroke-width="2"
+        />
+      </svg>`,
+    portal: (c) => /* HTML */ `<svg viewBox="0 0 32 32">
+        <circle
+          cx="9"
+          cy="17"
+          r="6"
+          fill="none"
+          stroke="#c49bff"
+          stroke-width="2.5"
+        />
+        <circle
+          cx="23"
+          cy="17"
+          r="6"
+          fill="none"
+          stroke="#c49bff"
+          stroke-width="2.5"
+        />
+        <path d="M13 13c2-3 4-3 6 0" stroke="${c}" stroke-dasharray="2 2" />
+      </svg>`,
+    zone: (c) => /* HTML */ `<svg viewBox="0 0 32 32">
+        <path
+          d="M5 18c0-7 8-10 13-8s10 3 9 9-9 8-14 7-8-3-8-8Z"
+          fill="${c}"
+          fill-opacity=".45"
+          stroke="${c}"
+        />
+      </svg>`,
+    rock: (c) => /* HTML */ `<svg viewBox="0 0 32 32">
+        <path d="m6 24 4-12 7-5 8 6 2 11Z" fill="#46564f" stroke="${c}" />
+        <path d="M14 28h6M17 7V3" stroke="${c}" />
+      </svg>`,
+    circle: (c) => /* HTML */ `<svg viewBox="0 0 32 32">
+        <circle
+          cx="16"
+          cy="16"
+          r="12"
+          fill="${c}"
+          fill-opacity=".25"
+          stroke="${c}"
+          stroke-width="2"
+          stroke-dasharray="4 3"
+        />
+        <circle
+          cx="16"
+          cy="16"
+          r="6"
+          fill="${c}"
+          fill-opacity=".55"
+          stroke="none"
+        />
+      </svg>`,
+    line: (c) => /* HTML */ `<svg viewBox="0 0 32 32">
+        <path
+          d="M4 22 28 10"
+          stroke="${c}"
+          stroke-width="6"
+          stroke-opacity=".35"
+        />
+        <path
+          d="M4 22 28 10"
+          stroke="${c}"
+          stroke-width="2"
+          stroke-dasharray="4 3"
+        />
+      </svg>`,
+    pool: (c) => /* HTML */ `<svg viewBox="0 0 32 32">
+        <ellipse
+          cx="16"
+          cy="19"
+          rx="12"
+          ry="8"
+          fill="${c}"
+          fill-opacity=".35"
+          stroke="${c}"
+        />
+        <circle cx="12" cy="15" r="2" stroke="${c}" />
+        <circle cx="19" cy="12" r="1.5" stroke="${c}" />
+      </svg>`,
+    ring: (c) => /* HTML */ `<svg viewBox="0 0 32 32">
+        <circle
+          cx="16"
+          cy="16"
+          r="12"
+          fill="none"
+          stroke="${c}"
+          stroke-width="3"
+        />
+        <circle
+          cx="16"
+          cy="16"
+          r="5"
+          fill="none"
+          stroke="${c}"
+          stroke-opacity=".5"
+        />
+      </svg>`,
+    laser: (c) => /* HTML */ `<svg viewBox="0 0 32 32">
+        <path
+          d="M4 26 28 6"
+          stroke="${c}"
+          stroke-width="7"
+          stroke-opacity=".3"
+          stroke-linecap="round"
+        />
+        <path d="M4 26 28 6" stroke="#fff" stroke-width="2" />
+      </svg>`,
+    bullet: (c) => /* HTML */ `<svg viewBox="0 0 32 32">
+        <circle cx="20" cy="14" r="5" fill="${c}" stroke="none" />
+        <path
+          d="M5 23 15 17"
+          stroke="${c}"
+          stroke-opacity=".5"
+          stroke-width="3"
+        />
+      </svg>`,
+    head: (c) => /* HTML */ `<svg viewBox="0 0 32 32">
+        <circle cx="12" cy="16" r="8" fill="#a0f0ba" stroke="none" />
+        <path d="m24 9 5 7-5 7-5-7Z" fill="${c}" stroke="none" />
+      </svg>`,
   };
   // ---------- 遊戲說明: five short visual pages, opened from the lobby or the pause menu ----------
   const ENEMY_TIPS = {
@@ -529,6 +877,7 @@
     healer: "會幫隊友補血，先打它",
     sniper: "紅色雷射＝要開槍",
   };
+  // 遊戲中快速說明的分頁。
   const GUIDE_PAGES = [
     ["play", "怎麼玩"],
     ["map", "地圖"],
@@ -536,24 +885,108 @@
     ["items", "食物道具"],
     ["foes", "敵人首領"],
   ];
+  // 產生快速說明某一頁的內容，會依目前的模式與地圖調整。
   function guidePage(id, inRun) {
     const mode = inRun ? game.mode : profile.mode,
       world = S.WORLDS[inRun ? game.world : profile.world],
       d = S.DIFFICULTIES[inRun ? game.difficulty : profile.difficulty],
       ch = inRun ? game.character : S.CHARACTERS[profile.selected];
-    const card = (art, title, text, tone = "") =>
-      `<article class="gg-card ${tone}"><i class="gg-art">${art}</i><b>${title}</b><span>${text}</span></article>`;
+    const card = (
+      art,
+      title,
+      text,
+      tone = "",
+    ) => /* HTML */ `<article class="gg-card ${tone}">
+        <i class="gg-art">${art}</i><b>${title}</b><span>${text}</span>
+      </article>`;
     const svg = (name) =>
       `<svg viewBox="0 0 24 24"><use href="#i-${name}"/></svg>`;
     const dot = (color) => `<em class="gg-dot" style="--c:${color}"></em>`;
     if (id === "play")
-      return `<p class="gg-lead">這局目標：${S.MODES[mode].goal}</p><div class="gg-cards">${card(svg("arrow"), "移動", "滑鼠或 WASD，蛇會一直往前")}${card(svg("bolt"), "衝刺 Space／左鍵", "撞到敵人 70 傷害")}${card(svg(ch.icon), `技能 E／右鍵`, `${ch.skill}，冷卻後可再用`)}${card(svg("target"), "自動咬擊", "敵人在頭前方就會咬")}${card(svg("snake"), "繞圈絞殺", "頭碰到身體，圈內敵人重創")}${card(briefIcon.head("#ff7a81"), "只有頭會受傷", "身體被碰到不扣血", "bad")}</div>`;
+      return /* HTML */ `<p class="gg-lead">這局目標：${S.MODES[mode].goal}</p>
+        <div class="gg-cards">
+          ${card(svg("arrow"), "移動", "滑鼠或 WASD，蛇會一直往前")}${card(
+            svg("bolt"),
+            "衝刺 Space／左鍵",
+            "撞到敵人 70 傷害",
+          )}${card(
+            svg(ch.icon),
+            `技能 E／右鍵`,
+            `${ch.skill}，冷卻後可再用`,
+          )}${card(svg("target"), "自動咬擊", "敵人在頭前方就會咬")}${card(
+            svg("snake"),
+            "繞圈絞殺",
+            "頭碰到身體，圈內敵人重創",
+          )}${card(
+            briefIcon.head("#ff7a81"),
+            "只有頭會受傷",
+            "身體被碰到不扣血",
+            "bad",
+          )}
+        </div>`;
     if (id === "map")
-      return `<p class="gg-lead ok">這些都 <b>不會扣血</b>，放心靠近。</p><div class="gg-cards">${card(briefIcon.chest("#f2c14e"), "寶箱", "打破掉能量、晶體、道具")}${card(briefIcon.spring("#7ef0c8"), "治癒泉", "站進去每秒回 9 HP")}${card(briefIcon.pad("#d9f77b"), "加速板", "踩過去短暫加速")}${card(briefIcon.portal("#7fd1ff"), "傳送門", "同顏色兩座互通")}${card(briefIcon.zone(world.zone.accent), world.zone.name, world.zone.effect)}${card(briefIcon.rock("#8aa39c"), "岩石・柱子", "擋路，也擋子彈")}</div>`;
+      return /* HTML */ `<p class="gg-lead ok">
+          這些都 <b>不會扣血</b>，放心靠近。
+        </p>
+        <div class="gg-cards">
+          ${card(
+            briefIcon.chest("#f2c14e"),
+            "寶箱",
+            "打破掉能量、晶體、道具",
+          )}${card(
+            briefIcon.spring("#7ef0c8"),
+            "治癒泉",
+            "站進去每秒回 9 HP",
+          )}${card(briefIcon.pad("#d9f77b"), "加速板", "踩過去短暫加速")}${card(
+            briefIcon.portal("#7fd1ff"),
+            "傳送門",
+            "同顏色兩座互通",
+          )}${card(
+            briefIcon.zone(world.zone.accent),
+            world.zone.name,
+            world.zone.effect,
+          )}${card(briefIcon.rock("#8aa39c"), "岩石・柱子", "擋路，也擋子彈")}
+        </div>`;
     if (id === "danger")
-      return `<p class="gg-lead bad">看到這些就閃開，<b>只有蛇頭</b>會被打到。</p><div class="gg-cards">${card(briefIcon.head("#ff7a81"), "敵人的頭", "別用頭撞，衝刺時例外", "bad")}${card(briefIcon.bullet("#ffad85"), "子彈", "橫向閃開", "bad")}${card(briefIcon.circle("#ff5263"), "紅色圈", "圈填滿前離開", "bad")}${card(briefIcon.line("#ff8a3d"), "紅色直線", "快爆發了，往旁邊閃", "bad")}${card(briefIcon.pool("#9be37a"), "綠色毒霧", "站在裡面持續扣血", "bad")}${card(briefIcon.ring("#7fe8ff"), "能量環", "按住衝刺可以穿過", "bad")}</div>`;
+      return /* HTML */ `<p class="gg-lead bad">
+          看到這些就閃開，<b>只有蛇頭</b>會被打到。
+        </p>
+        <div class="gg-cards">
+          ${card(
+            briefIcon.head("#ff7a81"),
+            "敵人的頭",
+            "別用頭撞，衝刺時例外",
+            "bad",
+          )}${card(
+            briefIcon.bullet("#ffad85"),
+            "子彈",
+            "橫向閃開",
+            "bad",
+          )}${card(
+            briefIcon.circle("#ff5263"),
+            "紅色圈",
+            "圈填滿前離開",
+            "bad",
+          )}${card(
+            briefIcon.line("#ff8a3d"),
+            "紅色直線",
+            "快爆發了，往旁邊閃",
+            "bad",
+          )}${card(
+            briefIcon.pool("#9be37a"),
+            "綠色毒霧",
+            "站在裡面持續扣血",
+            "bad",
+          )}${card(
+            briefIcon.ring("#7fe8ff"),
+            "能量環",
+            "按住衝刺可以穿過",
+            "bad",
+          )}
+        </div>`;
     if (id === "items") {
       const food = ["energy", "fruit", "crystal", "heal"],
+        // 食物與道具的簡短效果。
         short = {
           energy: "成長",
           fruit: "成長更多",
@@ -566,11 +999,21 @@
           bomb: "吃下就爆炸",
           rainbow: "大量得分",
         };
+      // 一格道具說明。
       const tile = (id) => {
         const f = S.FOODS[id];
-        return `<article class="gg-tile">${dot(f.color || world.crystal)}<b>${f.name}</b><span>${short[id]}</span></article>`;
+        return /* HTML */ `<article class="gg-tile">
+          ${dot(f.color || world.crystal)}<b>${f.name}</b
+          ><span>${short[id]}</span>
+        </article>`;
       };
-      return `<p class="gg-lead">靠近就會自動吸過來。道具有時間限制，畫面邊緣的箭頭會指出位置。</p><h4 class="gg-sub">食物</h4><div class="gg-tiles">${food.map(tile).join("")}</div><h4 class="gg-sub">道具</h4><div class="gg-tiles">${S.POWER_IDS.map(tile).join("")}</div>`;
+      return /* HTML */ `<p class="gg-lead">
+          靠近就會自動吸過來。道具有時間限制，畫面邊緣的箭頭會指出位置。
+        </p>
+        <h4 class="gg-sub">食物</h4>
+        <div class="gg-tiles">${food.map(tile).join("")}</div>
+        <h4 class="gg-sub">道具</h4>
+        <div class="gg-tiles">${S.POWER_IDS.map(tile).join("")}</div>`;
     }
     if (mode === "zen")
       return `<p class="gg-lead ok">悠遊秘境沒有敵人，放心探索。</p>`;
@@ -583,8 +1026,36 @@
           : mode === "survival"
             ? [S.BOSSES[0]]
             : [];
-    return `<p class="gg-lead">難度<b>${d.name}</b>：會遇到 ${roster.length} 種怪物${bosses.length ? `和 ${bosses.length} 位首領` : ""}。</p><div class="gg-tiles foes">${roster.map(([k, e]) => `<article class="gg-tile">${dot(e.color)}<b>${e.name}</b><span>${ENEMY_TIPS[k] || ""}</span></article>`).join("")}</div>${bosses.length ? `<h4 class="gg-sub">首領・三個階段、各四招</h4><div class="gg-bosses">${bosses.map((b) => `<article style="--c:${b.color}"><b>${b.name}</b><span>${b.title}</span></article>`).join("")}</div>` : ""}`;
+    return /* HTML */ `<p class="gg-lead">
+        難度<b>${d.name}</b>：會遇到 ${roster.length}
+        種怪物${bosses.length ? `和 ${bosses.length} 位首領` : ""}。
+      </p>
+      <div class="gg-tiles foes">
+        ${roster
+          .map(
+            ([k, e]) => /* HTML */ `<article class="gg-tile">
+                ${dot(e.color)}<b>${e.name}</b
+                ><span>${ENEMY_TIPS[k] || ""}</span>
+              </article>`,
+          )
+          .join("")}
+      </div>
+      ${
+        bosses.length
+          ? /* HTML */ `<h4 class="gg-sub">首領・三個階段、各四招</h4>
+            <div class="gg-bosses">
+              ${bosses
+                .map(
+                  (b) => /* HTML */ `<article style="--c:${b.color}">
+                      <b>${b.name}</b><span>${b.title}</span>
+                    </article>`,
+                )
+                .join("")}
+            </div>`
+          : ""
+      }`;
   }
+  // 打開快速說明，可以前後翻頁。
   function showGameGuide(inRun = false, fromPause = false, page = 0) {
     sound.init();
     if (inRun && game) game.paused = true;
@@ -594,7 +1065,51 @@
       last = page === GUIDE_PAGES.length - 1;
     showModal(
       "briefing",
-      `<button class="icon-button modal-close" id="close-brief" aria-label="關閉說明">${icon("close")}</button><p class="section-label">${S.MODES[mode].name}・${world.name}${inRun ? "・遊戲已暫停" : ""}</p><h2 id="modal-title">遊戲說明</h2><nav class="gg-tabs" aria-label="說明頁">${GUIDE_PAGES.map(([, label], i) => `<button data-gpage="${i}" class="${i === page ? "on" : ""}" aria-current="${i === page}"><small>${i + 1}</small>${label}</button>`).join("")}</nav><div class="gg-page">${guidePage(id, inRun)}</div><div class="gg-foot"><button class="text-button" id="gg-full">${icon("help")}看完整規則</button><div class="gg-nav"><button class="secondary-button" id="gg-prev" ${page === 0 ? "disabled" : ""}>上一頁</button>${last ? `<button class="primary-button" id="gg-done">${inRun ? "回到遊戲" : "我知道了"}</button>` : `<button class="primary-button" id="gg-next">下一頁</button>`}</div></div>`,
+      /* HTML */ `<button
+          class="icon-button modal-close"
+          id="close-brief"
+          aria-label="關閉說明"
+        >
+          ${icon("close")}
+        </button>
+        <p class="section-label">
+          ${S.MODES[mode].name}・${world.name}${inRun ? "・遊戲已暫停" : ""}
+        </p>
+        <h2 id="modal-title">遊戲說明</h2>
+        <nav class="gg-tabs" aria-label="說明頁">
+          ${GUIDE_PAGES.map(
+            ([, label], i) => /* HTML */ `<button
+                data-gpage="${i}"
+                class="${i === page ? "on" : ""}"
+                aria-current="${i === page}"
+              >
+                <small>${i + 1}</small>${label}
+              </button>`,
+          ).join("")}
+        </nav>
+        <div class="gg-page">${guidePage(id, inRun)}</div>
+        <div class="gg-foot">
+          <button class="text-button" id="gg-full">
+            ${icon("help")}看完整規則
+          </button>
+          <div class="gg-nav">
+            <button
+              class="secondary-button"
+              id="gg-prev"
+              ${page === 0 ? "disabled" : ""}
+            >
+              上一頁</button
+            >${
+              last
+                ? /* HTML */ `<button class="primary-button" id="gg-done">
+                  ${inRun ? "回到遊戲" : "我知道了"}
+                </button>`
+                : /* HTML */ `<button class="primary-button" id="gg-next">
+                  下一頁
+                </button>`
+            }
+          </div>
+        </div>`,
       true,
     );
     const back = () =>
@@ -614,12 +1129,15 @@
     guideState = { inRun, fromPause, page };
   }
   let guideState = null;
+  // 開始遊戲（按鈕用的入口）。
   function requestStart() {
     startGame();
   }
+  // 這個模式的目標。
   function modeGoal(mode) {
     return S.MODES[mode].goal;
   }
+  // 八步新手練習的標題與說明。
   const lessons = [
     [
       "試著轉一個彎",
@@ -648,12 +1166,14 @@
       "成長能量已經填滿。從三張卡片中選一張，或按 1／2／3；選擇時遊戲會暫停。",
     ],
   ];
+  // 更新練習的進度提示。
   function refreshCoach() {
     if (!tutorial || tutorial.completed) return;
     const lesson = lessons[tutorial.step];
     $("coach-step").textContent = `無傷練習 ${tutorial.step + 1} / 8`;
     $("coach-title").textContent = lesson[0];
     $("coach-detail").textContent = lesson[1];
+    // 每一步的完成比例。
     const ratios = [
       tutorial.progress / 0.65,
       tutorial.progress / 5,
@@ -675,6 +1195,7 @@
             ? "小技巧：持續往同一側轉，蛇頭很快就會碰到身體。"
             : "這裡不會受傷；練習分數不計入紀錄、不發獎勵。";
   }
+  // 完成練習。
   function completeTraining() {
     if (!tutorial?.completed || modalType === "training-done") return;
     profile.tutorialCompleted = true;
@@ -684,42 +1205,156 @@
     $("training-coach").classList.add("hidden");
     showModal(
       "training-done",
-      `<p class="section-label">八步練習完成</p><h2 id="modal-title">你已經學會全部操作了。</h2><p class="modal-subtitle">轉彎、吞噬、衝刺、自動咬擊、衝撞、纏繞、技能與進化，全部完成。</p><div class="rule-callout"><strong>正式挑戰時，記得保護蛇頭。</strong><p>咬擊會自動發動；被圍住就按住衝刺撞出去，或繞圈纏繞一網打盡。牆壁和岩石不會扣血，岩石還能擋子彈。</p></div><p class="brief-goal">${modeGoal(profile.mode)}</p><div class="modal-actions"><button class="primary-button" id="training-play">開始${S.MODES[profile.mode].name}</button><button class="secondary-button" id="training-home">返回大廳</button></div>`,
+      /* HTML */ `<p class="section-label">八步練習完成</p>
+        <h2 id="modal-title">你已經學會全部操作了。</h2>
+        <p class="modal-subtitle">
+          轉彎、吞噬、衝刺、自動咬擊、衝撞、纏繞、技能與進化，全部完成。
+        </p>
+        <div class="rule-callout">
+          <strong>正式挑戰時，記得保護蛇頭。</strong>
+          <p>
+            咬擊會自動發動；被圍住就按住衝刺撞出去，或繞圈纏繞一網打盡。牆壁和岩石不會扣血，岩石還能擋子彈。
+          </p>
+        </div>
+        <p class="brief-goal">${modeGoal(profile.mode)}</p>
+        <div class="modal-actions">
+          <button class="primary-button" id="training-play">
+            開始${S.MODES[profile.mode].name}</button
+          ><button class="secondary-button" id="training-home">返回大廳</button>
+        </div>`,
       false,
       { guard: 600 },
     );
     $("training-play").onclick = () => startGame();
     $("training-home").onclick = home;
   }
+  // 設定視窗。
   function settings(fromPause = false) {
     sound.init();
     const s = profile.settings;
     showModal(
       "settings",
-      `<button class="icon-button modal-close" id="close-settings" aria-label="關閉設定">${icon("close")}</button><h2 id="modal-title">調整你的節奏</h2><p class="modal-subtitle">設定會自動儲存，立即生效。</p><div class="setting-row"><div><strong>音樂與音效</strong><p>原創合成環境音與互動音效</p></div><button id="sound-toggle" class="toggle ${s.sound ? "on" : ""}" aria-pressed="${s.sound}">${s.sound ? "開啟" : "關閉"}</button></div><div class="setting-row"><label for="volume">音量</label><input id="volume" type="range" min="0" max="100" value="${s.volume * 100}" aria-label="音量"></div><div class="setting-row"><div><label for="quality">畫面品質</label><p>省電模式減少粒子、光暈與解析度</p></div><select id="quality"><option value="high" ${s.quality === "high" ? "selected" : ""}>精緻畫質</option><option value="low" ${s.quality === "low" ? "selected" : ""}>流暢省電</option></select></div><div class="setting-row"><div><label for="control">電腦操作方式</label><p>自動：最後動到的是滑鼠還是鍵盤，就用哪一個</p></div><select id="control"><option value="auto" ${s.control === "auto" ? "selected" : ""}>自動切換（推薦）</option><option value="pointer" ${s.control === "pointer" ? "selected" : ""}>滑鼠跟隨為主</option><option value="keyboard" ${s.control === "keyboard" ? "selected" : ""}>只用鍵盤</option></select></div><div class="setting-row"><div><strong>減少動態效果</strong><p>關閉鏡頭震動、打擊停頓、閃爍與漂浮粒子</p></div><button id="motion-toggle" class="toggle ${s.reducedMotion ? "on" : ""}" aria-pressed="${s.reducedMotion}">${s.reducedMotion ? "開啟" : "關閉"}</button></div><p class="help-note">${storageAvailable ? "進度保存在目前瀏覽器。清除網站資料會移除存檔。" : "目前瀏覽器無法寫入存檔，關閉頁面後進度可能遺失。"}${motionPreference.matches ? " 已依系統偏好減少動態效果。" : ""}</p><div class="modal-actions"><button class="primary-button" id="settings-done">完成</button></div>`,
+      /* HTML */ `<button
+          class="icon-button modal-close"
+          id="close-settings"
+          aria-label="關閉設定"
+        >
+          ${icon("close")}
+        </button>
+        <h2 id="modal-title">調整你的節奏</h2>
+        <p class="modal-subtitle">設定會自動儲存，立即生效。</p>
+        <div class="setting-row">
+          <div>
+            <strong>音樂與音效</strong>
+            <p>原創合成環境音與互動音效</p>
+          </div>
+          <button
+            id="sound-toggle"
+            class="toggle ${s.sound ? "on" : ""}"
+            aria-pressed="${s.sound}"
+          >
+            ${s.sound ? "開啟" : "關閉"}
+          </button>
+        </div>
+        <div class="setting-row">
+          <label for="volume">音量</label
+          ><input
+            id="volume"
+            type="range"
+            min="0"
+            max="100"
+            value="${s.volume * 100}"
+            aria-label="音量"
+          />
+        </div>
+        <div class="setting-row">
+          <div>
+            <label for="quality">畫面品質</label>
+            <p>省電模式減少粒子、光暈與解析度</p>
+          </div>
+          <select id="quality">
+            <option value="high" ${s.quality === "high" ? "selected" : ""}>
+              精緻畫質
+            </option>
+            <option value="low" ${s.quality === "low" ? "selected" : ""}>
+              流暢省電
+            </option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <div>
+            <label for="control">電腦操作方式</label>
+            <p>自動：最後動到的是滑鼠還是鍵盤，就用哪一個</p>
+          </div>
+          <select id="control">
+            <option value="auto" ${s.control === "auto" ? "selected" : ""}>
+              自動切換（推薦）
+            </option>
+            <option
+              value="pointer"
+              ${s.control === "pointer" ? "selected" : ""}
+            >
+              滑鼠跟隨為主
+            </option>
+            <option
+              value="keyboard"
+              ${s.control === "keyboard" ? "selected" : ""}
+            >
+              只用鍵盤
+            </option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <div>
+            <strong>減少動態效果</strong>
+            <p>關閉鏡頭震動、打擊停頓、閃爍與漂浮粒子</p>
+          </div>
+          <button
+            id="motion-toggle"
+            class="toggle ${s.reducedMotion ? "on" : ""}"
+            aria-pressed="${s.reducedMotion}"
+          >
+            ${s.reducedMotion ? "開啟" : "關閉"}
+          </button>
+        </div>
+        <p class="help-note">
+          ${
+            storageAvailable
+              ? "進度保存在目前瀏覽器。清除網站資料會移除存檔。"
+              : "目前瀏覽器無法寫入存檔，關閉頁面後進度可能遺失。"
+          }${motionPreference.matches ? " 已依系統偏好減少動態效果。" : ""}
+        </p>
+        <div class="modal-actions">
+          <button class="primary-button" id="settings-done">完成</button>
+        </div>`,
     );
+    // 音效開關。
     $("sound-toggle").onclick = () => {
       s.sound = !s.sound;
       save();
       sound.click();
       settings(fromPause);
     };
+    // 減少動態。
     $("motion-toggle").onclick = () => {
       s.reducedMotion = !s.reducedMotion;
       save();
       settings(fromPause);
     };
+    // 音量。
     $("volume").oninput = (e) => {
       s.volume = Number(e.target.value) / 100;
       save();
     };
     $("volume").onchange = () => sound.click();
+    // 畫質。
     $("quality").onchange = (e) => {
       s.quality = e.target.value;
       if (previewRenderer) previewRenderer.quality = s.quality;
       if (gameRenderer) gameRenderer.quality = s.quality;
       save();
     };
+    // 操作方式。
     $("control").onchange = (e) => {
       s.control = e.target.value;
       steer = s.control === "pointer" ? "pointer" : "keys";
@@ -729,11 +1364,16 @@
     const done = () => (fromPause ? pauseMenu() : closeModal());
     $("close-settings").onclick = $("settings-done").onclick = done;
   }
+  // 更新畫面下方的操作提示。
   function updateControlHint() {
     const c = profile.settings.control;
     document.querySelector(".game-tips").innerHTML =
       `${c === "keyboard" ? "WASD / 方向鍵移動" : "滑鼠或 WASD 移動"}<span>按住 Space／左鍵衝刺　E／右鍵技能　M 地圖　Esc 暫停</span>`;
   }
+
+  // ---------- 開始、暫停與結束 ----------
+
+  // 開始一局（或練習）：建立繪圖器與規則，重設所有畫面狀態。
   function startGame(training = false) {
     training = training === true;
     sound.init();
@@ -753,6 +1393,7 @@
       console.error(error);
       return;
     }
+    // 建立規則引擎。
     game = new S.Game({
       character: profile.selected,
       world: profile.world,
@@ -783,6 +1424,7 @@
     $("game-screen").classList.toggle("is-training", training);
     $("damage-notice").classList.add("hidden");
     refreshCoach();
+    // 更新角色名稱、技能等介面。
     const c = game.character;
     $("hud-avatar").innerHTML = avatar(c);
     $("hud-character").textContent = c.name;
@@ -805,18 +1447,62 @@
     else if (!training && profile.runs === 0)
       toast("隨時按 Esc，可以在暫停選單打開「本局說明」。");
   }
+  // 暫停選單。
   function pauseMenu() {
     if (!game || game.over || game.needsUpgrade) return;
     game.paused = true;
     showModal(
       "pause",
-      `<p class="section-label">世界與倒數已停止。</p><h2 id="modal-title">${game.training ? "練習已暫停" : "冒險已暫停"}</h2><p class="modal-subtitle">${game.training ? "八步無傷練習 / 不計紀錄" : S.MODES[game.mode].name + " / " + S.WORLDS[game.world].name + (game.mode === "zen" ? "" : " / 難度" + game.diff.name)}</p><p class="brief-goal">${game.training ? "按繼續會接著目前的練習步驟。" : modeGoal(game.mode)}</p><div class="result-meta"><div><strong>${number(game.score)}</strong><span>目前得分</span></div><div><strong>${timeString(game.time)}</strong><span>遊玩時間</span></div><div><strong>${game.level}</strong><span>進化等級</span></div></div><div class="modal-actions"><button class="primary-button" id="resume-button">${icon("play")}繼續${game.training ? "練習" : "冒險"}</button><button class="secondary-button" id="pause-map">戰場地圖 <kbd>M</kbd></button></div><div class="modal-actions"><button class="secondary-button" id="pause-brief">本局說明</button><button class="secondary-button" id="pause-rules">完整規則</button><button class="secondary-button" id="pause-settings">遊戲設定</button></div><div class="modal-actions"><button class="secondary-button" id="finish-run">${game.training ? "離開練習，不計紀錄" : "結算本局並領取獎勵"}</button></div>`,
+      /* HTML */ `<p class="section-label">世界與倒數已停止。</p>
+        <h2 id="modal-title">${game.training ? "練習已暫停" : "冒險已暫停"}</h2>
+        <p class="modal-subtitle">
+          ${
+            game.training
+              ? "八步無傷練習 / 不計紀錄"
+              : S.MODES[game.mode].name +
+                " / " +
+                S.WORLDS[game.world].name +
+                (game.mode === "zen" ? "" : " / 難度" + game.diff.name)
+          }
+        </p>
+        <p class="brief-goal">
+          ${
+            game.training ? "按繼續會接著目前的練習步驟。" : modeGoal(game.mode)
+          }
+        </p>
+        <div class="result-meta">
+          <div><strong>${number(game.score)}</strong><span>目前得分</span></div>
+          <div>
+            <strong>${timeString(game.time)}</strong><span>遊玩時間</span>
+          </div>
+          <div><strong>${game.level}</strong><span>進化等級</span></div>
+        </div>
+        <div class="modal-actions">
+          <button class="primary-button" id="resume-button">
+            ${icon("play")}繼續${game.training ? "練習" : "冒險"}</button
+          ><button class="secondary-button" id="pause-map">
+            戰場地圖 <kbd>M</kbd>
+          </button>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary-button" id="pause-brief">本局說明</button
+          ><button class="secondary-button" id="pause-rules">完整規則</button
+          ><button class="secondary-button" id="pause-settings">
+            遊戲設定
+          </button>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary-button" id="finish-run">
+            ${game.training ? "離開練習，不計紀錄" : "結算本局並領取獎勵"}
+          </button>
+        </div>`,
     );
     $("resume-button").onclick = resume;
     $("pause-settings").onclick = () => settings(true);
     $("pause-rules").onclick = () => help("damage", true);
     $("pause-brief").onclick = () => showGameGuide(true, true);
     $("pause-map").onclick = () => openMap(true);
+    // 結束這一局；悠遊模式也會結算。
     $("finish-run").onclick = () => {
       if (game.training) {
         home();
@@ -827,6 +1513,7 @@
       processEvents();
     };
   }
+  // 繼續遊戲。
   function resume() {
     if (!game || game.over) return;
     closeModal();
@@ -835,11 +1522,13 @@
     accumulator = 0;
     $("game-canvas").focus();
   }
+  // 打開大地圖。
   function openMap(fromPause = false) {
     if (!game || game.over || game.needsUpgrade || game.training) return;
     sound.init();
     game.paused = true;
     const w = S.WORLDS[game.world];
+    // 地圖圖例。
     const legend = [
       ["me", "你的蛇", game.character.color],
       ["enemy", "敵人", "#ff6f78"],
@@ -854,7 +1543,36 @@
     ];
     showModal(
       "map",
-      `<button class="icon-button modal-close" id="close-map" aria-label="關閉地圖">${icon("close")}</button><p class="section-label">${S.MODES[game.mode].name} / ${w.name}</p><h2 id="modal-title">戰場地圖</h2><p class="modal-subtitle">遊戲已暫停。白框是目前畫面範圍；道具 45 秒後消失，記得趁早去拿。</p><div class="big-map-wrap"><canvas id="big-map" aria-label="整張戰場的地圖"></canvas><ul class="map-legend">${legend.map(([k, label, color]) => `<li><i class="lg-${k}" style="--c:${color}"></i>${label}</li>`).join("")}</ul></div><p class="help-note">${w.zone.name}：${w.zone.effect}。</p><div class="modal-actions"><button class="primary-button" id="map-done">${fromPause ? "返回暫停選單" : "返回遊戲"} <kbd>M</kbd></button></div>`,
+      /* HTML */ `<button
+          class="icon-button modal-close"
+          id="close-map"
+          aria-label="關閉地圖"
+        >
+          ${icon("close")}
+        </button>
+        <p class="section-label">${S.MODES[game.mode].name} / ${w.name}</p>
+        <h2 id="modal-title">戰場地圖</h2>
+        <p class="modal-subtitle">
+          遊戲已暫停。白框是目前畫面範圍；道具 45 秒後消失，記得趁早去拿。
+        </p>
+        <div class="big-map-wrap">
+          <canvas id="big-map" aria-label="整張戰場的地圖"></canvas>
+          <ul class="map-legend">
+            ${legend
+              .map(
+                ([k, label, color]) => /* HTML */ `<li>
+                    <i class="lg-${k}" style="--c:${color}"></i>${label}
+                  </li>`,
+              )
+              .join("")}
+          </ul>
+        </div>
+        <p class="help-note">${w.zone.name}：${w.zone.effect}。</p>
+        <div class="modal-actions">
+          <button class="primary-button" id="map-done">
+            ${fromPause ? "返回暫停選單" : "返回遊戲"} <kbd>M</kbd>
+          </button>
+        </div>`,
       true,
     );
     const done = () => (fromPause ? pauseMenu() : resume());
@@ -864,6 +1582,7 @@
       if ($("big-map")) drawMap($("big-map"), game, true);
     });
   }
+  // 升級三選一。
   function showUpgrades() {
     sound.level();
     const choices = game.choices.map((id) =>
@@ -871,7 +1590,34 @@
     );
     showModal(
       "upgrade",
-      `<div class="guard-bar" aria-hidden="true"><i></i></div><p class="section-label">進化等級 ${game.level}</p><h2 id="modal-title">你的下一種可能。</h2><p class="modal-subtitle">按 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> 或點選卡片。空白鍵不會選卡，避免衝刺時誤觸；遊戲已暫停。</p><div class="upgrade-grid">${choices.map((u, i) => `<button class="upgrade-card" data-upgrade="${u.id}">${icon(u.icon)}<small>${game.upgrades[u.id] ? `強化至 ${game.upgrades[u.id] + 1} 級` : "全新進化"}</small><h3>${u.name}</h3><p>${u.description}</p><kbd>${i + 1}</kbd></button>`).join("")}</div>`,
+      /* HTML */ `<div class="guard-bar" aria-hidden="true"><i></i></div>
+        <p class="section-label">進化等級 ${game.level}</p>
+        <h2 id="modal-title">你的下一種可能。</h2>
+        <p class="modal-subtitle">
+          按 <kbd>1</kbd> <kbd>2</kbd>
+          <kbd>3</kbd> 或點選卡片。空白鍵不會選卡，避免衝刺時誤觸；遊戲已暫停。
+        </p>
+        <div class="upgrade-grid">
+          ${choices
+            .map(
+              (
+                u,
+                i,
+              ) => /* HTML */ `<button class="upgrade-card" data-upgrade="${u.id}">
+                  ${icon(u.icon)}<small
+                    >${
+                      game.upgrades[u.id]
+                        ? `強化至 ${game.upgrades[u.id] + 1} 級`
+                        : "全新進化"
+                    }</small
+                  >
+                  <h3>${u.name}</h3>
+                  <p>${u.description}</p>
+                  <kbd>${i + 1}</kbd>
+                </button>`,
+            )
+            .join("")}
+        </div>`,
       true,
       { guard: 650 },
     );
@@ -879,6 +1625,7 @@
       (b) => (b.onclick = () => choose(b.dataset.upgrade)),
     );
   }
+  // 選擇一個升級。
   function choose(id) {
     if (game && game.chooseUpgrade(id)) {
       closeModal();
@@ -893,6 +1640,7 @@
       updateHUD();
     }
   }
+  // 結算畫面：分數、死因與獎勵。
   function showResult() {
     result = S.settle(profile, game);
     if (!result) return;
@@ -912,13 +1660,74 @@
             : "你存活到倒數歸零，完成本次挑戰。";
     showModal(
       "result",
-      `<div class="guard-bar" aria-hidden="true"><i></i></div><span class="result-title">${died ? "生命歸零 / 冒險結束" : game.endReason === "retired" ? "主動結算" : "挑戰完成"}${game.mode === "zen" ? "" : ` / 難度${game.diff.name}`}${result.record ? " / 新紀錄" : ""}</span><h2 id="modal-title">${game.mode === "zen" ? "帶著微光，滿載而歸。" : game.won ? "秘境，記住了你的名字。" : "下一次，走得更遠。"}</h2><div class="result-reason ${died ? "danger" : ""}"><strong>${died ? "這次為什麼死亡？" : "本局結束原因"}</strong><p>${reason}</p>${died ? `<p>${damage?.advice || "留意左上生命，收集粉色十字或站進治癒泉恢復。"} 身體被碰到不會扣血。</p>` : ""}</div><div class="result-score">${number(game.score)}</div><div class="result-meta"><div><strong>${timeString(game.time)}</strong><span>冒險時間</span></div><div><strong>${game.maxLength}</strong><span>最長蛇身</span></div><div><strong>${game.kills}</strong><span>擊敗敵人</span></div><div><strong>${game.coilKills}</strong><span>纏繞擊殺</span></div></div><div class="result-loot">${icon("diamond")}+ ${result.reward} 進化晶體 <span class="subtle">已存入研究所</span></div>${result.earned.length ? `<p class="achievement-toast">新成就：${result.earned.join("、")}</p>` : ""}<div class="modal-actions"><button class="primary-button" id="again-button">${icon("play")}再來一局</button><button class="secondary-button" id="home-button">返回大廳</button></div>`,
+      /* HTML */ `<div class="guard-bar" aria-hidden="true"><i></i></div>
+        <span class="result-title"
+          >${
+            died
+              ? "生命歸零 / 冒險結束"
+              : game.endReason === "retired"
+                ? "主動結算"
+                : "挑戰完成"
+          }${game.mode === "zen" ? "" : ` / 難度${game.diff.name}`}${
+            result.record ? " / 新紀錄" : ""
+          }</span
+        >
+        <h2 id="modal-title">
+          ${
+            game.mode === "zen"
+              ? "帶著微光，滿載而歸。"
+              : game.won
+                ? "秘境，記住了你的名字。"
+                : "下一次，走得更遠。"
+          }
+        </h2>
+        <div class="result-reason ${died ? "danger" : ""}">
+          <strong>${died ? "這次為什麼死亡？" : "本局結束原因"}</strong>
+          <p>${reason}</p>
+          ${
+            died
+              ? /* HTML */ `<p>
+                ${
+                  damage?.advice ||
+                  "留意左上生命，收集粉色十字或站進治癒泉恢復。"
+                }
+                身體被碰到不會扣血。
+              </p>`
+              : ""
+          }
+        </div>
+        <div class="result-score">${number(game.score)}</div>
+        <div class="result-meta">
+          <div>
+            <strong>${timeString(game.time)}</strong><span>冒險時間</span>
+          </div>
+          <div><strong>${game.maxLength}</strong><span>最長蛇身</span></div>
+          <div><strong>${game.kills}</strong><span>擊敗敵人</span></div>
+          <div><strong>${game.coilKills}</strong><span>纏繞擊殺</span></div>
+        </div>
+        <div class="result-loot">
+          ${icon("diamond")}+ ${result.reward} 進化晶體
+          <span class="subtle">已存入研究所</span>
+        </div>
+        ${
+          result.earned.length
+            ? /* HTML */ `<p class="achievement-toast">
+              新成就：${result.earned.join("、")}
+            </p>`
+            : ""
+        }
+        <div class="modal-actions">
+          <button class="primary-button" id="again-button">
+            ${icon("play")}再來一局</button
+          ><button class="secondary-button" id="home-button">返回大廳</button>
+        </div>`,
       false,
       { guard: 900 },
     );
     $("again-button").onclick = () => startGame();
     $("home-button").onclick = home;
   }
+  // 回到大廳。
   function home() {
     closeModal();
     game = null;
@@ -931,7 +1740,12 @@
     navigate("lobby");
     $("start-button").focus();
   }
+
+  // ---------- 事件與畫面回饋 ----------
+
+  // 減少動態時把震動量歸零。
   const motion = (amount) => (reduced() ? 0 : amount);
+  // 在場景裡跳出一段文字，最多同時 60 個。
   function addText(x, z, text, color, opts = {}) {
     texts.push({
       x,
@@ -946,6 +1760,7 @@
     });
     if (texts.length > 60) texts.splice(0, texts.length - 60);
   }
+  // 處理規則引擎送來的事件，轉成音效、文字與特效。
   function processEvents() {
     if (!game) return;
     const events = game.events.splice(0),
@@ -970,6 +1785,7 @@
           hitStop = Math.max(hitStop, motion(0.06));
         }
       }
+      // 玩家受傷。
       if (e.type === "hurt") {
         sound.hurt();
         shake = Math.max(shake, motion(0.35));
@@ -988,6 +1804,7 @@
         });
         screenFlash = { color: "#8fd3ff", life: 0.3, max: 0.3 };
       }
+      // 打中敵人：依來源決定文字、顏色與震動。
       if (e.type === "hit") {
         const label =
           {
@@ -1011,7 +1828,7 @@
               blast: "#ff8a5a",
             }[e.source] || "#f1ed9d";
         const size = Math.min(30, 13 + e.amount / 9);
-        // Coil damage is summarised once by the coil event instead of stacking one number per enemy.
+        // 纏繞傷害由纏繞事件合併顯示一次，不在每隻敵人頭上疊數字。
         if (e.source !== "coil")
           addText(
             e.x,
@@ -1037,6 +1854,7 @@
           shake = Math.max(shake, motion(0.1));
       }
       if (e.type === "bite") sound.bite();
+      // 擊敗敵人。
       if (e.type === "kill") {
         flashes.push({
           x: e.x,
@@ -1050,6 +1868,7 @@
         shake = Math.max(shake, motion(e.boss ? 0.7 : 0.1));
         if (e.boss) hitStop = Math.max(hitStop, motion(0.16));
       }
+      // 纏繞成功的光圈與傷害。
       if (e.type === "coil") {
         coilFlashes.push({ points: e.points, life: 0.7, max: 0.7 });
         sound.coil(e.count);
@@ -1078,6 +1897,7 @@
             banner("第一次纏繞絞殺！圈越大、傷害越高", "power");
         }
       }
+      // 寶箱破裂。
       if (e.type === "cache") {
         sound.cache();
         addText(e.x, e.z, "寶箱破裂！", "#ffd27a", { size: 17 });
@@ -1091,6 +1911,7 @@
         });
         shake = Math.max(shake, motion(0.12));
       }
+      // 傳送門：鏡頭直接跳過去。
       if (e.type === "portal") {
         sound.portal();
         camera.x = head.x + Math.cos(game.angle) * 3;
@@ -1109,6 +1930,7 @@
         });
         sound.note(880 + Math.min(600, e.combo * 10), 0.2, 0.08, "sine");
       }
+      // 地面攻擊爆發，依原因有不同特效。
       if (e.type === "erupt") {
         if (e.cause === "lightning") {
           bolts.push({
@@ -1153,6 +1975,7 @@
           sound.note(90, 0.25, 0.1, "triangle", 0, 45);
         }
       }
+      // 爆炸。
       if (e.type === "explode") {
         flashes.push({
           x: e.x,
@@ -1204,6 +2027,7 @@
       }
       if (e.type === "guard")
         banner("女王之盾！小蟲活著時女王只受 35% 傷害", "danger");
+      // 首領施放招式的提示。
       if (e.type === "boss-cast") {
         bossCast = {
           name: e.name,
@@ -1260,6 +2084,7 @@
     }
     if (game?.events.length) processEvents();
   }
+  // 把鍵盤、滑鼠、搖桿整理成引擎要的輸入。
   function inputState() {
     let x =
       (keys.has("KeyD") || keys.has("ArrowRight") ? 1 : 0) -
@@ -1296,6 +2121,7 @@
         mouseDash,
     };
   }
+  // 目前最重要的一行狀態提示。
   function statusLine(g) {
     if (g.mode === "zen")
       return g.inSpring ? "治癒泉：恢復中" : "無傷模式：不會扣血";
@@ -1325,6 +2151,10 @@
       return "提示：繞圈讓蛇頭碰到自己身體，可纏繞絞殺圈內敵人";
     return "";
   }
+
+  // ---------- 介面與地圖 ----------
+
+  // 更新遊戲中的所有介面數字與長條。
   function updateHUD() {
     if (!game) return;
     const g = game;
@@ -1340,7 +2170,7 @@
             : g.mode === "endless"
               ? `無盡第 ${g.wave} 波 / ${g.enemies.some((e) => e.boss && !e.dead) ? "首領戰進行中" : `下位首領 ${Math.max(0, Math.ceil(g.nextBossAt - g.time))} 秒`}`
               : modeGoal(g.mode);
-    // The hint pill only appears when there is something worth saying right now.
+    // 只有真的需要提醒時才顯示提示。
     const hint = statusLine(g);
     $("protection-status").textContent = hint;
     $("hud-hint").classList.toggle("show", !!hint);
@@ -1403,6 +2233,7 @@
       "aria-label",
       `${g.character.skill}${g.cooldown > 0 ? `，冷卻剩餘 ${Math.ceil(g.cooldown)} 秒` : "，可使用"}`,
     );
+    // 目前生效的道具。
     const buffs = Object.entries(g.powers)
       .filter(([, v]) => v > 0)
       .map(([id, v]) => ({
@@ -1438,10 +2269,13 @@
       });
     $("buff-bar").innerHTML = buffs
       .map(
-        (b) =>
-          `<span class="buff" style="--c:${b.color}"><b>${b.name}</b><small>${b.v.toFixed(b.v < 10 ? 1 : 0)}s</small><i style="transform:scaleX(${S.clamp(b.v / b.max, 0, 1)})"></i></span>`,
+        (b) => /* HTML */ `<span class="buff" style="--c:${b.color}"
+            ><b>${b.name}</b><small>${b.v.toFixed(b.v < 10 ? 1 : 0)}s</small
+            ><i style="transform:scaleX(${S.clamp(b.v / b.max, 0, 1)})"></i
+          ></span>`,
       )
       .join("");
+    // 連擊計數。
     const combo = g.combo,
       meter = $("combo-meter");
     meter.classList.toggle("show", combo >= 3);
@@ -1457,6 +2291,7 @@
       }
     }
     lastCombo = combo;
+    // 首領血條。
     const boss = g.enemies.find((e) => e.boss);
     $("boss-hud").classList.toggle("hidden", !boss);
     if (boss) {
@@ -1485,7 +2320,7 @@
           : "";
     }
   }
-  // ---------- Minimap ----------
+  // ---------- 小地圖 ----------
   function mapTerrain(g, size, dpr) {
     const c = document.createElement("canvas");
     c.width = c.height = Math.round(size * dpr);
@@ -1501,6 +2336,7 @@
     ctx.fillStyle = w.floor;
     ctx.fillRect(pad, pad, size - pad * 2, size - pad * 2);
     ctx.globalAlpha = 0.9;
+    // 地面花紋。
     for (const p of g.patches) {
       const [x, z] = P(p);
       ctx.fillStyle = w.patches[p.tint];
@@ -1521,6 +2357,7 @@
       ctx.lineTo(size - pad, b);
       ctx.stroke();
     }
+    // 特殊區域。
     for (const z of g.zones) {
       const [x, y] = P(z),
         r = z.r * scale;
@@ -1550,6 +2387,7 @@
       }
     }
     ctx.fillStyle = "#d9f77b";
+    // 加速板。
     for (const p of g.pads) {
       const [x, y] = P(p),
         s = Math.max(2.2, 1.3 * scale);
@@ -1565,6 +2403,7 @@
       ctx.fill();
       ctx.restore();
     }
+    // 成對的傳送門用虛線相連。
     for (let i = 0; i < g.portals.length; i += 2) {
       const a = g.portals[i],
         b = g.portals[i + 1],
@@ -1590,6 +2429,7 @@
         ctx.stroke();
       }
     }
+    // 障礙物。
     for (const o of g.obstacles) {
       const [x, y] = P(o);
       if (o.landmark) {
@@ -1622,13 +2462,15 @@
     return { canvas: c, scale, P };
   }
   const mapCaches = { small: null, big: null };
+  // 畫小地圖或大地圖；地圖很大時小地圖只畫附近。
   function drawMap(canvas, g, big = false) {
     const size = Math.round(canvas.clientWidth) || (big ? 520 : 176),
       dpr = Math.min(2, window.devicePixelRatio || 1);
     if (canvas.width !== Math.round(size * dpr)) {
       canvas.width = canvas.height = Math.round(size * dpr);
     }
-    // On large maps the corner minimap follows you and shows the nearby ~110 m; the M map always shows everything.
+    // 大地圖時，角落的小地圖跟著玩家，只顯示附近約 110 公尺；按 M 的大地圖顯示
+    // 全部。
     const local = !big && g.bound > 70,
       half = local ? 55 : g.bound,
       tsize = local ? Math.round((size * g.bound) / half) : size,
@@ -1651,6 +2493,7 @@
       k = big ? 1.7 : 1;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, size, size);
+    // 先貼上事先畫好的地形。
     if (local) {
       const ts = cache.img.scale,
         sx = (tsize / 2 + (cx - half) * ts) * dpr,
@@ -1689,6 +2532,7 @@
         ctx.stroke();
       }
     ctx.fillStyle = "#ffd27a";
+    // 寶箱。
     for (const c of g.caches) {
       if (c.dead) continue;
       const [x, y] = P(c),
@@ -1701,6 +2545,7 @@
       ctx.closePath();
       ctx.fill();
     }
+    // 食物與道具。
     for (const f of g.food) {
       const def = S.FOODS[f.type];
       if (def.power) {
@@ -1728,6 +2573,7 @@
         ctx.fillRect(x - 0.5, y - 0.5, 1, 1);
       }
     }
+    // 危險區域。
     for (const hz of g.hazards) {
       const [x, y] = P(hz),
         type = hz.type || "circle";
@@ -1751,6 +2597,7 @@
         );
       ctx.stroke();
     }
+    // 敵人與菁英。
     for (const e of g.enemies) {
       const [x, y] = P(e);
       if (e.elite) {
@@ -1779,6 +2626,7 @@
       }
     }
     // A boss outside the nearby window still gets an arrow on the minimap edge.
+    // 首領在範圍外時，在邊緣畫箭頭。
     if (local)
       for (const e of g.enemies)
         if (e.boss) {
@@ -1800,6 +2648,7 @@
           ctx.fill();
           ctx.restore();
         }
+    // 目前鏡頭看得到的範圍。
     if (gameRenderer && !game?.training) {
       const vh = gameRenderer.viewHeight || 43,
         vw = (vh * gameRenderer.width) / gameRenderer.height;
@@ -1809,6 +2658,7 @@
       ctx.lineWidth = 1;
       ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
     }
+    // 自己的蛇身與方向。
     ctx.strokeStyle = g.character.color;
     ctx.lineWidth = 2.2 * k;
     ctx.lineJoin = "round";
@@ -1838,8 +2688,9 @@
     ctx.stroke();
     ctx.restore();
   }
-  // ---------- Effects layer ----------
+  // ---------- 特效層 ----------
   const glowCache = new Map();
+  // 光暈圖片，同一種顏色只畫一次。
   function glowSprite(color) {
     if (!glowCache.has(color)) {
       const c = document.createElement("canvas");
@@ -1855,6 +2706,10 @@
     }
     return glowCache.get(color);
   }
+
+  // ---------- 場景上方的特效層 ----------
+
+  // 把危險預警、傷害文字、道具名稱等畫在 3D 畫面上方。
   function drawFX(dt) {
     const canvas = $("fx-canvas"),
       ctx = canvas.getContext("2d"),
@@ -1881,8 +2736,9 @@
       head = g.snake[0];
     const onScreen = (p, m = 60) =>
       p.x > -m && p.x < w + m && p.y > -m && p.y < h + m;
-    // Additive neon glows under the HUD markings.
+    // 畫在標示底下的霓虹光暈。
     ctx.globalCompositeOperation = "lighter";
+    // 畫一團光。
     const glow = (x, y, z, radius, color, alpha) => {
       const p = P(x, y, z),
         r = radius * ppu;
@@ -1940,7 +2796,7 @@
     );
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = "source-over";
-    // Project attack footprints into the same world coordinates as collision checks.
+    // 攻擊範圍用與碰撞判定相同的場景座標投影。
     const footprint = (points, fill, stroke, width = 2) => {
       ctx.beginPath();
       points.forEach((point, i) => {
@@ -1958,16 +2814,19 @@
         ctx.stroke();
       }
     };
+    // 場景裡一個圓的頂點。
     const circle = (x, z, r, n = 48) =>
       Array.from({ length: n }, (_, i) => ({
         x: x + Math.cos((i / n) * Math.PI * 2) * r,
         z: z + Math.sin((i / n) * Math.PI * 2) * r,
       }));
+    // 顏色加上透明度。
     const hexA = (hex, a) =>
       hex +
       Math.round(S.clamp(a, 0, 1) * 255)
         .toString(16)
         .padStart(2, "0");
+    // 場景裡一條長方形路徑的四個角。
     const lane = (x, z, a, len, wid) => [
       { x: x - Math.sin(a) * wid, z: z + Math.cos(a) * wid },
       { x: x + Math.sin(a) * wid, z: z - Math.cos(a) * wid },
@@ -1980,6 +2839,7 @@
         z: z + Math.sin(a) * len + Math.cos(a) * wid,
       },
     ];
+    // 畫一條線。
     const line = (a, b) => {
       ctx.beginPath();
       ctx.moveTo(a.x, a.y);
@@ -1988,6 +2848,7 @@
     };
     const tn = performance.now() / 1000;
     // Enemy attacks: every danger shows its exact footprint before it lands.
+    // 危險區域的預警，會隨時間填滿。
     for (const hz of g.hazards) {
       const type = hz.type || "circle",
         col = hz.color || "#ff5263",
@@ -2108,6 +2969,7 @@
         }
       }
     }
+    // 敵人衝撞、瞄準與自爆的預警。
     for (const e of g.enemies) {
       if (e.windup > 0 || e.charge > 0) {
         const len = e.chargeLen || 12,
@@ -2158,6 +3020,7 @@
       }
     }
     // Coil flash: the enclosed loop lights up.
+    // 纏繞光圈。
     for (const c of coilFlashes) {
       const a = c.life / c.max;
       ctx.save();
@@ -2173,10 +3036,11 @@
       c.life -= fdt;
     }
     coilFlashes = coilFlashes.filter((c) => c.life > 0);
-    // Bite range: faint when something is close, bright when the jaw snaps.
+    // 咬擊範圍：有東西靠近時淡淡顯示，咬下去時變亮。
     const near =
       g.enemies.some((e) => S.distance(e, head) < g.biteRange + 5) ||
       g.caches.some((c) => !c.dead && S.distance(c, head) < g.biteRange + 4);
+    // 咬擊範圍。
     if (g.biteVisual > 0 || near) {
       const pts = [head];
       for (let i = 0; i <= 24; i++) {
@@ -2193,6 +3057,7 @@
         ctx.setLineDash([]);
       }
     }
+    // 練習的目標箭頭。
     if (
       tutorial &&
       tutorial.step === 5 &&
@@ -2211,6 +3076,7 @@
       ctx.lineDashOffset = 0;
     }
     ctx.textAlign = "center";
+    // 敵人血條與名稱。
     for (const e of g.enemies) {
       if (e.boss || e.hp < e.maxHp || e.dummy || S.distance(e, head) < 12) {
         const p = P(e.x, e.boss ? 5 : 2, e.z),
@@ -2237,8 +3103,9 @@
         ctx.fillStyle = "#ffd27a";
         ctx.fillRect(p.x - 18, p.y, 36 * Math.max(0, c.hp / c.maxHp), 4);
       }
-    // Name tags over power-ups so nobody has to remember what each one does. Nearest first; overlapping tags stack upward.
+    // 道具上方的名稱，不用記每個道具的作用。由近到遠，重疊時往上疊。
     const tags = [];
+    // 道具名稱標籤；重疊時往上移。
     for (const f of g.food
       .filter((f) => S.FOODS[f.type].power)
       .sort((a, b) => S.distance(a, head) - S.distance(b, head))) {
@@ -2333,7 +3200,7 @@
     }
     ctx.globalAlpha = 1;
     flashes = flashes.filter((f) => f.life > 0);
-    // Lightning bolts: a jagged strike from the sky onto the target circle.
+    // 閃電：從天上劈到目標圈。
     for (const b of bolts) {
       const a = b.life / b.max,
         end = P(b.x, 0, b.z),
@@ -2391,7 +3258,7 @@
       ctx.fillText("你的蛇頭 / 保護這裡", p.x, p.y);
       ctx.shadowBlur = 0;
     }
-    // Edge arrows for important things you can't see yet.
+    // 畫面外的重要目標，在邊緣畫箭頭。
     const marks = [];
     for (const e of g.enemies)
       if (e.boss)
@@ -2416,7 +3283,7 @@
       if (best)
         marks.push({ x: best.x, z: best.z, color: "#7ef0c8", label: "治癒泉" });
     }
-    // Nearest first, and skip arrows that would land on top of one already drawn.
+    // 由近到遠，會和前面重疊的就不畫。
     marks.sort((a, b) => S.distance(a, head) - S.distance(b, head));
     const placed = [];
     for (const m of marks) {
@@ -2464,6 +3331,7 @@
       ctx.fillText(`${m.label} ${dist}m`, lx, ly);
     }
     if (hurtFlash > 0) {
+      // 低血量的紅色邊緣。
       const grad = ctx.createRadialGradient(
         w / 2,
         h / 2,
@@ -2481,6 +3349,7 @@
     if (g.health / g.maxHealth < 0.3 && g.mode !== "zen" && !g.over) {
       const a =
         0.12 + (reduced() ? 0 : Math.sin(performance.now() / 260) * 0.07);
+      // 特殊狀態的邊緣光。
       const grad = ctx.createRadialGradient(
         w / 2,
         h / 2,
@@ -2518,12 +3387,17 @@
       }
     }
   }
+
+  // ---------- 主迴圈與輸入 ----------
+
+  // 每一幀：推進規則 → 移動鏡頭 → 繪圖 → 更新介面。
   function frame(now) {
     requestAnimationFrame(frame);
     const dt = Math.min(0.12, Math.max(0, (now - lastFrame) / 1000));
     lastFrame = now;
     if (document.hidden || portalPaused) return;
     if (game && !$("game-screen").classList.contains("hidden")) {
+      // 固定步長推進規則，命中時短暫停頓。
       if (!game.over && !game.paused && !game.needsUpgrade) {
         if (hitStop > 0) {
           hitStop = Math.max(0, hitStop - dt);
@@ -2545,6 +3419,7 @@
         sound.music();
       } else accumulator = 0;
       // Camera leads the head so you see more of where you're going; dashing pulls back for speed.
+      // 鏡頭稍微超前蛇頭。
       const h = game.snake[0],
         lead = game.training ? 1.5 : 3 + (game.dashing ? 2 : 0),
         follow = 1 - Math.exp(-dt * 5);
@@ -2556,6 +3431,7 @@
           ? 1.08
           : 1;
       zoom += (zoomTarget - zoom) * (1 - Math.exp(-dt * 4));
+      // 依畫質限制繪圖頻率。
       if (now - lastRender > (profile.settings.quality === "low" ? 30 : 10)) {
         lastRender = now;
         const renderCamera = { ...camera };
@@ -2594,20 +3470,45 @@
       );
     }
   }
-  // Populate buttons before initializing graphics, so navigation survives graphics failures.
+  // 先建立按鈕再啟動繪圖，繪圖失敗時仍可操作介面。
   $("mode-list").innerHTML = Object.entries(S.MODES)
     .map(
-      ([id, m]) =>
-        `<button class="mode-card" data-mode="${id}" aria-pressed="false">${icon(m.icon)}<span><strong>${m.name}</strong><small>${m.tag}</small></span><span class="radio-mark"></span></button>`,
+      ([id, m]) => /* HTML */ `<button
+          class="mode-card"
+          data-mode="${id}"
+          aria-pressed="false"
+        >
+          ${icon(m.icon)}<span
+            ><strong>${m.name}</strong><small>${m.tag}</small></span
+          ><span class="radio-mark"></span>
+        </button>`,
     )
     .join("");
   $("character-roster").innerHTML = S.CHARACTERS.map(
-    (c, i) =>
-      `<button class="character-card" data-character="${i}" aria-pressed="false" aria-label="選擇${c.name}，${c.role}">${avatar(c)}<span><strong>${c.name}</strong><small>${c.role}</small></span></button>`,
+    (c, i) => /* HTML */ `<button
+        class="character-card"
+        data-character="${i}"
+        aria-pressed="false"
+        aria-label="選擇${c.name}，${c.role}"
+      >
+        ${avatar(c)}<span
+          ><strong>${c.name}</strong><small>${c.role}</small></span
+        >
+      </button>`,
   ).join("");
   $("world-grid").innerHTML = S.WORLDS.map(
-    (w, i) =>
-      `<button class="world-card" data-world="${i}" aria-pressed="false"><span class="landscape" aria-hidden="true"></span><span class="world-copy"><span class="world-number">WORLD 0${i + 1}</span><h3>${w.name}</h3><p>${w.subtitle}</p></span><span class="world-check" aria-hidden="true">✓</span></button>`,
+    (w, i) => /* HTML */ `<button
+        class="world-card"
+        data-world="${i}"
+        aria-pressed="false"
+      >
+        <span class="landscape" aria-hidden="true"></span
+        ><span class="world-copy"
+          ><span class="world-number">WORLD 0${i + 1}</span>
+          <h3>${w.name}</h3>
+          <p>${w.subtitle}</p></span
+        ><span class="world-check" aria-hidden="true">✓</span>
+      </button>`,
   ).join("");
   $$("[data-character]").forEach(
     (b) =>
@@ -2635,8 +3536,13 @@
   );
   $("difficulty-list").innerHTML = Object.entries(S.DIFFICULTIES)
     .map(
-      ([id, d]) =>
-        `<button class="difficulty-option" data-difficulty="${id}" aria-pressed="false"><strong>${d.name}</strong><small>${d.tag}</small></button>`,
+      ([id, d]) => /* HTML */ `<button
+          class="difficulty-option"
+          data-difficulty="${id}"
+          aria-pressed="false"
+        >
+          <strong>${d.name}</strong><small>${d.tag}</small>
+        </button>`,
     )
     .join("");
   $$("[data-difficulty]").forEach(
@@ -2655,6 +3561,7 @@
         navigate(b.dataset.nav);
       }),
   );
+  // 點標題回到大廳。
   document.querySelector(".brand").onclick = (e) => {
     e.preventDefault();
     navigate("lobby");
@@ -2667,6 +3574,7 @@
   $("exit-training").onclick = pauseMenu;
   $("start-button").onclick = requestStart;
   $("pause-button").onclick = pauseMenu;
+  // 使用技能，冷卻中就提示剩餘時間。
   const trySkill = () => {
     if (!game) return;
     if (game.useSkill()) processEvents();
@@ -2677,6 +3585,7 @@
   $("minimap-wrap").onclick = () => openMap();
   const canvasEl = $("game-canvas");
   canvasEl.addEventListener("contextmenu", (e) => e.preventDefault());
+  // 滑鼠左鍵衝刺、右鍵技能。
   canvasEl.addEventListener("pointerdown", (e) => {
     if (!game || modalType || e.pointerType === "touch") return;
     e.preventDefault();
@@ -2690,6 +3599,7 @@
     canvasEl.addEventListener(event, (e) => {
       if (event !== "pointerup" || e.button === 0) mouseDash = false;
     });
+  // 滑鼠移動時切換成指標操作。
   canvasEl.addEventListener("pointermove", (e) => {
     if (e.pointerType === "touch") return;
     pointer = { x: e.clientX, y: e.clientY };
@@ -2704,6 +3614,7 @@
     )
       steer = "pointer";
   });
+  // 觸控衝刺鈕。
   $("dash-button").addEventListener("pointerdown", (e) => {
     if (!game || modalType) return;
     e.preventDefault();
@@ -2712,6 +3623,7 @@
   });
   for (const event of ["pointerup", "pointercancel", "lostpointercapture"])
     $("dash-button").addEventListener(event, () => (dashTouch = false));
+  // 衝刺鈕的鍵盤操作。
   $("dash-button").addEventListener("keydown", (e) => {
     if (e.code === "Enter" || e.code === "Space") {
       e.preventDefault();
@@ -2721,10 +3633,12 @@
   $("dash-button").addEventListener("keyup", () => (dashTouch = false));
   $("rotate-model").onclick = () => (rotation += Math.PI / 4);
   let dragX = null;
+  // 拖曳旋轉角色預覽。
   $("preview-canvas").addEventListener("pointerdown", (e) => {
     dragX = e.clientX;
     e.currentTarget.setPointerCapture(e.pointerId);
   });
+  // 拖曳中。
   $("preview-canvas").addEventListener("pointermove", (e) => {
     if (dragX !== null) {
       rotation += (e.clientX - dragX) * 0.009;
@@ -2734,6 +3648,7 @@
   for (const event of ["pointerup", "pointercancel", "lostpointercapture"])
     $("preview-canvas").addEventListener(event, () => (dragX = null));
   let joystickPointer = null;
+  // 搖桿移動。
   function joystickMove(e) {
     if (e.pointerId !== joystickPointer) return;
     const rect = $("joystick").getBoundingClientRect(),
@@ -2746,6 +3661,7 @@
       ? `translate(${(dx / d) * r}px,${(dy / d) * r}px)`
       : "";
   }
+  // 按下搖桿。
   $("joystick").addEventListener("pointerdown", (e) => {
     e.preventDefault();
     joystickPointer = e.pointerId;
@@ -2761,6 +3677,7 @@
         $("joystick").firstElementChild.style.transform = "";
       }
     });
+  // 鍵盤操作：視窗開著時先處理視窗，否則處理遊戲。
   document.addEventListener("keydown", (e) => {
     if (e.ctrlKey || e.altKey || e.metaKey) return;
     if (modalType) {
@@ -2781,6 +3698,7 @@
         e.preventDefault();
         return;
       }
+      // 升級視窗：方向鍵選、數字鍵直接選。
       if (modalType === "upgrade") {
         if (
           ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.code)
@@ -2799,7 +3717,7 @@
           ]?.focus();
           return;
         }
-        // Space / Enter only confirm a card the player deliberately moved to with Tab or the arrow keys.
+        // 空白鍵與 Enter 只會確認玩家用 Tab 或方向鍵特地移到的卡片。
         if (
           ["Space", "Enter", "NumpadEnter"].includes(e.code) &&
           !upgradeArmed
@@ -2812,6 +3730,7 @@
         e.preventDefault();
         return;
       }
+      // Tab 只在視窗裡移動。
       if (e.code === "Tab") {
         if (modalType === "upgrade") upgradeArmed = true;
         const list = [
@@ -2878,6 +3797,7 @@
       }
       return;
     }
+    // 遊戲中的按鍵。
     if (game && !game.over) {
       const codes = [
         "KeyW",
@@ -2914,6 +3834,7 @@
       requestStart();
     }
   });
+  // 放開按鍵。
   document.addEventListener("keyup", (e) => {
     keys.delete(e.code);
     if (
@@ -2923,7 +3844,7 @@
     )
       e.preventDefault();
   });
-  // Swallow clicks that land on a menu button during its short guard window.
+  // 防誤按期間，吃掉點在按鈕上的點擊。
   $("modal").addEventListener(
     "click",
     (e) => {
@@ -2953,15 +3874,18 @@
       sound.ctx.resume().catch(() => {});
     }
   });
+  // 切到背景或失去焦點時自動暫停。
   function autoPause() {
     resetInput();
     if (game && !game.over && !game.paused && !game.needsUpgrade && !modalType)
       pauseMenu();
   }
   window.addEventListener("blur", autoPause);
+  // 分頁切到背景。
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) autoPause();
   });
+  // 繪圖連線中斷。
   document.addEventListener("renderlost", () => {
     autoPause();
     toast("繪圖連線中斷，恢復後頁面會重新載入。");
@@ -2981,7 +3905,7 @@
     toast("角色預覽無法載入，請確認瀏覽器已啟用硬體加速。");
   }
   if (!storageAvailable) toast("目前無法讀寫本機存檔，遊戲仍可正常開玩。");
-  // Development aid: open index.html?debug to inspect the running game from the browser console.
+  // 開發用：網址加上 ?debug，可以在瀏覽器主控台檢查目前的遊戲。
   if (new URLSearchParams(location.search).has("debug"))
     window.__serpent = {
       game: () => game,

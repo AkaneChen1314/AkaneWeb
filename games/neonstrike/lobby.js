@@ -2,7 +2,7 @@
  * 檔案導讀：作戰準備流程：依序顯示幹員、地圖、戰鬥配置與任務確認。
  * 這裡控制哪一步可見；實際難度、幹員和任務資料仍由 main.js 管理。
  */
-// Keep mission setup readable by showing one group of choices at a time.
+// 一次只顯示一組選項，任務設定比較好讀。
 (() => {
   const tabs = [...document.querySelectorAll("[data-step-tab]")];
   const pages = [...document.querySelectorAll("[data-lobby-step]")];
@@ -15,6 +15,7 @@
   const map = document.getElementById("mapSelect");
   const mapCards = [...document.querySelectorAll('input[name="arena"]')];
   let step = 0;
+  // 顯示第幾步。
   function showStep(value) {
     step = Math.max(0, Math.min(tabs.length - 1, value));
     pages.forEach((page) => {
@@ -37,6 +38,7 @@
   tabs.forEach((tab, index) =>
     tab.addEventListener("click", () => showStep(index)),
   );
+  // 上一步、下一步與快速前往任務設定。
   previous.addEventListener("click", () => showStep(step - 1));
   next.addEventListener("click", () => showStep(step + 1));
   document.getElementById("encounterJump").addEventListener("click", () => {
@@ -44,6 +46,7 @@
     drawer.open = true;
     drawer.scrollIntoView({ block: "start", behavior: "smooth" });
   });
+  // 更新地圖卡片與介紹。
   function refreshMapPreview() {
     const foundry = map.value === "1";
     mapCards.forEach((card) => {
@@ -69,6 +72,7 @@
       map.dispatchEvent(new Event("change", { bubbles: true }));
     }),
   );
+  // 最後一步的摘要。
   function refreshSummary() {
     const operator = document.getElementById("operatorName").textContent;
     const mode =
@@ -102,6 +106,7 @@
         `生命 ${actual}（基礎 ${base}） · 基礎移速 ${document.getElementById("bossSpeedSelect").value}× · 攻擊 ${document.getElementById("bossPowerSelect").value}×`;
     }
   }
+  // 首領選項的說明，依模式不同。
   function refreshBossHint() {
     const mode =
       document
@@ -115,6 +120,7 @@
       : "本次沒有首領；可先設定供之後使用";
   }
   map.addEventListener("change", refreshMapPreview);
+  // 改了選項就更新說明與摘要。
   document.addEventListener("change", () =>
     queueMicrotask(() => {
       refreshBossHint();

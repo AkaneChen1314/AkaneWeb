@@ -21,6 +21,7 @@ const Main = {
   // 啟動分成幾段，每段之間讓瀏覽器喘口氣：
   // 在 Blue World 遊戲館裡，遊戲和網站共用同一條執行緒，一口氣做完會讓整個網站卡住將近一秒。
   async boot() {
+    // 更新載入文字，並讓瀏覽器先畫出來再繼續。
     const pause = (text) =>
       new Promise((resolve) => {
         if (text) document.getElementById("loading-text").textContent = text;
@@ -67,7 +68,8 @@ const Main = {
     const loading = document.getElementById("loading");
     loading.classList.remove("hidden");
     loading.classList.add("error");
-    document.getElementById("loading-text").textContent = "發生錯誤：" + (err && err.message ? err.message : err);
+    document.getElementById("loading-text").textContent =
+      "發生錯誤：" + (err && err.message ? err.message : err);
   },
 
   /* ---------- 主迴圈 ---------- */
@@ -87,12 +89,15 @@ const Main = {
     Input.endFrame();
   },
 
+  // 依目前的狀態更新一格畫面。
   step(dt) {
     const state = Game.state;
 
+    // 對戰中：更新遊戲、地圖、特效與介面，再繪製。
     if (state === "playing") {
       // 沒有鎖定滑鼠的模式下，用 P 或 Esc 暫停
-      if (Input.noLock && (Input.hit("KeyP") || Input.hit("Escape"))) return Game.pause();
+      if (Input.noLock && (Input.hit("KeyP") || Input.hit("Escape")))
+        return Game.pause();
       Game.update(dt);
       Maps.tick(dt); // 地圖上的動畫（列車、光環、火焰…）
       FX.update(dt);
@@ -134,6 +139,7 @@ const Main = {
   },
 };
 
+// 頁面載入完成後啟動。
 window.addEventListener("load", () => {
   // 先讓瀏覽器把載入畫面畫出來，再開始初始化（建地圖需要一點時間）
   setTimeout(() => Main.boot(), 30);

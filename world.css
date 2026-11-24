@@ -1,7 +1,7 @@
-/* Hallmark · theme: brand · genre: atmospheric · redesign: full · scope: homepage · r14 */
+/* 設計紀錄：r14 首頁整頁重新設計，以品牌配色與氛圍感為主。 */
 /* 閱讀提示：首頁的精修構圖在檔案後段；三款光色變數在 :root 與 data-world-tone 區塊。 */
 
-/* Critique: Bring character art and title together; remove repeated introduction and relocate appearance controls. */
+/* 角色圖與標題放在一起，拿掉重複介紹，外觀設定移到別處。 */
 /* Blue World 1.2 / r10
  * 最終視覺調整集中在此，既有專區與遊戲保持獨立。
  * 使用 CSS 繪製光環、海平線與柔光，沒有新增重複角色照片。
@@ -11,26 +11,33 @@
   --world-second: #a294fa;
   --world-pink: #e8adce;
 }
+/* 「夕光」色調。 */
 body[data-world-tone="twilight"] {
   --world-light: #b5afff;
   --world-second: #ce8acb;
   --world-pink: #8edcf1;
 }
+/* 「花色」色調。 */
 body[data-world-tone="petal"] {
   --world-light: #a2e4ef;
   --world-second: #eeabc9;
   --world-pink: #b6afff;
 }
+/* 頁面背景。 */
 body:not(.playing) {
   overflow-x: clip;
   background:
     radial-gradient(ellipse at 75% 8%, #423c762d, transparent 44%),
     radial-gradient(ellipse at 0% 25%, #18466d47, transparent 46%), #071523;
 }
+/* 選取文字的顏色。 */
 ::selection {
   color: #071523;
   background: #9bdfff;
 }
+
+/* ---------- 頁首 ---------- */
+
 .site-header {
   border-bottom: 1px solid #a4cafa20;
   margin-bottom: 25px;
@@ -58,6 +65,9 @@ body:not(.playing) {
   background: linear-gradient(120deg, #758ce327, #4dbada17);
   box-shadow: inset 0 0 0 1px #97c8ed35;
 }
+
+/* ---------- 首頁封面 ---------- */
+
 .blue-hour-hero {
   min-height: 750px;
   grid-template-columns: 1fr 1.1fr;
@@ -104,6 +114,7 @@ body:not(.playing) {
   background-clip: text;
   filter: none;
 }
+/* 標題旁的星星。 */
 .world-title-star {
   position: absolute;
   right: -56px;
@@ -113,6 +124,7 @@ body:not(.playing) {
   -webkit-text-fill-color: var(--world-light);
   text-shadow: 0 0 35px #aebaf260;
 }
+/* 標題的詩句與名稱。 */
 .blue-hour-hero .hero-type h1 .hero-poetry {
   font-size: clamp(22px, 2.3vw, 30px);
   margin-top: 27px;
@@ -161,6 +173,7 @@ body:not(.playing) {
     0 0 80px #547ed514,
     inset 0 0 55px #aa8adb10;
 }
+/* 環繞的軌道文字。 */
 .world-orbit-label {
   position: absolute;
   z-index: 1;
@@ -186,6 +199,9 @@ body:not(.playing) {
   box-shadow: 0 12px 40px #839af91a;
   pointer-events: none;
 }
+
+/* ---------- 封面旁的小筆記 ---------- */
+
 .hero-notes {
   /* 用整組卡片的中心對齊主視覺，避免三張卡片沉到封面底部。 */
   top: 50%;
@@ -216,6 +232,9 @@ body:not(.playing) {
   right: 0;
   letter-spacing: 2px;
 }
+
+/* ---------- 色調選擇列 ---------- */
+
 .world-palette-bar {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -280,12 +299,16 @@ body:not(.playing) {
   background: linear-gradient(120deg, #6f8ee132, #55c8da24);
   box-shadow: 0 0 24px #6dbde21b;
 }
+/* 滑鼠裝置才有滑過效果。 */
 @media (hover: hover) {
   .world-tones button:hover {
     transform: translateY(-2px);
     border-color: #bce9ff99;
   }
 }
+
+/* ---------- 入口卡、季數列與其他卡片 ---------- */
+
 .gateway {
   border-radius: 28px;
   box-shadow:
@@ -329,6 +352,7 @@ body:not(.playing) {
   background:
     radial-gradient(ellipse at 5% 50%, #7882c322, transparent 65%), #14283c66;
 }
+/* 專區標題。 */
 .zone-heading {
   padding-top: 35px;
   padding-bottom: 25px;
@@ -336,6 +360,7 @@ body:not(.playing) {
 .zone-heading h2 {
   color: #d9f1ff;
 }
+/* 人物肖像。 */
 .profile-portrait {
   /* 留下有辨識度的弧角，但不再壓到右下角的官方連結。 */
   border-radius: 35px 35px 86px 35px;
@@ -362,11 +387,13 @@ body:not(.playing) {
   color: #d8e9ff;
   text-shadow: 0 10px 35px #a38fff16;
 }
+/* 閱讀導覽。 */
 .archive-compass {
   border-color: #9bccec38;
   background: linear-gradient(130deg, #29345870, #0c223c80);
   box-shadow: inset 0 1px 0 #d7eaff13;
 }
+/* 圖片卡。 */
 .gallery-card {
   border-radius: 19px;
   border-color: #7fa7e52b;
@@ -381,6 +408,7 @@ body:not(.playing) {
   border-color: #a7cbe988;
   box-shadow: 0 16px 36px #0004;
 }
+/* 遊戲卡。 */
 .game-card {
   position: relative;
   border-radius: 26px;
@@ -406,6 +434,7 @@ body:not(.playing) {
   font-size: 20px;
   color: #beeafa;
 }
+/* 心情選擇。 */
 .mood-picker {
   border-radius: 22px;
   background: linear-gradient(115deg, #536caf20, #40778e10);
@@ -419,6 +448,7 @@ footer {
 .zone-panel:not([hidden]) {
   animation: world-zone-in 420ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
 }
+/* 換專區時的淡入。 */
 @keyframes world-zone-in {
   from {
     opacity: 0;
@@ -427,12 +457,18 @@ footer {
     opacity: 1;
   }
 }
+
+/* ---------- 區塊標題 ---------- */
+
 .section-heading h2 {
   text-wrap: balance;
 }
 .section-heading .eyebrow {
   text-shadow: 0 0 24px color-mix(in srgb, var(--world-light) 32%, transparent);
 }
+
+/* ---------- 中等寬度 ---------- */
+
 @media (min-width: 761px) and (max-width: 1250px) {
   .hero-notes {
     position: static;
@@ -456,6 +492,9 @@ footer {
     min-height: 610px;
   }
 }
+
+/* ---------- 手機 ---------- */
+
 @media (max-width: 760px) {
   .site-header {
     margin-bottom: 10px;
@@ -560,6 +599,9 @@ footer {
     padding: 16px 40px 16px 20px;
   }
 }
+
+/* ---------- 最窄的手機 ---------- */
+
 @media (max-width: 400px) {
   .site-header nav {
     width: 100%;
@@ -577,6 +619,9 @@ footer {
     font-size: 9px;
   }
 }
+
+/* ---------- 減少動態效果 ---------- */
+
 @media (prefers-reduced-motion: reduce) {
   .world-tones button,
   .gateway-link,
@@ -588,7 +633,7 @@ footer {
   }
 }
 
-/* r14 refined cover: character art carries the composition; navigation stays in the header and gateway cards. */
+/* ---------- r14 封面：角色圖撐起畫面，導覽放在頁首與入口卡片 ---------- */
 .home-zone .blue-hour-hero {
   width: min(100%, 1080px);
   min-height: 0;
@@ -727,9 +772,12 @@ footer {
   margin-top: 0;
 }
 
+/* 首頁的側邊影片。 */
 body[data-zone-view="home"] .edge-film[data-edge-zone="home"] {
   opacity: 0.1;
 }
+
+/* ---------- 頁尾的外觀設定 ---------- */
 
 footer .appearance-settings {
   flex: 0 0 100%;
@@ -795,6 +843,8 @@ footer .world-tones {
   gap: 10px;
 }
 
+/* ---------- 平板 ---------- */
+
 @media (max-width: 1100px) and (min-width: 761px) {
   .home-zone .blue-hour-hero .hero-type {
     padding-left: 8px;
@@ -807,6 +857,8 @@ footer .world-tones {
     font-size: clamp(76px, 9vw, 96px);
   }
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 760px) {
   .home-zone .blue-hour-hero {
@@ -883,6 +935,8 @@ footer .world-tones {
     font-size: 13px;
   }
 }
+
+/* ---------- 減少動態效果 ---------- */
 
 @media (prefers-reduced-motion: reduce) {
   footer .appearance-settings summary {

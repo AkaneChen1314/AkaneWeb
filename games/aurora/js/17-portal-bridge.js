@@ -20,7 +20,8 @@
       return;
     }
     // 暫停中的對戰維持靜音，等玩家按「繼續」時由 Game.resume() 恢復
-    if (Sound.ctx && Sound.ctx.state === "suspended" && Game.state !== "paused") Sound.ctx.resume();
+    if (Sound.ctx && Sound.ctx.state === "suspended" && Game.state !== "paused")
+      Sound.ctx.resume();
     Main.last = performance.now();
   });
 
@@ -32,6 +33,9 @@
   };
 
   setInterval(() => {
-    document.body.classList.toggle("portal-in-battle", typeof Game !== "undefined" && Game.state !== "menu");
+    document.body.classList.toggle(
+      "portal-in-battle",
+      typeof Game !== "undefined" && Game.state !== "menu",
+    );
   }, 300);
 })();

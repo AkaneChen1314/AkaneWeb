@@ -1,11 +1,16 @@
+/*
+ * 測試：星破的核心規則、結算、存檔與強化。
+ */
 const assert = require("node:assert/strict");
 const { Engine, defaultProfile, WEAPONS, STATS } = require("../game.js");
 let checks = 0;
+// 執行一項檢查。
 function check(name, fn) {
   fn();
   checks++;
   console.log("PASS", name);
 }
+// 相同種子會產生相同敵人與強化選項。
 check("fixed seeds reproduce enemy layout and upgrade draws", () => {
   const a = new Engine(defaultProfile()),
     b = new Engine(defaultProfile());
@@ -16,6 +21,7 @@ check("fixed seeds reproduce enemy layout and upgrade draws", () => {
   b.offerUpgrades("wave");
   assert.deepEqual(a.r.offers, b.r.offers);
 });
+// 六種進化組合都做得到，而且能用。
 check("all six evolution recipes are attainable and actionable", () => {
   for (const [id, w] of Object.entries(WEAPONS)) {
     const e = new Engine(defaultProfile());
@@ -31,6 +37,7 @@ check("all six evolution recipes are attainable and actionable", () => {
     assert.equal(e.r.phase, "play");
   }
 });
+// 首領波不會因為時間到就過關。
 check("a boss wave cannot advance just because its timer expires", () => {
   const e = new Engine(defaultProfile());
   e.newRun();
@@ -48,6 +55,7 @@ check("a boss wave cannot advance just because its timer expires", () => {
   assert.equal(e.r.phase, "upgrade");
   assert.equal(e.r.bosses, 1);
 });
+// 暫停與獎勵畫面不會讓戰鬥時間前進。
 check("paused and reward screens do not advance active battle time", () => {
   const e = new Engine(defaultProfile());
   e.newRun();
@@ -60,6 +68,7 @@ check("paused and reward screens do not advance active battle time", () => {
   e.step(0.05);
   assert.equal(e.r.time, t);
 });
+// 陣亡、撤退與成就都只結算一次。
 check("death, retreat and achievements settle exactly once", () => {
   const p = defaultProfile(),
     e = new Engine(p);
@@ -74,6 +83,7 @@ check("death, retreat and achievements settle exactly once", () => {
   assert(p.achievements.includes("first"));
   assert.equal(p.records.length, 1);
 });
+// 研究在出擊時就固定下來。
 check("research is snapshotted at launch", () => {
   const p = defaultProfile(),
     e = new Engine(p);
@@ -84,6 +94,7 @@ check("research is snapshotted at launch", () => {
   e.newRun();
   assert(e.damageMult("pulse") > mult);
 });
+// 有效的存檔接續後是暫停狀態，壞掉的武器資料會被拒絕。
 check("valid saves resume paused and reject corrupt weapon data", () => {
   const e = new Engine(defaultProfile());
   e.newRun();
@@ -97,6 +108,7 @@ check("valid saves resume paused and reject corrupt weapon data", () => {
   data.weapons[0].id = "unknown";
   assert.equal(new Engine(defaultProfile()).loadRun(data), false);
 });
+// 整備時的修理不會超支。
 check("intermission repair cannot overspend", () => {
   const e = new Engine(defaultProfile());
   e.newRun();
@@ -162,6 +174,7 @@ check(
   },
 );
 console.log(`${checks} meaningful engine checks passed.`);
+// 強化全滿後，無盡模式仍會給有效的獎勵。
 check("maxed-out endless runs still offer a valid saveable reward", () => {
   const e = new Engine(defaultProfile());
   e.newRun("scout", "endless", 0, 72);

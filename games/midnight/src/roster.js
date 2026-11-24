@@ -17,6 +17,7 @@
   game.ROUNDS_TO_WIN = 2;
   game.START_METER = 32;
 
+  // 一次打擊的判定，沒有指定的用預設值。
   function strike(at, range, damage, options = {}) {
     return {
       at,
@@ -31,6 +32,7 @@
     };
   }
 
+  // 一個飛行道具。
   function projectile(at, damage, shape, options) {
     return {
       at,
@@ -42,6 +44,7 @@
     };
   }
 
+  // 所有鬥士共用的普通攻擊。
   game.NORMALS = {
     // 輕攻：打中或被擋下後再按一次，依序接第二、第三段
     light: {
@@ -158,6 +161,7 @@
   };
   game.BURST_COST = 50;
 
+  // 四位鬥士的資料與專屬招式。
   game.FIGHTERS = [
     {
       id: "thunder",
@@ -513,7 +517,7 @@
     },
   ];
 
-  // Follow-up performed automatically when 影返 catches an attack.
+  // 影返成功反擊時自動接上的招式。
   game.COUNTER_STRIKE = {
     name: "影返・斷影",
     duration: 0.46,
@@ -670,7 +674,10 @@
       action: "guard",
       name: "防禦",
       labels: ["F", "7"],
-      codes: [["KeyF", "ShiftLeft"], ["Numpad7", "Digit7"]],
+      codes: [
+        ["KeyF", "ShiftLeft"],
+        ["Numpad7", "Digit7"],
+      ],
       hold: true,
     },
   ];
@@ -701,6 +708,7 @@
     4: "dodge",
     6: "guard",
   };
+  // 手把按鍵的名稱。
   game.PAD_LABELS = {
     jump: "A",
     light: "X",

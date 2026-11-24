@@ -9,20 +9,24 @@
   "use strict";
   let musicWasPlaying = false;
 
+  // 暫停或恢復：由外層遊戲館通知。
   function setPortalPaused(paused) {
     if (paused) {
       if (G.state === "playing") pauseGame();
-      if (document.pointerLockElement && document.exitPointerLock) document.exitPointerLock();
+      if (document.pointerLockElement && document.exitPointerLock)
+        document.exitPointerLock();
       G.input.keys = {};
       G.input.lmb = G.input.rmb = false;
       if (MUSIC.el && !MUSIC.el.paused) {
         musicWasPlaying = true;
         MUSIC.el.pause();
       }
-      if (SND.ctx && SND.ctx.state === "running") SND.ctx.suspend().catch(() => {});
+      if (SND.ctx && SND.ctx.state === "running")
+        SND.ctx.suspend().catch(() => {});
       return;
     }
-    if (SND.ctx && SND.ctx.state === "suspended") SND.ctx.resume().catch(() => {});
+    if (SND.ctx && SND.ctx.state === "suspended")
+      SND.ctx.resume().catch(() => {});
     if (musicWasPlaying && MUSIC.el) {
       const played = MUSIC.el.play();
       if (played && played.catch) played.catch(() => {});
@@ -32,7 +36,10 @@
     APP.last = performance.now();
   }
 
-  window.addEventListener("akane-portal-pause", (event) => setPortalPaused(event.detail.paused));
+  // 外層送來的暫停通知。
+  window.addEventListener("akane-portal-pause", (event) =>
+    setPortalPaused(event.detail.paused),
+  );
 
   // 遊戲館隱藏這個 iframe 時不必再繪製 3D 場景，省下顯示卡與電量。
   const drawScene = window.renderScene;
@@ -43,6 +50,9 @@
 
   // 戰鬥中（含暫停與結算）隱藏獨立開啟時的返回鈕。
   setInterval(() => {
-    document.body.classList.toggle("portal-in-battle", G.state !== "hangar" && G.state !== "boot");
+    document.body.classList.toggle(
+      "portal-in-battle",
+      G.state !== "hangar" && G.state !== "boot",
+    );
   }, 300);
 })();

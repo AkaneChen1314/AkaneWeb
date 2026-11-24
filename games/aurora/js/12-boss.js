@@ -26,25 +26,48 @@
  */
 
 class Boss extends Bot {
+  // def 是首領資料；生命值依難度調整。
   constructor(def, team) {
     const color = def.color;
-    super({
-      type: def.id, name: def.name, hp: Math.round(def.hp * Game.difficulty.enemyHp), armor: 0,
-      speed: def.speed / 4.6, weapon: "lmg", role: "boss", aim: 1.2, score: 5000,
-      scale: def.scale, hover: def.hover, grenades: 0, look: { accent: color },
-      makeRig: () => {
-        if (def.id === "titan") {
-          const r = CharModels.titan(color);
-          r.root.scale.setScalar(def.scale);
-          return r;
-        }
-        if (def.id === "hydra") return CharModels.hydra(color);
-        return CharModels.create(
-          { suit: 0x16121f, armor: 0x0c0d12, accent: color, helmet: "wraith", bulk: 0.95, pads: true, pack: false },
-          { scale: def.scale }
-        );
+    super(
+      {
+        type: def.id,
+        name: def.name,
+        hp: Math.round(def.hp * Game.difficulty.enemyHp),
+        armor: 0,
+        speed: def.speed / 4.6,
+        weapon: "lmg",
+        role: "boss",
+        aim: 1.2,
+        score: 5000,
+        scale: def.scale,
+        hover: def.hover,
+        grenades: 0,
+        look: { accent: color },
+        // 每種首領使用自己的模型。
+        makeRig: () => {
+          if (def.id === "titan") {
+            const r = CharModels.titan(color);
+            r.root.scale.setScalar(def.scale);
+            return r;
+          }
+          if (def.id === "hydra") return CharModels.hydra(color);
+          return CharModels.create(
+            {
+              suit: 0x16121f,
+              armor: 0x0c0d12,
+              accent: color,
+              helmet: "wraith",
+              bulk: 0.95,
+              pads: true,
+              pack: false,
+            },
+            { scale: def.scale },
+          );
+        },
       },
-    }, team);
+      team,
+    );
 
     this.def = def;
     this.isBoss = true;
@@ -53,9 +76,17 @@ class Boss extends Bot {
     this.radius = def.radius;
     this.height = def.height;
     this.color = color;
+    // 命中範圍：依首領的外型設定。
     if (def.id === "hydra") {
       // 核心：圓柱包住球體，弱點是正面的巨眼
-      this.hit = { r: 1.15, h: 2.2, base: def.hover - 1.1, headY: 1.1, headR: 0.5, headFwd: 0.75 };
+      this.hit = {
+        r: 1.15,
+        h: 2.2,
+        base: def.hover - 1.1,
+        headY: 1.1,
+        headR: 0.5,
+        headFwd: 0.75,
+      };
       this.eyeOffset = def.hover;
     }
 
@@ -79,7 +110,8 @@ class Boss extends Bot {
     const rig = this.rig;
     if (!rig || !this.alive) return;
     const speed = Math.hypot(this.vel.x, this.vel.z);
-    const sin = Math.sin(this.yaw), cos = Math.cos(this.yaw);
+    const sin = Math.sin(this.yaw),
+      cos = Math.cos(this.yaw);
     const fwd = -this.vel.x * sin - this.vel.z * cos;
     const side = this.vel.x * cos - this.vel.z * sin;
 
@@ -88,19 +120,29 @@ class Boss extends Bot {
       const step = Math.sin(rig.phase) > 0;
       if (speed > 0.6 && step !== this.lastStep) {
         const foot = step ? 1 : -1;
-        const fx = this.pos.x + cos * foot * 0.7, fz = this.pos.z - sin * foot * 0.7;
+        const fx = this.pos.x + cos * foot * 0.7,
+          fz = this.pos.z - sin * foot * 0.7;
         FX.puff(fx, this.pos.y + 0.1, fz, 5, 1.0, 0x6a5a4a, 1.6);
         FX.addShake(fx, this.pos.y, fz, 0.18);
         Sound.play("stomp", { pos: this.pos, vol: 0.35 });
       }
       this.lastStep = step;
-      rig.torso.rotation.z += Math.sin(rig.phase) * 0.05 * Math.min(1, speed / 2); // 走路時左右搖晃
+      rig.torso.rotation.z +=
+        Math.sin(rig.phase) * 0.05 * Math.min(1, speed / 2); // 走路時左右搖晃
     } else if (this.def.id === "wraith") {
       rig.tilt.position.y = 0.25 + Math.sin(Scene3D.time * 2.2) * 0.07; // 離地懸浮
       rig.torso.rotation.x -= Math.min(1, speed / 5) * 0.4; // 移動時身體前傾
       rig.legL.rotation.x *= 0.4; // 懸浮時腳幾乎不擺動
       rig.legR.rotation.x *= 0.4;
-      if (speed > 3.5) FX.dissolve(this.pos.x, this.pos.y + 0.3, this.pos.z, this.height * 0.9, this.color, 3); // 殘影
+      if (speed > 3.5)
+        FX.dissolve(
+          this.pos.x,
+          this.pos.y + 0.3,
+          this.pos.z,
+          this.height * 0.9,
+          this.color,
+          3,
+        ); // 殘影
     } else if (this.def.id === "hydra") {
       rig.body.rotation.z = Util.damp(rig.body.rotation.z, -side * 0.06, 4, dt);
       rig.body.rotation.x += Util.clamp(fwd, -4, 4) * 0.04;
@@ -111,7 +153,14 @@ class Boss extends Bot {
   /* 範圍攻擊用：首領和目標之間有沒有牆擋住。
    * h 是檢查的高度（離腳底幾公尺）；被牆或掩體擋住就打不到。 */
   canReach(e, h = 1.0) {
-    return World.los(this.pos.x, this.pos.y + h, this.pos.z, e.pos.x, e.pos.y + Math.min(h, 1.2), e.pos.z);
+    return World.los(
+      this.pos.x,
+      this.pos.y + h,
+      this.pos.z,
+      e.pos.x,
+      e.pos.y + Math.min(h, 1.2),
+      e.pos.z,
+    );
   }
 
   hurt(target, amount, weapon) {
@@ -131,6 +180,7 @@ class Boss extends Bot {
     this.tickTimers(dt);
     this.combatMoveT -= dt;
     this.repathT -= dt;
+    // 尋路額度不夠時，留到這一格再算。
     if (this.pendingMove && Bot.pathBudget > 0) {
       const m = this.pendingMove;
       this.pendingMove = null;
@@ -146,6 +196,7 @@ class Boss extends Bot {
     const t = this.target;
 
     // 登場演出：站在原地怒吼
+    // 登場動畫期間不能被打，也不會行動。
     if (this.introT > 0) {
       this.introT -= dt;
       this.invuln = 0.2;
@@ -159,6 +210,7 @@ class Boss extends Bot {
     this.checkPhase();
 
     // 暈眩中：不能動，受到的傷害提高（玩家的輸出時機）
+    // 撞牆後的暈眩：傷害提高 1.5 倍。
     if (this.stunT > 0) {
       this.stunT -= dt;
       this.damageTakenMult = 1.5;
@@ -174,7 +226,7 @@ class Boss extends Bot {
           0,
           0xfff2a0,
           2,
-          3
+          3,
         );
       World.stepBody(this, dt);
       this.updateRig(dt);
@@ -182,13 +234,17 @@ class Boss extends Bot {
     }
     this.damageTakenMult = 1;
 
+    // 正在使用招式：更新到結束為止。
     if (this.atk) {
       // 施放招式中：招式自己決定首領要不要移動、轉身
       this.atk.t += dt;
       const done = Boss.PATTERNS[this.atk.name].update(this, this.atk, dt, t);
       if (done) {
         this.atk = null;
-        this.atkCd = (this.def.id === "wraith" ? 1.3 : 2.0) * [1, 0.8, 0.6][this.phase] * Util.rand(0.8, 1.2);
+        this.atkCd =
+          (this.def.id === "wraith" ? 1.3 : 2.0) *
+          [1, 0.8, 0.6][this.phase] *
+          Util.rand(0.8, 1.2);
       }
     } else if (t) {
       this.positioning(t);
@@ -200,13 +256,15 @@ class Boss extends Bot {
       this.steer(dt);
     }
     // 大部分招式首領站著不動，仍要套用重力與碰撞；會自己移動的招式（衝撞）已在招式內處理
-    if (this.atk && !Boss.PATTERNS[this.atk.name].selfMove) World.stepBody(this, dt);
+    if (this.atk && !Boss.PATTERNS[this.atk.name].selfMove)
+      World.stepBody(this, dt);
     this.updateRig(dt);
   }
 
   // 選最近的敵人當目標
   pickTarget() {
-    let best = null, bestD = Infinity;
+    let best = null,
+      bestD = Infinity;
     for (const a of Combat.actors) {
       if (!a.alive || a.team === this.team) continue;
       const d = Util.dist2D(a.pos.x, a.pos.z, this.pos.x, this.pos.z);
@@ -218,7 +276,14 @@ class Boss extends Bot {
     this.target = best;
     if (best) {
       const eye = this.eyePos(Bot._v1);
-      this.visible = World.los(eye.x, eye.y, eye.z, best.pos.x, best.pos.y + 1.2, best.pos.z);
+      this.visible = World.los(
+        eye.x,
+        eye.y,
+        eye.z,
+        best.pos.x,
+        best.pos.y + 1.2,
+        best.pos.z,
+      );
       this.lastSeen.copy(best.pos);
       this.lastSeenTime = Game.time;
       this.seenFor = 9;
@@ -228,7 +293,12 @@ class Boss extends Bot {
   // 沒在出招時的走位：太遠就靠近，否則在偏好距離內繞著玩家移動
   positioning(t) {
     const dist = Util.dist2D(t.pos.x, t.pos.z, this.pos.x, this.pos.z);
-    const [near, far] = this.def.id === "wraith" ? [7, 14] : this.def.id === "hydra" ? [13, 24] : [9, 20];
+    const [near, far] =
+      this.def.id === "wraith"
+        ? [7, 14]
+        : this.def.id === "hydra"
+          ? [13, 24]
+          : [9, 20];
     if (dist > far || !this.visible) {
       if (this.repathT <= 0) {
         this.repathT = 0.8;
@@ -253,7 +323,11 @@ class Boss extends Bot {
     Sound.play("bossRoar", { pos: this.pos });
     FX.ring(this.pos.x, this.pos.y + 0.1, this.pos.z, 16, this.color, 0.8);
     FX.explosion(this.pos.x, this.centerY(), this.pos.z, 4, this.color);
-    HUD.announce(this.enraged ? "狂暴化" : "第 " + (this.phase + 1) + " 階段", this.def.name + " 的攻擊變得更猛烈", this.color);
+    HUD.announce(
+      this.enraged ? "狂暴化" : "第 " + (this.phase + 1) + " 階段",
+      this.def.name + " 的攻擊變得更猛烈",
+      this.color,
+    );
     // 把貼太近的玩家震開
     for (const a of Combat.actors) {
       if (!a.alive || a.team === this.team) continue;
@@ -279,7 +353,8 @@ class Boss extends Bot {
     this.minions = this.minions.filter((m) => m.alive);
     const cap = this.maxMinions();
     for (let i = 0; i < count && this.minions.length < cap; i++) {
-      const p = Nav.randomNear(this.pos.x, this.pos.z, 6, 14) || Nav.randomPoint();
+      const p =
+        Nav.randomNear(this.pos.x, this.pos.z, 6, 14) || Nav.randomPoint();
       const type = Util.pick(this.def.minions);
       const minion = Game.spawnEnemy(type, p.x, p.y, p.z);
       minion.calmT = 1.8; // 剛被叫出來：先觀察 1.8 秒才開槍，讓玩家有時間反應
@@ -304,7 +379,11 @@ class Boss extends Bot {
         const need = Boss.PATTERNS[p];
         if (need.needSight && !this.visible) return false;
         if (need.maxDist && dist > need.maxDist) return false;
-        if (p === "summon" && this.minions.filter((m) => m.alive).length >= this.maxMinions() - 1) return false;
+        if (
+          p === "summon" &&
+          this.minions.filter((m) => m.alive).length >= this.maxMinions() - 1
+        )
+          return false;
         return true;
       });
       name = options.length ? Util.pick(options) : "rockets";
@@ -323,10 +402,11 @@ class Boss extends Bot {
     const wantYaw = Util.yawTo(t.pos.x - this.pos.x, t.pos.z - this.pos.z);
     const wantPitch = Math.atan2(
       t.pos.y + 1.1 - this.eyeY(),
-      Math.max(1, Util.dist2D(t.pos.x, t.pos.z, this.pos.x, this.pos.z))
+      Math.max(1, Util.dist2D(t.pos.x, t.pos.z, this.pos.x, this.pos.z)),
     );
     this.aimYaw = this.yaw = Util.turnToward(this.yaw, wantYaw, rate * dt);
-    this.aimPitch = this.pitch = this.pitch + Util.clamp(wantPitch - this.pitch, -rate * dt, rate * dt);
+    this.aimPitch = this.pitch =
+      this.pitch + Util.clamp(wantPitch - this.pitch, -rate * dt, rate * dt);
   }
 
   /* ---------- 死亡演出：連續爆炸 ---------- */
@@ -341,13 +421,14 @@ class Boss extends Bot {
         this.centerY() + Util.rand(-1, 1.5),
         this.pos.z + Util.rand(-1.5, 1.5),
         3.5,
-        Math.random() < 0.5 ? this.color : 0xff8a2a
+        Math.random() < 0.5 ? this.color : 0xff8a2a,
       );
       Sound.play("explosion", { pos: this.pos, vol: 0.7 });
     }
     this.updateRig(dt);
   }
 
+  // 首領死亡時，清除所有小兵。
   onDeath(attacker, info) {
     super.onDeath(attacker, info);
     this.atk = null;
@@ -369,10 +450,12 @@ class Boss extends Bot {
 Boss.PATTERNS = {
   /* ---------- 機砲掃射 ---------- */
   minigun: {
-    label: "機砲掃射 — 橫向移動！", needSight: true,
+    label: "機砲掃射 — 橫向移動！",
+    needSight: true,
     start(b) {
       Sound.play("charge", { pos: b.pos });
     },
+    // 先蓄力，再一邊掃射一邊橫向移動。
     update(b, a, dt, t) {
       const windup = 0.8;
       const duration = b.enraged ? 3.6 : 2.8;
@@ -388,7 +471,11 @@ Boss.PATTERNS = {
         a.tick += 0.055;
         const origin = b.eyePos(Bot._v1);
         const m = b.muzzlePos(Bot._v3);
-        const dir = Combat._spreadDir(Util.aimDir(b.yaw, b.pitch, Bot._v2), 2.4, Combat._dir);
+        const dir = Combat._spreadDir(
+          Util.aimDir(b.yaw, b.pitch, Bot._v2),
+          2.4,
+          Combat._dir,
+        );
         Combat._hitscan(b, origin, dir, Boss.GUN, m.x, m.y, m.z);
         FX.muzzle(m.x, m.y, m.z, b.color, false);
         if (Math.random() < 0.5) Sound.play("lmg", { pos: b.pos, vol: 0.8 });
@@ -401,11 +488,13 @@ Boss.PATTERNS = {
   /* ---------- 火箭彈幕 ---------- */
   rockets: {
     label: "火箭彈幕 — 離開紅圈！",
+    // 依階段決定火箭數量。
     start(b, a, t) {
       a.count = b.enraged ? 9 : 6 + b.phase;
       a.fired = 0;
       Sound.play("charge", { pos: b.pos });
     },
+    // 依序發射，落點有些會預判玩家移動的方向。
     update(b, a, dt, t) {
       b.face(t, 3, dt);
       // 每 0.16 秒標記一個落點：第一發瞄準玩家腳下，其餘散在周圍與行進方向上
@@ -422,8 +511,20 @@ Boss.PATTERNS = {
         Combat.after(delay - 0.6, () => {
           if (!b.alive) return;
           Combat.addProjectile({
-            owner: b, x, y: y + 30, z, vx: 0, vy: -50, vz: 0, gravity: 0, damage: 55, blast: 3.8,
-            color: b.color, size: 0.2, weapon: "boss", rocket: true
+            owner: b,
+            x,
+            y: y + 30,
+            z,
+            vx: 0,
+            vy: -50,
+            vz: 0,
+            gravity: 0,
+            damage: 55,
+            blast: 3.8,
+            color: b.color,
+            size: 0.2,
+            weapon: "boss",
+            rocket: true,
           });
         });
         Sound.play("launcher", { pos: b.pos, vol: 0.6 });
@@ -437,7 +538,9 @@ Boss.PATTERNS = {
 
   /* ---------- 震地波 ---------- */
   shockwave: {
-    label: "震地波 — 跳躍閃避！", maxDist: 26,
+    label: "震地波 — 跳躍閃避！",
+    maxDist: 26,
+    // 依階段決定震波次數。
     start(b, a) {
       a.waves = b.enraged ? 3 : b.phase >= 1 ? 2 : 1;
       a.wave = 0;
@@ -445,9 +548,11 @@ Boss.PATTERNS = {
       FX.mark(b.pos.x, b.pos.y, b.pos.z, 5, 0xffc233, 0.9);
       Sound.play("charge", { pos: b.pos });
     },
+    // 震波向外擴散；跳起來或站在高處可以躲開。
     update(b, a, dt) {
       const windup = 0.9;
-      const speed = 17, maxR = 30;
+      const speed = 17,
+        maxR = 30;
       b.crouch = a.radius < 0 ? Math.min(1, a.t / windup) * 0.8 : 0; // 蓄力時蹲低
       if (a.radius < 0) {
         if (a.t < windup) return false;
@@ -464,7 +569,13 @@ Boss.PATTERNS = {
       for (const e of Combat.actors) {
         if (!e.alive || e.team === b.team) continue;
         const d = Util.dist2D(e.pos.x, e.pos.z, b.pos.x, b.pos.z);
-        if (d > prev && d <= a.radius && e.onGround && Math.abs(e.pos.y - b.pos.y) < 1.2 && b.canReach(e, 0.5)) {
+        if (
+          d > prev &&
+          d <= a.radius &&
+          e.onGround &&
+          Math.abs(e.pos.y - b.pos.y) < 1.2 &&
+          b.canReach(e, 0.5)
+        ) {
           b.hurt(e, 34, "shockwave");
           e.vel.y = 6;
           e.onGround = false;
@@ -489,20 +600,37 @@ Boss.PATTERNS = {
 
   /* ---------- 衝撞 ---------- */
   charge: {
-    label: "衝撞 — 離開提示線！", needSight: true, maxDist: 34, selfMove: true,
+    label: "衝撞 — 離開提示線！",
+    needSight: true,
+    maxDist: 34,
+    selfMove: true,
+    // 決定衝鋒的方向與距離，並畫出警告。
     start(b, a, t) {
-      a.dir = new THREE.Vector3(t.pos.x - b.pos.x, 0, t.pos.z - b.pos.z).normalize();
+      a.dir = new THREE.Vector3(
+        t.pos.x - b.pos.x,
+        0,
+        t.pos.z - b.pos.z,
+      ).normalize();
       a.len = Math.min(32, Util.dist2D(t.pos.x, t.pos.z, b.pos.x, b.pos.z) + 7);
       a.travelled = 0;
       a.hitSet = new Set();
       // 地上的提示線
       const y = b.pos.y + 0.12;
-      FX.beam({ x: b.pos.x, y, z: b.pos.z }, { x: b.pos.x + a.dir.x * a.len, y, z: b.pos.z + a.dir.z * a.len }, b.radius * 0.9, 0xff3030, 0.85, false).mesh.material.opacity = 0.35;
+      FX.beam(
+        { x: b.pos.x, y, z: b.pos.z },
+        { x: b.pos.x + a.dir.x * a.len, y, z: b.pos.z + a.dir.z * a.len },
+        b.radius * 0.9,
+        0xff3030,
+        0.85,
+        false,
+      ).mesh.material.opacity = 0.35;
       Sound.play("charge", { pos: b.pos });
       b.yaw = b.aimYaw = Util.yawTo(a.dir.x, a.dir.z);
     },
+    // 衝鋒：撞到人造成傷害，撞到牆則自己暈眩。
     update(b, a, dt) {
-      if (a.t < 0.85) { // 預警：原地蓄力
+      if (a.t < 0.85) {
+        // 預警：原地蓄力
         b.vel.x = b.vel.z = 0;
         World.stepBody(b, dt);
         return false;
@@ -513,11 +641,16 @@ Boss.PATTERNS = {
       World.stepBody(b, dt);
       a.travelled += speed * dt;
       FX.puff(b.pos.x, b.pos.y + 0.3, b.pos.z, 1, 1.2, 0x8a7a6a, 1.5);
-      if (b.def.id === "wraith") FX.flash(b.pos.x, b.centerY(), b.pos.z, b.color, 2.5, 0.2, 0.5); // 殘影
+      if (b.def.id === "wraith")
+        FX.flash(b.pos.x, b.centerY(), b.pos.z, b.color, 2.5, 0.2, 0.5); // 殘影
       // 撞到路徑上的敵人
       for (const e of Combat.actors) {
         if (!e.alive || e.team === b.team || a.hitSet.has(e)) continue;
-        if (Util.dist2D(e.pos.x, e.pos.z, b.pos.x, b.pos.z) < b.radius + 1.0 && Math.abs(e.pos.y - b.pos.y) < 2.5 && b.canReach(e)) {
+        if (
+          Util.dist2D(e.pos.x, e.pos.z, b.pos.x, b.pos.z) < b.radius + 1.0 &&
+          Math.abs(e.pos.y - b.pos.y) < 2.5 &&
+          b.canReach(e)
+        ) {
           a.hitSet.add(e);
           b.hurt(e, 48, "charge");
           e.vel.x += a.dir.x * 12;
@@ -530,7 +663,13 @@ Boss.PATTERNS = {
       if (b.hitWall && a.travelled > 2) {
         b.vel.x = b.vel.z = 0;
         b.stunT = 2.2;
-        FX.explosion(b.pos.x + a.dir.x * b.radius, b.centerY(), b.pos.z + a.dir.z * b.radius, 3, 0xffc233);
+        FX.explosion(
+          b.pos.x + a.dir.x * b.radius,
+          b.centerY(),
+          b.pos.z + a.dir.z * b.radius,
+          3,
+          0xffc233,
+        );
         Sound.play("stomp", { pos: b.pos });
         HUD.announce("破綻！", "首領暈眩中，全力輸出", 0xfff2a0);
         return true;
@@ -545,12 +684,15 @@ Boss.PATTERNS = {
 
   /* ---------- 能量刃 ---------- */
   blades: {
-    label: "能量刃 — 找縫隙閃避！", needSight: true,
+    label: "能量刃 — 找縫隙閃避！",
+    needSight: true,
+    // 依階段決定飛刃的波數。
     start(b, a) {
       a.volleys = b.enraged ? 5 : 3;
       a.fired = 0;
       Sound.play("charge", { pos: b.pos });
     },
+    // 一波波發射扇形飛刃。
     update(b, a, dt, t) {
       b.face(t, 6, dt);
       while (a.fired < a.volleys && a.t > 0.6 + a.fired * 0.42) {
@@ -561,9 +703,21 @@ Boss.PATTERNS = {
         for (let i = 0; i < n; i++) {
           const ang = b.yaw + (i - (n - 1) / 2 + offset) * 0.17;
           Combat.addProjectile({
-            owner: b, x: b.pos.x - Math.sin(ang) * 1.2, y, z: b.pos.z - Math.cos(ang) * 1.2,
-            vx: -Math.sin(ang) * 24, vy: 0, vz: -Math.cos(ang) * 24,
-            gravity: 0, damage: 20, blast: 0, color: b.color, size: 0.22, weapon: "boss", direct: true, life: 2.2,
+            owner: b,
+            x: b.pos.x - Math.sin(ang) * 1.2,
+            y,
+            z: b.pos.z - Math.cos(ang) * 1.2,
+            vx: -Math.sin(ang) * 24,
+            vy: 0,
+            vz: -Math.cos(ang) * 24,
+            gravity: 0,
+            damage: 20,
+            blast: 0,
+            color: b.color,
+            size: 0.22,
+            weapon: "boss",
+            direct: true,
+            life: 2.2,
           });
         }
         Sound.play("plasma", { pos: b.pos });
@@ -576,12 +730,14 @@ Boss.PATTERNS = {
   /* ---------- 瞬移斬 ---------- */
   blink: {
     label: "瞬移斬 — 離開提示圈！",
+    // 依階段決定瞬移次數。
     start(b, a) {
       a.jumps = b.enraged ? 4 : 2 + b.phase;
       a.done = 0;
       a.stage = 0;
       a.t = 0;
     },
+    // 消失、出現在玩家附近，再立刻攻擊。
     update(b, a, dt, t) {
       if (!t) return true;
       b.vel.x = b.vel.z = 0;
@@ -593,7 +749,12 @@ Boss.PATTERNS = {
         for (let i = 0; i < 12 && !spot; i++) {
           const behind = t.yaw + Math.PI + Util.rand(-1.4, 1.4);
           const r = Util.rand(3.5, 5.5);
-          const idx = Nav.nearest(t.pos.x - Math.sin(behind) * r, t.pos.z - Math.cos(behind) * r, true, 3);
+          const idx = Nav.nearest(
+            t.pos.x - Math.sin(behind) * r,
+            t.pos.z - Math.cos(behind) * r,
+            true,
+            3,
+          );
           if (idx >= 0 && Math.abs(Nav.h[idx] - t.pos.y) < 1.5)
             spot = { x: Nav.cellX(idx), y: Nav.h[idx], z: Nav.cellZ(idx) };
         }
@@ -610,11 +771,11 @@ Boss.PATTERNS = {
         Sound.play("melee", { pos: b.pos, vol: 1.5 });
         for (const e of Combat.actors) {
           if (
-            e.alive
-              && e.team !== b.team
-              && Util.dist2D(e.pos.x, e.pos.z, b.pos.x, b.pos.z) < 4.6 + e.radius
-              && Math.abs(e.pos.y - b.pos.y) < 2.5
-              && b.canReach(e)
+            e.alive &&
+            e.team !== b.team &&
+            Util.dist2D(e.pos.x, e.pos.z, b.pos.x, b.pos.z) < 4.6 + e.radius &&
+            Math.abs(e.pos.y - b.pos.y) < 2.5 &&
+            b.canReach(e)
           )
             b.hurt(e, 40, "slash");
         }
@@ -631,10 +792,12 @@ Boss.PATTERNS = {
   /* ---------- 螺旋彈幕 ---------- */
   orbs: {
     label: "螺旋彈幕 — 保持移動！",
+    // 記住起始角度。
     start(b, a) {
       a.angle = Math.random() * 6.28;
       Sound.play("charge", { pos: b.pos });
     },
+    // 旋轉著連續發射光球。
     update(b, a, dt, t) {
       b.face(t, 2, dt);
       const arms = b.enraged ? 4 : 3; // 同時幾條旋臂
@@ -648,9 +811,21 @@ Boss.PATTERNS = {
         for (let i = 0; i < arms; i++) {
           const ang = a.angle + (i / arms) * Math.PI * 2;
           Combat.addProjectile({
-            owner: b, x: b.pos.x + Math.cos(ang) * (b.radius + 0.3), y, z: b.pos.z + Math.sin(ang) * (b.radius + 0.3),
-            vx: Math.cos(ang) * 11, vy: 0, vz: Math.sin(ang) * 11,
-            gravity: 0, damage: 15, blast: 0, color: b.color, size: 0.26, weapon: "boss", direct: true, life: 4,
+            owner: b,
+            x: b.pos.x + Math.cos(ang) * (b.radius + 0.3),
+            y,
+            z: b.pos.z + Math.sin(ang) * (b.radius + 0.3),
+            vx: Math.cos(ang) * 11,
+            vy: 0,
+            vz: Math.sin(ang) * 11,
+            gravity: 0,
+            damage: 15,
+            blast: 0,
+            color: b.color,
+            size: 0.26,
+            weapon: "boss",
+            direct: true,
+            life: 4,
           });
         }
         if (Math.random() < 0.4) Sound.play("plasma", { pos: b.pos, vol: 0.5 });
@@ -662,6 +837,7 @@ Boss.PATTERNS = {
   /* ---------- 旋轉雷射 ---------- */
   laser: {
     label: "旋轉雷射 — 跳躍或找掩體！",
+    // 決定雷射的起始角度、方向與數量。
     start(b, a, t) {
       a.angle = Math.atan2(t.pos.z - b.pos.z, t.pos.x - b.pos.x) + 1.2; // 從玩家側邊開始掃
       a.dirSign = Math.random() < 0.5 ? 1 : -1;
@@ -669,12 +845,15 @@ Boss.PATTERNS = {
       a.count = b.enraged ? 3 : 2; // 幾道雷射同時旋轉
       Sound.play("charge", { pos: b.pos });
     },
+    // 先顯示預警線，再旋轉掃射；被柱子擋住的地方安全。
     update(b, a, dt) {
-      const windup = 1.0, duration = 4.2;
+      const windup = 1.0,
+        duration = 4.2;
       const y = b.pos.y + 0.75; // 雷射高度：跳起來可以越過
       const firing = a.t >= windup;
       if (firing && !a.beams.length) {
-        for (let i = 0; i < a.count; i++) a.beams.push(FX.beam(b.pos, b.pos, 0.16, b.color, duration, false));
+        for (let i = 0; i < a.count; i++)
+          a.beams.push(FX.beam(b.pos, b.pos, 0.16, b.color, duration, false));
         Sound.play("laser", { pos: b.pos });
       }
       if (firing) a.angle += a.dirSign * dt * (b.enraged ? 1.25 : 0.95);
@@ -687,14 +866,23 @@ Boss.PATTERNS = {
 
       for (let i = 0; i < a.count; i++) {
         const ang = a.angle + (i / a.count) * Math.PI * 2;
-        const dx = Math.cos(ang), dz = Math.sin(ang);
+        const dx = Math.cos(ang),
+          dz = Math.sin(ang);
         // 雷射會被牆擋住，所以躲在掩體後是安全的
-        const len = Math.min(45, World.raycast(b.pos.x, y, b.pos.z, dx, 0, dz, 45, Combat._hit));
+        const len = Math.min(
+          45,
+          World.raycast(b.pos.x, y, b.pos.z, dx, 0, dz, 45, Combat._hit),
+        );
         const end = { x: b.pos.x + dx * len, y, z: b.pos.z + dz * len };
-        const start = { x: b.pos.x + dx * b.radius, y, z: b.pos.z + dz * b.radius };
+        const start = {
+          x: b.pos.x + dx * b.radius,
+          y,
+          z: b.pos.z + dz * b.radius,
+        };
         if (!firing) {
           // 預警：一閃一閃的細線
-          if (Math.floor(a.t * 14) % 2 === 0) FX.tracer(start.x, y, start.z, end.x, y, end.z, 0xff3030, 0.03);
+          if (Math.floor(a.t * 14) % 2 === 0)
+            FX.tracer(start.x, y, start.z, end.x, y, end.z, 0xff3030, 0.03);
           continue;
         }
         FX.setBeam(a.beams[i], start, end);
@@ -702,11 +890,20 @@ Boss.PATTERNS = {
         if (!doDamage) continue;
         for (const e of Combat.actors) {
           if (!e.alive || e.team === b.team) continue;
-          const ex = e.pos.x - b.pos.x, ez = e.pos.z - b.pos.z;
+          const ex = e.pos.x - b.pos.x,
+            ez = e.pos.z - b.pos.z;
           const along = ex * dx + ez * dz; // 敵人沿雷射方向的距離
           const side = Math.abs(ex * dz - ez * dx); // 敵人離雷射的橫向距離
-          const feet = e.pos.y, head = e.pos.y + e.height;
-          if (along > 0 && along < len && side < e.radius + 0.2 && feet < y && head > y) b.hurt(e, 9, "laser");
+          const feet = e.pos.y,
+            head = e.pos.y + e.height;
+          if (
+            along > 0 &&
+            along < len &&
+            side < e.radius + 0.2 &&
+            feet < y &&
+            head > y
+          )
+            b.hurt(e, 9, "laser");
         }
       }
       return a.t > windup + duration;
@@ -716,10 +913,12 @@ Boss.PATTERNS = {
   /* ---------- 召喚 ---------- */
   summon: {
     label: "召喚增援",
+    // 開始召喚的警示。
     start(b) {
       Sound.play("charge", { pos: b.pos });
       FX.ring(b.pos.x, b.pos.y + 0.1, b.pos.z, 10, b.color, 0.9);
     },
+    // 召喚小兵。
     update(b, a) {
       if (a.t > 0.9 && a.stage === 0) {
         a.stage = 1;
@@ -732,10 +931,12 @@ Boss.PATTERNS = {
   /* ---------- 近身重擊 ---------- */
   slam: {
     label: "近身重擊 — 後退！",
+    // 畫出踩踏範圍的警告。
     start(b) {
       FX.mark(b.pos.x, b.pos.y, b.pos.z, b.radius + 4, 0xff3030, 0.7);
       Sound.play("charge", { pos: b.pos, vol: 0.7 });
     },
+    // 踩踏：範圍內的敵人受傷並被推開。
     update(b, a) {
       if (a.t > 0.7 && a.stage === 0) {
         a.stage = 1;
@@ -747,7 +948,11 @@ Boss.PATTERNS = {
         for (const e of Combat.actors) {
           if (!e.alive || e.team === b.team) continue;
           const d = Util.dist2D(e.pos.x, e.pos.z, b.pos.x, b.pos.z);
-          if (d < r + e.radius && Math.abs(e.pos.y - b.pos.y) < 2.5 && b.canReach(e)) {
+          if (
+            d < r + e.radius &&
+            Math.abs(e.pos.y - b.pos.y) < 2.5 &&
+            b.canReach(e)
+          ) {
             b.hurt(e, 36, "slam");
             e.vel.x += ((e.pos.x - b.pos.x) / Math.max(d, 0.5)) * 13;
             e.vel.z += ((e.pos.z - b.pos.z) / Math.max(d, 0.5)) * 13;
@@ -762,4 +967,10 @@ Boss.PATTERNS = {
 };
 
 // 機砲掃射使用的虛擬武器資料（傷害、衰減、曳光顏色）
-Boss.GUN = { id: "boss", damage: 9, headMult: 1, falloff: [60, 120, 0.7], tracer: 0xff9a4d };
+Boss.GUN = {
+  id: "boss",
+  damage: 9,
+  headMult: 1,
+  falloff: [60, 120, 0.7],
+  tracer: 0xff9a4d,
+};

@@ -1,15 +1,26 @@
+/*
+ * 測試：霓光突擊的主要玩法（換彈、波次、補給、手榴彈、首領與設定）。
+ */
 import assert from "node:assert/strict";
 import { createHarness } from "./test-harness.mjs";
 
 const cases = [];
+// 登記一項測試。
 function test(name, execute) {
   cases.push({ name, execute });
 }
 
+// 換彈使用遊戲時間，而且不會憑空多出子彈。
 test("reload uses active gameplay time and never creates spare ammunition", () => {
   const h = createHarness();
   h.run(
-    "gameState='playing';ammo=10;reserve=5;reload();updateCombatTimers(1,2000);",
+    `
+      gameState = "playing";
+      ammo = 10;
+      reserve = 5;
+      reload();
+      updateCombatTimers(1, 2000);
+    `,
   );
   assert.equal(h.run("reloading"), true);
   assert.equal(h.run("ammo"), 10);
@@ -18,16 +29,28 @@ test("reload uses active gameplay time and never creates spare ammunition", () =
   const remaining = h.run("reloadRemaining");
   for (let i = 0; i < 100; i++) h.run("animate(10000);");
   assert.equal(h.run("reloadRemaining"), remaining);
-  h.run("gameState='playing';updateCombatTimers(.56,2560);");
+  h.run(`
+    gameState = "playing";
+    updateCombatTimers(0.56, 2560);
+  `);
   assert.equal(h.run("reloading"), false);
   assert.equal(h.run("ammo"), 15);
   assert.equal(h.run("reserve"), 0);
 });
 
+// 增援倒數在暫停時停住，並且只生成、補給一次。
 test("wave reinforcement waits through pause, then spawns and supplies exactly once", () => {
   const h = createHarness();
   h.run(
-    "gameState='playing';selectedMode=1;matchTotalEnemies=27;reserve=0;armor=0;grenadeCount=1;handleEnemyDefeated();",
+    `
+      gameState = "playing";
+      selectedMode = 1;
+      matchTotalEnemies = 27;
+      reserve = 0;
+      armor = 0;
+      grenadeCount = 1;
+      handleEnemyDefeated();
+    `,
   );
   assert.equal(h.run("wavePending"), true);
   assert.equal(h.run("currentWave"), 0);
@@ -36,7 +59,10 @@ test("wave reinforcement waits through pause, then spawns and supplies exactly o
   for (let i = 0; i < 100; i++) h.run("animate(10000);");
   assert.equal(h.run("waveRemaining"), 2.4);
   assert.equal(h.run("enemies.length"), 0);
-  h.run("gameState='playing';updateCombatTimers(2.41,3410);");
+  h.run(`
+    gameState = "playing";
+    updateCombatTimers(2.41, 3410);
+  `);
   assert.equal(h.run("currentWave"), 1);
   assert.equal(h.run("wavePending"), false);
   assert.equal(h.run("enemies.length"), 9);
@@ -48,14 +74,24 @@ test("wave reinforcement waits through pause, then spawns and supplies exactly o
   assert.equal(h.run("reserve"), 45);
 });
 
+// 對局結束後，結果不會再改變，也不會再受傷。
 test("ended match cannot change its result or accept later damage", () => {
   const h = createHarness();
   h.run(
-    "gameState='playing';health=0;createEnemy(0,0,0x556677,0);endGame(false);",
+    `
+      gameState = "playing";
+      health = 0;
+      createEnemy(0, 0, 0x556677, 0);
+      endGame(false);
+    `,
   );
   const title = h.nodes.get("#resultTitle").textContent;
   h.run(
-    "endGame(true);damageEnemy(enemies[0],1000,null,false,true);handleEnemyDefeated();",
+    `
+      endGame(true);
+      damageEnemy(enemies[0], 1000, null, false, true);
+      handleEnemyDefeated();
+    `,
   );
   assert.equal(h.nodes.get("#resultTitle").textContent, title);
   assert.equal(h.run("gameState"), "ended");
@@ -63,16 +99,30 @@ test("ended match cannot change its result or accept later damage", () => {
   assert.equal(h.run("kills"), 0);
 });
 
+// 敵人出生時避開玩家與場景。
 test("spawned enemies avoid the player and real arena collision boxes", () => {
   const h = createHarness();
   h.run(
-    "createArena();yaw.position.set(-64,1.68,-61);matchTotalEnemies=18;spawnEnemies(18);",
+    `
+      createArena();
+      yaw.position.set(-64, 1.68, -61);
+      matchTotalEnemies = 18;
+      spawnEnemies(18);
+    `,
   );
   assert.equal(h.run("enemies.length"), 18);
   assert.ok(h.run("collisionBoxes.length") > 100);
   assert.equal(
     h.run(
-      "enemies.every(e=>Math.hypot(e.position.x-yaw.position.x,e.position.z-yaw.position.z)>14)",
+      `
+        enemies.every(
+          (e) =>
+            Math.hypot(
+              e.position.x - yaw.position.x,
+              e.position.z - yaw.position.z,
+            ) > 14,
+        );
+      `,
     ),
     true,
   );
@@ -82,10 +132,18 @@ test("spawned enemies avoid the player and real arena collision boxes", () => {
   );
 });
 
+// 快速三連殺只給一次補給；逾時或重複計算都不算。
 test("three quick kills reward supplies once; expired streak and duplicate kill do not", () => {
   const h = createHarness();
   h.run(
-    "gameState='playing';resolvingBlast=true;health=50;armor=10;reserve=100;for(let i=0;i<4;i++)createEnemy(i*5,0,0x556677,i);",
+    `
+      gameState = "playing";
+      resolvingBlast = true;
+      health = 50;
+      armor = 10;
+      reserve = 100;
+      for (let i = 0; i < 4; i++) createEnemy(i * 5, 0, 0x556677, i);
+    `,
   );
   for (let i = 0; i < 3; i++) {
     h.setNow(1000 + i * 1000);
@@ -97,15 +155,24 @@ test("three quick kills reward supplies once; expired streak and duplicate kill 
   assert.equal(h.run("armor"), 20);
   assert.equal(h.run("reserve"), 115);
   h.setNow(19001);
-  h.run("killEnemy(enemies[3],false,true);killEnemy(enemies[3],false,true);");
+  h.run(`
+    killEnemy(enemies[3], false, true);
+    killEnemy(enemies[3], false, true);
+  `);
   assert.equal(h.run("kills"), 4);
   assert.equal(h.run("killStreak"), 1);
   assert.equal(h.run("reserve"), 115);
 });
 
+// 幹員技能遵守上限、冷卻與暫停。
 test("operator ability respects caps, cooldown, pause and its operator effect", () => {
   const h = createHarness();
-  h.run("gameState='playing';health=90;armor=45;useAbility();");
+  h.run(`
+    gameState = "playing";
+    health = 90;
+    armor = 45;
+    useAbility();
+  `);
   assert.equal(h.run("health"), 100);
   assert.equal(h.run("armor"), 50);
   assert.equal(h.run("abilityCooldown"), 28);
@@ -115,22 +182,48 @@ test("operator ability respects caps, cooldown, pause and its operator effect", 
   h.run("gameState='paused';");
   for (let i = 0; i < 100; i++) h.run("animate(10000);");
   assert.equal(h.run("abilityCooldown"), 28);
-  h.run("gameState='playing';updateCombatTimers(28,29000);useAbility();");
+  h.run(`
+    gameState = "playing";
+    updateCombatTimers(28, 29000);
+    useAbility();
+  `);
   assert.equal(h.run("health"), 72);
   h.setNow(30000);
-  h.run("selectedOperator=1;abilityCooldown=0;useAbility();");
+  h.run(`
+    selectedOperator = 1;
+    abilityCooldown = 0;
+    useAbility();
+  `);
   assert.equal(h.run("speedBoostUntil"), 38000);
   h.run(
-    "selectedOperator=2;abilityCooldown=0;maxArmor=80;armor=60;useAbility();",
+    `
+      selectedOperator = 2;
+      abilityCooldown = 0;
+      maxArmor = 80;
+      armor = 60;
+      useAbility();
+    `,
   );
   assert.equal(h.run("armor"), 80);
   assert.equal(h.run("damageShieldUntil"), 38000);
 });
 
+// 恢復遊戲後，增益、補給、任務與連殺的時間都接得上。
 test("resuming pointer lock preserves buff, pickup, contract and streak time", () => {
   const h = createHarness();
   h.run(
-    "setupEvents();gameState='playing';gameStart=1000;matchDeadline=181000;lastKillAt=4000;speedBoostUntil=17000;damageShieldUntil=17000;reloading=true;reloadStarted=4000;pickups.push({active:false,respawnAt:40000});",
+    `
+      setupEvents();
+      gameState = "playing";
+      gameStart = 1000;
+      matchDeadline = 181000;
+      lastKillAt = 4000;
+      speedBoostUntil = 17000;
+      damageShieldUntil = 17000;
+      reloading = true;
+      reloadStarted = 4000;
+      pickups.push({ active: false, respawnAt: 40000 });
+    `,
   );
   h.setNow(5000);
   h.run("pauseGame();");
@@ -147,10 +240,20 @@ test("resuming pointer lock preserves buff, pickup, contract and streak time", (
   assert.equal(h.run("pickups[0].respawnAt"), 60000);
 });
 
+// 牆能擋住爆炸；沒有遮蔽的目標會被炸到。
 test("solid wall blocks blast while an unobstructed target is reachable", () => {
   const h = createHarness();
   h.run(
-    "const testWall=new THREE.Mesh(new THREE.BoxGeometry(.5,3,4),new THREE.MeshStandardMaterial());testWall.position.set(0,1.5,0);scene.add(testWall);worldMeshes.push(testWall);scene.updateMatrixWorld(true);",
+    `
+      const testWall = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 3, 4),
+        new THREE.MeshStandardMaterial(),
+      );
+      testWall.position.set(0, 1.5, 0);
+      scene.add(testWall);
+      worldMeshes.push(testWall);
+      scene.updateMatrixWorld(true);
+    `,
   );
   assert.equal(
     h.run(
@@ -167,21 +270,45 @@ test("solid wall blocks blast while an unobstructed target is reachable", () => 
   );
 });
 
+// 打到敵人頭上的名牌不會扣血，打身體才會。
 test("shooting floating enemy UI cannot damage the body; aiming at the body can", () => {
   const h = createHarness();
   h.run(
-    "gameState='playing';createEnemy(0,0,0x556677,0);pitch=new THREE.Group();weapon=new THREE.Group();const testFlash=new THREE.Object3D();testFlash.name='flash';weapon.add(testFlash);muzzleAnchor=new THREE.Object3D();weapon.add(muzzleAnchor);camera.add(weapon);muzzleFlash=new THREE.PointLight();scene.add(camera);camera.position.set(0,1.28,10);camera.lookAt(0,1.28,0);scene.updateMatrixWorld(true);shoot(1000);",
+    `
+      gameState = "playing";
+      createEnemy(0, 0, 0x556677, 0);
+      pitch = new THREE.Group();
+      weapon = new THREE.Group();
+      const testFlash = new THREE.Object3D();
+      testFlash.name = "flash";
+      weapon.add(testFlash);
+      muzzleAnchor = new THREE.Object3D();
+      weapon.add(muzzleAnchor);
+      camera.add(weapon);
+      muzzleFlash = new THREE.PointLight();
+      scene.add(camera);
+      camera.position.set(0, 1.28, 10);
+      camera.lookAt(0, 1.28, 0);
+      scene.updateMatrixWorld(true);
+      shoot(1000);
+    `,
   );
   assert.equal(h.run("enemies[0].userData.state.health"), 65);
   assert.equal(h.run("hits"), 1);
   h.run(
-    "camera.position.set(0,2.52,10);camera.lookAt(0,2.52,0);scene.updateMatrixWorld(true);shoot(2000);",
+    `
+      camera.position.set(0, 2.52, 10);
+      camera.lookAt(0, 2.52, 0);
+      scene.updateMatrixWorld(true);
+      shoot(2000);
+    `,
   );
   assert.equal(h.run("enemies[0].userData.state.health"), 65);
   assert.equal(h.run("hits"), 1);
   assert.equal(h.run("ammo"), 28);
 });
 
+// 已移除的補給不會出現；其餘補給外觀各不相同。
 test("removed supply types cannot spawn or collect; remaining supplies have distinct models", () => {
   const h = createHarness();
   assert.deepEqual(Array.from(h.run("Object.keys(pickupTypes)")), [
@@ -198,7 +325,12 @@ test("removed supply types cannot spawn or collect; remaining supplies have dist
     h.run("canUsePickup('stim',1000)||canUsePickup('cache',1000)"),
     false,
   );
-  h.run("createPickups();health=99;maxHealth=100;gameState='playing';");
+  h.run(`
+    createPickups();
+    health = 99;
+    maxHealth = 100;
+    gameState = "playing";
+  `);
   assert.equal(h.run("pickups.length"), 16);
   assert.ok(
     h.run("pickups.find(item=>item.type==='medkit').model.children.length") >
@@ -215,10 +347,16 @@ test("removed supply types cannot spawn or collect; remaining supplies have dist
   assert.equal(h.run("health"), 100);
 });
 
+// 按住手榴彈只是預覽；放開才丟一顆，暫停會取消。
 test("grenade hold previews without spending stock; release throws once and pause cancels", () => {
   const h = createHarness();
   h.run(
-    "setupEvents();createGrenadePreview();gameState='playing';grenadeCount=2;",
+    `
+      setupEvents();
+      createGrenadePreview();
+      gameState = "playing";
+      grenadeCount = 2;
+    `,
   );
   const key = { code: "KeyG", repeat: false, preventDefault() {} };
   h.dispatchGlobal("keydown", key);
@@ -237,10 +375,16 @@ test("grenade hold previews without spending stock; release throws once and paus
   assert.equal(h.run("grenadePreview.group.visible"), false);
 });
 
+// 左鍵取消手榴彈，不消耗數量，放開也不會丟。
 test("left click cancels a held grenade without spending stock or firing on release", () => {
   const h = createHarness();
   h.run(
-    "setupEvents();createGrenadePreview();gameState='playing';grenadeCount=2;",
+    `
+      setupEvents();
+      createGrenadePreview();
+      gameState = "playing";
+      grenadeCount = 2;
+    `,
   );
   const key = { code: "KeyG", repeat: false, preventDefault() {} };
   h.dispatchGlobal("keydown", key);
@@ -256,10 +400,27 @@ test("left click cancels a held grenade without spending stock or firing on rele
   assert.equal(h.run("grenadePreview.line.geometry.drawRange.count"), 0);
 });
 
+// 爆炸位置是手榴彈的實際位置；停住的手榴彈不再旋轉。
 test("grenade blast uses the actual projectile location and frozen grenades stop spinning", () => {
   const h = createHarness();
   h.run(
-    "gameState='playing';scene.add(camera);yaw.position.set(0,1.68,50);const resting=createGrenadeModel();const restingMotion=createGrenadeMotion({x:0,y:1.68,z:0},{x:0,y:0,z:0});restingMotion.position={x:0,y:.13,z:0};restingMotion.velocity={x:0,y:0,z:0};restingMotion.grounded=true;resting.position.copy(restingMotion.position);scene.add(resting);grenades.push({mesh:resting,motion:restingMotion});updateGrenades(.1);",
+    `
+      gameState = "playing";
+      scene.add(camera);
+      yaw.position.set(0, 1.68, 50);
+      const resting = createGrenadeModel();
+      const restingMotion = createGrenadeMotion(
+        { x: 0, y: 1.68, z: 0 },
+        { x: 0, y: 0, z: 0 },
+      );
+      restingMotion.position = { x: 0, y: 0.13, z: 0 };
+      restingMotion.velocity = { x: 0, y: 0, z: 0 };
+      restingMotion.grounded = true;
+      resting.position.copy(restingMotion.position);
+      scene.add(resting);
+      grenades.push({ mesh: resting, motion: restingMotion });
+      updateGrenades(0.1);
+    `,
   );
   assert.equal(h.run("grenades[0].mesh.rotation.x"), 0);
   assert.equal(h.run("grenades[0].mesh.rotation.z"), 0);
@@ -272,10 +433,18 @@ test("grenade blast uses the actual projectile location and frozen grenades stop
   );
 });
 
+// 高空爆炸會計算高度距離，不會在遠處地面留下焦痕。
 test("high airbursts respect vertical blast distance and cannot scorch the distant ground", () => {
   const h = createHarness();
   h.run(
-    "gameState='playing';yaw.position.set(0,1.68,0);createEnemy(0,0,0x556677,0);const highGrenade=new THREE.Group();highGrenade.position.set(0,15,0);explodeBarrel(highGrenade,'grenade');",
+    `
+      gameState = "playing";
+      yaw.position.set(0, 1.68, 0);
+      createEnemy(0, 0, 0x556677, 0);
+      const highGrenade = new THREE.Group();
+      highGrenade.position.set(0, 15, 0);
+      explodeBarrel(highGrenade, "grenade");
+    `,
   );
   assert.equal(h.run("health"), 100);
   assert.equal(h.run("armor"), 50);
@@ -286,7 +455,12 @@ test("high airbursts respect vertical blast distance and cannot scorch the dista
     "an airburst leaves no ground scorch mark",
   );
   h.run(
-    "const lowGrenade=new THREE.Group();lowGrenade.position.set(0,.13,0);lowGrenade.userData.surfaceY=.01;explodeBarrel(lowGrenade,'grenade');",
+    `
+      const lowGrenade = new THREE.Group();
+      lowGrenade.position.set(0, 0.13, 0);
+      lowGrenade.userData.surfaceY = 0.01;
+      explodeBarrel(lowGrenade, "grenade");
+    `,
   );
   assert.ok(
     h.run("health") < 100,
@@ -295,10 +469,20 @@ test("high airbursts respect vertical blast distance and cannot scorch the dista
   assert.equal(h.run("bulletDecals.length"), 1);
 });
 
+// 擊殺提示會區分爆頭，而且最多顯示三則。
 test("kill feedback distinguishes headshots and caps recent kills at three", () => {
   const h = createHarness();
   h.run(
-    "kills=4;killStreak=2;matchTotalEnemies=12;defeatedEnemies=4;showKillFeedback('ALPHA',true);showKillFeedback('BETA',false);showKillFeedback('GAMMA',false);showKillFeedback('DELTA',false);",
+    `
+      kills = 4;
+      killStreak = 2;
+      matchTotalEnemies = 12;
+      defeatedEnemies = 4;
+      showKillFeedback("ALPHA", true);
+      showKillFeedback("BETA", false);
+      showKillFeedback("GAMMA", false);
+      showKillFeedback("DELTA", false);
+    `,
   );
   assert.equal(h.nodes.get("#killFeed").children.length, 3);
   assert.equal(h.run("ui.killNotice.classList.contains('visible')"), true);
@@ -315,16 +499,30 @@ test("kill feedback distinguishes headshots and caps recent kills at three", () 
   );
 });
 
+// 開鏡時步槍與瞄具一起對準。
 test("ADS zoom aligns the complete rifle while its optic mount stays attached", () => {
   const h = createHarness();
   h.run(
-    "scene.add(camera);camera.position.set(0,1.68,0);createWeapon();aiming=true;for(let i=0;i<60;i++)updateWeaponPose(1/60,i*16);scene.updateMatrixWorld(true);",
+    `
+      scene.add(camera);
+      camera.position.set(0, 1.68, 0);
+      createWeapon();
+      aiming = true;
+      for (let i = 0; i < 60; i++) updateWeaponPose(1 / 60, i * 16);
+      scene.updateMatrixWorld(true);
+    `,
   );
   assert.ok(Math.abs(h.run("camera.fov") - 54) < 0.1);
   assert.equal(h.run("opticGroup.position.y"), 0.225);
   assert.ok(
     h.run(
-      'new THREE.Box3().setFromObject(weapon.getObjectByName("optic-mount")).intersectsBox(new THREE.Box3().setFromObject(weapon.getObjectByName("rail")))',
+      `
+        new THREE.Box3()
+          .setFromObject(weapon.getObjectByName("optic-mount"))
+          .intersectsBox(
+            new THREE.Box3().setFromObject(weapon.getObjectByName("rail")),
+          );
+      `,
     ),
   );
   const center = h.run(
@@ -336,10 +534,21 @@ test("ADS zoom aligns the complete rifle while its optic mount stays attached", 
   );
 });
 
+// 貼著牆時步槍會收起並離開開鏡，但仍可開火。
 test("point-blank solid cover retracts the rifle and exits ADS without disabling fire", () => {
   const h = createHarness();
   h.run(
-    "scene.add(camera);pitch=new THREE.Group();camera.position.set(0,1.68,0);createWeapon();addBox(0,2,-.55,4,4,.1,0x444444);aiming=true;gameState='playing';for(let i=0;i<30;i++)updateWeaponPose(1/60,i*16);shoot(2000);",
+    `
+      scene.add(camera);
+      pitch = new THREE.Group();
+      camera.position.set(0, 1.68, 0);
+      createWeapon();
+      addBox(0, 2, -0.55, 4, 4, 0.1, 0x444444);
+      aiming = true;
+      gameState = "playing";
+      for (let i = 0; i < 30; i++) updateWeaponPose(1 / 60, i * 16);
+      shoot(2000);
+    `,
   );
   assert.equal(h.run("weaponObstructed"), true);
   assert.equal(h.run("ammo"), 29);
@@ -354,17 +563,32 @@ test("point-blank solid cover retracts the rifle and exits ADS without disabling
     "cover behind the player cannot block the rifle",
   );
   h.run(
-    "collisionBoxes.length=0;worldMeshes.length=0;for(let i=0;i<60;i++)updateWeaponPose(1/60,3000+i*16);shoot(5000);",
+    `
+      collisionBoxes.length = 0;
+      worldMeshes.length = 0;
+      for (let i = 0; i < 60; i++) updateWeaponPose(1 / 60, 3000 + i * 16);
+      shoot(5000);
+    `,
   );
   assert.equal(h.run("weaponObstructed"), false);
   assert.ok(h.run("adsAmount") > 0.995, "backing away restores ADS");
   assert.equal(h.run("ammo"), 28, "firing continues after leaving cover");
 });
 
+// 彈匣打空會自動換彈，按住滑鼠會接著射擊。
 test("empty magazine starts automatic reload and held trigger resumes without R", () => {
   const h = createHarness();
   h.run(
-    "scene.add(camera);createWeapon();pitch=new THREE.Group();gameState='playing';ammo=1;reserve=35;mouseDown=true;shoot(1000);",
+    `
+      scene.add(camera);
+      createWeapon();
+      pitch = new THREE.Group();
+      gameState = "playing";
+      ammo = 1;
+      reserve = 35;
+      mouseDown = true;
+      shoot(1000);
+    `,
   );
   assert.equal(h.run("ammo"), 0);
   assert.equal(h.run("reloading"), true);
@@ -396,10 +620,20 @@ test("empty magazine starts automatic reload and held trigger resumes without R"
   );
 });
 
+// 自動換彈遵守剩餘備彈，不會憑空增加。
 test("automatic reload respects partial reserves and does not create ammo", () => {
   const h = createHarness();
   h.run(
-    "scene.add(camera);createWeapon();pitch=new THREE.Group();gameState='playing';ammo=1;reserve=4;shoot(1000);updateCombatTimers(2,4000);",
+    `
+      scene.add(camera);
+      createWeapon();
+      pitch = new THREE.Group();
+      gameState = "playing";
+      ammo = 1;
+      reserve = 4;
+      shoot(1000);
+      updateCombatTimers(2, 4000);
+    `,
   );
   assert.equal(h.run("ammo"), 4);
   assert.equal(h.run("reserve"), 0);
@@ -409,10 +643,19 @@ test("automatic reload respects partial reserves and does not create ammo", () =
   assert.match(h.run("ui.reload.textContent"), /備彈用盡/);
 });
 
+// 換彈音效依彈匣、槍機的階段各播放一次，暫停會停住。
 test("reload sounds follow magazine and bolt stages once and freeze during pause", () => {
   const h = createHarness();
   h.run(
-    "const reloadSounds=[];playReloadSound=stage=>reloadSounds.push(stage);gameState='playing';ammo=12;reserve=50;reload();updateCombatTimers(.4,1400);",
+    `
+      const reloadSounds = [];
+      playReloadSound = (stage) => reloadSounds.push(stage);
+      gameState = "playing";
+      ammo = 12;
+      reserve = 50;
+      reload();
+      updateCombatTimers(0.4, 1400);
+    `,
   );
   assert.deepEqual(Array.from(h.run("reloadSounds")), ["release"]);
   h.run("updateCombatTimers(.5,1900);");
@@ -422,7 +665,11 @@ test("reload sounds follow magazine and bolt stages once and freeze during pause
   for (let i = 0; i < 100; i++) h.run("animate(9000);");
   assert.equal(h.run("reloadSounds.length"), 2);
   h.run(
-    "gameState='playing';updateCombatTimers(.5,2400);updateCombatTimers(.3,2700);",
+    `
+      gameState = "playing";
+      updateCombatTimers(0.5, 2400);
+      updateCombatTimers(0.3, 2700);
+    `,
   );
   assert.deepEqual(Array.from(h.run("reloadSounds")), [
     "release",
@@ -437,14 +684,80 @@ test("reload sounds follow magazine and bolt stages once and freeze during pause
   );
 });
 
+// 槍聲包含步槍與彈殼兩層，播完會釋放。
 test("weapon audio emits rifle and casing layers, caches impacts and releases nodes", () => {
   const h = createHarness();
   h.run(`
-    const audioNodes=[],audioStarts=[];let allocatedAudioBuffers=0;
-    function audioNode(kind){const parameter=()=>({value:0,setValueAtTime(){},exponentialRampToValueAtTime(){}});const node={kind,gain:parameter(),frequency:parameter(),Q:parameter(),pan:parameter(),playbackRate:parameter(),connect(next){return next;},disconnect(){this.disconnected=true;},start(){audioStarts.push(this);},stop(){}};audioNodes.push(node);return node;}
-    audioContext={sampleRate:8000,currentTime:1,createBuffer(channels,length){allocatedAudioBuffers++;const samples=new Float32Array(length);return {getChannelData(){return samples;}};},createBufferSource(){return audioNode('source');},createGain(){return audioNode('gain');},createBiquadFilter(){return audioNode('filter');},createStereoPanner(){return audioNode('panner');},createOscillator(){return audioNode('oscillator');}};
-    audioMaster=audioNode('master');soundBuffers={rifle0:{name:'rifle0'},rifle1:{name:'rifle1'},shell:{name:'shell'},tail:{name:'tail'}};
-    playGunshot();playReloadSound('release');playReloadSound('insert');playReloadSound('bolt');playReloadSound('release');
+    const audioNodes = [],
+      audioStarts = [];
+    let allocatedAudioBuffers = 0;
+    function audioNode(kind) {
+      const parameter = () => ({
+        value: 0,
+        setValueAtTime() {},
+        exponentialRampToValueAtTime() {},
+      });
+      const node = {
+        kind,
+        gain: parameter(),
+        frequency: parameter(),
+        Q: parameter(),
+        pan: parameter(),
+        playbackRate: parameter(),
+        connect(next) {
+          return next;
+        },
+        disconnect() {
+          this.disconnected = true;
+        },
+        start() {
+          audioStarts.push(this);
+        },
+        stop() {},
+      };
+      audioNodes.push(node);
+      return node;
+    }
+    audioContext = {
+      sampleRate: 8000,
+      currentTime: 1,
+      createBuffer(channels, length) {
+        allocatedAudioBuffers++;
+        const samples = new Float32Array(length);
+        return {
+          getChannelData() {
+            return samples;
+          },
+        };
+      },
+      createBufferSource() {
+        return audioNode("source");
+      },
+      createGain() {
+        return audioNode("gain");
+      },
+      createBiquadFilter() {
+        return audioNode("filter");
+      },
+      createStereoPanner() {
+        return audioNode("panner");
+      },
+      createOscillator() {
+        return audioNode("oscillator");
+      },
+    };
+    audioMaster = audioNode("master");
+    soundBuffers = {
+      rifle0: { name: "rifle0" },
+      rifle1: { name: "rifle1" },
+      shell: { name: "shell" },
+      tail: { name: "tail" },
+    };
+    playGunshot();
+    playReloadSound("release");
+    playReloadSound("insert");
+    playReloadSound("bolt");
+    playReloadSound("release");
   `);
   assert.equal(
     h.run(
@@ -462,22 +775,44 @@ test("weapon audio emits rifle and casing layers, caches impacts and releases no
   );
   assert.ok(
     h.run(
-      "Object.values(mechanicalBuffers).every(buffer=>Array.from(buffer.getChannelData(0)).every(Number.isFinite)&&buffer.getChannelData(0).some(value=>Math.abs(value)>.01))",
+      `
+        Object.values(mechanicalBuffers).every(
+          (buffer) =>
+            Array.from(buffer.getChannelData(0)).every(Number.isFinite) &&
+            buffer.getChannelData(0).some((value) => Math.abs(value) > 0.01),
+        );
+      `,
     ),
   );
   h.run("audioStarts.forEach(node=>node.onended?.());");
   assert.equal(
     h.run(
-      "audioNodes.filter(node=>node.kind!=='master').every(node=>node.disconnected)",
+      `
+        audioNodes
+          .filter((node) => node.kind !== "master")
+          .every((node) => node.disconnected);
+      `,
     ),
     true,
   );
 });
 
+// 場景與手上的步槍分開繪製，畫完會還原設定。
 test("world and foreground rifle use isolated depth passes and restore render state", () => {
   const h = createHarness();
   h.run(
-    "const renderPasses=[];scene.background=new THREE.Color(0x102030);const savedBackground=scene.background;renderer.render=(s,c)=>renderPasses.push({mask:c.layers.mask,background:s.background,shadows:renderer.shadowMap.autoUpdate});renderFrame();",
+    `
+      const renderPasses = [];
+      scene.background = new THREE.Color(0x102030);
+      const savedBackground = scene.background;
+      renderer.render = (s, c) =>
+        renderPasses.push({
+          mask: c.layers.mask,
+          background: s.background,
+          shadows: renderer.shadowMap.autoUpdate,
+        });
+      renderFrame();
+    `,
   );
   assert.equal(h.run("renderPasses.length"), 2);
   assert.equal(h.run("renderPasses[0].mask"), 1);
@@ -489,17 +824,33 @@ test("world and foreground rifle use isolated depth passes and restore render st
   assert.equal(h.run("camera.layers.mask"), 1);
 });
 
+// 自訂設定會檢查數值，並組出合理的任務目標。
 test("encounter settings validate stored values and compose fair mode objectives", () => {
   const h = createHarness();
   h.run(
-    "missionSettings=normalizeMissionSettings({enemyCount:999,enemyPower:NaN,eliteRate:-1,bossFinale:'true'});",
+    `
+      missionSettings = normalizeMissionSettings({
+        enemyCount: 999,
+        enemyPower: NaN,
+        eliteRate: -1,
+        bossFinale: "true",
+      });
+    `,
   );
   assert.equal(h.run("missionSettings.enemyCount"), 0);
   assert.equal(h.run("missionSettings.enemyPower"), 1);
   assert.equal(h.run("missionSettings.eliteRate"), 0.15);
   assert.equal(h.run("missionSettings.bossFinale"), false);
   h.run(
-    "selectedMode=1;missionSettings=normalizeMissionSettings({enemyCount:30,enemyPower:1.5,eliteRate:.3,bossFinale:true});",
+    `
+      selectedMode = 1;
+      missionSettings = normalizeMissionSettings({
+        enemyCount: 30,
+        enemyPower: 1.5,
+        eliteRate: 0.3,
+        bossFinale: true,
+      });
+    `,
   );
   assert.deepEqual(Array.from(h.run("currentMode().waves")), [20, 25, 30]);
   assert.equal(h.run("encounterTotal()"), 76);
@@ -519,6 +870,7 @@ test("encounter settings validate stored values and compose fair mode objectives
   );
 });
 
+// 大廳的選項會存檔，進行中的戰鬥不受影響。
 test("lobby controls persist configuration and cannot change a running encounter", () => {
   const h = createHarness();
   h.run("setupEvents();");
@@ -529,20 +881,39 @@ test("lobby controls persist configuration and cannot change a running encounter
   assert.equal(h.run("currentMode().enemyCount"), 6);
   assert.equal(JSON.parse(h.storage.get("neonEncounter")).enemyPower, 1.25);
   h.run(
-    "initAudio=()=>{};loadAudioAssets=()=>{};requestLock=()=>{};startGame();",
+    `
+      initAudio = () => {};
+      loadAudioAssets = () => {};
+      requestLock = () => {};
+      startGame();
+    `,
   );
   h.nodes.get("#enemyCountSelect").value = "30";
   h.nodes.get("#enemyCountSelect").dispatch("change");
-  h.run("missionSettings.enemyCount=24;missionSettings.enemyPower=.8;");
+  h.run(`
+    missionSettings.enemyCount = 24;
+    missionSettings.enemyPower = 0.8;
+  `);
   assert.equal(h.run("currentMode().enemyCount"), 6);
   assert.equal(h.run("getEnemyTuning().health"), 1.25);
   assert.equal(h.run("matchTotalEnemies"), 6);
 });
 
+// 首領模式：清完護衛後出現一次首領，擊破首領才算勝利。
 test("warlord guards lead to one supplied boss finale and victory waits for the boss", () => {
   const h = createHarness();
   h.run(
-    "selectedMode=3;missionSettings=normalizeMissionSettings({enemyCount:6,eliteRate:.3});initAudio=()=>{};loadAudioAssets=()=>{};requestLock=()=>{};startGame();",
+    `
+      selectedMode = 3;
+      missionSettings = normalizeMissionSettings({
+        enemyCount: 6,
+        eliteRate: 0.3,
+      });
+      initAudio = () => {};
+      loadAudioAssets = () => {};
+      requestLock = () => {};
+      startGame();
+    `,
   );
   assert.equal(h.run("matchTotalEnemies"), 7);
   assert.equal(h.run("enemies.length"), 6);
@@ -551,11 +922,23 @@ test("warlord guards lead to one supplied boss finale and victory waits for the 
     2,
   );
   h.run(
-    "enemies.forEach(enemy=>enemy.userData.state.alive=false);defeatedEnemies=6;kills=6;health=25;armor=0;reserve=0;grenadeCount=0;handleEnemyDefeated();",
+    `
+      enemies.forEach((enemy) => (enemy.userData.state.alive = false));
+      defeatedEnemies = 6;
+      kills = 6;
+      health = 25;
+      armor = 0;
+      reserve = 0;
+      grenadeCount = 0;
+      handleEnemyDefeated();
+    `,
   );
   assert.equal(h.run("gameState"), "playing");
   assert.equal(h.run("bossArrivalQueued"), true);
-  h.run("updateCombatTimers(1,2000);handleEnemyDefeated();");
+  h.run(`
+    updateCombatTimers(1, 2000);
+    handleEnemyDefeated();
+  `);
   assert.ok(
     Math.abs(h.run("bossArrivalRemaining") - 2.2) < 1e-7,
     "repeated completion checks cannot restart the countdown",
@@ -571,7 +954,11 @@ test("warlord guards lead to one supplied boss finale and victory waits for the 
   assert.equal(h.run("enemies.length"), 7, "boss spawns exactly once");
   assert.equal(h.run("reserve"), 75, "pre-boss supply is granted exactly once");
   h.run(
-    "const finalBoss=enemies.find(e=>e.userData.state.rank==='boss');queueBossAttack(finalBoss,yaw.position);damageEnemy(finalBoss,10000,null,true,false,true);",
+    `
+      const finalBoss = enemies.find((e) => e.userData.state.rank === "boss");
+      queueBossAttack(finalBoss, yaw.position);
+      damageEnemy(finalBoss, 10000, null, true, false, true);
+    `,
   );
   assert.equal(h.run("gameState"), "ended");
   assert.equal(h.run("defeatedEnemies"), 7);
@@ -579,15 +966,25 @@ test("warlord guards lead to one supplied boss finale and victory waits for the 
   assert.equal(h.nodes.get("#resultTitle").textContent, "指揮官已擊敗");
 });
 
+// 首領預警在暫停時停住、鎖定位置，而且閃得開。
 test("boss telegraph freezes through pause, locks its target and can be escaped", () => {
   const h = createHarness();
   h.run(
-    "gameState='playing';yaw.position.set(0,1.68,0);const castingBoss=createEnemy(10,0,0x444444,0,'boss');queueBossAttack(castingBoss,yaw.position);",
+    `
+      gameState = "playing";
+      yaw.position.set(0, 1.68, 0);
+      const castingBoss = createEnemy(10, 0, 0x444444, 0, "boss");
+      queueBossAttack(castingBoss, yaw.position);
+    `,
   );
   assert.equal(h.run("bossAttacks.length"), 1);
   h.run("gameState='paused';updateBossAttacks(1,2000);");
   assert.equal(h.run("bossAttacks[0].remaining"), 1.4);
-  h.run("gameState='playing';yaw.position.x=5;updateBossAttacks(1.5,3500);");
+  h.run(`
+    gameState = "playing";
+    yaw.position.x = 5;
+    updateBossAttacks(1.5, 3500);
+  `);
   assert.equal(
     h.run("bossAttacks[0].position.x"),
     0,
@@ -599,10 +996,18 @@ test("boss telegraph freezes through pause, locks its target and can be escaped"
   assert.equal(h.run("bossAttacks.length"), 0);
 });
 
+// 首領攻擊只傷害一次，厚掩體擋得住。
 test("boss strike deals damage once and thick cover blocks it", () => {
   const h = createHarness();
   h.run(
-    "gameState='playing';yaw.position.set(1,1.68,0);const strikeBoss=createEnemy(10,0,0x444444,0,'boss');const targetPoint=new THREE.Vector3(0,0,0);queueBossAttack(strikeBoss,targetPoint);updateBossAttacks(1.41,2410);",
+    `
+      gameState = "playing";
+      yaw.position.set(1, 1.68, 0);
+      const strikeBoss = createEnemy(10, 0, 0x444444, 0, "boss");
+      const targetPoint = new THREE.Vector3(0, 0, 0);
+      queueBossAttack(strikeBoss, targetPoint);
+      updateBossAttacks(1.41, 2410);
+    `,
   );
   assert.ok(h.run("health") < 100);
   const health = h.run("health");
@@ -610,16 +1015,41 @@ test("boss strike deals damage once and thick cover blocks it", () => {
   assert.equal(h.run("health"), health);
   const covered = createHarness();
   covered.run(
-    "gameState='playing';yaw.position.set(1,1.68,0);const coverBoss=createEnemy(10,0,0x444444,0,'boss');const cover=new THREE.Mesh(new THREE.BoxGeometry(.1,3,4),new THREE.MeshBasicMaterial());cover.position.set(.5,1.5,0);scene.add(cover);worldMeshes.push(cover);scene.updateMatrixWorld(true);queueBossAttack(coverBoss,new THREE.Vector3(0,0,0));updateBossAttacks(1.5,2500);",
+    `
+      gameState = "playing";
+      yaw.position.set(1, 1.68, 0);
+      const coverBoss = createEnemy(10, 0, 0x444444, 0, "boss");
+      const cover = new THREE.Mesh(
+        new THREE.BoxGeometry(0.1, 3, 4),
+        new THREE.MeshBasicMaterial(),
+      );
+      cover.position.set(0.5, 1.5, 0);
+      scene.add(cover);
+      worldMeshes.push(cover);
+      scene.updateMatrixWorld(true);
+      queueBossAttack(coverBoss, new THREE.Vector3(0, 0, 0));
+      updateBossAttacks(1.5, 2500);
+    `,
   );
   assert.equal(covered.run("health"), 100);
   assert.equal(covered.run("armor"), 50);
 });
 
+// 玩家陣亡後，其他還沒落下的攻擊會清除。
 test("lethal boss strike clears other pending strikes without post-match damage", () => {
   const h = createHarness();
   h.run(
-    "gameState='playing';health=1;armor=0;yaw.position.set(0,1.68,0);const b1=createEnemy(10,0,0x444444,0,'boss'),b2=createEnemy(-10,0,0x444444,1,'boss');queueBossAttack(b1,yaw.position);queueBossAttack(b2,yaw.position);updateBossAttacks(1.5,2500);",
+    `
+      gameState = "playing";
+      health = 1;
+      armor = 0;
+      yaw.position.set(0, 1.68, 0);
+      const b1 = createEnemy(10, 0, 0x444444, 0, "boss"),
+        b2 = createEnemy(-10, 0, 0x444444, 1, "boss");
+      queueBossAttack(b1, yaw.position);
+      queueBossAttack(b2, yaw.position);
+      updateBossAttacks(1.5, 2500);
+    `,
   );
   assert.equal(h.run("gameState"), "ended");
   assert.equal(h.run("health"), 0);
@@ -627,10 +1057,21 @@ test("lethal boss strike clears other pending strikes without post-match damage"
   assert.equal(h.nodes.get("#resultTitle").textContent, "幹員已陣亡");
 });
 
+// 子彈用完後撿到彈藥會自動裝填。
 test("ammo supplies automatically load an empty weapon after reserves were exhausted", () => {
   const h = createHarness();
   h.run(
-    "createPickups();gameState='playing';ammo=0;reserve=0;mouseDown=true;collectPickup(pickups.find(item=>item.type==='ammo'),1000);",
+    `
+      createPickups();
+      gameState = "playing";
+      ammo = 0;
+      reserve = 0;
+      mouseDown = true;
+      collectPickup(
+        pickups.find((item) => item.type === "ammo"),
+        1000,
+      );
+    `,
   );
   assert.equal(h.run("reloading"), true);
   assert.equal(h.run("mouseDown"), true);
@@ -640,15 +1081,30 @@ test("ammo supplies automatically load an empty weapon after reserves were exhau
   assert.equal(h.run("reserve"), 30);
 });
 
+// 各種補給不會讓現有的子彈或手榴彈變少。
 test("wave, streak and boss supplies never remove already stocked ammo or grenades", () => {
   const h = createHarness();
   h.run(
-    "gameState='playing';selectedMode=1;reserve=235;grenadeCount=4;wavePending=true;waveRemaining=.1;updateCombatTimers(.2,1200);",
+    `
+      gameState = "playing";
+      selectedMode = 1;
+      reserve = 235;
+      grenadeCount = 4;
+      wavePending = true;
+      waveRemaining = 0.1;
+      updateCombatTimers(0.2, 1200);
+    `,
   );
   assert.equal(h.run("reserve"), 240);
   assert.equal(h.run("grenadeCount"), 4);
   h.run(
-    "resolvingBlast=true;killStreak=2;lastKillAt=900;createEnemy(60,60,0x555555,20);killEnemy(enemies.at(-1),false,true);",
+    `
+      resolvingBlast = true;
+      killStreak = 2;
+      lastKillAt = 900;
+      createEnemy(60, 60, 0x555555, 20);
+      killEnemy(enemies.at(-1), false, true);
+    `,
   );
   assert.equal(
     h.run("reserve"),
@@ -656,16 +1112,30 @@ test("wave, streak and boss supplies never remove already stocked ammo or grenad
     "a streak reward cannot lower a full reserve",
   );
   h.run(
-    "bossArrivalQueued=true;bossArrivalRemaining=.1;bossPending=true;updateCombatTimers(.2,1400);",
+    `
+      bossArrivalQueued = true;
+      bossArrivalRemaining = 0.1;
+      bossPending = true;
+      updateCombatTimers(0.2, 1400);
+    `,
   );
   assert.equal(h.run("reserve"), 240);
   assert.equal(h.run("grenadeCount"), 4);
 });
 
+// 暫停時調整的音量與畫質會和大廳同步，也不影響戰鬥設定。
 test("pause volume and quality controls stay synchronized with the lobby and preserve combat setup", () => {
   const h = createHarness();
   h.run(
-    "devicePixelRatio=2;innerWidth=1024;innerHeight=768;renderer.setPixelRatio=value=>renderer.testPixelRatio=value;renderer.setSize=()=>{};setupEvents();gameState='paused';",
+    `
+      devicePixelRatio = 2;
+      innerWidth = 1024;
+      innerHeight = 768;
+      renderer.setPixelRatio = (value) => (renderer.testPixelRatio = value);
+      renderer.setSize = () => {};
+      setupEvents();
+      gameState = "paused";
+    `,
   );
   h.nodes.get("#pauseVolumeControl").value = "0";
   h.nodes.get("#pauseVolumeControl").dispatch("input");

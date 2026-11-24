@@ -15,6 +15,7 @@
   const WHITE = "#fff8e4";
   const FIRE = ["#ffd98a", "#ffab3a", "#ff6a22", "#b8321a", "#4a1610"];
   const MAX_SCENES = 90;
+  // 亂數與曲線小工具。
   const rand = (min, max) => min + Math.random() * (max - min);
   const pick = (list) => list[Math.floor(Math.random() * list.length)];
   const clamp01 = (value) => Math.max(0, Math.min(1, value));
@@ -29,6 +30,7 @@
       this.cache = new Map();
     }
 
+    // 沒有畫過才畫，之後重複使用。
     get(key, width, height, paint) {
       let canvas = this.cache.get(key);
       if (!canvas) {
@@ -173,7 +175,9 @@
     }
   }
 
+  // 技能與大招的特效。
   class SkillFx {
+    // 建立並清空。
     constructor(effects) {
       this.fx = effects;
       this.sprites = new Sprites();
@@ -184,6 +188,7 @@
       return this.fx.calm;
     }
 
+    // 清空所有特效。
     reset() {
       this.scenes = [];
       this.energy = 0; // 畫面現在有多亮，決定泛光的強度
@@ -203,6 +208,7 @@
       return scene;
     }
 
+    // 推進所有特效。
     update(dt, fighters, match) {
       this.energy = Math.max(0, this.energy - dt * 1.3);
       for (const scene of this.scenes) {
@@ -219,16 +225,12 @@
       if (match) for (const shot of match.projectiles) this.trailShot(shot);
     }
 
+    // 畫指定的一層（角色後面或前面）。
     draw(ctx, layer, fighters) {
       for (const scene of this.scenes) {
         if (scene.layer !== layer || scene.age < 0) continue;
         ctx.save();
-        scene.draw(
-          ctx,
-          scene.age / scene.life,
-          fighters[scene.index],
-          scene,
-        );
+        scene.draw(ctx, scene.age / scene.life, fighters[scene.index], scene);
         ctx.restore();
       }
     }
@@ -256,13 +258,7 @@
       ctx.translate(x, y);
       ctx.rotate(Math.PI / 2);
       ctx.globalAlpha = alpha * 0.7;
-      ctx.drawImage(
-        streak,
-        -size * 0.8,
-        -size * 0.07,
-        size * 1.6,
-        size * 0.14,
-      );
+      ctx.drawImage(streak, -size * 0.8, -size * 0.07, size * 1.6, size * 0.14);
       ctx.restore();
       ctx.globalAlpha = 1;
       this.fx.glow(ctx, x, y, size * 0.6, color, alpha * 0.55);
@@ -297,6 +293,7 @@
       ctx.stroke();
     }
 
+    // 月牙形的刀光。
     crescent(ctx, x, y, size, angle, flip, color, alpha) {
       if (alpha <= 0) return;
       ctx.save();
@@ -326,6 +323,7 @@
       );
     }
 
+    // 擴散的圓環。
     popRing(x, y, radius, color, options = {}) {
       const { life = 0.36, stretch = 1, from = 0.2, squeeze = 1 } = options;
       this.add(
@@ -407,6 +405,7 @@
     // 落雷：光柱加上從天而降的閃電
     strikeDown(x, color, options = {}) {
       const { delay = 0, big = false } = options;
+      // 打下來的那一瞬間。
       const strike = () => {
         for (let i = 0; i < (big ? 3 : 2); i += 1)
           this.fx.bolt(x + rand(-70, 70), -20, x + rand(-8, 8), G, color, {
@@ -478,6 +477,7 @@
        座標先算好，畫的時候只要壓扁成地面的透視。 */
     cracks(x, radius, options) {
       const { count = 9, life = 1.4, color, core, dark = "#0b0605" } = options;
+      // 每條裂痕的折線。
       const lines = Array.from({ length: count }, (_, i) => {
         let a = (i / count) * TAU + rand(-0.2, 0.2);
         const reach = radius * rand(0.65, 1);
@@ -491,6 +491,7 @@
         }
         return points;
       });
+      // 畫到目前長出來的長度。
       const trace = (ctx, shown) => {
         ctx.beginPath();
         for (const points of lines)
@@ -578,6 +579,7 @@
       });
     }
 
+    // 一團火。
     fire(x, y, options = {}) {
       this.fx.emit("fire", x, y, {
         vx: rand(-30, 30),
@@ -610,6 +612,7 @@
         },
         {
           delay,
+          // 火柱噴發。
           start: () => {
             const count = this.calm ? 2 : 8;
             for (let i = 0; i < count; i += 1)
@@ -622,6 +625,7 @@
       );
     }
 
+    // 散落的羽毛。
     feathers(x, y, count) {
       for (let i = 0; i < (this.calm ? 2 : count); i += 1) {
         const a = rand(0, TAU);
@@ -639,6 +643,7 @@
       }
     }
 
+    // 寒氣。
     mist(x, y, count, spread = 40, up = 40) {
       this.fx.burst(x, y, count, {
         colors: ["#5aa9d8", "#8fd4f5", "#3f86c0"],
@@ -717,6 +722,7 @@
     start(f, action) {
       if (!["special", "skill2", "super"].includes(action)) return;
       this.boost(action === "super" ? 1 : 0.45);
+      // 每位鬥士每個招式的開場特效。
       const stage = {
         "thunder:special": () => this.thunderDash(f),
         "frost:special": () => this.frostCharge(f),
@@ -789,8 +795,7 @@
       if (effect === "bolt") this.thunderHit(fighter, x, y, action, finisher);
       else if (effect === "ice")
         this.iceBurst(x, y, { super: 1.15, skill2: 0.6 }[action] ?? 1);
-      else if (effect === "quake")
-        this.explosion(x, y, 1);
+      else if (effect === "quake") this.explosion(x, y, 1);
       else if (effect === "shade")
         this.shadeHit(x, y, action, finisher, direction);
     }
@@ -858,6 +863,7 @@
       );
     }
 
+    // 雷隼揮擊。
     thunderSwing(f, tip, y, action) {
       if (action === "skill2") {
         // 升龍：跟著拳頭往上掃的弧光
@@ -944,6 +950,7 @@
       );
     }
 
+    // 雷隼打中。
     thunderHit(victim, x, y, action, finisher) {
       this.popFlare(x, y, finisher ? 190 : 120, "#ffd060", 0.26);
       this.popRing(x, y, finisher ? 210 : 130, "#ffd060", { life: 0.4 });
@@ -1067,6 +1074,7 @@
       this.mist(f.x, G - 8, 4, 30, 10);
     }
 
+    // 發射飛行道具。
     launch(shot) {
       const y = G - shot.y;
       if (shot.shape === "ice") {
@@ -1120,6 +1128,7 @@
       });
     }
 
+    // 冰球炸開。
     iceBurst(x, y, scale) {
       const needles = Array.from({ length: 11 }, (_, i) => ({
         a: (i / 11) * TAU + rand(-0.2, 0.2),
@@ -1222,6 +1231,7 @@
     // 冰棱破土：前後兩排，有受光面與背光面，最後碎掉
     erupt(trap) {
       const { width, height } = trap.spec;
+      // 一排冰錐的位置與高度。
       const row = (count, scale, spread) =>
         Array.from({ length: count }, (_, i) => {
           const n = count > 1 ? (i / (count - 1)) * 2 - 1 : 0;
@@ -1233,6 +1243,7 @@
             delay: Math.abs(n) * 0.07,
           };
         });
+      // 一層冰錐長出來。
       const rise = (layer, spikes, dim) =>
         this.add(
           0.78,
@@ -1262,6 +1273,7 @@
       // 碎裂
       this.add(0.1, () => {}, {
         delay: 0.64,
+        // 冰柱爆發。
         start: () => {
           this.mist(trap.x, G - 60, 6, 60, 30);
           this.fx.burst(trap.x, G - 70, 20, {
@@ -1277,6 +1289,7 @@
       });
     }
 
+    // 畫一根冰錐。
     drawSpike(ctx, x, spike, age, k, dim) {
       const t = Math.max(0, age - spike.delay);
       // 竄出來時稍微衝過頭再縮回來
@@ -1367,6 +1380,7 @@
           }
         },
         {
+          // 雪花飄動。
           step: (dt) => {
             for (const s of flakes) {
               s.x += dir * s.speed * dt;
@@ -1392,6 +1406,7 @@
         {
           index: f.index,
           move: f.move,
+          // 拳頭的火焰。
           step: (dt, me) => {
             if (this.calm || Math.random() > dt * 60) return;
             this.fire(me.x + me.face * rand(20, 70), G - me.y - rand(60, 180));
@@ -1418,15 +1433,7 @@
             ctx.lineWidth = 6 + i * 7;
             ctx.lineCap = "round";
             ctx.beginPath();
-            ctx.ellipse(
-              10 - i * 9 + flick,
-              0,
-              62,
-              118 + i * 4,
-              0,
-              -1.15,
-              1.15,
-            );
+            ctx.ellipse(10 - i * 9 + flick, 0, 62, 118 + i * 4, 0, -1.15, 1.15);
             ctx.stroke();
           }
           ctx.restore();
@@ -1436,6 +1443,7 @@
         {
           index: f.index,
           move: f.move,
+          // 衝鋒留下的火焰。
           step: (dt, me) => {
             if (this.calm) return;
             for (let n = dt * 90; n > 0; n -= 1) {
@@ -1478,6 +1486,7 @@
         {
           index: f.index,
           layer: "back",
+          // 鬃毛的火焰。
           step: (dt, me) => {
             if (this.calm) return;
             for (let i = 0; i < 2; i += 1)
@@ -1512,6 +1521,7 @@
         {
           index: f.index,
           move: f.move,
+          // 往中心聚集的火星。
           step: (dt, me) => {
             if (this.calm) return;
             for (let i = 0; i < 3; i += 1) {
@@ -1618,6 +1628,7 @@
       }
     }
 
+    // 影燕打中。
     shadeHit(x, y, action, finisher, direction) {
       this.popFlare(x, y, finisher ? 160 : 110, "#c98cff", 0.26);
       const tilt = rand(0.45, 0.7) * direction;

@@ -1,3 +1,7 @@
+/*
+ * 全站共用的中文字型。字型依字元拆成很多小檔，瀏覽器只會下載畫面上用到的部分。
+ * unicode-range 是每個檔案包含的字元，由字型工具產生，請不要手動修改。
+ */
 @font-face {
   font-family: "Akane Symbols";
   font-style: normal;
@@ -206,6 +210,7 @@
   font-display: swap;
   src: url("../assets/fonts/noto-tc-bold.woff2") format("woff2");
 }
+/* 套用到所有文字與表單。 */
 body,
 button,
 input,

@@ -12,6 +12,8 @@
   --shadow: 0 24px 70px #0006;
 }
 
+/* ---------- 基本設定與背景 ---------- */
+
 * {
   box-sizing: border-box;
 }
@@ -37,6 +39,7 @@ button {
   color: inherit;
 }
 
+/* 背景極光。 */
 .aurora {
   position: fixed;
   inset: -40%;
@@ -55,6 +58,7 @@ button {
   animation: drift 22s linear infinite;
 }
 
+/* 整個遊戲的外框。 */
 .game-shell {
   position: relative;
   z-index: 1;
@@ -67,12 +71,15 @@ button {
   gap: 12px;
 }
 
+/* 半透明面板。 */
 .glass {
   background: linear-gradient(145deg, #0e1f36eb, #07111fe0);
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
 }
+
+/* ---------- 上方列 ---------- */
 
 .topbar {
   min-height: 72px;
@@ -117,6 +124,7 @@ button {
   margin: 0;
 }
 
+/* 目前樓層與資源。 */
 .run-meta {
   display: flex;
   gap: 8px;
@@ -138,6 +146,7 @@ button {
   margin-left: 5px;
 }
 
+/* 右上角按鈕。 */
 .header-actions {
   display: flex;
   gap: 7px;
@@ -157,6 +166,8 @@ button {
   border-color: #5fdce888;
   background: #15314c;
 }
+
+/* ---------- 三欄版面 ---------- */
 
 .layout {
   display: grid;
@@ -189,6 +200,7 @@ button {
   border-bottom: 1px solid var(--line);
 }
 
+/* 角色肖像。 */
 .portrait-wrap {
   position: relative;
 }
@@ -204,6 +216,7 @@ button {
   font-size: 32px;
 }
 
+/* 等級標記。 */
 .level-badge {
   position: absolute;
   right: -8px;
@@ -220,6 +233,7 @@ button {
   font-size: 18px;
 }
 
+/* 血量、魔力與經驗條。 */
 .meter-block {
   display: grid;
   gap: 6px;
@@ -265,6 +279,7 @@ button {
   background: linear-gradient(90deg, #7657ff, #d273ff);
 }
 
+/* 數值表。 */
 .stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -297,6 +312,8 @@ button {
   color: var(--muted);
   margin: 0 0 8px;
 }
+
+/* ---------- 裝備欄 ---------- */
 
 .equipment {
   margin-top: auto;
@@ -334,6 +351,7 @@ button {
   font-size: 12px;
 }
 
+/* 狀態效果。 */
 .effects {
   display: flex;
   gap: 6px;
@@ -348,6 +366,8 @@ button {
   border: 1px solid var(--line);
   font-size: 12px;
 }
+
+/* ---------- 戰鬥區 ---------- */
 
 .battle-column {
   min-width: 0;
@@ -390,6 +410,7 @@ button {
   animation: dangerPulse 1.6s infinite;
 }
 
+/* 區域與樓層。 */
 .zone-line {
   position: absolute;
   left: 18px;
@@ -407,6 +428,7 @@ button {
   letter-spacing: 0.1em;
 }
 
+/* 場景氣氛。 */
 .ambient {
   position: absolute;
   inset: 0;
@@ -451,6 +473,7 @@ button {
   animation-delay: -4s;
 }
 
+/* 敵人、血條與招式。 */
 .enemy-wrap {
   position: relative;
   z-index: 2;
@@ -574,6 +597,7 @@ button {
   font-style: normal;
 }
 
+/* 場景文字。 */
 .scene-copy {
   text-align: center;
   max-width: 430px;
@@ -593,6 +617,7 @@ button {
   color: var(--muted);
 }
 
+/* 跳出的傷害數字。 */
 .float-layer {
   position: absolute;
   inset: 0;
@@ -624,6 +649,7 @@ button {
   display: none !important;
 }
 
+/* 回合資訊。 */
 .turn-strip {
   border-radius: 15px;
   min-height: 56px;
@@ -648,6 +674,7 @@ button {
   margin-top: 2px;
 }
 
+/* 行動點數。 */
 .energy-pips {
   display: flex;
   gap: 5px;
@@ -677,6 +704,8 @@ button {
   font-size: 12px;
   cursor: pointer;
 }
+
+/* ---------- 技能卡 ---------- */
 
 .card-hand {
   display: grid;
@@ -748,6 +777,8 @@ button {
   margin-top: 8px;
 }
 
+/* ---------- 探索選項 ---------- */
+
 .explore-actions {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -801,13 +832,17 @@ button {
   margin: 0;
 }
 
+/* 危險路線。 */
 .risk-route {
   background: linear-gradient(145deg, #241b46, #0d1429);
 }
 
+/* 休息路線。 */
 .rest-route {
   background: linear-gradient(145deg, #12352f, #091c20);
 }
+
+/* ---------- 右側背包 ---------- */
 
 .inventory-panel {
   display: flex;
@@ -815,6 +850,7 @@ button {
   overflow: hidden;
 }
 
+/* 分頁。 */
 .tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -858,6 +894,7 @@ button {
   flex-direction: column;
 }
 
+/* 篩選按鈕。 */
 .filters {
   display: flex;
   flex: 0 0 auto;
@@ -886,6 +923,7 @@ button {
   font-weight: 800;
 }
 
+/* 道具清單。 */
 .inventory-list {
   flex: 1 1 auto;
   min-height: 0;
@@ -903,6 +941,7 @@ button {
   font-size: 12px;
 }
 
+/* 每一項道具。 */
 .item-row {
   display: grid;
   grid-template-columns: 42px 1fr auto;
@@ -1010,6 +1049,8 @@ button {
   animation: prismaticShift 7s linear infinite;
 }
 
+/* ---------- 稀有度顏色 ---------- */
+
 .equip-slot.rarity-common > span {
   background: #26394a;
 }
@@ -1051,6 +1092,7 @@ button {
   text-shadow: 0 0 8px #7ef7e588;
 }
 
+/* 稀有度標籤。 */
 .rarity-tag {
   display: inline-block;
   margin-left: 4px;
@@ -1092,12 +1134,14 @@ button {
   text-shadow: 0 0 9px #7ef7e5cc;
 }
 
+/* 稀有度的流動光。 */
 @keyframes prismaticShift {
   to {
     background-position: 260% 50%;
   }
 }
 
+/* 戰鬥紀錄。 */
 .combat-log {
   overflow-y: auto;
   padding: 11px 2px;
@@ -1117,6 +1161,8 @@ button {
   color: #eaf8ff;
   border-color: var(--cyan);
 }
+
+/* ---------- 視窗 ---------- */
 
 .modal {
   position: fixed;
@@ -1147,6 +1193,7 @@ button {
   text-align: center;
 }
 
+/* 開始畫面。 */
 .start-card {
   width: min(780px, 100%);
 }
@@ -1167,6 +1214,7 @@ button {
   line-height: 1.65;
 }
 
+/* 選擇難度。 */
 .difficulty {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1194,6 +1242,7 @@ button {
   color: var(--muted);
 }
 
+/* 選擇職業。 */
 .class-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1261,6 +1310,7 @@ button {
   cursor: pointer;
 }
 
+/* 道具與事件的圖示。 */
 .detail-icon,
 .event-icon {
   font-size: 55px;
@@ -1273,6 +1323,7 @@ button {
   margin: 10px 0 0;
 }
 
+/* 詳細數值。 */
 .detail-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1288,6 +1339,7 @@ button {
   font-size: 12.5px;
 }
 
+/* 視窗的按鈕。 */
 .modal-actions,
 .event-options {
   display: flex;
@@ -1318,6 +1370,7 @@ button {
   margin-top: 4px;
 }
 
+/* 說明。 */
 .help-card {
   text-align: left;
 }
@@ -1328,6 +1381,8 @@ button {
   line-height: 1.7;
   margin: 7px 0;
 }
+
+/* ---------- 提示訊息 ---------- */
 
 .toast-stack {
   position: fixed;
@@ -1347,6 +1402,8 @@ button {
   font-size: 12px;
   animation: toastIn 0.3s;
 }
+
+/* ---------- 動畫 ---------- */
 
 @keyframes drift {
   to {
@@ -1412,6 +1469,8 @@ button {
   }
 }
 
+/* ---------- 平板 ---------- */
+
 @media (max-width: 1100px) {
   .layout {
     grid-template-columns: 220px minmax(430px, 1fr);
@@ -1427,6 +1486,8 @@ button {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 740px) {
   .game-shell {
@@ -1586,6 +1647,8 @@ button {
   }
 }
 
+/* ---------- 小手機 ---------- */
+
 @media (max-width: 390px) {
   .meta-chip:nth-child(2) {
     display: none;
@@ -1608,6 +1671,8 @@ button {
   }
 }
 
+/* ---------- 減少動態效果 ---------- */
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
@@ -1621,6 +1686,7 @@ button {
   font-weight: 900;
 }
 
+/* 等級不足的裝備。 */
 .shop-row.gear-locked {
   border-color: #7d8ba326;
   filter: saturate(0.62);
@@ -1631,6 +1697,7 @@ button {
   opacity: 0.72;
 }
 
+/* 首領對話的捲軸。 */
 .boss-dialogue-card::-webkit-scrollbar:horizontal {
   height: 0;
 }
@@ -1649,6 +1716,7 @@ button {
   overflow: hidden;
 }
 
+/* 不能選的路線。 */
 .route-card:disabled {
   cursor: not-allowed;
 }
@@ -1660,6 +1728,7 @@ button {
   text-align: right;
 }
 
+/* 分頁與面板標題。 */
 .tabs {
   grid-template-columns: repeat(4, 1fr);
 }
@@ -1685,9 +1754,12 @@ button {
   color: var(--muted);
 }
 
+/* 六個職業的排列。 */
 .class-grid.six {
   grid-template-columns: repeat(3, 1fr);
 }
+
+/* ---------- 技能列 ---------- */
 
 .skill-bar {
   display: grid;
@@ -1752,6 +1824,8 @@ button {
   border-color: #5edce64d;
 }
 
+/* ---------- 商店與強化 ---------- */
+
 .shop-row,
 .upgrade-row {
   display: grid;
@@ -1801,10 +1875,12 @@ button {
   opacity: 0.35;
 }
 
+/* 強化等級。 */
 .enhance-level {
   color: var(--gold) !important;
 }
 
+/* 資源變動時閃一下。 */
 .resource-flash {
   animation: resourceFlash 0.5s;
 }
@@ -1814,6 +1890,8 @@ button {
     filter: brightness(1.8);
   }
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 740px) {
   .class-grid.six {
@@ -1843,6 +1921,8 @@ button {
     display: block;
   }
 }
+
+/* ---------- 小手機 ---------- */
 
 @media (max-width: 390px) {
   .class-grid.six {
@@ -1954,6 +2034,7 @@ button {
   box-shadow: 0 0 16px #ff4b31;
 }
 
+/* 效果與花費說明。 */
 .effect-line {
   display: block;
   color: #72ecbd;
@@ -1966,6 +2047,7 @@ button {
   color: #f2d28a;
 }
 
+/* 強化前後的比較。 */
 .upgrade-preview {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -1998,6 +2080,7 @@ button {
   font-weight: 800;
 }
 
+/* 世界首領的光暈與風暴。 */
 @keyframes worldBossPulse {
   50% {
     box-shadow:
@@ -2011,6 +2094,8 @@ button {
     transform: rotate(360deg);
   }
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 740px) {
   .arena.boss-battle .enemy-sprite {
@@ -2084,6 +2169,7 @@ button {
   color: var(--muted);
 }
 
+/* 職業數值。 */
 .class-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -2112,6 +2198,7 @@ button {
   border-color: #5adbe82e;
 }
 
+/* 敵人介紹。 */
 .enemy-note {
   display: grid;
   gap: 4px;
@@ -2138,11 +2225,14 @@ button {
   animation: dangerText 1.1s ease-in-out infinite;
 }
 
+/* 危險文字的閃爍。 */
 @keyframes dangerText {
   50% {
     filter: brightness(1.65);
   }
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 740px) {
   .intro-grid {
@@ -2167,6 +2257,8 @@ button {
     width: min(245px, calc(100% - 20px));
   }
 }
+
+/* ---------- 小手機 ---------- */
 
 @media (max-width: 430px) {
   .class-stats {
@@ -2196,6 +2288,7 @@ button {
   display: none;
 }
 
+/* 可以查看說明的狀態。 */
 .effect-chip,
 .status-tip {
   position: relative;
@@ -2203,6 +2296,7 @@ button {
   outline: none;
 }
 
+/* 狀態的說明框。 */
 .status-tip:after {
   content: attr(data-tooltip);
   position: absolute;
@@ -2255,6 +2349,7 @@ button {
   transform: translateX(-50%);
 }
 
+/* 敵人下一招。 */
 .enemy-intent {
   cursor: help;
   outline: none;
@@ -2289,6 +2384,7 @@ button {
   transform: translateY(0);
 }
 
+/* 敵人的狀態。 */
 #enemyEffects {
   display: flex;
   gap: 4px;
@@ -2340,6 +2436,7 @@ button {
   color: var(--muted);
 }
 
+/* 掉落與商品標籤。 */
 .drop-tag,
 .shop-tag {
   display: inline-block;
@@ -2361,6 +2458,7 @@ button {
   color: #e5a7ef;
 }
 
+/* 藥水商店。 */
 .potion-shop {
   border-color: #66d9e526;
 }
@@ -2369,6 +2467,8 @@ button {
   font-weight: 500;
   color: #a9dce3;
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 740px) {
   .status-tip:after {
@@ -2408,6 +2508,8 @@ button {
   padding-top: 0;
   padding-bottom: 10px;
 }
+
+/* ---------- 隱藏職業 ---------- */
 
 .god-class {
   grid-column: 1/-1;
@@ -2495,6 +2597,7 @@ button {
   min-height: 0;
 }
 
+/* 紀錄分頁。 */
 #logPage.tab-page.active {
   display: flex;
   height: 100%;
@@ -2524,6 +2627,8 @@ button {
   background: #3d6c8c;
 }
 
+/* ---------- 平板與手機的背包 ---------- */
+
 @media (max-width: 1100px) {
   .inventory-panel {
     position: static;
@@ -2552,10 +2657,12 @@ button:focus-visible {
   outline-offset: 2px;
 }
 
+/* 回合資訊。 */
 .turn-strip {
   background: linear-gradient(120deg, #102941ed, #081522ed);
 }
 
+/* 連擊。 */
 .combo-badge {
   flex: 0 0 auto;
   border: 1px solid #6f8ca833;
@@ -2575,6 +2682,7 @@ button:focus-visible {
   box-shadow: 0 0 14px #ffc44f20;
 }
 
+/* 各種招式的顏色。 */
 .enemy-intent.intent-heavy {
   border-color: #ff6d6d88;
   background: #351519e8;
@@ -2591,6 +2699,7 @@ button:focus-visible {
   background: #28183ae8;
 }
 
+/* 技能按鈕。 */
 .skill-command {
   overflow: hidden;
 }
@@ -2612,6 +2721,8 @@ button:focus-visible {
   font-style: normal;
   font-weight: 900;
 }
+
+/* ---------- 戰術按鈕 ---------- */
 
 .tactic-panel {
   border: 1px solid var(--line);
@@ -2736,6 +2847,8 @@ button:focus-visible {
   border-color: #55dfa055;
 }
 
+/* ---------- 藥水選擇 ---------- */
+
 .open-potion-mode {
   width: 100%;
   min-height: 60px;
@@ -2777,6 +2890,7 @@ button:focus-visible {
   font-size: 11.5px;
 }
 
+/* 藥水視窗。 */
 .potion-mode-backdrop {
   position: fixed;
   z-index: 89;
@@ -2943,6 +3057,7 @@ button:focus-visible {
   cursor: pointer;
 }
 
+/* 取消與確認。 */
 #cancelPotionMode {
   border: 1px solid #668ba280;
   background: linear-gradient(135deg, #122b3d, #0c1d2a);
@@ -2976,6 +3091,7 @@ button:focus-visible {
   cursor: not-allowed;
 }
 
+/* 回合進行中鎖住操作。 */
 .battle-locked {
   min-height: 230px;
   margin: auto;
@@ -3022,6 +3138,8 @@ button:focus-visible {
   padding: 10px 12px;
 }
 
+/* ---------- 平板 ---------- */
+
 @media (max-width: 1100px) {
   .tactic-command p {
     display: none;
@@ -3031,6 +3149,8 @@ button:focus-visible {
     min-height: 76px;
   }
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 740px) {
   .battle-column {
@@ -3127,6 +3247,8 @@ button:focus-visible {
   }
 }
 
+/* ---------- 小手機 ---------- */
+
 @media (max-width: 390px) {
   .arena {
     min-height: 335px;
@@ -3157,6 +3279,8 @@ button:focus-visible {
   }
 }
 
+/* ---------- 觸控裝置：不顯示滑過效果 ---------- */
+
 @media (hover: none) {
   .skill-command:hover:not(:disabled),
   .tactic-command:hover:not(:disabled),
@@ -3172,6 +3296,7 @@ button:focus-visible {
   display: none !important;
 }
 
+/* 共用的說明框。 */
 .global-tooltip {
   position: fixed;
   z-index: 200;
@@ -3258,6 +3383,8 @@ button:focus-visible {
   }
 }
 
+/* ---------- 捲軸 ---------- */
+
 html,
 body,
 .inventory-list,
@@ -3295,6 +3422,8 @@ body,
 ::-webkit-scrollbar-corner {
   background: #071421;
 }
+
+/* ---------- 手機的藥水視窗 ---------- */
 
 @media (max-width: 740px) {
   .potion-mode-panel {
@@ -3335,6 +3464,7 @@ body,
   }
 }
 
+/* 小手機的藥水視窗。 */
 @media (max-width: 390px) {
   .potion-mode-panel {
     gap: 8px;
@@ -3354,6 +3484,7 @@ body,
   }
 }
 
+/* 高度較矮的視窗。 */
 @media (max-height: 620px) and (min-width: 741px) {
   .potion-mode-panel {
     width: min(1180px, calc(100vw - 24px));
@@ -3387,11 +3518,14 @@ body,
     0 0 18px #ff52682c;
 }
 
+/* 可以點開說明的項目。 */
 .status-tip,
 .enemy-intent {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 740px) {
   .game-shell {
@@ -3523,6 +3657,8 @@ body,
   }
 }
 
+/* ---------- 小手機 ---------- */
+
 @media (max-width: 430px) {
   .stats-grid {
     grid-template-columns: 1fr 1fr;
@@ -3560,6 +3696,8 @@ body,
     padding: 10px 7px;
   }
 }
+
+/* ---------- 橫拿手機 ---------- */
 
 @media (max-width: 900px) and (orientation: landscape) and (max-height: 520px) {
   .potion-mode-panel {
@@ -3615,6 +3753,8 @@ body:after {
   animation: worldGlow 12s ease-in-out infinite alternate;
 }
 
+/* ---------- 精修後的外觀 ---------- */
+
 .glass {
   background:
     linear-gradient(115deg, transparent 0 42%, #7fe9ff08 50%, transparent 58%),
@@ -3652,6 +3792,7 @@ body:after {
   animation: brandPulse 3.4s ease-in-out infinite;
 }
 
+/* 戰鬥場景的裝飾。 */
 .arena {
   isolation: isolate;
   transition:
@@ -3758,6 +3899,8 @@ body:after {
   animation: bossShadow 3.2s ease-in-out infinite;
 }
 
+/* ---------- 首領對話 ---------- */
+
 .boss-dialogue-modal {
   z-index: 90;
   overflow: hidden;
@@ -3816,11 +3959,13 @@ body:after {
   max-width: 100%;
 }
 
+/* 對話登場動畫。 */
 .dialogue-entered .boss-dialogue-card {
   transform: none;
   opacity: 1;
 }
 
+/* 每個首領各自的對話配色。 */
 .boss-dialogue-modal.theme-ancient-tree,
 .boss-dialogue-card.theme-ancient-tree {
   --dialogue-main: #6ee7a0;
@@ -4209,6 +4354,8 @@ body:after {
   outline-offset: 3px;
 }
 
+/* ---------- 裝飾動畫 ---------- */
+
 @keyframes starDrift {
   to {
     background-position:
@@ -4314,6 +4461,8 @@ body:after {
     box-shadow: 0 0 33px var(--dialogue-glow);
   }
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 740px) {
   body:after {
@@ -4431,6 +4580,8 @@ body:after {
   }
 }
 
+/* ---------- 橫拿手機 ---------- */
+
 @media (max-width: 900px) and (orientation: landscape) and (max-height: 520px) {
   .boss-dialogue-card {
     display: grid;
@@ -4479,6 +4630,8 @@ body:after {
   }
 }
 
+/* ---------- 減少動態效果 ---------- */
+
 @media (prefers-reduced-motion: reduce) {
   body:before,
   body:after,
@@ -4509,6 +4662,7 @@ html {
   color-scheme: dark;
 }
 
+/* 版面寬度。 */
 .layout {
   grid-template-columns: 240px minmax(0, 1fr) 310px;
 }
@@ -4519,6 +4673,7 @@ html {
   min-width: 0;
 }
 
+/* 強化材料。 */
 .cost-material {
   display: inline;
   cursor: help;
@@ -4529,6 +4684,7 @@ html {
   color: #f3b6bb;
 }
 
+/* 首領機制說明。 */
 .enemy-note .boss-mechanic {
   color: #dfc794;
 }
@@ -4548,6 +4704,7 @@ html {
   color: #e6d7ff;
 }
 
+/* 首領覺醒。 */
 .arena.boss-awakened .enemy-sprite {
   filter: drop-shadow(0 0 20px #e9bc8877) drop-shadow(0 15px 18px #0008);
 }
@@ -4555,6 +4712,8 @@ html {
 .arena.world-boss-battle {
   animation-duration: 6s;
 }
+
+/* ---------- 戰鬥特效 ---------- */
 
 .battle-fx {
   position: absolute;
@@ -4590,6 +4749,7 @@ html {
   transform: rotate(var(--angle)) translateY(calc(-1 * var(--distance)));
 }
 
+/* 每一種特效的樣子。 */
 .fx-slash:before {
   height: 3px;
   inset: auto -15%;
@@ -4621,6 +4781,7 @@ html {
   animation-duration: 1s;
 }
 
+/* 後期首領的特效。 */
 .late-boss-fx {
   background: radial-gradient(circle, #ddc3e416, transparent 70%);
 }
@@ -4637,6 +4798,7 @@ html {
   }
 }
 
+/* 說明工具。 */
 .guide-tools {
   display: flex;
   gap: 8px;
@@ -4653,6 +4815,8 @@ html {
   font-size: 12px;
   cursor: pointer;
 }
+
+/* ---------- 圖鑑 ---------- */
 
 .codex-card {
   width: min(680px, 100%);
@@ -4721,6 +4885,7 @@ html {
   line-height: 1.5;
 }
 
+/* 沒有資料時的按鈕。 */
 .source-empty button {
   min-height: 40px;
   padding: 8px;
@@ -4731,6 +4896,7 @@ html {
   cursor: pointer;
 }
 
+/* 尚未解鎖。 */
 .codex-entry.locked {
   opacity: 0.55;
 }
@@ -4747,6 +4913,7 @@ html {
   font-size: 30px;
 }
 
+/* 設定選項。 */
 .setting-row {
   display: flex;
   align-items: center;
@@ -4763,6 +4930,7 @@ html {
   accent-color: #65b5a7;
 }
 
+/* 關閉特效時停止所有動畫。 */
 .effects-off *,
 .effects-off *:before,
 .effects-off *:after {
@@ -4775,9 +4943,12 @@ html {
   display: none;
 }
 
+/* 開啟視窗時背景不捲動。 */
 body.modal-active {
   overflow: hidden;
 }
+
+/* ---------- 高度較矮的電腦螢幕 ---------- */
 
 @media (min-width: 1101px) and (max-height: 850px) {
   .game-shell {
@@ -4823,6 +4994,7 @@ body.modal-active {
   }
 }
 
+/* 電腦與平板的世界首領。 */
 @media (min-width: 741px) {
   .arena.world-boss-battle .enemy-sprite {
     font-size: 110px;
@@ -4838,6 +5010,8 @@ body.modal-active {
     grid-template-columns: 210px minmax(0, 1fr);
   }
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 740px) {
   .turn-strip {
@@ -4881,6 +5055,8 @@ body.modal-active {
   }
 }
 
+/* ---------- 減少動態效果 ---------- */
+
 @media (prefers-reduced-motion: reduce) {
   .battle-fx {
     display: none;
@@ -4893,6 +5069,8 @@ body.modal-active {
     transition: none !important;
   }
 }
+
+/* ---------- 橫拿手機 ---------- */
 
 @media (max-width: 900px) and (orientation: landscape) and (max-height: 520px) {
   .potion-mode-panel {
@@ -4921,6 +5099,7 @@ body.modal-active {
   outline: 2px solid #73e9ff;
   outline-offset: 3px;
 }
+/* 圖鑑進度。 */
 .codex-progress {
   margin: 0 0 12px;
   color: #8cd9f0;
@@ -4940,6 +5119,9 @@ body.modal-active {
   color: #7795af;
   font-family: sans-serif;
 }
+
+/* ---------- 較窄的上方列 ---------- */
+
 @media (max-width: 980px) {
   .topbar {
     flex-wrap: wrap;
@@ -5035,9 +5217,11 @@ body.viewport-zoomed .boss-dialogue-portrait {
   background: #0a192bca;
   touch-action: manipulation;
 }
+/* 隱藏職業的符號。 */
 .god-symbol {
   pointer-events: none;
 }
+/* 事件結果。 */
 .event-result {
   display: grid;
   gap: 8px;
@@ -5088,6 +5272,7 @@ body.viewport-zoomed .boss-dialogue-portrait {
   font-variant-numeric: tabular-nums;
 }
 
+/* 手機的血量列。 */
 @media (max-width: 740px) {
   .battle-vitals {
     display: grid;
@@ -5098,6 +5283,7 @@ body.viewport-zoomed .boss-dialogue-portrait {
     min-height: 400px;
   }
 
+  /* 敵人資訊。 */
   .enemy-card {
     left: 10px;
     right: 10px;
@@ -5121,6 +5307,7 @@ body.viewport-zoomed .boss-dialogue-portrait {
   letter-spacing: -0.1em;
 }
 
+/* 手機的首領符號。 */
 @media (max-width: 740px) {
   .boss-dialogue-portrait span.multi-glyph {
     font-size: 25px;

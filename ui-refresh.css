@@ -4,6 +4,7 @@
  */
 /* 閱讀提示：主介面優先修改這裡的 :root：字型、共用按鈕、文字色彩與圓角集中管理。 */
 
+/* 網站內附的字型。 */
 @font-face {
   font-family: "Blue World Display";
   font-style: normal;
@@ -38,6 +39,7 @@
   --muted: #bacdde;
 }
 
+/* 全站使用同一套字型。 */
 html,
 body,
 button,
@@ -63,6 +65,7 @@ p {
   text-wrap: pretty;
 }
 
+/* 標題、按鈕與導覽的字重。 */
 h1,
 h2,
 h3,
@@ -87,6 +90,7 @@ h4 {
   text-wrap: balance;
 }
 
+/* 鍵盤操作時的焦點框。 */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -97,6 +101,7 @@ summary:focus-visible {
   outline-offset: 3px;
 }
 
+/* 區塊標題。 */
 .section-heading {
   row-gap: 14px;
 }
@@ -134,6 +139,7 @@ summary:focus-visible {
   font-family: var(--ui-latin-font);
 }
 
+/* 封面標題。 */
 .blue-hour-hero .hero-type h1 strong.world-title {
   font-weight: 800;
   letter-spacing: -4px;
@@ -152,6 +158,7 @@ summary b,
   font-weight: inherit;
 }
 
+/* 一般說明文字的大小與行高。 */
 .section-heading > p,
 .archive-intro,
 .blue-hour-hero .archive-intro,
@@ -180,6 +187,7 @@ summary b,
   color: var(--ui-muted);
 }
 
+/* 小標題與輔助文字。 */
 .eyebrow,
 .gateway-kicker,
 .guide-caption,
@@ -212,6 +220,7 @@ summary b,
   line-height: 1.6;
 }
 
+/* 標誌、封面名稱與小筆記。 */
 .brand small,
 .blue-hour-hero .hero-type h1 .hero-name,
 .hero-notes-label,
@@ -236,6 +245,7 @@ summary b,
   line-height: 1.55;
 }
 
+/* 介紹文字。 */
 .archive-intro,
 .blue-hour-hero .archive-intro,
 .hero-about p,
@@ -256,6 +266,7 @@ summary b,
   line-height: 1.85;
 }
 
+/* 說明與筆記文字。 */
 .hero-collection-note p,
 .world-palette-bar > p,
 .home-season-strip a small,
@@ -309,6 +320,7 @@ footer {
   color: var(--ui-secondary-text);
 }
 
+/* 輔助資訊的大小。 */
 .compass-links a,
 .profile-portrait figcaption,
 .profile-portrait figcaption a,
@@ -360,6 +372,7 @@ footer {
   border-radius: var(--ui-surface-radius);
 }
 
+/* 人物肖像。 */
 .profile-portrait {
   overflow: hidden;
 }
@@ -369,6 +382,7 @@ footer {
   content: none;
 }
 
+/* 電腦版的人物肖像。 */
 @media (min-width: 901px) {
   .profile-portrait img {
     height: 480px;
@@ -416,15 +430,18 @@ footer {
   white-space: nowrap;
 }
 
+/* 導覽連結。 */
 .site-header nav a {
   min-height: 44px;
   align-items: center;
 }
 
+/* 話數選單。 */
 .episode-control select {
   border-color: var(--ui-field-border);
 }
 
+/* 次要按鈕滑過的樣子。 */
 .stage-toggle:hover,
 .world-tones button:hover,
 .motion-toggle:hover,
@@ -450,6 +467,7 @@ footer {
   transform: none;
 }
 
+/* 選取中的按鈕。 */
 .world-tones button[aria-pressed="true"],
 .actor-room-choices button[aria-pressed="true"],
 .design-note-tabs button[aria-pressed="true"],
@@ -514,6 +532,7 @@ footer {
   background: linear-gradient(115deg, #15384f, #203f66);
 }
 
+/* 遊戲卡按鈕。 */
 .card-button {
   justify-content: space-between;
 }
@@ -552,6 +571,7 @@ button.text-link {
   text-underline-offset: 4px;
 }
 
+/* 沒有框線的文字按鈕。 */
 button.text-link {
   min-height: 44px;
   padding: 6px 0;
@@ -623,6 +643,7 @@ button.text-link:hover {
   transform: none;
 }
 
+/* 卡片滑過時的效果。 */
 .game-card:hover,
 .gallery-card:hover,
 .gateway:hover,
@@ -650,10 +671,12 @@ button.text-link:hover {
   background: linear-gradient(132deg, #153b5be8, #102a49e8);
 }
 
+/* 遊戲專區入口。 */
 .game-gateway {
   background: linear-gradient(132deg, #193a5ce8, #182b4ce8);
 }
 
+/* 入口文字。 */
 .gateway-copy {
   width: 55%;
   max-width: 330px;
@@ -674,6 +697,7 @@ button.text-link:hover {
   line-height: 1.75;
 }
 
+/* 遊戲獨立說明。 */
 .game-independence-note {
   display: block;
   margin-top: 10px;
@@ -682,6 +706,7 @@ button.text-link:hover {
   line-height: 1.55;
 }
 
+/* 入口人物。 */
 .reaching-guide {
   width: 72%;
   top: 48px;
@@ -704,6 +729,7 @@ button.text-link:hover {
   align-items: stretch;
 }
 
+/* 動態卡內容。 */
 .moment-card {
   height: 100%;
 }
@@ -760,6 +786,7 @@ button.text-link:hover {
   }
 }
 
+/* 主要動態卡的畫面。 */
 @media (min-width: 1101px) {
   .moment-feature .moment-screen {
     height: 260px;
@@ -779,6 +806,7 @@ button.text-link:hover {
   height: 100%;
 }
 
+/* 特別圖片卡。 */
 .special-art-card {
   display: flex;
   flex-direction: column;
@@ -814,6 +842,7 @@ button.text-link:hover {
   }
 }
 
+/* 收藏筆記。 */
 .hero-collection-note {
   padding: 15px;
   border-radius: 16px;
@@ -824,11 +853,13 @@ button.text-link:hover {
   line-height: 1.5;
 }
 
+/* 色調列與閱讀導覽。 */
 .world-palette-bar,
 .archive-compass {
   background: linear-gradient(115deg, #263d5e70, #10253a70);
 }
 
+/* 人物介紹的來源。 */
 .profile-content .source-inline {
   color: var(--ui-muted);
 }
@@ -849,12 +880,14 @@ button.text-link:hover {
   font-size: 12px;
 }
 
+/* 來源連結與頁尾文字的大小。 */
 .moment-copy .source-link,
 .curator-actions .text-link,
 footer small {
   font-size: 13px;
 }
 
+/* 小標籤的大小。 */
 .image-corner,
 .profile-tags span,
 .archive-compass .eyebrow,
@@ -868,16 +901,20 @@ footer small {
   font-size: 12px;
 }
 
+/* 行內來源連結。 */
 .profile-content .source-inline,
 .profile-content .source-inline a {
   font-size: 13px !important;
 }
 
+/* 註腳與遊樂室連結的大小。 */
 .actor-room-footnote,
 .playroom-heading > .text-link,
 #chibi-source {
   font-size: 13px;
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 760px) {
   body {
@@ -1021,6 +1058,8 @@ footer small {
   }
 }
 
+/* ---------- 最窄的手機 ---------- */
+
 @media (max-width: 400px) {
   .site-header nav a {
     padding-inline: 8px;
@@ -1067,6 +1106,7 @@ footer small {
   object-position: 36% center;
 }
 
+/* 遊戲卡內容。 */
 .game-card .card-body {
   min-width: 0;
 }
@@ -1079,6 +1119,8 @@ footer small {
   outline: 2px solid #a1dce8;
   outline-offset: 4px;
 }
+
+/* ---------- 肖像、特別圖片與服裝 ---------- */
 
 .portrait-room,
 .special-room,
@@ -1201,6 +1243,7 @@ footer small {
   line-height: 1.7;
 }
 
+/* 手機版的肖像與服裝。 */
 @media (max-width: 760px) {
   .portrait-room {
     grid-template-columns: minmax(0, 1fr);
@@ -1235,6 +1278,7 @@ footer small {
   font-size: 28px;
   padding: 8px;
 }
+/* 翻牌記憶遊戲。 */
 .memory-card[data-revealed="true"] {
   background: #2d6176;
   border-color: #a5e0ee;
@@ -1245,6 +1289,7 @@ footer small {
   color: #b8f3d8;
   cursor: default;
 }
+/* 小茜的心情與互動。 */
 .chibi-mood-choices {
   display: flex;
   flex-wrap: wrap;
@@ -1307,11 +1352,15 @@ footer small {
   accent-color: #95d8e9;
   cursor: pointer;
 }
+/* 配色按鈕。 */
 .color-actions {
   justify-content: flex-start;
   gap: 10px;
   flex-wrap: wrap;
 }
+
+/* ---------- 小手機 ---------- */
+
 @media (max-width: 480px) {
   .chibi-mode-picker {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1335,12 +1384,14 @@ footer small {
   background: #081327;
 }
 
+/* 遊樂室的人物圖。 */
 .chibi-playroom .chibi-image-button img,
 .chibi-playroom[data-chibi-look] .chibi-image-button img {
   object-fit: contain;
   mask-image: none;
 }
 
+/* 遊戲卡標題與心情選擇。 */
 .game-card h3 {
   overflow-wrap: anywhere;
 }
@@ -1360,11 +1411,13 @@ footer small {
   flex-wrap: wrap;
 }
 
+/* 隨機推薦按鈕。 */
 .surprise-button {
   grid-column: 2;
   grid-row: 1;
 }
 
+/* 手機版的遊戲卡。 */
 @media (max-width: 760px) {
   .game-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -1385,6 +1438,8 @@ footer small {
     position: static;
   }
 }
+
+/* ---------- 減少動態效果 ---------- */
 
 @media (prefers-reduced-motion: reduce) {
   .stage-toggle,

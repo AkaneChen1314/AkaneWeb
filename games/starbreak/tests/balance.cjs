@@ -1,8 +1,15 @@
+/*
+ * 平衡模擬：讓自動駕駛打完整場並輸出結果，用來比較難度與裝備。
+ * 用法：node balance.cjs [ships｜loadouts｜difficulties｜boss-legacy｜
+ * boss-endgame…]。
+ */
 const { Engine, defaultProfile, WEAPONS, DIFFICULTIES, STATS } = require(
   process.env.STARBREAK_ENGINE || "../game.js",
 );
+// 要模擬的情境。
 const scenario = process.argv[2] || "ships";
 const mode = process.env.STARBREAK_MODE || "campaign";
+// 首領測試用的設定。
 const trial =
   scenario === "boss-legacy"
     ? {
@@ -32,6 +39,7 @@ const trial =
         bossThirdPhase: true,
         finalBoss: false,
       };
+// 依情境列出要跑的組合。
 const cases =
   scenario === "boss-endgame"
     ? ["rift", "tyrant", "queen", "core"].map((roster) => ({
@@ -62,6 +70,7 @@ const cases =
               difficulty: 0,
               config: {},
             }));
+// 每一種組合各跑一場。
 for (const { ship, difficulty, config } of cases) {
   const profile = defaultProfile();
   if (process.env.STARBREAK_RESEARCH === "max")
@@ -81,6 +90,7 @@ for (const { ship, difficulty, config } of cases) {
     Number(process.env.STARBREAK_SEED) || 81237,
     config,
   );
+  // 後期首領：先給滿等級與裝備。
   if (scenario === "boss-endgame") {
     const r = e.r;
     r.p.level = 25;
@@ -247,9 +257,11 @@ for (const { ship, difficulty, config } of cases) {
       e.burst();
     e.step(0.05, { x: dx, y: dy });
   }
+  // 記錄每場首領戰花了多久。
   for (const fight of fights)
     if (fight.b.dead && fight.duration === null)
       fight.duration = +(e.r.time - fight.start).toFixed(1);
+  // 輸出這一場的結果。
   console.log(
     JSON.stringify({
       ship,

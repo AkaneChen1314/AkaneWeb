@@ -6,7 +6,8 @@
  */
 .standalone-portal-nav {
   position: fixed;
-  inset: auto auto max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  inset: auto auto max(12px, env(safe-area-inset-bottom))
+    max(12px, env(safe-area-inset-left));
   z-index: 2147483000;
   min-height: 0;
   height: auto;
@@ -38,6 +39,7 @@
   display: none;
 }
 
+/* 戰鬥中隱藏返回鈕。 */
 .portal-in-battle .standalone-portal-nav {
   display: none;
 }

@@ -29,7 +29,15 @@ const Scene3D = {
   time: 0,
 
   // 後製參數（HUD 與玩家狀態會修改它們）
-  post: { bloom: 0.85, exposure: 1.0, hurt: 0, desat: 0, flash: 0, aberration: 0.0035, vignette: 0.5 },
+  post: {
+    bloom: 0.85,
+    exposure: 1.0,
+    hurt: 0,
+    desat: 0,
+    flash: 0,
+    aberration: 0.0035,
+    vignette: 0.5,
+  },
 
   /* 畫質設定：
    *   msaa         反鋸齒取樣數        shadow       陰影貼圖解析度（0 = 關閉陰影）
@@ -37,9 +45,33 @@ const Scene3D = {
    *   shadowEvery  每幾幀重畫一次陰影  lights       地圖上最多幾盞點光源 */
   QUALITY: {
     // 陰影蓋住整張地圖，所以高畫質的陰影解析度要高一點
-    high: { label: "精緻", msaa: 4, shadow: 4096, ratio: 1.5, bloomLevels: 5, shadowEvery: 2, lights: 10 },
-    medium: { label: "均衡", msaa: 2, shadow: 1024, ratio: 1.0, bloomLevels: 4, shadowEvery: 3, lights: 6 },
-    low: { label: "流暢", msaa: 0, shadow: 0, ratio: 0.8, bloomLevels: 3, shadowEvery: 3, lights: 3 },
+    high: {
+      label: "精緻",
+      msaa: 4,
+      shadow: 4096,
+      ratio: 1.5,
+      bloomLevels: 5,
+      shadowEvery: 2,
+      lights: 10,
+    },
+    medium: {
+      label: "均衡",
+      msaa: 2,
+      shadow: 1024,
+      ratio: 1.0,
+      bloomLevels: 4,
+      shadowEvery: 3,
+      lights: 6,
+    },
+    low: {
+      label: "流暢",
+      msaa: 0,
+      shadow: 0,
+      ratio: 0.8,
+      bloomLevels: 3,
+      shadowEvery: 3,
+      lights: 3,
+    },
   },
 
   /* 動態解析度：畫面跟不上（低於約 45 幀）時自動把解析度降一級，順了再慢慢升回來。
@@ -52,12 +84,16 @@ const Scene3D = {
 
   /* ---------- 初始化 ---------- */
   init(canvas) {
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" });
+    this.renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: false,
+      powerPreference: "high-performance",
+    });
     this.renderer.autoClear = false;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(78, 1, 0.15, 800) // 近平面 0.15：深度精準度加倍，遠處的面比較不會閃;
+    this.camera = new THREE.PerspectiveCamera(78, 1, 0.15, 800); // 近平面 0.15：深度精準度加倍，遠處的面比較不會閃;
     this.camera.rotation.order = "YXZ"; // 先左右轉、再上下看
     this.scene.add(this.camera);
 
@@ -92,7 +128,9 @@ const Scene3D = {
     this._buildSky();
     this._buildPost();
     // 第一次開啟時的預設畫質：手機與平板用「均衡」，電腦用「精緻」（玩家選過之後就照玩家的）
-    const touchDevice = window.matchMedia && matchMedia("(hover: none) and (pointer: coarse)").matches;
+    const touchDevice =
+      window.matchMedia &&
+      matchMedia("(hover: none) and (pointer: coarse)").matches;
     this.setQuality(Util.load("quality", touchDevice ? "medium" : "high"));
     window.addEventListener("resize", () => this.resize());
   },
@@ -103,7 +141,9 @@ const Scene3D = {
     this.quality = name;
     const q = this.QUALITY[name];
     this.autoScale = this.autoCeil = 1; // 換畫質後重新評估要不要縮小解析度
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, q.ratio));
+    this.renderer.setPixelRatio(
+      Math.min(window.devicePixelRatio || 1, q.ratio),
+    );
     this.renderer.shadowMap.enabled = q.shadow > 0;
     // 陰影改成「需要時才重畫」，由 render() 每隔幾幀要求一次
     this.renderer.shadowMap.autoUpdate = false;
@@ -118,7 +158,9 @@ const Scene3D = {
       this.setShadowArea(this.shadowHalf || 50);
     }
     // 陰影開關會改變材質的著色器，全部標記為需要重新編譯
-    this.scene.traverse((n) => { if (n.material) n.material.needsUpdate = true; });
+    this.scene.traverse((n) => {
+      if (n.material) n.material.needsUpdate = true;
+    });
     if (typeof Maps !== "undefined") Maps.applyLightBudget(); // 點光源數量跟著畫質調整
     this.resize();
     Util.save("quality", name);
@@ -137,16 +179,24 @@ const Scene3D = {
     cam.far = 320;
     cam.updateProjectionMatrix();
     this.sun.target.position.set(0, 0, 0);
-    this.sun.position.set(this.sunDir.x * 150, this.sunDir.y * 150, this.sunDir.z * 150);
+    this.sun.position.set(
+      this.sunDir.x * 150,
+      this.sunDir.y * 150,
+      this.sunDir.z * 150,
+    );
     this.sun.target.updateMatrixWorld();
   },
 
+  // 視窗大小或畫質改變時，重新設定畫布與鏡頭。
   resize() {
     // 視窗搬到不同縮放比例的螢幕時，解析度也要跟著更新
     this.dpr = window.devicePixelRatio || 1;
-    this.renderer.setPixelRatio(Math.min(this.dpr, this.QUALITY[this.quality].ratio) * this.autoScale);
+    this.renderer.setPixelRatio(
+      Math.min(this.dpr, this.QUALITY[this.quality].ratio) * this.autoScale,
+    );
     // 視窗被縮到最小時寬高會是 0；至少保留 1 像素，避免除以零與無效的畫面緩衝區
-    const w = Math.max(1, window.innerWidth), h = Math.max(1, window.innerHeight);
+    const w = Math.max(1, window.innerWidth),
+      h = Math.max(1, window.innerHeight);
     this.renderer.setSize(w, h, false);
     this.camera.aspect = this.weaponCamera.aspect = w / h;
     this.camera.updateProjectionMatrix();
@@ -159,11 +209,21 @@ const Scene3D = {
    * ============================================================ */
   _buildSky() {
     this.skyUniforms = {
-      uTop: { value: new THREE.Color() }, uHorizon: { value: new THREE.Color() }, uBottom: { value: new THREE.Color() },
-      uSunDir: { value: new THREE.Vector3(0, 1, 0) }, uSunColor: { value: new THREE.Color() }, uSunDisc: { value: 1 },
-      uStars: { value: 0 }, uAurora: { value: 0 }, uPlanet: { value: 0 }, uTime: { value: 0 },
+      uTop: { value: new THREE.Color() },
+      uHorizon: { value: new THREE.Color() },
+      uBottom: { value: new THREE.Color() },
+      uSunDir: { value: new THREE.Vector3(0, 1, 0) },
+      uSunColor: { value: new THREE.Color() },
+      uSunDisc: { value: 1 },
+      uStars: { value: 0 },
+      uAurora: { value: 0 },
+      uPlanet: { value: 0 },
+      uTime: { value: 0 },
       // 每張地圖的特殊天空效果（0 = 關閉）
-      uCity: { value: 0 }, uDoom: { value: 0 }, uWater: { value: 0 }, uNebula: { value: 0 },
+      uCity: { value: 0 },
+      uDoom: { value: 0 },
+      uWater: { value: 0 },
+      uNebula: { value: 0 },
     };
     const material = new THREE.ShaderMaterial({
       uniforms: this.skyUniforms,
@@ -336,6 +396,7 @@ const Scene3D = {
           gl_FragColor = vec4(col, 1.0);
         }`,
     });
+    // 包住整個場景的大球；永遠畫在最後面。
     this.sky = new THREE.Mesh(new THREE.SphereGeometry(600, 32, 20), material);
     this.sky.frustumCulled = false;
     this.sky.renderOrder = -10;
@@ -344,6 +405,7 @@ const Scene3D = {
 
   /* ---------- 套用地圖的天空與燈光設定 ---------- */
   setEnvironment(cfg) {
+    // 套用這張地圖的天空顏色。
     const u = this.skyUniforms;
     u.uTop.value.setHex(cfg.top);
     u.uHorizon.value.setHex(cfg.horizon);
@@ -361,6 +423,7 @@ const Scene3D = {
     u.uSunDir.value.copy(this.sunDir);
 
     this.sun.color.setHex(cfg.sunColor);
+    // 太陽光、環境光與霧。
     this.sun.intensity = cfg.sunPower;
     this.hemi.color.setHex(cfg.hemiSky);
     this.hemi.groundColor.setHex(cfg.hemiGround);
@@ -369,8 +432,12 @@ const Scene3D = {
     this.post.exposure = cfg.exposure;
 
     // 槍的打光顏色跟著地圖走
-    this.weaponHemi.color.setHex(cfg.hemiSky).lerp(new THREE.Color(0xffffff), 0.5);
-    this.weaponKey.color.setHex(cfg.sunColor).lerp(new THREE.Color(0xffffff), 0.4);
+    this.weaponHemi.color
+      .setHex(cfg.hemiSky)
+      .lerp(new THREE.Color(0xffffff), 0.5);
+    this.weaponKey.color
+      .setHex(cfg.sunColor)
+      .lerp(new THREE.Color(0xffffff), 0.4);
 
     // 把天空拍成「環境貼圖」，金屬表面才會有反光
     const envScene = new THREE.Scene();
@@ -385,19 +452,30 @@ const Scene3D = {
     this.scene.environmentIntensity = 0.9;
 
     // 槍用另一張「攝影棚」環境貼圖：不管地圖多暗，金屬槍身都有清楚的反光
+    // 攝影棚燈光：只用在第一人稱的武器上。
     if (!this.studioEnv) {
       const studio = new THREE.Scene();
       studio.add(
         new THREE.Mesh(
           new THREE.SphereGeometry(20, 16, 12),
-          new THREE.MeshBasicMaterial({ color: 0x3a424e, side: THREE.BackSide })
-        )
+          new THREE.MeshBasicMaterial({
+            color: 0x3a424e,
+            side: THREE.BackSide,
+          }),
+        ),
       );
       // 三片發亮的板子當作柔光箱：上方、左前、右後
-      for (const [x, y, z, s, b] of [[0, 12, 0, 14, 5], [-12, 3, -6, 8, 4], [12, 2, 8, 6, 2.5]]) {
+      for (const [x, y, z, s, b] of [
+        [0, 12, 0, 14, 5],
+        [-12, 3, -6, 8, 4],
+        [12, 2, 8, 6, 2.5],
+      ]) {
         const panel = new THREE.Mesh(
           new THREE.PlaneGeometry(s, s),
-          new THREE.MeshBasicMaterial({ color: new THREE.Color(b, b, b), side: THREE.DoubleSide })
+          new THREE.MeshBasicMaterial({
+            color: new THREE.Color(b, b, b),
+            side: THREE.DoubleSide,
+          }),
         );
         panel.position.set(x, y, z);
         panel.lookAt(0, 0, 0);
@@ -426,11 +504,22 @@ const Scene3D = {
       varying vec2 vUv;
       void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`;
     const make = (uniforms, fragmentShader) =>
-      new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader, depthTest: false, depthWrite: false });
+      new THREE.ShaderMaterial({
+        uniforms,
+        vertexShader,
+        fragmentShader,
+        depthTest: false,
+        depthWrite: false,
+      });
 
     // 縮小：取四個點平均；uThreshold > 0 時順便只留下很亮的部分
+    // 依序建立縮小、放大與最後合成三種後製材質。
     this.matDown = make(
-      { tSrc: { value: null }, uTexel: { value: new THREE.Vector2() }, uThreshold: { value: 0 } },
+      {
+        tSrc: { value: null },
+        uTexel: { value: new THREE.Vector2() },
+        uThreshold: { value: 0 },
+      },
       /* glsl */ `
       uniform sampler2D tSrc;
       uniform vec2 uTexel;
@@ -450,7 +539,11 @@ const Scene3D = {
     );
     // 放大：九點加權模糊後，疊上同尺寸的那一層
     this.matUp = make(
-      { tSrc: { value: null }, tBase: { value: null }, uTexel: { value: new THREE.Vector2() } },
+      {
+        tSrc: { value: null },
+        tBase: { value: null },
+        uTexel: { value: new THREE.Vector2() },
+      },
       /* glsl */ `
       uniform sampler2D tSrc, tBase;
       uniform vec2 uTexel;
@@ -467,8 +560,16 @@ const Scene3D = {
     // 最終合成
     this.matFinal = make(
       {
-        tScene: { value: null }, tBloom: { value: null }, uBloom: { value: 1 }, uExposure: { value: 1 }, uTime: { value: 0 },
-        uHurt: { value: 0 }, uDesat: { value: 0 }, uFlash: { value: 0 }, uAberration: { value: 0 }, uVignette: { value: 0.5 },
+        tScene: { value: null },
+        tBloom: { value: null },
+        uBloom: { value: 1 },
+        uExposure: { value: 1 },
+        uTime: { value: 0 },
+        uHurt: { value: 0 },
+        uDesat: { value: 0 },
+        uFlash: { value: 0 },
+        uAberration: { value: 0 },
+        uVignette: { value: 0.5 },
       },
       /* glsl */ `
       uniform sampler2D tScene, tBloom;
@@ -513,23 +614,45 @@ const Scene3D = {
     );
   },
 
+  // 重新配置後製用的暫存畫面；尺寸依畫質決定。
   _resizePost() {
     if (!this.postQuad) return;
     const q = this.QUALITY[this.quality];
     const size = this.renderer.getDrawingBufferSize(new THREE.Vector2());
-    const w = size.x, h = size.y;
+    const w = size.x,
+      h = size.y;
 
     // 釋放舊的暫存畫面
-    for (const t of [this.rtScene, ...(this.rtDown || []), ...(this.rtUp || [])]) if (t) t.dispose();
+    for (const t of [
+      this.rtScene,
+      ...(this.rtDown || []),
+      ...(this.rtUp || []),
+    ])
+      if (t) t.dispose();
 
-    const hdr = { type: THREE.HalfFloatType, depthBuffer: false, magFilter: THREE.LinearFilter, minFilter: THREE.LinearFilter };
-    this.rtScene = new THREE.WebGLRenderTarget(w, h, { ...hdr, depthBuffer: true, samples: q.msaa });
+    const hdr = {
+      type: THREE.HalfFloatType,
+      depthBuffer: false,
+      magFilter: THREE.LinearFilter,
+      minFilter: THREE.LinearFilter,
+    };
+    this.rtScene = new THREE.WebGLRenderTarget(w, h, {
+      ...hdr,
+      depthBuffer: true,
+      samples: q.msaa,
+    });
     this.rtDown = [];
     this.rtUp = [];
-    let bw = Math.floor(w / 2), bh = Math.floor(h / 2);
+    let bw = Math.floor(w / 2),
+      bh = Math.floor(h / 2);
     for (let i = 0; i < q.bloomLevels; i++) {
-      this.rtDown.push(new THREE.WebGLRenderTarget(Math.max(2, bw), Math.max(2, bh), hdr));
-      if (i < q.bloomLevels - 1) this.rtUp.push(new THREE.WebGLRenderTarget(Math.max(2, bw), Math.max(2, bh), hdr));
+      this.rtDown.push(
+        new THREE.WebGLRenderTarget(Math.max(2, bw), Math.max(2, bh), hdr),
+      );
+      if (i < q.bloomLevels - 1)
+        this.rtUp.push(
+          new THREE.WebGLRenderTarget(Math.max(2, bw), Math.max(2, bh), hdr),
+        );
       bw = Math.floor(bw / 2);
       bh = Math.floor(bh / 2);
     }
@@ -560,7 +683,8 @@ const Scene3D = {
 
     if (avg > 22 && this.autoScale > 0.55) {
       // 剛升上去 12 秒內又掉幀：代表升太多了，之後不再升到這一級
-      if (now - a.raisedAt < 12000) this.autoCeil = Math.max(0.55, this.autoScale - 0.1);
+      if (now - a.raisedAt < 12000)
+        this.autoCeil = Math.max(0.55, this.autoScale - 0.1);
       this.autoScale = Math.max(0.55, this.autoScale - 0.1);
       a.smooth = 0;
       this.resize();
@@ -584,10 +708,12 @@ const Scene3D = {
     // 視窗被縮到最小（看不到畫面）時不用畫，也避免顯示卡一直報「緩衝區大小為 0」的警告
     if (window.innerWidth < 2 || window.innerHeight < 2) return;
     this._autoResolution();
+    // 先畫天空與場景，再疊上第一人稱武器。
     const r = this.renderer;
     // 陰影貼圖每隔幾幀才重畫一次（地圖不會動，角色的影子慢一兩幀看不出來），省下一整趟繪製
     this.frameNo++;
-    if (this.frameNo % this.QUALITY[this.quality].shadowEvery === 0) r.shadowMap.needsUpdate = true;
+    if (this.frameNo % this.QUALITY[this.quality].shadowEvery === 0)
+      r.shadowMap.needsUpdate = true;
     this.skyUniforms.uTime.value = this.time;
     this.sky.position.copy(this.camera.position);
 
@@ -604,8 +730,10 @@ const Scene3D = {
     }
 
     // 3. 泛光：先縮小（第一層同時做亮部擷取），再放大疊回
-    const down = this.rtDown, up = this.rtUp;
+    const down = this.rtDown,
+      up = this.rtUp;
     let src = this.rtScene;
+    // 光暈：逐級縮小，再逐級放大疊加。
     for (let i = 0; i < down.length; i++) {
       this.matDown.uniforms.tSrc.value = src.texture;
       this.matDown.uniforms.uTexel.value.set(0.5 / src.width, 0.5 / src.height);
@@ -625,6 +753,7 @@ const Scene3D = {
     // 4. 合成到螢幕
     const u = this.matFinal.uniforms;
     const p = this.post;
+    // 合成：曝光、光暈、色差、暗角與受傷效果。
     u.tScene.value = this.rtScene.texture;
     u.tBloom.value = acc.texture;
     u.uBloom.value = p.bloom / down.length;
@@ -646,6 +775,7 @@ const Scene3D = {
  *  陣列裡，用「環狀」方式重複使用（新的粒子覆蓋最舊的）。
  * ============================================================ */
 class ParticleSystem {
+  // max 是粒子上限；additive 表示發光粒子（加亮混合）。
   constructor(max, additive) {
     this.max = max;
     this.cursor = 0;
@@ -702,10 +832,16 @@ class ParticleSystem {
   emit(o) {
     const i = this.cursor;
     this.cursor = (this.cursor + 1) % this.max;
-    this.pos[i * 3] = o.x; this.pos[i * 3 + 1] = o.y; this.pos[i * 3 + 2] = o.z;
-    this.vel[i * 3] = o.vx || 0; this.vel[i * 3 + 1] = o.vy || 0; this.vel[i * 3 + 2] = o.vz || 0;
+    this.pos[i * 3] = o.x;
+    this.pos[i * 3 + 1] = o.y;
+    this.pos[i * 3 + 2] = o.z;
+    this.vel[i * 3] = o.vx || 0;
+    this.vel[i * 3 + 1] = o.vy || 0;
+    this.vel[i * 3 + 2] = o.vz || 0;
     const b = o.bright ?? 1;
-    this.col[i * 3] = o.color.r * b; this.col[i * 3 + 1] = o.color.g * b; this.col[i * 3 + 2] = o.color.b * b;
+    this.col[i * 3] = o.color.r * b;
+    this.col[i * 3 + 1] = o.color.g * b;
+    this.col[i * 3 + 2] = o.color.b * b;
     this.life[i] = this.maxLife[i] = o.life;
     this.size0[i] = o.size;
     this.size1[i] = o.size1 ?? o.size * 0.2;
@@ -713,16 +849,29 @@ class ParticleSystem {
     this.drag[i] = o.drag ?? 0;
   }
 
+  // 更新所有粒子：移動、重力、阻力、縮放與淡出。
   update(dt) {
     const { pos, vel, life, maxLife, data } = this;
     for (let i = 0; i < this.max; i++) {
-      if (life[i] <= 0) { data[i * 2 + 1] = 0; continue; }
+      if (life[i] <= 0) {
+        data[i * 2 + 1] = 0;
+        continue;
+      }
       life[i] -= dt;
       const k = i * 3;
       const dragF = Math.max(0, 1 - this.drag[i] * dt);
-      vel[k] *= dragF; vel[k + 1] = vel[k + 1] * dragF - this.grav[i] * dt; vel[k + 2] *= dragF;
-      pos[k] += vel[k] * dt; pos[k + 1] += vel[k + 1] * dt; pos[k + 2] += vel[k + 2] * dt;
-      if (pos[k + 1] < 0.02 && this.grav[i] > 0) { pos[k + 1] = 0.02; vel[k + 1] *= -0.35; vel[k] *= 0.6; vel[k + 2] *= 0.6; } // 落地彈一下
+      vel[k] *= dragF;
+      vel[k + 1] = vel[k + 1] * dragF - this.grav[i] * dt;
+      vel[k + 2] *= dragF;
+      pos[k] += vel[k] * dt;
+      pos[k + 1] += vel[k + 1] * dt;
+      pos[k + 2] += vel[k + 2] * dt;
+      if (pos[k + 1] < 0.02 && this.grav[i] > 0) {
+        pos[k + 1] = 0.02;
+        vel[k + 1] *= -0.35;
+        vel[k] *= 0.6;
+        vel[k + 2] *= 0.6;
+      } // 落地彈一下
       const t = Math.max(0, life[i] / maxLife[i]); // 1 剛出生 → 0 消失
       data[i * 2] = this.size1[i] + (this.size0[i] - this.size1[i]) * t;
       data[i * 2 + 1] = Math.min(1, t * 2.2);
@@ -745,6 +894,7 @@ const FX = {
   shake: 0, // 目前的畫面震動強度（玩家的攝影機會讀取）
   _c: new THREE.Color(),
 
+  // 建立粒子、曳光彈、彈孔、彈殼、光暈與地面標記等資源。
   init() {
     const scene = Scene3D.scene;
     this.glow = new ParticleSystem(2600, true); // 發光粒子：火花、能量
@@ -752,8 +902,17 @@ const FX = {
     scene.add(this.glow.points, this.smoke.points);
 
     /* ---- 曳光彈：最多 140 條，全部用同一個「實例化網格」畫 ---- */
-    const tracerMat = new THREE.MeshBasicMaterial({ toneMapped: false, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
-    this.tracerMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), tracerMat, 140);
+    const tracerMat = new THREE.MeshBasicMaterial({
+      toneMapped: false,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    this.tracerMesh = new THREE.InstancedMesh(
+      new THREE.BoxGeometry(1, 1, 1),
+      tracerMat,
+      140,
+    );
     this.tracerMesh.frustumCulled = false;
     this.tracerMesh.count = 0;
     this.tracers = [];
@@ -770,8 +929,18 @@ const FX = {
     grad.addColorStop(1, "rgba(0,0,0,0)");
     hc.fillStyle = grad;
     hc.fillRect(0, 0, 64, 64);
-    const holeMat = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(holeCanvas), transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4 });
-    this.holeMesh = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), holeMat, 160);
+    const holeMat = new THREE.MeshBasicMaterial({
+      map: new THREE.CanvasTexture(holeCanvas),
+      transparent: true,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -4,
+    });
+    this.holeMesh = new THREE.InstancedMesh(
+      new THREE.PlaneGeometry(1, 1),
+      holeMat,
+      160,
+    );
     this.holeMesh.frustumCulled = false;
     this.holeMesh.count = 0;
     this.holeCursor = 0;
@@ -779,13 +948,23 @@ const FX = {
 
     /* ---- 彈殼：40 顆會掉在地上彈跳的黃銅小圓柱 ---- */
     const shellGeo = new THREE.CylinderGeometry(0.008, 0.008, 0.03, 6);
-    const shellMat = new THREE.MeshStandardMaterial({ color: 0xc9a040, metalness: 0.9, roughness: 0.3 });
+    const shellMat = new THREE.MeshStandardMaterial({
+      color: 0xc9a040,
+      metalness: 0.9,
+      roughness: 0.3,
+    });
     this.shellMesh = new THREE.InstancedMesh(shellGeo, shellMat, 40);
     this.shellMesh.frustumCulled = false;
     this.shellMesh.count = 40;
     this.shells = [];
     for (let i = 0; i < 40; i++) {
-      this.shells.push({ life: 0, pos: new THREE.Vector3(0, -50, 0), vel: new THREE.Vector3(), rot: new THREE.Euler(), spin: 0 });
+      this.shells.push({
+        life: 0,
+        pos: new THREE.Vector3(0, -50, 0),
+        vel: new THREE.Vector3(),
+        rot: new THREE.Euler(),
+        spin: 0,
+      });
     }
     this.shellCursor = 0;
     scene.add(this.shellMesh);
@@ -793,7 +972,13 @@ const FX = {
     /* ---- 光暈貼片（槍口火光、爆炸閃光）：30 個可重複使用的 Sprite ---- */
     this.sprites = [];
     for (let i = 0; i < 30; i++) {
-      const mat = new THREE.SpriteMaterial({ map: Tex.glowSprite(), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, toneMapped: false });
+      const mat = new THREE.SpriteMaterial({
+        map: Tex.glowSprite(),
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        transparent: true,
+        toneMapped: false,
+      });
       const sprite = new THREE.Sprite(mat);
       sprite.visible = false;
       scene.add(sprite);
@@ -850,7 +1035,10 @@ const FX = {
       const t = 1 - Math.max(0, r.life / r.maxLife); // 0 → 1
       r.mesh.scale.setScalar(Util.lerp(0.2, r.radius, t));
       r.mesh.material.opacity = (1 - t) * 0.9;
-      if (r.life <= 0) { this._drop(r.mesh); this.rings.splice(i, 1); }
+      if (r.life <= 0) {
+        this._drop(r.mesh);
+        this.rings.splice(i, 1);
+      }
     }
     for (let i = this.marks.length - 1; i >= 0; i--) {
       const m = this.marks[i];
@@ -858,7 +1046,11 @@ const FX = {
       const t = 1 - Math.max(0, m.life / m.maxLife);
       m.fill.scale.setScalar(Math.max(0.001, m.radius * t)); // 內圈逐漸填滿 = 倒數
       m.ring.material.opacity = 0.55 + 0.4 * Math.sin(Scene3D.time * 18);
-      if (m.life <= 0) { this._drop(m.ring); this._drop(m.fill); this.marks.splice(i, 1); }
+      if (m.life <= 0) {
+        this._drop(m.ring);
+        this._drop(m.fill);
+        this.marks.splice(i, 1);
+      }
     }
     for (let i = this.beams.length - 1; i >= 0; i--) {
       const b = this.beams[i];
@@ -866,7 +1058,10 @@ const FX = {
       const t = Math.max(0, b.life / b.maxLife);
       b.mesh.scale.x = b.mesh.scale.z = b.radius * (b.fade ? t : 1);
       b.mesh.material.opacity = b.fade ? t : 1;
-      if (b.life <= 0) { this._drop(b.mesh); this.beams.splice(i, 1); }
+      if (b.life <= 0) {
+        this._drop(b.mesh);
+        this.beams.splice(i, 1);
+      }
     }
     this._updateWeather(dt);
   },
@@ -885,11 +1080,23 @@ const FX = {
     this.tracerMesh.count = 0;
     this.holeMesh.count = 0;
     this.holeCursor = 0;
-    for (const s of this.shells) { s.life = 0; s.pos.set(0, -50, 0); }
-    for (const s of this.sprites) { s.life = 0; s.sprite.visible = false; }
-    for (const l of this.lights) { l.life = 0; l.light.intensity = 0; }
+    for (const s of this.shells) {
+      s.life = 0;
+      s.pos.set(0, -50, 0);
+    }
+    for (const s of this.sprites) {
+      s.life = 0;
+      s.sprite.visible = false;
+    }
+    for (const l of this.lights) {
+      l.life = 0;
+      l.light.intensity = 0;
+    }
     for (const r of this.rings) this._drop(r.mesh);
-    for (const m of this.marks) { this._drop(m.ring); this._drop(m.fill); }
+    for (const m of this.marks) {
+      this._drop(m.ring);
+      this._drop(m.fill);
+    }
     for (const b of this.beams) this._drop(b.mesh);
     this.rings.length = this.marks.length = this.beams.length = 0;
     this.shake = 0;
@@ -904,12 +1111,19 @@ const FX = {
     const color = this._c.setHex(colorHex);
     for (let i = 0; i < count; i++) {
       this.glow.emit({
-        x, y, z,
+        x,
+        y,
+        z,
         vx: nx * speed * Math.random() + Util.rand(-1, 1) * speed * 0.5,
         vy: ny * speed * Math.random() + Util.rand(-0.2, 1) * speed * 0.5,
         vz: nz * speed * Math.random() + Util.rand(-1, 1) * speed * 0.5,
-        life: Util.rand(0.15, 0.45), size: Util.rand(0.04, 0.09), size1: 0.01,
-        color, bright: 3, gravity: 12, drag: 1.5,
+        life: Util.rand(0.15, 0.45),
+        size: Util.rand(0.04, 0.09),
+        size1: 0.01,
+        color,
+        bright: 3,
+        gravity: 12,
+        drag: 1.5,
       });
     }
   },
@@ -919,10 +1133,18 @@ const FX = {
     const color = this._c.setHex(colorHex);
     for (let i = 0; i < count; i++) {
       this.smoke.emit({
-        x: x + Util.rand(-0.1, 0.1), y: y + Util.rand(-0.05, 0.1), z: z + Util.rand(-0.1, 0.1),
-        vx: Util.rand(-spread, spread), vy: Util.rand(0.2, 1.0), vz: Util.rand(-spread, spread),
-        life: Util.rand(0.5, 1.2), size: size * 0.4, size1: size * Util.rand(1.2, 2),
-        color, bright: 0.5, drag: 1.2,
+        x: x + Util.rand(-0.1, 0.1),
+        y: y + Util.rand(-0.05, 0.1),
+        z: z + Util.rand(-0.1, 0.1),
+        vx: Util.rand(-spread, spread),
+        vy: Util.rand(0.2, 1.0),
+        vz: Util.rand(-spread, spread),
+        life: Util.rand(0.5, 1.2),
+        size: size * 0.4,
+        size1: size * Util.rand(1.2, 2),
+        color,
+        bright: 0.5,
+        drag: 1.2,
       });
     }
   },
@@ -930,7 +1152,15 @@ const FX = {
   // 子彈打到牆：火花 + 一小團灰塵 + 彈孔
   impact(hit, colorHex = 0xffd9a0) {
     this.sparks(hit.x, hit.y, hit.z, hit.nx, hit.ny, hit.nz, colorHex, 6, 4);
-    this.puff(hit.x + hit.nx * 0.05, hit.y + hit.ny * 0.05, hit.z + hit.nz * 0.05, 3, 0.35, 0x9a948a, 0.5);
+    this.puff(
+      hit.x + hit.nx * 0.05,
+      hit.y + hit.ny * 0.05,
+      hit.z + hit.nz * 0.05,
+      3,
+      0.35,
+      0x9a948a,
+      0.5,
+    );
     this.debris(hit.x, hit.y, hit.z, hit.nx, hit.ny, hit.nz, 5, 0x3a3634);
     this.hole(hit, 0.11);
   },
@@ -941,22 +1171,48 @@ const FX = {
     for (let i = 0; i < count; i++) {
       const sp = Util.rand(1.5, 4.5);
       this.smoke.emit({
-        x, y, z,
-        vx: nx * sp + Util.rand(-1.2, 1.2), vy: ny * sp + Util.rand(0.5, 2.5), vz: nz * sp + Util.rand(-1.2, 1.2),
-        life: Util.rand(0.6, 1.2), size: Util.rand(0.035, 0.07), size1: 0.03, color, bright: 0.8, gravity: 13, drag: 0.6,
+        x,
+        y,
+        z,
+        vx: nx * sp + Util.rand(-1.2, 1.2),
+        vy: ny * sp + Util.rand(0.5, 2.5),
+        vz: nz * sp + Util.rand(-1.2, 1.2),
+        life: Util.rand(0.6, 1.2),
+        size: Util.rand(0.035, 0.07),
+        size1: 0.03,
+        color,
+        bright: 0.8,
+        gravity: 13,
+        drag: 0.6,
       });
     }
   },
 
   // 能量彈打在牆上：發光的灼痕與慢慢熄滅的火星
   scorch(hit, colorHex) {
-    this.flash(hit.x + hit.nx * 0.05, hit.y + hit.ny * 0.05, hit.z + hit.nz * 0.05, colorHex, 0.7, 0.35, 0.8);
+    this.flash(
+      hit.x + hit.nx * 0.05,
+      hit.y + hit.ny * 0.05,
+      hit.z + hit.nz * 0.05,
+      colorHex,
+      0.7,
+      0.35,
+      0.8,
+    );
     const color = this._c.setHex(colorHex);
     for (let i = 0; i < 4; i++) {
       this.glow.emit({
-        x: hit.x + hit.nx * 0.04, y: hit.y + hit.ny * 0.04, z: hit.z + hit.nz * 0.04,
-        vx: Util.rand(-0.2, 0.2), vy: Util.rand(0, 0.3), vz: Util.rand(-0.2, 0.2),
-        life: Util.rand(0.6, 1.2), size: 0.08, size1: 0.01, color, bright: 2.5,
+        x: hit.x + hit.nx * 0.04,
+        y: hit.y + hit.ny * 0.04,
+        z: hit.z + hit.nz * 0.04,
+        vx: Util.rand(-0.2, 0.2),
+        vy: Util.rand(0, 0.3),
+        vz: Util.rand(-0.2, 0.2),
+        life: Util.rand(0.6, 1.2),
+        size: 0.08,
+        size1: 0.01,
+        color,
+        bright: 2.5,
       });
     }
     this.hole(hit, 0.16);
@@ -967,8 +1223,18 @@ const FX = {
     const color = this._c.setHex(0xbcbcbc);
     for (let i = 0; i < 2; i++) {
       this.smoke.emit({
-        x, y, z, vx: Util.rand(-0.2, 0.2), vy: Util.rand(0.3, 0.7), vz: Util.rand(-0.2, 0.2),
-        life: Util.rand(0.5, 0.9), size: 0.05, size1: 0.25, color, bright: 0.35, drag: 1.5,
+        x,
+        y,
+        z,
+        vx: Util.rand(-0.2, 0.2),
+        vy: Util.rand(0.3, 0.7),
+        vz: Util.rand(-0.2, 0.2),
+        life: Util.rand(0.5, 0.9),
+        size: 0.05,
+        size1: 0.25,
+        color,
+        bright: 0.35,
+        drag: 1.5,
       });
     }
   },
@@ -978,9 +1244,18 @@ const FX = {
     const color = this._c.setHex(colorHex);
     for (let i = 0; i < count; i++) {
       this.glow.emit({
-        x: x + Util.rand(-0.5, 0.5), y: y + Util.rand(0, h), z: z + Util.rand(-0.5, 0.5),
-        vx: Util.rand(-0.3, 0.3), vy: Util.rand(0.6, 1.8), vz: Util.rand(-0.3, 0.3),
-        life: Util.rand(0.6, 1.2), size: 0.07, size1: 0.01, color, bright: 2.2, drag: 0.8,
+        x: x + Util.rand(-0.5, 0.5),
+        y: y + Util.rand(0, h),
+        z: z + Util.rand(-0.5, 0.5),
+        vx: Util.rand(-0.3, 0.3),
+        vy: Util.rand(0.6, 1.8),
+        vz: Util.rand(-0.3, 0.3),
+        life: Util.rand(0.6, 1.2),
+        size: 0.07,
+        size1: 0.01,
+        color,
+        bright: 2.2,
+        drag: 0.8,
       });
     }
   },
@@ -991,21 +1266,53 @@ const FX = {
     this.holeCursor = (this.holeCursor + 1) % 160;
     this.holeMesh.count = Math.max(this.holeMesh.count, i + 1);
     const m = TMP.m1;
-    const q = TMP.q1.setFromUnitVectors(TMP.v1.set(0, 0, 1), TMP.v2.set(hit.nx, hit.ny, hit.nz));
-    m.compose(TMP.v3.set(hit.x + hit.nx * 0.012, hit.y + hit.ny * 0.012, hit.z + hit.nz * 0.012), q, TMP.v4.set(size, size, 1));
+    const q = TMP.q1.setFromUnitVectors(
+      TMP.v1.set(0, 0, 1),
+      TMP.v2.set(hit.nx, hit.ny, hit.nz),
+    );
+    m.compose(
+      TMP.v3.set(
+        hit.x + hit.nx * 0.012,
+        hit.y + hit.ny * 0.012,
+        hit.z + hit.nz * 0.012,
+      ),
+      q,
+      TMP.v4.set(size, size, 1),
+    );
     this.holeMesh.setMatrixAt(i, m);
     this.holeMesh.instanceMatrix.needsUpdate = true;
   },
 
   // 擊中角色：能量護甲碎裂般的亮點
   hitFlesh(x, y, z, colorHex, crit) {
-    this.sparks(x, y, z, 0, 0.3, 0, crit ? 0xfff2a0 : colorHex, crit ? 14 : 7, crit ? 5 : 3.5);
+    this.sparks(
+      x,
+      y,
+      z,
+      0,
+      0.3,
+      0,
+      crit ? 0xfff2a0 : colorHex,
+      crit ? 14 : 7,
+      crit ? 5 : 3.5,
+    );
     // 噴濺：幾滴發光的能量液往外噴出後落下，爆頭時更多
     const color = this._c.setHex(colorHex);
     for (let i = 0; i < (crit ? 10 : 5); i++) {
       this.glow.emit({
-        x, y, z, vx: Util.rand(-2.5, 2.5), vy: Util.rand(0.5, 3), vz: Util.rand(-2.5, 2.5),
-        life: Util.rand(0.4, 0.8), size: Util.rand(0.04, 0.08), size1: 0.02, color, bright: 1.6, gravity: 11, drag: 0.8,
+        x,
+        y,
+        z,
+        vx: Util.rand(-2.5, 2.5),
+        vy: Util.rand(0.5, 3),
+        vz: Util.rand(-2.5, 2.5),
+        life: Util.rand(0.4, 0.8),
+        size: Util.rand(0.04, 0.08),
+        size1: 0.02,
+        color,
+        bright: 1.6,
+        gravity: 11,
+        drag: 0.8,
       });
     }
     if (crit) this.flash(x, y, z, 0xfff2a0, 0.9, 0.12, 1.6); // 爆頭的閃光
@@ -1016,9 +1323,21 @@ const FX = {
     if (this.tracers.length >= 140) this.tracers.shift();
     const len = Math.hypot(bx - ax, by - ay, bz - az);
     if (len < 0.5) return;
-    this.tracers.push({ ax, ay, az, dx: (bx - ax) / len, dy: (by - ay) / len, dz: (bz - az) / len, len, head: Math.min(len, 6), color: colorHex, width });
+    this.tracers.push({
+      ax,
+      ay,
+      az,
+      dx: (bx - ax) / len,
+      dy: (by - ay) / len,
+      dz: (bz - az) / len,
+      len,
+      head: Math.min(len, 6),
+      color: colorHex,
+      width,
+    });
   },
 
+  // 曳光彈往前飛，抵達終點後消失。
   _updateTracers(dt) {
     const SPEED = 380; // 光條前進的速度（公尺／秒）
     const STREAK = 9; // 光條長度
@@ -1028,11 +1347,21 @@ const FX = {
       const t = this.tracers[i];
       t.head += SPEED * dt;
       const tail = Math.max(0, t.head - STREAK);
-      if (tail >= t.len) { this.tracers.splice(i, 1); continue; }
+      if (tail >= t.len) {
+        this.tracers.splice(i, 1);
+        continue;
+      }
       const head = Math.min(t.head, t.len);
       const mid = (head + tail) / 2;
-      const q = TMP.q1.setFromUnitVectors(TMP.v1.set(0, 0, 1), TMP.v2.set(t.dx, t.dy, t.dz));
-      TMP.m1.compose(TMP.v3.set(t.ax + t.dx * mid, t.ay + t.dy * mid, t.az + t.dz * mid), q, TMP.v4.set(t.width, t.width, head - tail));
+      const q = TMP.q1.setFromUnitVectors(
+        TMP.v1.set(0, 0, 1),
+        TMP.v2.set(t.dx, t.dy, t.dz),
+      );
+      TMP.m1.compose(
+        TMP.v3.set(t.ax + t.dx * mid, t.ay + t.dy * mid, t.az + t.dz * mid),
+        q,
+        TMP.v4.set(t.width, t.width, head - tail),
+      );
       mesh.setMatrixAt(n, TMP.m1);
       mesh.setColorAt(n, TMP.c1.setHex(t.color).multiplyScalar(3));
       n++;
@@ -1053,6 +1382,7 @@ const FX = {
     s.ground = World.groundAt(pos.x, pos.z, pos.y);
   },
 
+  // 彈殼落下、彈跳、旋轉，一段時間後消失。
   _updateShells(dt) {
     const mesh = this.shellMesh;
     for (let i = 0; i < this.shells.length; i++) {
@@ -1063,10 +1393,12 @@ const FX = {
         s.pos.addScaledVector(s.vel, dt);
         s.rot.x += s.spin * dt;
         s.rot.z += s.spin * 0.7 * dt;
-        if (s.pos.y < s.ground + 0.01) { // 碰到地面：反彈並減速
+        if (s.pos.y < s.ground + 0.01) {
+          // 碰到地面：反彈並減速
           s.pos.y = s.ground + 0.01;
           s.vel.y *= -0.4;
-          s.vel.x *= 0.5; s.vel.z *= 0.5;
+          s.vel.x *= 0.5;
+          s.vel.z *= 0.5;
           s.spin *= 0.5;
         }
         if (s.life <= 0) s.pos.set(0, -50, 0);
@@ -1110,7 +1442,14 @@ const FX = {
 
   // 往外擴散的衝擊波環
   ring(x, y, z, radius, colorHex, life = 0.5) {
-    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(colorHex).multiplyScalar(2.5), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
+    const mat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(colorHex).multiplyScalar(2.5),
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      toneMapped: false,
+    });
     const mesh = new THREE.Mesh(this.ringGeo, mat);
     mesh.position.set(x, y + 0.06, z);
     Scene3D.scene.add(mesh);
@@ -1121,11 +1460,23 @@ const FX = {
    * 外框固定，內圈由小變大，填滿的瞬間就是命中時間。 */
   mark(x, y, z, radius, colorHex, duration) {
     const color = new THREE.Color(colorHex).multiplyScalar(2);
-    const base = { transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false, blending: THREE.AdditiveBlending };
-    const ring = new THREE.Mesh(this.ringGeo, new THREE.MeshBasicMaterial({ ...base, color }));
+    const base = {
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      toneMapped: false,
+      blending: THREE.AdditiveBlending,
+    };
+    const ring = new THREE.Mesh(
+      this.ringGeo,
+      new THREE.MeshBasicMaterial({ ...base, color }),
+    );
     ring.position.set(x, y + 0.07, z);
     ring.scale.setScalar(radius);
-    const fill = new THREE.Mesh(this.discGeo, new THREE.MeshBasicMaterial({ ...base, color, opacity: 0.28 }));
+    const fill = new THREE.Mesh(
+      this.discGeo,
+      new THREE.MeshBasicMaterial({ ...base, color, opacity: 0.28 }),
+    );
     fill.position.set(x, y + 0.05, z);
     Scene3D.scene.add(ring, fill);
     this.marks.push({ ring, fill, radius, life: duration, maxLife: duration });
@@ -1133,7 +1484,14 @@ const FX = {
 
   // 光束：從 a 到 b 的發光圓柱。fade = true 會逐漸變細消失
   beam(a, b, radius, colorHex, life, fade = true) {
-    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(colorHex).multiplyScalar(3), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
+    const mat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(colorHex).multiplyScalar(3),
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      toneMapped: false,
+    });
     const mesh = new THREE.Mesh(this.beamGeo, mat);
     const dir = TMP.v1.set(b.x - a.x, b.y - a.y, b.z - a.z);
     const len = dir.length();
@@ -1151,7 +1509,10 @@ const FX = {
     const dir = TMP.v1.set(b.x - a.x, b.y - a.y, b.z - a.z);
     const len = Math.max(0.01, dir.length());
     beam.mesh.position.set((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
-    beam.mesh.quaternion.setFromUnitVectors(TMP.v2.set(0, 1, 0), dir.normalize());
+    beam.mesh.quaternion.setFromUnitVectors(
+      TMP.v2.set(0, 1, 0),
+      dir.normalize(),
+    );
     beam.mesh.scale.y = len;
   },
 
@@ -1162,34 +1523,70 @@ const FX = {
     this.light(x, y + 1, z, colorHex, 220, 0.4);
     this.ring(x, y, z, radius, colorHex, 0.45);
     const color = this._c.setHex(colorHex);
-    for (let i = 0; i < 46; i++) { // 四散的火花
-      const a = Math.random() * 6.28, up = Math.random();
+    // 往外噴發的火焰。
+    for (let i = 0; i < 46; i++) {
+      // 四散的火花
+      const a = Math.random() * 6.28,
+        up = Math.random();
       const sp = Util.rand(4, 15);
       this.glow.emit({
-        x, y: y + 0.2, z,
-        vx: Math.cos(a) * sp * (1 - up * 0.5), vy: up * sp * 0.9 + 1, vz: Math.sin(a) * sp * (1 - up * 0.5),
-        life: Util.rand(0.3, 0.9), size: Util.rand(0.08, 0.2), size1: 0.01, color, bright: 3.5, gravity: 13, drag: 1.2,
+        x,
+        y: y + 0.2,
+        z,
+        vx: Math.cos(a) * sp * (1 - up * 0.5),
+        vy: up * sp * 0.9 + 1,
+        vz: Math.sin(a) * sp * (1 - up * 0.5),
+        life: Util.rand(0.3, 0.9),
+        size: Util.rand(0.08, 0.2),
+        size1: 0.01,
+        color,
+        bright: 3.5,
+        gravity: 13,
+        drag: 1.2,
       });
     }
-    for (let i = 0; i < 14; i++) { // 火球核心
+    // 高速飛散的火星。
+    for (let i = 0; i < 14; i++) {
+      // 火球核心
       this.glow.emit({
-        x: x + Util.rand(-0.4, 0.4), y: y + Util.rand(0.1, 0.8), z: z + Util.rand(-0.4, 0.4),
-        vx: Util.rand(-2, 2), vy: Util.rand(1, 4), vz: Util.rand(-2, 2),
-        life: Util.rand(0.25, 0.5), size: radius * 0.35, size1: radius * 0.6, color, bright: 2.2, drag: 3,
+        x: x + Util.rand(-0.4, 0.4),
+        y: y + Util.rand(0.1, 0.8),
+        z: z + Util.rand(-0.4, 0.4),
+        vx: Util.rand(-2, 2),
+        vy: Util.rand(1, 4),
+        vz: Util.rand(-2, 2),
+        life: Util.rand(0.25, 0.5),
+        size: radius * 0.35,
+        size1: radius * 0.6,
+        color,
+        bright: 2.2,
+        drag: 3,
       });
     }
     this.puff(x, y + 0.4, z, 16, radius * 0.6, 0x3a3836, 2.2);
     this.debris(x, y + 0.3, z, 0, 1, 0, 22, 0x2a2624); // 被炸飛的碎塊
-    for (let i = 0; i < 8; i++) { // 往上衝的濃煙柱
+    // 緩慢上升的黑煙。
+    for (let i = 0; i < 8; i++) {
+      // 往上衝的濃煙柱
       this.smoke.emit({
-        x: x + Util.rand(-0.6, 0.6), y: y + 0.5, z: z + Util.rand(-0.6, 0.6),
-        vx: Util.rand(-0.5, 0.5), vy: Util.rand(2.5, 5), vz: Util.rand(-0.5, 0.5),
-        life: Util.rand(1.8, 3), size: radius * 0.3, size1: radius * 0.9, color: this._c.setHex(0x2a2826), bright: 0.5, drag: 1.2,
+        x: x + Util.rand(-0.6, 0.6),
+        y: y + 0.5,
+        z: z + Util.rand(-0.6, 0.6),
+        vx: Util.rand(-0.5, 0.5),
+        vy: Util.rand(2.5, 5),
+        vz: Util.rand(-0.5, 0.5),
+        life: Util.rand(1.8, 3),
+        size: radius * 0.3,
+        size1: radius * 0.9,
+        color: this._c.setHex(0x2a2826),
+        bright: 0.5,
+        drag: 1.2,
       });
     }
     // 焦痕：只有在靠近地面爆炸時才留在地上
     const ground = World.groundAt(x, z, y + 0.3);
-    if (y - ground < 1.5) this.hole({ x, y: ground, z, nx: 0, ny: 1, nz: 0 }, radius * 0.9);
+    if (y - ground < 1.5)
+      this.hole({ x, y: ground, z, nx: 0, ny: 1, nz: 0 }, radius * 0.9);
     this.addShake(x, y, z, radius * 0.12);
   },
 
@@ -1217,8 +1614,15 @@ const FX = {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(this.weatherPos, 3));
     this.weatherMat = new THREE.ShaderMaterial({
-      uniforms: { uColor: { value: new THREE.Color() }, uSize: { value: 1 }, uStreak: { value: 0 }, uAlpha: { value: 0.5 } },
-      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      uniforms: {
+        uColor: { value: new THREE.Color() },
+        uSize: { value: 1 },
+        uStreak: { value: 0 },
+        uAlpha: { value: 0.5 },
+      },
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
       vertexShader: /* glsl */ `
         uniform float uSize;
         void main() {
@@ -1247,15 +1651,58 @@ const FX = {
 
   // type：rain 雨、snow 雪、dust 沙塵、motes 漂浮光點、ash 灰燼、bubbles 氣泡、none 無
   setWeather(type) {
+    // 切換天氣；每張地圖使用其中一種。
     this.weatherType = type;
     const u = this.weatherMat.uniforms;
     const presets = {
-      rain: { color: 0x8fb0ff, size: 0.5, streak: 1, alpha: 0.35, vy: -26, drift: 1.5 },
-      snow: { color: 0xffffff, size: 0.11, streak: 0, alpha: 0.75, vy: -1.8, drift: 1.2 },
-      dust: { color: 0xffd9a0, size: 0.08, streak: 0, alpha: 0.4, vy: -0.15, drift: 3.5 },
-      motes: { color: 0x9fc0ff, size: 0.05, streak: 0, alpha: 0.6, vy: 0.12, drift: 0.3 },
-      ash: { color: 0xffa070, size: 0.07, streak: 0, alpha: 0.55, vy: -0.9, drift: 1.6 }, // 灰燼與火星
-      bubbles: { color: 0x9ff4ff, size: 0.09, streak: 0, alpha: 0.45, vy: 1.6, drift: 0.4 }, // 往上冒的氣泡
+      rain: {
+        color: 0x8fb0ff,
+        size: 0.5,
+        streak: 1,
+        alpha: 0.35,
+        vy: -26,
+        drift: 1.5,
+      },
+      snow: {
+        color: 0xffffff,
+        size: 0.11,
+        streak: 0,
+        alpha: 0.75,
+        vy: -1.8,
+        drift: 1.2,
+      },
+      dust: {
+        color: 0xffd9a0,
+        size: 0.08,
+        streak: 0,
+        alpha: 0.4,
+        vy: -0.15,
+        drift: 3.5,
+      },
+      motes: {
+        color: 0x9fc0ff,
+        size: 0.05,
+        streak: 0,
+        alpha: 0.6,
+        vy: 0.12,
+        drift: 0.3,
+      },
+      ash: {
+        color: 0xffa070,
+        size: 0.07,
+        streak: 0,
+        alpha: 0.55,
+        vy: -0.9,
+        drift: 1.6,
+      }, // 灰燼與火星
+      bubbles: {
+        color: 0x9ff4ff,
+        size: 0.09,
+        streak: 0,
+        alpha: 0.45,
+        vy: 1.6,
+        drift: 0.4,
+      }, // 往上冒的氣泡
     };
     const p = presets[type];
     this.weather.visible = !!p;
@@ -1267,6 +1714,7 @@ const FX = {
     u.uAlpha.value = p.alpha;
   },
 
+  // 天氣粒子跟著鏡頭移動，離開範圍後從另一側回來。
   _updateWeather(dt) {
     const p = this.weatherCfg;
     if (!p || !this.weather.visible) return;
@@ -1277,13 +1725,16 @@ const FX = {
       const k = i * 3;
       const seed = this.weatherSeed[i];
       pos[k + 1] += p.vy * (0.7 + seed * 0.6) * dt;
-      pos[k] += Math.sin(t * 0.7 + seed * 30) * p.drift * dt + p.drift * 0.4 * dt;
+      pos[k] +=
+        Math.sin(t * 0.7 + seed * 30) * p.drift * dt + p.drift * 0.4 * dt;
       pos[k + 2] += Math.cos(t * 0.5 + seed * 17) * p.drift * dt;
       // 超出攝影機周圍的方塊範圍就繞回另一邊（看起來像無限的雨）
       if (pos[k + 1] < 0) pos[k + 1] += 24;
       if (pos[k + 1] > 24) pos[k + 1] -= 24;
-      if (pos[k] - cam.x > 30) pos[k] -= 60; else if (pos[k] - cam.x < -30) pos[k] += 60;
-      if (pos[k + 2] - cam.z > 30) pos[k + 2] -= 60; else if (pos[k + 2] - cam.z < -30) pos[k + 2] += 60;
+      if (pos[k] - cam.x > 30) pos[k] -= 60;
+      else if (pos[k] - cam.x < -30) pos[k] += 60;
+      if (pos[k + 2] - cam.z > 30) pos[k + 2] -= 60;
+      else if (pos[k + 2] - cam.z < -30) pos[k + 2] += 60;
     }
     this.weather.geometry.attributes.position.needsUpdate = true;
   },

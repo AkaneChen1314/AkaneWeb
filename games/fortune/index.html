@@ -1,34 +1,81 @@
 <!doctype html>
+<!--
+  遊戲版面入口：整個遊戲都畫在同一張畫布上。
+  規則與畫面在 js 資料夾；這裡只負責依序載入。
+-->
 <html lang="zh-Hant">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>運氣戰鬥 · 命運轉輪塔防</title>
-<style>
-  html,body{margin:0;height:100%;background:#05030c;overflow:hidden;user-select:none;-webkit-user-select:none}
-  canvas{display:block;position:absolute;left:0;top:0;touch-action:none;cursor:default}
-</style>
-<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../../shared/portal.css?v=20261121-r15c">
-<link rel="stylesheet" href="../game-portal.css?v=20261121-r15c">
-<link rel="stylesheet" href="../touch-controls.css?v=20261121-r15c">
-<script src="../../shared/portal.js?v=20261121-r15c"></script>
-</head>
-<body>
-<canvas id="c"></canvas>
-<script src="js/util.js?v=20261121-r15c"></script>
-<script src="js/data.js?v=20261121-r15c"></script>
-<script src="js/audio.js?v=20261121-r15c"></script>
-<script src="js/art.js?v=20261121-r15c"></script>
-<script src="js/fx.js?v=20261121-r15c"></script>
-<script src="js/items.js?v=20261121-r15c"></script>
-<script src="js/casino.js?v=20261121-r15c"></script>
-<script src="js/shop.js?v=20261121-r15c"></script>
-<script src="js/game.js?v=20261121-r15c"></script>
-<script src="js/ui.js?v=20261121-r15c"></script>
-<script src="js/main.js?v=20261121-r15c"></script>
-<script src="js/portal-bridge.js?v=20261121-r15c"></script>
-<script src="../touch-controls.js?v=20261121-r15c"></script>
-<script>window.AkaneTouch && AkaneTouch.rotateHint("把手機橫過來玩，牌桌和地圖會大很多");</script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1"
+    />
+    <title>運氣戰鬥 · 命運轉輪塔防</title>
+    <!-- 畫布佔滿整個視窗。 -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #05030c;
+        overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      canvas {
+        display: block;
+        position: absolute;
+        left: 0;
+        top: 0;
+        touch-action: none;
+        cursor: default;
+      }
+    </style>
+    <!-- 網站圖示、返回遊戲館與觸控操作。 -->
+    <link
+      rel="icon"
+      href="../../assets/favicon.svg"
+      type="image/svg+xml"
+    />
+    <link
+      rel="stylesheet"
+      href="../../shared/portal.css?v=20261121-r15c"
+    />
+    <link
+      rel="stylesheet"
+      href="../game-portal.css?v=20261121-r15c"
+    />
+    <link
+      rel="stylesheet"
+      href="../touch-controls.css?v=20261121-r15c"
+    />
+    <script src="../../shared/portal.js?v=20261121-r15c"></script>
+  </head>
+  <body>
+    <!-- 遊戲畫布。 -->
+    <canvas id="c"></canvas>
+    <!--
+      遊戲程式，依序載入：工具、資料、聲音、圖案、特效、道具、賭場、商店、
+      規則、介面、主程式。順序不要更動。
+    -->
+    <script src="js/util.js?v=20261121-r15c"></script>
+    <script src="js/data.js?v=20261121-r15c"></script>
+    <script src="js/audio.js?v=20261121-r15c"></script>
+    <script src="js/art.js?v=20261121-r15c"></script>
+    <script src="js/fx.js?v=20261121-r15c"></script>
+    <script src="js/items.js?v=20261121-r15c"></script>
+    <script src="js/casino.js?v=20261121-r15c"></script>
+    <script src="js/shop.js?v=20261121-r15c"></script>
+    <script src="js/game.js?v=20261121-r15c"></script>
+    <script src="js/ui.js?v=20261121-r15c"></script>
+    <script src="js/main.js?v=20261121-r15c"></script>
+    <!-- 和遊戲館溝通，以及觸控操作。 -->
+    <script src="js/portal-bridge.js?v=20261121-r15c"></script>
+    <script src="../touch-controls.js?v=20261121-r15c"></script>
+    <!-- 手機直拿時提醒橫過來。 -->
+    <script>
+      window.AkaneTouch &&
+        AkaneTouch.rotateHint("把手機橫過來玩，牌桌和地圖會大很多");
+    </script>
+  </body>
 </html>

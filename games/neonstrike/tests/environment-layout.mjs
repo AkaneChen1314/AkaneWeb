@@ -1,7 +1,10 @@
+/*
+ * 測試：港區地圖的物件都有支撐，沒有懸空或重疊。
+ */
 import assert from "node:assert/strict";
 import { createHarness, THREE } from "./test-harness.mjs";
 
-// Inspect the shipped map rather than rebuilding a parallel list of placements.
+// 直接檢查遊戲裡實際的地圖，不另外維護一份位置清單。
 const harness = createHarness();
 harness.run("createArena();scene.updateMatrixWorld(true);");
 const scene = harness.run("scene"),
@@ -10,26 +13,32 @@ const meshes = [];
 scene.traverse((object) => {
   if (object.isMesh) meshes.push(object);
 });
+// 兩個數字要夠接近。
 const close = (actual, expected, label, tolerance = 0.001) =>
   assert.ok(
     Math.abs(actual - expected) <= tolerance,
     `${label}: ${actual} != ${expected}`,
   );
 const cases = [];
+// 登記一項測試。
 const test = (name, run) => cases.push({ name, run });
 
+// 物件在世界中的範圍。
 function boundsOf(mesh) {
   if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
   return mesh.geometry.boundingBox.clone().applyMatrix4(mesh.matrixWorld);
 }
+// 是不是某個物件底下的零件。
 function descendsFrom(object, ancestor) {
   for (let node = object; node; node = node.parent)
     if (node === ancestor) return true;
   return false;
 }
+// 兩個範圍是否碰在一起。
 function touches(a, b, tolerance = 0.045) {
   return a.clone().expandByScalar(tolerance).intersectsBox(b);
 }
+// 兩個範圍從上方看重疊的面積。
 function overlapArea(a, b) {
   return (
     Math.max(0, Math.min(a.max.x, b.max.x) - Math.max(a.min.x, b.min.x)) *
@@ -45,6 +54,7 @@ for (const root of worldRoots) {
     });
 }
 
+// 疊高的貨櫃底下要有對齊的貨櫃。
 test("every elevated freight container rests on aligned lower containers", () => {
   const containers = meshes.filter((mesh) => mesh.userData.container === true);
   assert.ok(
@@ -55,6 +65,7 @@ test("every elevated freight container rests on aligned lower containers", () =>
     containers.some((mesh) => boundsOf(mesh).min.y > 2),
     "stacked freight silhouettes are retained",
   );
+  // 每一個貨櫃。
   for (const container of containers) {
     const bounds = boundsOf(container),
       bottom = bounds.min.y;
@@ -71,7 +82,7 @@ test("every elevated freight container rests on aligned lower containers", () =>
       supports.length,
       `floating container at ${container.position.toArray()}`,
     );
-    // Sample corners as well as the middle: a tiny overlapping corner is not a stack.
+    // 中央與四個角落都要檢查；只壓到一小角不算疊好。
     for (const u of [0.01, 0.5, 0.99])
       for (const v of [0.01, 0.5, 0.99]) {
         const point = new THREE.Vector3(
@@ -106,6 +117,7 @@ test("every elevated freight container rests on aligned lower containers", () =>
   }
 });
 
+// 區域招牌要有看得到而且連在一起的支架。
 test("zone signs have connected visible mounting hardware, with no isolated floating support pieces", () => {
   const signs = [];
   scene.traverse((object) => {
@@ -146,12 +158,14 @@ test("zone signs have connected visible mounting hardware, with no isolated floa
   }
 });
 
+// 招牌支架要碰到地面或實際的支撐物。
 test("sign mounts contact the ground or their actual supporting structure", () => {
   const signs = [];
   scene.traverse((object) => {
     if (object.userData.zoneSign) signs.push(object);
   });
   const mountKinds = new Set();
+  // 每一面招牌。
   for (const sign of signs) {
     const mount = sign.getObjectByName("sign-mount");
     assert.ok(mount);
@@ -168,8 +182,7 @@ test("sign mounts contact the ground or their actual supporting structure", () =
       if (object.isMesh && object.userData.signSupport)
         support.push(boundsOf(object));
     });
-    // Wall brackets anchor sideways; their attachment is checked against real
-    // wall geometry below rather than an unrelated horizontal height plane.
+    // 牆面支架是從側面固定；下面改用實際的牆面檢查，不用不相關的水平高度。
     if (kind !== "wall")
       assert.ok(
         support.some(
@@ -177,6 +190,7 @@ test("sign mounts contact the ground or their actual supporting structure", () =
         ),
         `${sign.name} stops short of its anchor`,
       );
+    // 立柱型招牌要站在地上。
     if (kind === "posts") {
       assert.ok(
         support.some((box) => Math.abs(box.min.y) < 0.05),
@@ -202,6 +216,7 @@ test("sign mounts contact the ground or their actual supporting structure", () =
   );
 });
 
+// 通風扇要靠在牆上，不能超出牆的末端。
 test("maintenance fans are backed by the service wall instead of hanging beyond its end", () => {
   const fans = [];
   scene.traverse((object) => {
@@ -235,6 +250,7 @@ test("maintenance fans are backed by the service wall instead of hanging beyond 
   }
 });
 
+// 乾塢的甲板要壓在船身上，並有足夠的支撐面積。
 test("dry-dock deck plates sit on the hull and retain substantial supported area", () => {
   const plates = meshes.filter((mesh) => {
     const p = mesh.geometry?.parameters;
@@ -260,6 +276,7 @@ test("dry-dock deck plates sit on the hull and retain substantial supported area
   }
 });
 
+// 西側矮牆的壓頂要貼著牆。
 test("western breaker wall caps touch their walls instead of levitating above them", () => {
   const walls = meshes.filter((mesh) => {
     const p = mesh.geometry?.parameters;
@@ -291,6 +308,7 @@ test("western breaker wall caps touch their walls instead of levitating above th
   }
 });
 
+// 地面導引線要平貼地面。
 test("navigation markings remain flat on the ground and do not become floating signs", () => {
   const markings = meshes.filter((mesh) => mesh.name === "harbor-wayfinding");
   assert.ok(markings.length, "the map needs readable ground wayfinding");
@@ -305,6 +323,7 @@ test("navigation markings remain flat on the ground and do not become floating s
   }
 });
 
+// 補給箱放在地面的底座上，指示燈動畫不會讓它移動。
 test("supply cases rest on grounded pads and stay anchored as their indicators animate", () => {
   harness.run("createPickups();scene.updateMatrixWorld(true);");
   const pickups = Array.from(harness.run("pickups"));
@@ -327,7 +346,11 @@ test("supply cases rest on grounded pads and stay anchored as their indicators a
     );
   }
   harness.run(
-    "updatePickups(.5,2000);updatePickups(.5,3500);scene.updateMatrixWorld(true);",
+    `
+      updatePickups(0.5, 2000);
+      updatePickups(0.5, 3500);
+      scene.updateMatrixWorld(true);
+    `,
   );
   pickups.forEach((item, index) => {
     close(

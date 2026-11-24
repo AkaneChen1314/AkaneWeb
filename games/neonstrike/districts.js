@@ -10,7 +10,7 @@
 import * as THREE from "./vendor/three.module.min.js";
 import { bodyOverlapsCollider } from "./spatial-collision.js";
 
-// Box mapping in world units keeps texture density equal on long merged walls.
+// 以場景單位計算貼圖，長的合併牆面密度一致。
 function applyWorldUV(geometry, tile) {
   const pos = geometry.attributes.position,
     normal = geometry.attributes.normal,
@@ -29,9 +29,11 @@ function applyWorldUV(geometry, tile) {
   }
 }
 
+// 把很多形狀合併成一個，減少繪圖次數。
 function mergeGeometries(items, tile) {
   let vertices = 0,
     indices = 0;
+  // 每個形狀先套用位置，再算頂點與索引數。
   const prepared = items.map(({ geometry, transform }) => {
     const clone = geometry.clone();
     clone.applyMatrix4(transform);
@@ -47,7 +49,8 @@ function mergeGeometries(items, tile) {
   const pos = new Float32Array(vertices * 3),
     nor = new Float32Array(vertices * 3),
     uvs = new Float32Array(vertices * 2),
-    idx = vertices > 65535 ? new Uint32Array(indices) : new Uint16Array(indices);
+    idx =
+      vertices > 65535 ? new Uint32Array(indices) : new Uint16Array(indices);
   let v = 0,
     k = 0;
   for (const { clone, index } of prepared) {
@@ -71,6 +74,7 @@ function mergeGeometries(items, tile) {
   return merged;
 }
 
+// 外觀完全相同的材質才可以合併。
 function materialKey(material) {
   return [
     material.type,
@@ -143,6 +147,7 @@ export function batchStaticMeshes({ scene, objects, worldMeshes, tile = 37 }) {
   const removed = new Set();
   for (const meshes of buckets.values()) {
     if (meshes.length < 2) continue;
+    // 合併後的網格。
     const merged = new THREE.Mesh(
       mergeGeometries(
         meshes.map((mesh) => ({
@@ -169,7 +174,7 @@ export function batchStaticMeshes({ scene, objects, worldMeshes, tile = 37 }) {
   if (removed.size) {
     for (let i = worldMeshes.length - 1; i >= 0; i--)
       if (removed.has(worldMeshes[i])) worldMeshes.splice(i, 1);
-    // Free GPU buffers that nothing on screen uses any more.
+    // 釋放畫面上已經沒有用到的緩衝區。
     const live = new Set();
     scene.traverse((object) => {
       if (object.geometry) live.add(object.geometry);
@@ -200,7 +205,7 @@ export function trimTinyShadowCasters(objects, minRadius = 0.25) {
       if (!geometry.boundingSphere) geometry.computeBoundingSphere();
       object.updateWorldMatrix(true, false);
       sphere.copy(geometry.boundingSphere).applyMatrix4(object.matrixWorld);
-      // Instanced parts are sized by one instance, not by the whole batch.
+      // 實例化的零件，大小看單一個體，不看整批。
       if (sphere.radius < minRadius) {
         object.castShadow = false;
         trimmed++;
@@ -209,11 +214,13 @@ export function trimTinyShadowCasters(objects, minRadius = 0.25) {
   return trimmed;
 }
 
+// 建築工具箱：材質、批次、碰撞、燈光與地面標線都從這裡產生。
 export function createDistrictBuilder(ctx) {
   const materials = new Map();
   const batches = [];
-  // Every visible part, so finish() can seal the ones nothing stops you in.
+  // 所有看得到的零件，finish() 會檢查有沒有忘了加碰撞。
   const parts = [];
+  // 記下一個零件。
   const record = (part) => {
     parts.push(part);
     ctx.debugParts?.push(part);
@@ -228,14 +235,21 @@ export function createDistrictBuilder(ctx) {
     position = new THREE.Vector3(),
     euler = new THREE.Euler();
 
+  // 一般材質，同一個名稱只建立一次。
   function standard(key, color, roughness = 0.72, metalness = 0.1, extra = {}) {
     if (!materials.has(key))
       materials.set(
         key,
-        new THREE.MeshStandardMaterial({ color, roughness, metalness, ...extra }),
+        new THREE.MeshStandardMaterial({
+          color,
+          roughness,
+          metalness,
+          ...extra,
+        }),
       );
     return materials.get(key);
   }
+  // 發光材質。
   function glow(key, color, opacity = 1) {
     if (!materials.has(key))
       materials.set(
@@ -250,13 +264,15 @@ export function createDistrictBuilder(ctx) {
     return materials.get(key);
   }
 
-  /** A named group of static parts merged per material when finished. */
+  // 一組固定的零件，完成時依材質合併。
   class Batch {
+    // 建立一組零件並登記。
     constructor(name) {
       this.name = name;
       this.buckets = new Map();
       batches.push(this);
     }
+    // 加入一個形狀。
     push(geometry, material, transform, solid, shadow) {
       const key = `${material.uuid}|${solid ? "s" : "d"}|${shadow ? "c" : "n"}`;
       if (!this.buckets.has(key))
@@ -265,7 +281,7 @@ export function createDistrictBuilder(ctx) {
         .get(key)
         .items.push({ geometry, transform: transform.clone() });
     }
-    /** Axis box rotated about Y. collide=false → decor (no collider, no ray tests). */
+    // 可以繞 Y 軸旋轉的方塊。collide=false 是裝飾（沒有碰撞，也不做射線檢查）。
     box(x, y, z, sx, sy, sz, material, options = {}) {
       const rot = options.rot || 0,
         collide = options.collide !== false;
@@ -293,7 +309,7 @@ export function createDistrictBuilder(ctx) {
         visibleSolid: !material.transparent && material.visible !== false,
       });
     }
-    /** Vertical cylinder; collide adds a round collider. axis "x"/"z" lays it down (decor). */
+    // 直立圓柱；collide 會加圓形碰撞，axis 設成 "x" 或 "z" 就橫躺（裝飾）。
     cylinder(x, y, z, radius, height, material, options = {}) {
       const segments = options.segments ?? 12,
         axis = options.axis || "y",
@@ -336,7 +352,7 @@ export function createDistrictBuilder(ctx) {
         collide: collide || options.collideAlong === true,
         visibleSolid: !material.transparent && options.open !== true,
       });
-      // Lying pipes and rollers get an oriented box along their axis.
+      // 橫躺的管子與滾輪，沿著軸向加一個斜的方塊碰撞。
       if (options.collideAlong && axis !== "y") {
         const rot = (options.rot || 0) + (axis === "z" ? Math.PI / 2 : 0);
         ctx.registerCollisionBox(x, y, z, height, radius * 2, radius * 2, rot);
@@ -356,7 +372,7 @@ export function createDistrictBuilder(ctx) {
         );
       }
     }
-    /** Arbitrary decor geometry with a full transform. */
+    // 任意形狀的裝飾，位置與旋轉自己給。
     shape(geometry, material, transform, options = {}) {
       this.push(
         geometry,
@@ -368,6 +384,7 @@ export function createDistrictBuilder(ctx) {
     }
   }
 
+  // 登記一種會重複很多次的零件。
   function instance(key, geometryFactory, material, options = {}) {
     if (!instanced.has(key))
       instanced.set(key, {
@@ -380,13 +397,14 @@ export function createDistrictBuilder(ctx) {
       });
     return instanced.get(key);
   }
+  // 加入一個重複零件。
   function addInstance(key, transform, color) {
     const entry = instanced.get(key);
     entry.transforms.push(transform.clone());
     entry.colors.push(color ?? null);
   }
 
-  /** Local frame helper: rotate (lx, lz) about Y by rot, then offset. */
+  // 區域座標：把 (lx, lz) 繞 Y 轉 rot 再位移。
   function frame(ox, oz, rot = 0) {
     const cos = Math.cos(rot),
       sin = Math.sin(rot);
@@ -400,6 +418,7 @@ export function createDistrictBuilder(ctx) {
   function collider(x, y, z, sx, sy, sz, rot = 0) {
     ctx.registerCollisionBox(x, y, z, sx, sy, sz, rot);
   }
+  // 圓形碰撞。
   function roundCollider(x, z, radius, y0, y1) {
     ctx.collisionBoxes.push(
       ctx.roundCollider(
@@ -413,11 +432,8 @@ export function createDistrictBuilder(ctx) {
       ),
     );
   }
-  /**
-   * Climbable ladder. (climbX, climbZ) is where the climber's body hangs,
-   * (nx, nz) points away from the structure, and (exitX, exitZ) is where the
-   * player steps off at height `top`.
-   */
+  // 可以爬的梯子。(climbX, climbZ) 是爬的人的位置，(nx, nz) 指向離開建築的方向，
+  // (exitX, exitZ) 是在 top 高度踏上平台的位置。
   function ladder(spec) {
     ctx.ladders?.push({ bottom: 0, ...spec });
   }
@@ -427,6 +443,7 @@ export function createDistrictBuilder(ctx) {
   function pool(x, z, radius, color, strength = 1) {
     pools.push({ x, z, radius, color, strength });
   }
+  // 登記一段地面標線。
   function paint(draw) {
     paints.push(draw);
   }
@@ -443,37 +460,59 @@ export function createDistrictBuilder(ctx) {
           for (const w of [-0.3, 0, 0.3]) {
             const lx = u * part.sx,
               lz = w * part.sz;
-            points.push([part.x + lx * c + lz * s, part.y + v * part.sy, part.z - lx * s + lz * c]);
+            points.push([
+              part.x + lx * c + lz * s,
+              part.y + v * part.sy,
+              part.z - lx * s + lz * c,
+            ]);
           }
     } else if (part.axis === "y") {
       for (const v of [-0.3, 0, 0.3]) {
         points.push([part.x, part.y + v * part.height, part.z]);
         for (const a of [0, 1.57, 3.14, 4.71])
-          points.push([part.x + Math.cos(a) * part.radius * 0.5, part.y + v * part.height, part.z + Math.sin(a) * part.radius * 0.5]);
+          points.push([
+            part.x + Math.cos(a) * part.radius * 0.5,
+            part.y + v * part.height,
+            part.z + Math.sin(a) * part.radius * 0.5,
+          ]);
       }
     } else {
       const rot = part.rot + (part.axis === "z" ? Math.PI / 2 : 0),
         c = Math.cos(rot),
         s = Math.sin(rot);
       for (const u of [-0.4, -0.2, 0, 0.2, 0.4])
-        points.push([part.x + u * part.height * c, part.y, part.z - u * part.height * s]);
+        points.push([
+          part.x + u * part.height * c,
+          part.y,
+          part.z - u * part.height * s,
+        ]);
     }
     return points;
   }
+  // 檢查看得到卻沒有碰撞的零件，補上碰撞。
   function sealUncoveredParts() {
     const cell = 4,
       grid = new Map(),
       key = (i, j) => i * 4096 + j;
     for (const box of ctx.collisionBoxes)
-      for (let i = Math.floor(box.min.x / cell); i <= Math.floor(box.max.x / cell); i++)
-        for (let j = Math.floor(box.min.z / cell); j <= Math.floor(box.max.z / cell); j++) {
+      for (
+        let i = Math.floor(box.min.x / cell);
+        i <= Math.floor(box.max.x / cell);
+        i++
+      )
+        for (
+          let j = Math.floor(box.min.z / cell);
+          j <= Math.floor(box.max.z / cell);
+          j++
+        ) {
           const k = key(i, j);
           if (!grid.has(k)) grid.set(k, []);
           grid.get(k).push(box);
         }
+    // 這一點已經有碰撞了嗎。
     const covered = (x, y, z) =>
-      (grid.get(key(Math.floor(x / cell), Math.floor(z / cell))) || []).some((box) =>
-        bodyOverlapsCollider(box, x, z, 0.03, y - 0.03, y + 0.03),
+      (grid.get(key(Math.floor(x / cell), Math.floor(z / cell))) || []).some(
+        (box) => bodyOverlapsCollider(box, x, z, 0.03, y - 0.03, y + 0.03),
       );
     let sealed = 0;
     for (const part of parts) {
@@ -491,15 +530,39 @@ export function createDistrictBuilder(ctx) {
       }
       if (!count || open < Math.max(2, count * 0.3)) continue;
       if (part.shape === "box")
-        ctx.registerCollisionBox(part.x, part.y, part.z, part.sx, part.sy, part.sz, part.rot);
-      else if (part.axis === "y") roundCollider(part.x, part.z, part.radius, part.y - part.height / 2, part.y + part.height / 2);
+        ctx.registerCollisionBox(
+          part.x,
+          part.y,
+          part.z,
+          part.sx,
+          part.sy,
+          part.sz,
+          part.rot,
+        );
+      else if (part.axis === "y")
+        roundCollider(
+          part.x,
+          part.z,
+          part.radius,
+          part.y - part.height / 2,
+          part.y + part.height / 2,
+        );
       else
-        ctx.registerCollisionBox(part.x, part.y, part.z, part.height, part.radius * 2, part.radius * 2, part.rot + (part.axis === "z" ? Math.PI / 2 : 0));
+        ctx.registerCollisionBox(
+          part.x,
+          part.y,
+          part.z,
+          part.height,
+          part.radius * 2,
+          part.radius * 2,
+          part.rot + (part.axis === "z" ? Math.PI / 2 : 0),
+        );
       sealed++;
     }
     return sealed;
   }
 
+  // 完成：補碰撞、合併零件、建立燈光與標線。
   function finish(options = {}) {
     sealUncoveredParts();
     for (const batch of batches)
@@ -552,7 +615,7 @@ export function createDistrictBuilder(ctx) {
     if (paints.length) createPaintOverlay(options.paintResolution || 2048);
   }
 
-  // Additive ground glow under lamps: the look of many lights at the cost of one draw call.
+  // 燈下的地面光暈：只要一次繪圖，看起來像很多盞燈。
   function createLightPools() {
     const canvas = document.createElement("canvas");
     canvas.width = canvas.height = 128;
@@ -565,6 +628,7 @@ export function createDistrictBuilder(ctx) {
     g.fillStyle = gradient;
     g.fillRect(0, 0, 128, 128);
     const texture = new THREE.CanvasTexture(canvas);
+    // 光暈材質。
     const material = new THREE.MeshBasicMaterial({
       map: texture,
       transparent: true,
@@ -599,6 +663,7 @@ export function createDistrictBuilder(ctx) {
     ctx.scene.add(mesh);
   }
 
+  // 把所有標線畫在同一張地面貼圖。
   function createPaintOverlay(resolution) {
     const canvas = document.createElement("canvas");
     canvas.width = canvas.height = resolution;
@@ -616,6 +681,7 @@ export function createDistrictBuilder(ctx) {
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = 4;
+    // 貼在地面的平面。
     const plane = new THREE.Mesh(
       new THREE.PlaneGeometry(150, 150),
       new THREE.MeshStandardMaterial({
@@ -658,19 +724,31 @@ export function createDistrictBuilder(ctx) {
   };
 }
 
-/* ------------------------------------------------------------------------ */
-/* Prefabs                                                                    */
-/* ------------------------------------------------------------------------ */
+// ---------- 組合好的建築與道具 ----------
 
-/**
- * Wall run along local X from (x1) to (x2) at local z, with door openings.
- * openings: [{ at, width, height }] measured along the run from its centre.
- */
-export function wallRun(b, f, x1, x2, z, thickness, height, material, openings = []) {
+// 沿區域座標 X 方向的牆，從 x1 到 x2，位在 z，可以留門。openings：[{ at, width,
+// height }]，從牆中央量起。
+export function wallRun(
+  b,
+  f,
+  x1,
+  x2,
+  z,
+  thickness,
+  height,
+  material,
+  openings = [],
+) {
+  // 門口由左到右排好。
   const sorted = openings
-    .map((o) => ({ from: o.at - o.width / 2, to: o.at + o.width / 2, h: o.height }))
+    .map((o) => ({
+      from: o.at - o.width / 2,
+      to: o.at + o.width / 2,
+      h: o.height,
+    }))
     .sort((a, c) => a.from - c.from);
   let cursor = x1;
+  // 一段實心的牆。
   const piece = (from, to, y0, y1) => {
     const length = to - from;
     if (length < 0.05 || y1 - y0 < 0.05) return;
@@ -694,13 +772,28 @@ export function wallRun(b, f, x1, x2, z, thickness, height, material, openings =
   piece(cursor, x2, 0, height);
 }
 
-/** Same as wallRun but the run follows local Z at local x. */
-export function wallRunZ(b, f, z1, z2, x, thickness, height, material, openings = []) {
-  // Pieces sit on the line local x = const and extend along local Z.
+// 和 wallRun 一樣，但是沿 Z 方向，位在 x。
+export function wallRunZ(
+  b,
+  f,
+  z1,
+  z2,
+  x,
+  thickness,
+  height,
+  material,
+  openings = [],
+) {
+  // 每一段都在 x 固定的線上，沿 Z 延伸。
   const sorted = openings
-    .map((o) => ({ from: o.at - o.width / 2, to: o.at + o.width / 2, h: o.height }))
+    .map((o) => ({
+      from: o.at - o.width / 2,
+      to: o.at + o.width / 2,
+      h: o.height,
+    }))
     .sort((a, c) => a.from - c.from);
   let cursor = z1;
+  // 一段實心的牆。
   const piece = (from, to, y0, y1) => {
     const length = to - from;
     if (length < 0.05 || y1 - y0 < 0.05) return;
@@ -724,10 +817,7 @@ export function wallRunZ(b, f, z1, z2, x, thickness, height, material, openings 
   piece(cursor, z2, 0, height);
 }
 
-/**
- * Enterable building with door openings, roof, cladding ribs, high windows,
- * wall lamps over the doors and an interior callback in local coordinates.
- */
+// 可以進入的建築：門口、屋頂、浪板、高窗、門燈，以及用區域座標擺設內部的函式。
 export function warehouse(kit, options) {
   const {
     x,
@@ -755,16 +845,16 @@ export function warehouse(kit, options) {
       width: door.width,
       height: door.height ?? 3,
     });
-  // North/south walls span the full width; east/west fit between them.
+  // 南北牆是全寬，東西牆夾在中間。
   wallRun(b, f, -w / 2, w / 2, -d / 2 + t / 2, t, h, wall, openings.n);
   wallRun(b, f, -w / 2, w / 2, d / 2 - t / 2, t, h, wall, openings.s);
   wallRunZ(b, f, -d / 2 + t, d / 2 - t, -w / 2 + t / 2, t, h, wall, openings.w);
   wallRunZ(b, f, -d / 2 + t, d / 2 - t, w / 2 - t / 2, t, h, wall, openings.e);
-  // Roof slab (overhead: blocks shots and grenades, never the walking grid).
+  // 屋頂板在頭上：擋子彈與手榴彈，不影響走路的格子。
   b.box(f.x(0, 0), h + 0.14, f.z(0, 0), w + 0.5, 0.28, d + 0.5, roof, {
     rot,
   });
-  // Parapet and base plinth trims.
+  // 女兒牆與底座的飾條。
   for (const lz of [-d / 2 - 0.03, d / 2 + 0.03])
     detail.box(f.x(0, lz), h + 0.42, f.z(0, lz), w + 0.06, 0.3, 0.12, trim, {
       rot,
@@ -775,40 +865,83 @@ export function warehouse(kit, options) {
       rot,
       collide: false,
     });
-  // Corrugated ribs on all outside faces, skipped across door openings.
+  // 外牆的浪板，門口的位置略過。
   const ribGap = 0.62,
+    // 這個位置是不是門口。
     blocked = (side, at) =>
       openings[side].some(
         (o) => at > o.at - o.width / 2 - 0.15 && at < o.at + o.width / 2 + 0.15,
       );
   for (let lx = -w / 2 + 0.4; lx <= w / 2 - 0.4; lx += ribGap) {
     if (!blocked("n", lx))
-      detail.box(f.x(lx, -d / 2 - 0.03), h / 2 + 0.25, f.z(lx, -d / 2 - 0.03), 0.07, h - 0.9, 0.06, rib, { rot, collide: false, shadow: false });
+      detail.box(
+        f.x(lx, -d / 2 - 0.03),
+        h / 2 + 0.25,
+        f.z(lx, -d / 2 - 0.03),
+        0.07,
+        h - 0.9,
+        0.06,
+        rib,
+        { rot, collide: false, shadow: false },
+      );
     if (!blocked("s", lx))
-      detail.box(f.x(lx, d / 2 + 0.03), h / 2 + 0.25, f.z(lx, d / 2 + 0.03), 0.07, h - 0.9, 0.06, rib, { rot, collide: false, shadow: false });
+      detail.box(
+        f.x(lx, d / 2 + 0.03),
+        h / 2 + 0.25,
+        f.z(lx, d / 2 + 0.03),
+        0.07,
+        h - 0.9,
+        0.06,
+        rib,
+        { rot, collide: false, shadow: false },
+      );
   }
   for (let lz = -d / 2 + 0.4; lz <= d / 2 - 0.4; lz += ribGap) {
     if (!blocked("w", lz))
-      detail.box(f.x(-w / 2 - 0.03, lz), h / 2 + 0.25, f.z(-w / 2 - 0.03, lz), 0.06, h - 0.9, 0.07, rib, { rot, collide: false, shadow: false });
+      detail.box(
+        f.x(-w / 2 - 0.03, lz),
+        h / 2 + 0.25,
+        f.z(-w / 2 - 0.03, lz),
+        0.06,
+        h - 0.9,
+        0.07,
+        rib,
+        { rot, collide: false, shadow: false },
+      );
     if (!blocked("e", lz))
-      detail.box(f.x(w / 2 + 0.03, lz), h / 2 + 0.25, f.z(w / 2 + 0.03, lz), 0.06, h - 0.9, 0.07, rib, { rot, collide: false, shadow: false });
+      detail.box(
+        f.x(w / 2 + 0.03, lz),
+        h / 2 + 0.25,
+        f.z(w / 2 + 0.03, lz),
+        0.06,
+        h - 0.9,
+        0.07,
+        rib,
+        { rot, collide: false, shadow: false },
+      );
   }
-  // Base plinth band on every face, interrupted at each doorway so nothing
-  // dark spans the threshold.
+  // 每一面的底座飾條，門口會斷開，門檻上不會有黑條。
   const plinth = (side, from, to) => {
     const spans = openings[side]
       .map((o) => [o.at - o.width / 2, o.at + o.width / 2])
       .sort((a, c) => a[0] - c[0]);
     let cursor = from;
+    // 一段底座。
     const piece = (a, c) => {
       if (c - a < 0.05) return;
       const mid = (a + c) / 2;
       if (side === "n" || side === "s") {
         const lz = side === "n" ? -d / 2 - 0.05 : d / 2 + 0.05;
-        detail.box(f.x(mid, lz), 0.3, f.z(mid, lz), c - a, 0.6, 0.08, trim, { rot, shadow: false });
+        detail.box(f.x(mid, lz), 0.3, f.z(mid, lz), c - a, 0.6, 0.08, trim, {
+          rot,
+          shadow: false,
+        });
       } else {
         const lx = side === "w" ? -w / 2 - 0.05 : w / 2 + 0.05;
-        detail.box(f.x(lx, mid), 0.3, f.z(lx, mid), 0.08, 0.6, c - a, trim, { rot, shadow: false });
+        detail.box(f.x(lx, mid), 0.3, f.z(lx, mid), 0.08, 0.6, c - a, trim, {
+          rot,
+          shadow: false,
+        });
       }
     };
     for (const [a, c] of spans) {
@@ -821,55 +954,141 @@ export function warehouse(kit, options) {
   plinth("s", -w / 2 - 0.09, w / 2 + 0.09);
   plinth("w", -d / 2 - 0.01, d / 2 + 0.01);
   plinth("e", -d / 2 - 0.01, d / 2 + 0.01);
-  // Lit clerestory windows on the long faces.
-  const windowMat = kit.glow(`window-${palette.window ?? 0x9fe4ff}`, palette.window ?? 0x9fe4ff, 0.85);
+  // 長邊牆上亮著的高窗。
+  const windowMat = kit.glow(
+    `window-${palette.window ?? 0x9fe4ff}`,
+    palette.window ?? 0x9fe4ff,
+    0.85,
+  );
   for (let lx = -w / 2 + 2; lx <= w / 2 - 2; lx += 3.2)
     for (const lz of [-d / 2 - 0.07, d / 2 + 0.07])
-      detail.box(f.x(lx, lz), h - 0.95, f.z(lx, lz), 1.9, 0.42, 0.04, windowMat, { rot, collide: false, shadow: false });
-  // Door dressing: hazard jambs, half-raised shutters, a lamp and a light pool.
+      detail.box(
+        f.x(lx, lz),
+        h - 0.95,
+        f.z(lx, lz),
+        1.9,
+        0.42,
+        0.04,
+        windowMat,
+        { rot, collide: false, shadow: false },
+      );
+  // 門的裝飾：警示門框、半開的捲門、門燈與地面光。
   const hazard = kit.standard("hazard-yellow", 0xd8b52a, 0.55, 0.2),
     lampMat = kit.glow("lamp-warm", 0xffe2a8);
   for (const door of doors) {
     const height = door.height ?? 3;
-    const sideOffset = { n: [0, -1], s: [0, 1], w: [-1, 0], e: [1, 0] }[door.side];
+    const sideOffset = { n: [0, -1], s: [0, 1], w: [-1, 0], e: [1, 0] }[
+      door.side
+    ];
     const along = door.side === "n" || door.side === "s";
     const center = along
       ? [door.at, (sideOffset[1] * d) / 2]
       : [(sideOffset[0] * w) / 2, door.at];
     const out = 0.24;
     for (const s of [-1, 1]) {
-      const jx = along ? center[0] + s * (door.width / 2 + 0.08) : center[0] + sideOffset[0] * out;
-      const jz = along ? center[1] + sideOffset[1] * out : center[1] + s * (door.width / 2 + 0.08);
-      detail.box(f.x(jx, jz), height / 2, f.z(jx, jz), along ? 0.16 : 0.12, height, along ? 0.12 : 0.16, hazard, { rot, collide: false });
+      const jx = along
+        ? center[0] + s * (door.width / 2 + 0.08)
+        : center[0] + sideOffset[0] * out;
+      const jz = along
+        ? center[1] + sideOffset[1] * out
+        : center[1] + s * (door.width / 2 + 0.08);
+      detail.box(
+        f.x(jx, jz),
+        height / 2,
+        f.z(jx, jz),
+        along ? 0.16 : 0.12,
+        height,
+        along ? 0.12 : 0.16,
+        hazard,
+        { rot, collide: false },
+      );
     }
     if (door.shutter !== false && door.width >= 3) {
-      // Rolled shutter box above the opening; the curtain stops above head height.
+      // 門上方的捲門箱；捲門停在頭的高度以上。
       const sx = center[0] + sideOffset[0] * 0.05,
         sz = center[1] + sideOffset[1] * 0.05;
-      b.box(f.x(sx, sz), height - 0.25, f.z(sx, sz), along ? door.width : t + 0.1, 0.5, along ? t + 0.1 : door.width, kit.standard("shutter", 0x52616a, 0.5, 0.55), { rot });
+      b.box(
+        f.x(sx, sz),
+        height - 0.25,
+        f.z(sx, sz),
+        along ? door.width : t + 0.1,
+        0.5,
+        along ? t + 0.1 : door.width,
+        kit.standard("shutter", 0x52616a, 0.5, 0.55),
+        { rot },
+      );
     }
     const lx = center[0] + sideOffset[0] * 0.35,
       lz = center[1] + sideOffset[1] * 0.35;
-    detail.box(f.x(lx, lz), height + 0.55, f.z(lx, lz), along ? 0.9 : 0.18, 0.14, along ? 0.18 : 0.9, lampMat, { rot, collide: false, shadow: false });
+    detail.box(
+      f.x(lx, lz),
+      height + 0.55,
+      f.z(lx, lz),
+      along ? 0.9 : 0.18,
+      0.14,
+      along ? 0.18 : 0.9,
+      lampMat,
+      { rot, collide: false, shadow: false },
+    );
     const px = center[0] + sideOffset[0] * 2.2,
       pz = center[1] + sideOffset[1] * 2.2;
     kit.pool(f.x(px, pz), f.z(px, pz), 3.2, 0xffd59a, 0.9);
   }
-  // Interior floor tint and ceiling light panels.
-  detail.box(f.x(0, 0), 0.012, f.z(0, 0), w - 0.82, 0.02, d - 0.82, palette.floor || kit.standard("warehouse-floor", 0x4d5658, 0.85, 0.05), { rot, collide: false, shadow: false });
-  const panel = kit.glow(`ceiling-${palette.ceiling ?? 0xe6f6ff}`, palette.ceiling ?? 0xe6f6ff);
+  // 內部地板顏色與天花板燈。
+  detail.box(
+    f.x(0, 0),
+    0.012,
+    f.z(0, 0),
+    w - 0.82,
+    0.02,
+    d - 0.82,
+    palette.floor || kit.standard("warehouse-floor", 0x4d5658, 0.85, 0.05),
+    { rot, collide: false, shadow: false },
+  );
+  const panel = kit.glow(
+    `ceiling-${palette.ceiling ?? 0xe6f6ff}`,
+    palette.ceiling ?? 0xe6f6ff,
+  );
   for (let lx = -w / 2 + 3; lx <= w / 2 - 3; lx += 5)
     for (const lz of d > 10 ? [-d / 4, d / 4] : [0]) {
-      detail.box(f.x(lx, lz), h - 0.05, f.z(lx, lz), 2.4, 0.06, 0.32, panel, { rot, collide: false, shadow: false });
-      kit.pool(f.x(lx, lz), f.z(lx, lz), 2.6, palette.ceiling ?? 0xe6f6ff, 0.55);
+      detail.box(f.x(lx, lz), h - 0.05, f.z(lx, lz), 2.4, 0.06, 0.32, panel, {
+        rot,
+        collide: false,
+        shadow: false,
+      });
+      kit.pool(
+        f.x(lx, lz),
+        f.z(lx, lz),
+        2.6,
+        palette.ceiling ?? 0xe6f6ff,
+        0.55,
+      );
     }
-  kit.light(f.x(0, 0), h - 0.6, f.z(0, 0), palette.ceiling ?? 0xe6f6ff, 7, Math.max(w, d) * 0.95);
+  kit.light(
+    f.x(0, 0),
+    h - 0.6,
+    f.z(0, 0),
+    palette.ceiling ?? 0xe6f6ff,
+    7,
+    Math.max(w, d) * 0.95,
+  );
   if (options.interior) options.interior(b, detail, f);
   return { b, detail, f };
 }
 
-/** Pallet rack with shelves and cargo; one collider for the whole bay. */
-export function rack(kit, b, detail, f, lx, lz, length, depth = 1.1, height = 3.2, rot = 0) {
+// 有層板與貨物的貨架，整排共用一個碰撞。
+export function rack(
+  kit,
+  b,
+  detail,
+  f,
+  lx,
+  lz,
+  length,
+  depth = 1.1,
+  height = 3.2,
+  rot = 0,
+) {
   const steel = kit.standard("rack-blue", 0x2c5a86, 0.5, 0.5),
     beam = kit.standard("rack-orange", 0xd2702c, 0.55, 0.35),
     cargo = [
@@ -878,53 +1097,121 @@ export function rack(kit, b, detail, f, lx, lz, length, depth = 1.1, height = 3.
       kit.standard("cargo-c", 0x3f5e4b, 0.8, 0.05),
     ];
   const sub = kit.frame(f.x(lx, lz), f.z(lx, lz), f.rot + rot);
-  // Cargo on the third shelf can stand taller than a low rack frame.
+  // 第三層的貨物可能比矮的架子高。
   const colliderHeight = Math.max(height, 3.25);
-  kit.collider(sub.x(0, 0), colliderHeight / 2, sub.z(0, 0), length, colliderHeight, depth, sub.rot);
+  kit.collider(
+    sub.x(0, 0),
+    colliderHeight / 2,
+    sub.z(0, 0),
+    length,
+    colliderHeight,
+    depth,
+    sub.rot,
+  );
   const bays = Math.max(1, Math.round(length / 2.7));
   for (let i = 0; i <= bays; i++) {
     const px = -length / 2 + (i * length) / bays;
     for (const s of [-1, 1])
-      detail.box(sub.x(px, (s * depth) / 2), height / 2, sub.z(px, (s * depth) / 2), 0.09, height, 0.09, steel, { rot: sub.rot, collide: false, solid: true });
+      detail.box(
+        sub.x(px, (s * depth) / 2),
+        height / 2,
+        sub.z(px, (s * depth) / 2),
+        0.09,
+        height,
+        0.09,
+        steel,
+        { rot: sub.rot, collide: false, solid: true },
+      );
   }
   const levels = [0.15, 1.2, 2.25, height - 0.05];
   levels.forEach((y, level) => {
     for (const s of [-1, 1])
-      detail.box(sub.x(0, (s * depth) / 2), y, sub.z(0, (s * depth) / 2), length, 0.1, 0.07, beam, { rot: sub.rot, collide: false, solid: true });
+      detail.box(
+        sub.x(0, (s * depth) / 2),
+        y,
+        sub.z(0, (s * depth) / 2),
+        length,
+        0.1,
+        0.07,
+        beam,
+        { rot: sub.rot, collide: false, solid: true },
+      );
     if (level === levels.length - 1) return;
-    detail.box(sub.x(0, 0), y + 0.04, sub.z(0, 0), length - 0.1, 0.03, depth, steel, { rot: sub.rot, collide: false, solid: true, shadow: false });
+    detail.box(
+      sub.x(0, 0),
+      y + 0.04,
+      sub.z(0, 0),
+      length - 0.1,
+      0.03,
+      depth,
+      steel,
+      { rot: sub.rot, collide: false, solid: true, shadow: false },
+    );
     for (let i = 0; i < bays; i++) {
       const cx = -length / 2 + ((i + 0.5) * length) / bays;
       const fill = (i * 7 + level * 3) % 5;
       if (fill === 4) continue;
       const sx = 1.1 + (fill % 2) * 0.35,
         sy = 0.55 + ((i + level) % 3) * 0.17;
-      detail.box(sub.x(cx, 0), y + 0.06 + sy / 2, sub.z(cx, 0), sx, sy, depth * 0.82, cargo[(i + level) % 3], { rot: sub.rot, collide: false, solid: true });
+      detail.box(
+        sub.x(cx, 0),
+        y + 0.06 + sy / 2,
+        sub.z(cx, 0),
+        sx,
+        sy,
+        depth * 0.82,
+        cargo[(i + level) % 3],
+        { rot: sub.rot, collide: false, solid: true },
+      );
     }
   });
 }
 
-/** Wooden pallet stack with a shrink-wrapped load. */
-export function palletStack(kit, b, x, z, rot = 0, layers = 2, wrapped = true, baseY = 0) {
+// 木棧板，上面是包膜的貨物。
+export function palletStack(
+  kit,
+  b,
+  x,
+  z,
+  rot = 0,
+  layers = 2,
+  wrapped = true,
+  baseY = 0,
+) {
   const wood = kit.standard("pallet-wood", 0x7b5a3a, 0.9, 0.02),
-    wrap = kit.standard("pallet-wrap", 0x9aaab0, 0.35, 0.05, { transparent: true, opacity: 0.88 });
+    wrap = kit.standard("pallet-wrap", 0x9aaab0, 0.35, 0.05, {
+      transparent: true,
+      opacity: 0.88,
+    });
   const f = kit.frame(x, z, rot);
-  // baseY lets a stack stand on a raised floor (e.g. the loading dock).
+  // baseY 讓貨堆可以放在架高的地面（例如裝卸月台）。
   let y = baseY;
   for (let layer = 0; layer < layers; layer++) {
     for (const lz of [-0.45, 0, 0.45])
-      b.box(f.x(0, lz), y + 0.05, f.z(0, lz), 1.2, 0.1, 0.12, wood, { rot, collide: false, solid: true });
-    b.box(f.x(0, 0), y + 0.13, f.z(0, 0), 1.2, 0.04, 1.0, wood, { rot, collide: false, solid: true });
+      b.box(f.x(0, lz), y + 0.05, f.z(0, lz), 1.2, 0.1, 0.12, wood, {
+        rot,
+        collide: false,
+        solid: true,
+      });
+    b.box(f.x(0, 0), y + 0.13, f.z(0, 0), 1.2, 0.04, 1.0, wood, {
+      rot,
+      collide: false,
+      solid: true,
+    });
     y += 0.15;
     if (wrapped) {
-      b.box(f.x(0, 0), y + 0.4, f.z(0, 0), 1.1, 0.8, 0.95, wrap, { rot, collide: false, solid: true });
+      b.box(f.x(0, 0), y + 0.4, f.z(0, 0), 1.1, 0.8, 0.95, wrap, {
+        rot,
+        collide: false,
+        solid: true,
+      });
       y += 0.8;
     }
   }
   kit.collider(f.x(0, 0), (baseY + y) / 2, f.z(0, 0), 1.2, y - baseY, 1.0, rot);
 }
 
-/** Box truck or semi cab + trailer, parked; colliders on cab and cargo body. */
+// 停放的廂型車，或車頭加拖車；車頭與貨箱有碰撞。
 export function truck(kit, b, x, z, rot, color = 0x9c3b31, trailer = false) {
   const f = kit.frame(x, z, rot),
     body = kit.standard(`truck-${color}`, color, 0.5, 0.35),
@@ -936,33 +1223,89 @@ export function truck(kit, b, x, z, rot, color = 0x9c3b31, trailer = false) {
     tail = kit.glow("taillight", 0xff3344);
   const cargoLength = trailer ? 11 : 6.2,
     cabZ = -(cargoLength / 2 + 1.35);
-  // Cab.
+  // 車頭。
   b.box(f.x(0, cabZ), 1.55, f.z(0, cabZ), 2.4, 2.1, 2.2, body, { rot });
-  b.box(f.x(0, cabZ - 1.12), 1.95, f.z(0, cabZ - 1.12), 2.1, 0.9, 0.06, glass, { rot, collide: false });
-  b.box(f.x(0, cabZ - 1.1), 0.75, f.z(0, cabZ - 1.1), 2.42, 0.5, 0.12, dark, { rot, collide: false });
+  b.box(f.x(0, cabZ - 1.12), 1.95, f.z(0, cabZ - 1.12), 2.1, 0.9, 0.06, glass, {
+    rot,
+    collide: false,
+  });
+  b.box(f.x(0, cabZ - 1.1), 0.75, f.z(0, cabZ - 1.1), 2.42, 0.5, 0.12, dark, {
+    rot,
+    collide: false,
+  });
   for (const s of [-0.85, 0.85])
-    b.box(f.x(s, cabZ - 1.17), 0.95, f.z(s, cabZ - 1.17), 0.36, 0.18, 0.04, head, { rot, collide: false, shadow: false });
-  // Cargo body / trailer.
+    b.box(
+      f.x(s, cabZ - 1.17),
+      0.95,
+      f.z(s, cabZ - 1.17),
+      0.36,
+      0.18,
+      0.04,
+      head,
+      { rot, collide: false, shadow: false },
+    );
+  // 貨箱或拖車。
   b.box(f.x(0, 0.3), 1.95, f.z(0, 0.3), 2.5, 2.8, cargoLength, box, { rot });
   const chassisStart = cabZ - 0.8,
     chassisEnd = 0.3 + cargoLength / 2 - 0.05,
     chassisMid = (chassisStart + chassisEnd) / 2;
-  b.box(f.x(0, chassisMid), 0.42, f.z(0, chassisMid), 1.6, 0.3, chassisEnd - chassisStart, dark, { rot, collide: false });
+  b.box(
+    f.x(0, chassisMid),
+    0.42,
+    f.z(0, chassisMid),
+    1.6,
+    0.3,
+    chassisEnd - chassisStart,
+    dark,
+    { rot, collide: false },
+  );
   for (const s of [-1, 1]) {
-    b.box(f.x(s * 1.27, 0.3), 2.75, f.z(s * 1.27, 0.3), 0.03, 0.5, cargoLength - 0.4, kit.standard(`truck-stripe-${color}`, color, 0.5, 0.3), { rot, collide: false, shadow: false });
-    b.box(f.x(s * 0.95, cargoLength / 2 + 0.33), 0.9, f.z(s * 0.95, cargoLength / 2 + 0.33), 0.3, 0.14, 0.04, tail, { rot, collide: false, shadow: false });
+    b.box(
+      f.x(s * 1.27, 0.3),
+      2.75,
+      f.z(s * 1.27, 0.3),
+      0.03,
+      0.5,
+      cargoLength - 0.4,
+      kit.standard(`truck-stripe-${color}`, color, 0.5, 0.3),
+      { rot, collide: false, shadow: false },
+    );
+    b.box(
+      f.x(s * 0.95, cargoLength / 2 + 0.33),
+      0.9,
+      f.z(s * 0.95, cargoLength / 2 + 0.33),
+      0.3,
+      0.14,
+      0.04,
+      tail,
+      { rot, collide: false, shadow: false },
+    );
   }
   const axles = trailer
     ? [cabZ + 0.2, cabZ + 1.8, cargoLength / 2 - 1.2, cargoLength / 2 - 2.6]
     : [cabZ + 0.3, cargoLength / 2 - 1.3];
   for (const az of axles)
     for (const s of [-1.08, 1.08])
-      b.cylinder(f.x(s, az), 0.5, f.z(s, az), 0.5, 0.38, dark, { axis: "x", rot, segments: 14, collide: false });
+      b.cylinder(f.x(s, az), 0.5, f.z(s, az), 0.5, 0.38, dark, {
+        axis: "x",
+        rot,
+        segments: 14,
+        collide: false,
+      });
   for (const s of [-1.3, 1.3])
-    b.box(f.x(s, cabZ - 0.4), 2.1, f.z(s, cabZ - 0.4), 0.06, 0.32, 0.22, steel, { rot, collide: false, shadow: false });
+    b.box(
+      f.x(s, cabZ - 0.4),
+      2.1,
+      f.z(s, cabZ - 0.4),
+      0.06,
+      0.32,
+      0.22,
+      steel,
+      { rot, collide: false, shadow: false },
+    );
 }
 
-/** Low sandbag wall (≈1.05 m) built from instanced bags; one collider per run. */
+// 矮沙包牆（約 1.05 公尺），用重複的沙包組成，每排一個碰撞。
 export function sandbags(kit, x, z, length, rot = 0, courses = 4) {
   kit.instance(
     "sandbag",
@@ -981,14 +1324,22 @@ export function sandbags(kit, x, z, length, rot = 0, courses = 4) {
     for (let i = 0; i < count - (course % 2); i++) {
       const lx = -length / 2 + 0.29 + i * (length / count) + shift;
       for (const lz of course < courses - 1 ? [-0.19, 0.19] : [0]) {
-        kit.euler.set((Math.random() - 0.5) * 0.08, rot + (Math.random() - 0.5) * 0.16, 0);
+        kit.euler.set(
+          (Math.random() - 0.5) * 0.08,
+          rot + (Math.random() - 0.5) * 0.16,
+          0,
+        );
         kit.quaternion.setFromEuler(kit.euler);
         kit.matrix.compose(
           kit.position.set(f.x(lx, lz), 0.12 + course * 0.235, f.z(lx, lz)),
           kit.quaternion,
           new THREE.Vector3(1, 1, 1),
         );
-        kit.addInstance("sandbag", kit.matrix, (i + course) % 3 ? 0x8b7c58 : 0x7a6c4c);
+        kit.addInstance(
+          "sandbag",
+          kit.matrix,
+          (i + course) % 3 ? 0x8b7c58 : 0x7a6c4c,
+        );
       }
     }
   }
@@ -997,8 +1348,17 @@ export function sandbags(kit, x, z, length, rot = 0, courses = 4) {
   return { x, z, length, rot, height };
 }
 
-/** Concrete jersey barriers in a row. */
-export function jerseyRow(kit, b, x, z, count, rot = 0, gap = 0.08, colorful = false) {
+// 一排水泥紐澤西護欄。
+export function jerseyRow(
+  kit,
+  b,
+  x,
+  z,
+  count,
+  rot = 0,
+  gap = 0.08,
+  colorful = false,
+) {
   kit.instance(
     "jersey",
     () => {
@@ -1012,7 +1372,10 @@ export function jerseyRow(kit, b, x, z, count, rot = 0, gap = 0.08, colorful = f
       shape.lineTo(-0.13, 0.32);
       shape.lineTo(-0.3, 0.12);
       shape.closePath();
-      const geometry = new THREE.ExtrudeGeometry(shape, { depth: 2.9, bevelEnabled: false });
+      const geometry = new THREE.ExtrudeGeometry(shape, {
+        depth: 2.9,
+        bevelEnabled: false,
+      });
       geometry.translate(0, 0, -1.45);
       geometry.rotateY(Math.PI / 2);
       return geometry;
@@ -1025,21 +1388,41 @@ export function jerseyRow(kit, b, x, z, count, rot = 0, gap = 0.08, colorful = f
   for (let i = 0; i < count; i++) {
     const lx = (i - (count - 1) / 2) * span;
     kit.quaternion.setFromEuler(kit.euler.set(0, rot, 0));
-    kit.matrix.compose(kit.position.set(f.x(lx, 0), 0, f.z(lx, 0)), kit.quaternion, new THREE.Vector3(1, 1, 1));
-    kit.addInstance("jersey", kit.matrix, colorful && i % 2 ? 0xc7473c : 0xb7b9b1);
+    kit.matrix.compose(
+      kit.position.set(f.x(lx, 0), 0, f.z(lx, 0)),
+      kit.quaternion,
+      new THREE.Vector3(1, 1, 1),
+    );
+    kit.addInstance(
+      "jersey",
+      kit.matrix,
+      colorful && i % 2 ? 0xc7473c : 0xb7b9b1,
+    );
   }
   kit.collider(x, 0.41, z, count * span - gap, 0.82, 0.62, rot);
 }
 
-/** Street lamp: pole, arm, glowing head, light cone and ground pool. */
+// 路燈：燈桿、燈臂、發光的燈頭、光錐與地面光。
 export function lamp(kit, b, x, z, rot = 0, color = 0xffd9a0, height = 6.2) {
   const pole = kit.standard("lamp-pole", 0x2b3438, 0.55, 0.6),
     headMat = kit.glow(`lamp-head-${color}`, color);
   const f = kit.frame(x, z, rot);
   b.cylinder(x, height / 2, z, 0.09, height, pole, { segments: 8 });
-  b.box(f.x(0.75, 0), height - 0.065, f.z(0.75, 0), 1.6, 0.1, 0.11, pole, { rot, collide: false, solid: true });
-  b.box(f.x(1.45, 0), height - 0.16, f.z(1.45, 0), 0.62, 0.12, 0.3, headMat, { rot, collide: false, shadow: false });
-  b.box(f.x(0, 0), 0.1, f.z(0, 0), 0.42, 0.2, 0.42, pole, { rot, collide: false, solid: true });
+  b.box(f.x(0.75, 0), height - 0.065, f.z(0.75, 0), 1.6, 0.1, 0.11, pole, {
+    rot,
+    collide: false,
+    solid: true,
+  });
+  b.box(f.x(1.45, 0), height - 0.16, f.z(1.45, 0), 0.62, 0.12, 0.3, headMat, {
+    rot,
+    collide: false,
+    shadow: false,
+  });
+  b.box(f.x(0, 0), 0.1, f.z(0, 0), 0.42, 0.2, 0.42, pole, {
+    rot,
+    collide: false,
+    solid: true,
+  });
   kit.pool(f.x(1.45, 0), f.z(1.45, 0), 4.2, color, 1);
   kit.instance(
     "lamp-cone",
@@ -1067,18 +1450,23 @@ export function lamp(kit, b, x, z, rot = 0, color = 0xffd9a0, height = 6.2) {
   kit.addInstance("lamp-cone", kit.matrix, color);
 }
 
-/** Cluster of plain (non-explosive) steel drums. */
+// 一群不會爆炸的鐵桶。
 export function drums(kit, b, x, z, layout, color = 0x2f5f86) {
   const body = kit.standard(`drum-${color}`, color, 0.45, 0.5),
     rim = kit.standard("drum-rim", 0x1c2326, 0.4, 0.7);
   for (const [dx, dz] of layout) {
     b.cylinder(x + dx, 0.45, z + dz, 0.3, 0.9, body, { segments: 14 });
     for (const y of [0.18, 0.72])
-      b.cylinder(x + dx, y, z + dz, 0.31, 0.05, rim, { segments: 14, collide: false, solid: true, shadow: false });
+      b.cylinder(x + dx, y, z + dz, 0.31, 0.05, rim, {
+        segments: 14,
+        collide: false,
+        solid: true,
+        shadow: false,
+      });
   }
 }
 
-/** Raised guard tower; only the legs block movement. */
+// 架高的崗哨，只有腳柱會擋路。
 export function watchtower(kit, b, x, z, rot = 0, accent = 0xff4b5c) {
   const steel = kit.standard("tower-steel", 0x2a3539, 0.55, 0.6),
     deck = kit.standard("tower-deck", 0x3b4549, 0.7, 0.4),
@@ -1086,15 +1474,28 @@ export function watchtower(kit, b, x, z, rot = 0, accent = 0xff4b5c) {
     beacon = kit.glow(`beacon-${accent}`, accent);
   const f = kit.frame(x, z, rot),
     top = 4.4;
-  for (const [lx, lz] of [[-1.3, -1.3], [1.3, -1.3], [-1.3, 1.3], [1.3, 1.3]])
+  for (const [lx, lz] of [
+    [-1.3, -1.3],
+    [1.3, -1.3],
+    [-1.3, 1.3],
+    [1.3, 1.3],
+  ])
     b.box(f.x(lx, lz), top / 2, f.z(lx, lz), 0.22, top, 0.22, steel, { rot });
-  // Braces run above head height so walking under the deck is never blocked
-  // by (or through) a bar.
+  // 斜撐在頭的高度以上，走在平台下面不會被擋，也不會穿過去。
   for (const y of [2.15, 3.45])
-    for (const [lx, lz, sx, sz] of [[0, -1.3, 2.6, 0.08], [0, 1.3, 2.6, 0.08], [-1.3, 0, 0.08, 2.6], [1.3, 0, 0.08, 2.6]])
-      b.box(f.x(lx, lz), y, f.z(lx, lz), sx, 0.08, sz, steel, { rot, collide: false, solid: true });
+    for (const [lx, lz, sx, sz] of [
+      [0, -1.3, 2.6, 0.08],
+      [0, 1.3, 2.6, 0.08],
+      [-1.3, 0, 0.08, 2.6],
+      [1.3, 0, 0.08, 2.6],
+    ])
+      b.box(f.x(lx, lz), y, f.z(lx, lz), sx, 0.08, sz, steel, {
+        rot,
+        collide: false,
+        solid: true,
+      });
   b.box(f.x(0, 0), top + 0.1, f.z(0, 0), 3.4, 0.2, 3.4, deck, { rot });
-  // Solid railings keep players on the deck; the ladder side has a gap.
+  // 實心欄杆讓玩家不會掉下平台；梯子那一側留缺口。
   for (const [lx, lz, sx, sz] of [
     [0, -1.65, 3.4, 0.08],
     [-1.05, 1.65, 1.3, 0.08],
@@ -1103,18 +1504,45 @@ export function watchtower(kit, b, x, z, rot = 0, accent = 0xff4b5c) {
     [1.65, 0, 0.08, 3.4],
   ])
     b.box(f.x(lx, lz), top + 0.75, f.z(lx, lz), sx, 1.1, sz, steel, { rot });
-  for (const [lx, lz] of [[-1.6, -1.6], [1.6, -1.6], [-1.6, 1.6], [1.6, 1.6]])
+  for (const [lx, lz] of [
+    [-1.6, -1.6],
+    [1.6, -1.6],
+    [-1.6, 1.6],
+    [1.6, 1.6],
+  ])
     b.box(f.x(lx, lz), top + 1.3, f.z(lx, lz), 0.12, 2.2, 0.12, steel, { rot });
-  b.box(f.x(0, 0), top + 2.45, f.z(0, 0), 3.8, 0.18, 3.8, roof, { rot, collide: false, solid: true });
-  b.box(f.x(0, 0), top + 2.75, f.z(0, 0), 0.22, 0.22, 0.22, beacon, { rot, collide: false, shadow: false });
-  // Ladder.
+  b.box(f.x(0, 0), top + 2.45, f.z(0, 0), 3.8, 0.18, 3.8, roof, {
+    rot,
+    collide: false,
+    solid: true,
+  });
+  b.box(f.x(0, 0), top + 2.75, f.z(0, 0), 0.22, 0.22, 0.22, beacon, {
+    rot,
+    collide: false,
+    shadow: false,
+  });
+  // 梯子。
   for (const s of [-0.25, 0.25])
-    b.box(f.x(s, 1.42), top / 2, f.z(s, 1.42), 0.05, top, 0.05, steel, { rot, collide: false, solid: true });
+    b.box(f.x(s, 1.42), top / 2, f.z(s, 1.42), 0.05, top, 0.05, steel, {
+      rot,
+      collide: false,
+      solid: true,
+    });
   for (let y = 0.35; y < top; y += 0.38)
-    b.box(f.x(0, 1.42), y, f.z(0, 1.42), 0.5, 0.04, 0.04, steel, { rot, collide: false, solid: true, shadow: false });
-  // Hand rails above the deck so the ladder visibly continues to the top.
+    b.box(f.x(0, 1.42), y, f.z(0, 1.42), 0.5, 0.04, 0.04, steel, {
+      rot,
+      collide: false,
+      solid: true,
+      shadow: false,
+    });
+  // 平台上方的扶手，梯子看起來一路接到頂。
   for (const s of [-0.25, 0.25])
-    b.box(f.x(s, 1.42), top + 0.6, f.z(s, 1.42), 0.05, 0.8, 0.05, steel, { rot, collide: false, solid: true, shadow: false });
+    b.box(f.x(s, 1.42), top + 0.6, f.z(s, 1.42), 0.05, 0.8, 0.05, steel, {
+      rot,
+      collide: false,
+      solid: true,
+      shadow: false,
+    });
   kit.ladder({
     climbX: f.x(0, 1.86),
     climbZ: f.z(0, 1.86),
@@ -1128,7 +1556,7 @@ export function watchtower(kit, b, x, z, rot = 0, accent = 0xff4b5c) {
   kit.pool(x, z, 5, 0xffd8a0, 0.8);
 }
 
-/** Large rail-mounted gantry crane spanning a yard; legs are the only colliders. */
+// 橫跨場地的大型軌道龍門架，只有腳柱有碰撞。
 export function gantryCrane(kit, b, x1, x2, z1, z2, height = 15) {
   const yellow = kit.standard("crane-yellow", 0xc99a2e, 0.55, 0.45),
     dark = kit.standard("crane-dark", 0x1d2427, 0.6, 0.5),
@@ -1140,53 +1568,112 @@ export function gantryCrane(kit, b, x1, x2, z1, z2, height = 15) {
     for (const lx of [x1, x2]) {
       b.box(lx, height / 2, lz, 0.9, height, 0.9, yellow);
       b.box(lx, 0.25, lz, 1.6, 0.5, 2.4, dark);
-      b.cylinder(lx, 0.2, lz - 0.7, 0.28, 0.4, dark, { axis: "x", collide: false });
-      b.cylinder(lx, 0.2, lz + 0.7, 0.28, 0.4, dark, { axis: "x", collide: false });
+      b.cylinder(lx, 0.2, lz - 0.7, 0.28, 0.4, dark, {
+        axis: "x",
+        collide: false,
+      });
+      b.cylinder(lx, 0.2, lz + 0.7, 0.28, 0.4, dark, {
+        axis: "x",
+        collide: false,
+      });
     }
-    // Sill beam at the top and a portal brace at 9 m (both overhead).
+    // 上方的橫樑，與 9 公尺高的門型支撐（都在頭上）。
     b.box(midX, height + 0.6, lz, span + 2, 1.2, 1.1, yellow);
-    b.box(midX, 9, lz, span - 0.9, 0.5, 0.5, yellow, { collide: false, solid: true });
+    b.box(midX, 9, lz, span - 0.9, 0.5, 0.5, yellow, {
+      collide: false,
+      solid: true,
+    });
   }
-  // Main girders running between the two portals.
+  // 兩座門架之間的主樑。
   const midZ = (z1 + z2) / 2,
     length = Math.abs(z2 - z1);
   for (const lx of [x1 + span * 0.3, x2 - span * 0.3])
     b.box(lx, height + 1.5, midZ, 0.9, 1.4, length + 1.04, yellow);
-  // Trolley, operator cab, hoist cables and spreader.
+  // 台車、操作室、鋼索與吊具。
   const tx = midX,
     tz = midZ - length * 0.12;
-  b.box(tx, height + 2.5, tz, span * 0.5, 0.9, 3, dark, { collide: false, solid: true });
-  b.box(tx + span * 0.18, height - 0.4, tz + 1.2, 2.2, 1.8, 2, kit.standard("crane-cab", 0x2f454c, 0.3, 0.6), { collide: false, solid: true });
-  b.box(tx + span * 0.18, height - 0.3, tz + 2.21, 1.9, 1, 0.04, kit.glow("crane-window", 0x9fe4ff, 0.8), { collide: false, shadow: false });
-  // The spreader never hangs lower than 4.2 m, so small cranes keep it overhead.
+  b.box(tx, height + 2.5, tz, span * 0.5, 0.9, 3, dark, {
+    collide: false,
+    solid: true,
+  });
+  b.box(
+    tx + span * 0.18,
+    height - 0.4,
+    tz + 1.2,
+    2.2,
+    1.8,
+    2,
+    kit.standard("crane-cab", 0x2f454c, 0.3, 0.6),
+    { collide: false, solid: true },
+  );
+  b.box(
+    tx + span * 0.18,
+    height - 0.3,
+    tz + 2.21,
+    1.9,
+    1,
+    0.04,
+    kit.glow("crane-window", 0x9fe4ff, 0.8),
+    { collide: false, shadow: false },
+  );
+  // 吊具最低 4.2 公尺，小型龍門架也不會撞到頭。
   const hookY = Math.max(height - 7.1, 4.2),
     cableTop = height - 0.4;
   for (const s of [-1.2, 1.2])
-    b.box(tx + s, (cableTop + hookY) / 2, tz, 0.05, cableTop - hookY, 0.05, cable, { collide: false, shadow: false });
+    b.box(
+      tx + s,
+      (cableTop + hookY) / 2,
+      tz,
+      0.05,
+      cableTop - hookY,
+      0.05,
+      cable,
+      { collide: false, shadow: false },
+    );
   b.box(tx, hookY, tz, 3.4, 0.35, 1.2, yellow);
   for (const lx of [x1, x2])
     for (const lz of [z1, z2])
-      b.box(lx, height + 1.35, lz, 0.25, 0.25, 0.25, beacon, { collide: false, shadow: false });
+      b.box(lx, height + 1.35, lz, 0.25, 0.25, 0.25, beacon, {
+        collide: false,
+        shadow: false,
+      });
 }
 
-/** Vertical storage tank with ring bands, ladder and pipe stub. */
+// 直立儲槽：環帶、梯子與短管。
 export function storageTank(kit, b, x, z, radius, height, color = 0x7d8a8f) {
   const body = kit.standard(`tank-${color}`, color, 0.45, 0.55),
     band = kit.standard("tank-band", 0x343d41, 0.5, 0.6),
     rail = kit.standard("tank-rail", 0xc99a2e, 0.5, 0.4);
   b.cylinder(x, height / 2, z, radius, height, body, { segments: 28 });
   for (let y = 1.2; y < height; y += 2.2)
-    b.cylinder(x, y, z, radius + 0.04, 0.14, band, { segments: 28, collide: false, solid: true, shadow: false });
-  // Cap sits 12 mm above the shell top: exactly flush surfaces z-fight (flicker),
-  // and 12 mm is too little for feet to visibly sink in.
-  b.cylinder(x, height - 0.028, z, radius + 0.02, 0.08, band, { segments: 28, collide: false, solid: true, shadow: false });
+    b.cylinder(x, y, z, radius + 0.04, 0.14, band, {
+      segments: 28,
+      collide: false,
+      solid: true,
+      shadow: false,
+    });
+  // 蓋子比槽頂高 12 公釐：完全切齊會閃爍，12 公釐又不會讓腳看起來陷進去。
+  b.cylinder(x, height - 0.028, z, radius + 0.02, 0.08, band, {
+    segments: 28,
+    collide: false,
+    solid: true,
+    shadow: false,
+  });
   b.box(x - radius * 0.35, height + 0.3, z, 0.6, 0.6, 0.6, band);
   for (let y = 0.5; y < height; y += 0.42)
-    b.box(x + radius + 0.12, y, z, 0.05, 0.04, 0.55, rail, { collide: false, solid: true, shadow: false });
+    b.box(x + radius + 0.12, y, z, 0.05, 0.04, 0.55, rail, {
+      collide: false,
+      solid: true,
+      shadow: false,
+    });
   for (const s of [-0.27, 0.27])
-    b.box(x + radius + 0.12, height / 2, z + s, 0.05, height, 0.05, rail, { collide: false, solid: true, shadow: false });
-  // A low painted lip marks the roof edge without blocking: players may step
-  // or jump off any side (there is no fall damage).
+    b.box(x + radius + 0.12, height / 2, z + s, 0.05, height, 0.05, rail, {
+      collide: false,
+      solid: true,
+      shadow: false,
+    });
+  // 屋頂邊緣漆一道低邊，標示邊界但不擋路：玩家可以從任何一側走或跳下來（沒有墜
+  // 落傷害）。
   b.cylinder(x, height + 0.06, z, radius + 0.05, 0.12, rail, {
     segments: 28,
     open: true,
@@ -1205,41 +1692,85 @@ export function storageTank(kit, b, x, z, radius, height, color = 0x7d8a8f) {
   });
 }
 
-/** Diesel generator skid. */
+// 柴油發電機。
 export function generator(kit, b, x, z, rot = 0, color = 0x3a6b4f) {
   const f = kit.frame(x, z, rot),
     body = kit.standard(`gen-${color}`, color, 0.6, 0.35),
     dark = kit.standard("gen-dark", 0x15191b, 0.6, 0.4),
     led = kit.glow("gen-led", 0x58ff8a);
-  b.box(f.x(0, 0), 0.12, f.z(0, 0), 3, 0.24, 1.5, dark, { rot, collide: false, solid: true });
+  b.box(f.x(0, 0), 0.12, f.z(0, 0), 3, 0.24, 1.5, dark, {
+    rot,
+    collide: false,
+    solid: true,
+  });
   b.box(f.x(0, 0), 0.95, f.z(0, 0), 2.8, 1.45, 1.3, body, { rot });
   for (let i = -1.1; i <= 1.11; i += 0.22)
-    b.box(f.x(i, 0.66), 1.05, f.z(i, 0.66), 0.08, 0.9, 0.03, dark, { rot, collide: false, shadow: false });
-  b.cylinder(f.x(-1, 0), 2.1, f.z(-1, 0), 0.11, 0.9, dark, { collide: false, solid: true });
-  b.box(f.x(1.1, 0.66), 1.45, f.z(1.1, 0.66), 0.14, 0.06, 0.03, led, { rot, collide: false, shadow: false });
+    b.box(f.x(i, 0.66), 1.05, f.z(i, 0.66), 0.08, 0.9, 0.03, dark, {
+      rot,
+      collide: false,
+      shadow: false,
+    });
+  b.cylinder(f.x(-1, 0), 2.1, f.z(-1, 0), 0.11, 0.9, dark, {
+    collide: false,
+    solid: true,
+  });
+  b.box(f.x(1.1, 0.66), 1.45, f.z(1.1, 0.66), 0.14, 0.06, 0.03, led, {
+    rot,
+    collide: false,
+    shadow: false,
+  });
 }
 
-/**
- * Two-level scaffold with planks. Posts, decks and the long-side guard rails
- * collide, so the frame can't be walked through at any height. The short ends
- * stay open: that is where players jump on and off the decks, and the space
- * under the first deck stays walkable.
- */
+// 兩層的鷹架與踏板。柱子、踏板與長邊的護欄都有碰撞，任何高度都走不過去；短邊是
+// 開放的，玩家從那裡上下，第一層下面可以走。
 export function scaffold(kit, b, x, z, w, d, levels = 2, rot = 0) {
   const f = kit.frame(x, z, rot),
     pipe = kit.standard("scaffold-pipe", 0x8c9599, 0.45, 0.7),
     plank = kit.standard("scaffold-plank", 0x8a6a40, 0.9, 0.02),
-    net = kit.standard("scaffold-net", 0x1f6a55, 0.9, 0, { transparent: true, opacity: 0.55, side: THREE.DoubleSide });
+    net = kit.standard("scaffold-net", 0x1f6a55, 0.9, 0, {
+      transparent: true,
+      opacity: 0.55,
+      side: THREE.DoubleSide,
+    });
   const top = levels * 2;
   for (const lx of [-w / 2, 0, w / 2])
     for (const lz of [-d / 2, d / 2])
-      b.box(f.x(lx, lz), top / 2 + 0.5, f.z(lx, lz), 0.07, top + 1, 0.07, pipe, { rot });
+      b.box(
+        f.x(lx, lz),
+        top / 2 + 0.5,
+        f.z(lx, lz),
+        0.07,
+        top + 1,
+        0.07,
+        pipe,
+        { rot },
+      );
   for (let level = 1; level <= levels; level++) {
     const y = level * 2;
     b.box(f.x(0, 0), y, f.z(0, 0), w, 0.06, d, plank, { rot });
     for (const lz of [-d / 2, d / 2])
-      b.box(f.x(0, lz), y + 1, f.z(0, lz), w, 0.05, 0.05, pipe, { rot, shadow: false });
+      b.box(f.x(0, lz), y + 1, f.z(0, lz), w, 0.05, 0.05, pipe, {
+        rot,
+        shadow: false,
+      });
   }
-  b.box(f.x(0, d / 2 + 0.05), top / 2 + 1, f.z(0, d / 2 + 0.05), w, top - 0.2, 0.02, net, { rot, collide: false, solid: false, shadow: false });
-  kit.collider(f.x(0, d / 2 + 0.05), top / 2 + 1, f.z(0, d / 2 + 0.05), w, top - 0.2, 0.08, rot);
+  b.box(
+    f.x(0, d / 2 + 0.05),
+    top / 2 + 1,
+    f.z(0, d / 2 + 0.05),
+    w,
+    top - 0.2,
+    0.02,
+    net,
+    { rot, collide: false, solid: false, shadow: false },
+  );
+  kit.collider(
+    f.x(0, d / 2 + 0.05),
+    top / 2 + 1,
+    f.z(0, d / 2 + 0.05),
+    w,
+    top - 0.2,
+    0.08,
+    rot,
+  );
 }

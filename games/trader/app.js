@@ -5,9 +5,11 @@
 (function () {
   "use strict";
   const E = window.BillionEngine,
+    // 用 id 找元素的縮寫。
     $ = (id) => document.getElementById(id),
     SAVE = "billion-to-zero-v2",
     PREF = "billion-to-zero-preferences-v2";
+  // 把特殊字元換掉，避免玩家輸入的文字被當成 HTML。
   const esc = (x) =>
     String(x).replace(
       /[&<>"']/g,
@@ -20,6 +22,7 @@
           "'": "&#39;",
         })[c],
     );
+  // 商品圖示。
   const ICONS = {
       sky: "💎",
       moon: "🚀",
@@ -32,6 +35,7 @@
     },
     LEV = [1, 2, 5, 10, 25, 50, 100];
   let s = E.create(),
+    // 玩家偏好：音效、特效、教學是否完成等，和遊戲進度分開儲存。
     prefs = {
       sound: false,
       effects: !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
@@ -82,11 +86,16 @@
   } catch {
     storageOK = false;
   }
+
+  // ---------- 文字格式、儲存與回饋 ----------
+
+  // 金額文字：自動換成億或萬。
   function money(v, d = 2) {
     if (Math.abs(v) >= 1e8) return (v / 1e8).toFixed(d) + " 億";
     if (Math.abs(v) >= 1e4) return (v / 1e4).toFixed(1) + " 萬";
     return Math.round(v).toLocaleString("zh-TW") + " 元";
   }
+  // 價格文字：小於 1 顯示較多小數。
   function price(v) {
     return v < 1
       ? v.toFixed(5)
@@ -95,12 +104,15 @@
           maximumFractionDigits: 2,
         });
   }
+  // 帶正負號的數字。
   function signed(v, d = 2) {
     return (v >= 0 ? "+" : "") + v.toFixed(d);
   }
+  // 賺錢或賠錢的樣式名稱。
   function color(v) {
     return v >= 0 ? "positive" : "negative";
   }
+  // 右下角的短訊息。
   function toast(text, error = false) {
     const el = document.createElement("div");
     el.className = "toast" + (error ? " error" : "");
@@ -108,6 +120,7 @@
     $("toast-container").append(el);
     setTimeout(() => el.remove(), 4000);
   }
+  // 存偏好與進度；教學與練習帳戶不存進度。
   function save() {
     try {
       localStorage.setItem(PREF, JSON.stringify(prefs));
@@ -123,6 +136,7 @@
         ? "此瀏覽器自動保存"
         : "無法保存，關閉會遺失進度";
   }
+  // 合成短音效。
   function beep(bad = false) {
     if (!prefs.sound) return;
     try {
@@ -142,12 +156,14 @@
       o.stop(t + 0.23);
     } catch {}
   }
+  // 停掉所有進行中的特效。
   function stopEffects() {
     clearTimeout(feedbackTimer);
     clearTimeout(glitchTimer);
     $("feedback").classList.remove("show");
     $("feedback-confetti").innerHTML = "";
   }
+  // 賺錢或賠錢的全螢幕回饋。
   function feedback(delta, caption = "", special = "") {
     clearTimeout(feedbackTimer);
     const win = delta > 0;
@@ -174,8 +190,14 @@
       win && prefs.effects
         ? Array.from(
             { length: 38 },
-            (_, i) =>
-              `<i class="confetti" style="left:${(i * 43) % 100}%;background:${["#ffdc69", "#ff88b5", "#84b9ff", "#83f3c3"][i % 4]};animation-delay:${(i % 7) * 0.07}s;transform:rotate(${i * 17}deg)"></i>`,
+            (_, i) => /* HTML */ `<i
+                class="confetti"
+                style="left:${(i * 43) % 100}%;background:${
+                  ["#ffdc69", "#ff88b5", "#84b9ff", "#83f3c3"][i % 4]
+                };animation-delay:${
+                  (i % 7) * 0.07
+                }s;transform:rotate(${i * 17}deg)"
+              ></i>`,
           ).join("")
         : "";
     $("feedback").classList.add("show");
@@ -185,6 +207,10 @@
       prefs.effects ? 1800 : 700,
     );
   }
+
+  // ---------- 主畫面 ----------
+
+  // 依身家、健康與日子決定稱號、頭像與章節。
   function rank() {
     const eq = E.equity(s);
     if (s.ended)
@@ -250,6 +276,7 @@
       detail: "你繼承了 100 億。市場裡的人，突然都變成你的朋友。",
     };
   }
+  // 重畫整個畫面；資料一有變動就呼叫它。
   function render() {
     const eq = E.equity(s),
       r = rank();
@@ -262,6 +289,7 @@
     $("hero-line").textContent = lesson
       ? "這次的練習會先讓你賺到錢，學會買進、等一天，再賣掉。"
       : r.detail;
+    // 上方的日期、身家、現金、當日損益與負債。
     $("day").textContent = "第 " + s.day + " 天";
     $("day-progress").style.width = ((s.day - 1) / 59) * 100 + "%";
     $("rank").textContent = r.name;
@@ -282,6 +310,7 @@
     $("interest-caption").textContent = s.debt
       ? "明天光利息就要 " + money(E.interest(s))
       : "目前沒有借款";
+    // 角色狀態：稱號、健康、壓力與身體部件。
     $("avatar").textContent = r.avatar;
     $("character-rank").textContent = s.playerName + " · " + r.name;
     $("character-line").textContent = r.line;
@@ -298,8 +327,14 @@
     $("stress-text").textContent = Math.round(s.stress) + " / 100";
     $("stress-bar").style.width = s.stress + "%";
     $("body-parts").innerHTML = E.ORGANS.map(
-      (o) =>
-        `<button class="body-part ${!E.organAvailable(s, o) ? "lost" : ""}" data-body-part="${o.id}" title="${esc(o.note)}"><span>${o.icon}</span><div><b>${o.name}</b><small>${bodyStatus(o)}</small></div></button>`,
+      (o) => /* HTML */ `<button
+          class="body-part ${!E.organAvailable(s, o) ? "lost" : ""}"
+          data-body-part="${o.id}"
+          title="${esc(o.note)}"
+        >
+          <span>${o.icon}</span>
+          <div><b>${o.name}</b><small>${bodyStatus(o)}</small></div>
+        </button>`,
     ).join("");
     const kidneys = 2 - s.organs.filter((id) => id.startsWith("kidney")).length,
       eyes = 2 - s.organs.filter((id) => id.startsWith("cornea")).length;
@@ -311,6 +346,7 @@
         : kidneys < 2
           ? "左腎、右腎分別記錄，休息無法恢復部件。"
           : "兩顆腎，各自保留；所有部件狀態都會存檔。";
+    // 各個區塊分別更新。
     renderAtmosphere();
     $("loan-count").textContent = s.loans.length + " 張";
     renderLoans();
@@ -319,6 +355,7 @@
     renderOrder();
     renderPortfolio();
     renderNews();
+    // 整頁的氣氛樣式。
     document.body.classList.toggle("reduced-effects", !prefs.effects);
     document.body.classList.toggle(
       "dead-world",
@@ -336,6 +373,7 @@
         : s.reputation < 75
           ? "虛構朋友圈開始出現抹黑訊息。"
           : "朋友還在，別讓借條替你說話。";
+    // 有劇情、工作或賭局時鎖住按鈕。
     const lock =
       s.ended ||
       !!s.pending ||
@@ -388,6 +426,7 @@
     save();
     if (lesson && !$("modal").open) positionGuide();
   }
+  // 借款清單。
   function renderLoans() {
     $("loans").innerHTML = s.loans.length
       ? s.loans
@@ -399,16 +438,20 @@
                 </div>
                 <small class="${l.due <= s.day + 1 ? "danger" : ""}"
                   >第 ${l.due} 天到期 · 每日息
-                  ${(E.loanRate(l) * 100).toFixed(0)}%${l.extensions ? " · 已延期 " + l.extensions + " 次" : ""}${l.stage ? " · 催收階段 " + l.stage : ""}</small
+                  ${(E.loanRate(l) * 100).toFixed(0)}%${
+                    l.extensions ? " · 已延期 " + l.extensions + " 次" : ""
+                  }${l.stage ? " · 催收階段 " + l.stage : ""}</small
                 >
               </div>`,
           )
           .join("")
       : '<p class="loan-empty">今天還沒欠任何人。<br>有時候，「不用還錢」就是最大的自由。</p>';
   }
+  // 商品圖示，沒有就用寶石。
   function assetIcon(a) {
     return a.emoji || ICONS[a.id] || "💎";
   }
+  // 商品清單，會依分類、題材與搜尋文字篩選。
   function renderAssets() {
     if (sectorKind !== filter) {
       sectorKind = filter;
@@ -424,6 +467,7 @@
           .join("");
       $("sector-select").value = "all";
     }
+    // 符合條件的商品。
     const assets = E.ASSETS.filter(
       (a) =>
         a.kind === filter &&
@@ -438,8 +482,27 @@
     $("assets").innerHTML = assets.length
       ? assets
           .map(
-            (a, i) =>
-              `<button class="asset-card ${a.id === selected ? "active" : ""}" style="--card-accent:${["#ff91c6", "#9c97ff", "#67d9ef", "#87e6b5", "#ffcf7c", "#ff9a81"][i % 6]}" data-asset="${a.id}" aria-pressed="${a.id === selected}"><span class="asset-emoji">${assetIcon(a)}</span><b>${a.name}</b><small>${a.sector}</small><span class="asset-change ${color(s.markets[a.id].change)}">${signed(s.markets[a.id].change)}%</span></button>`,
+            (a, i) => /* HTML */ `<button
+                class="asset-card ${a.id === selected ? "active" : ""}"
+                style="--card-accent:${
+                  [
+                    "#ff91c6",
+                    "#9c97ff",
+                    "#67d9ef",
+                    "#87e6b5",
+                    "#ffcf7c",
+                    "#ff9a81",
+                  ][i % 6]
+                }"
+                data-asset="${a.id}"
+                aria-pressed="${a.id === selected}"
+              >
+                <span class="asset-emoji">${assetIcon(a)}</span><b>${a.name}</b
+                ><small>${a.sector}</small
+                ><span class="asset-change ${color(s.markets[a.id].change)}"
+                  >${signed(s.markets[a.id].change)}%</span
+                >
+              </button>`,
           )
           .join("")
       : '<p class="asset-empty">沒有找到。試試別的名字或題材。</p>';
@@ -449,6 +512,7 @@
         b.classList.toggle("active", b.dataset.filter === filter),
       );
   }
+  // 目前選到的商品：價格、漲跌與說明。
   function renderMarket() {
     const a = E.ASSETS.find((x) => x.id === selected),
       m = s.markets[selected];
@@ -461,6 +525,7 @@
     $("asset-note").innerHTML = a.note;
     renderChart();
   }
+  // 行情為什麼暫停的說明文字。
   function clockReason() {
     return s.ended
       ? "故事結束，可回看"
@@ -480,6 +545,7 @@
                     ? "閱讀視窗暫停，關閉後繼續"
                     : "全天行情 · 每秒 5 分鐘";
   }
+  // 把分鐘數換成 時:分。
   function clock(minute) {
     return (
       String(Math.floor(minute / 60)).padStart(2, "0") +
@@ -487,6 +553,7 @@
       String(minute % 60).padStart(2, "0")
     );
   }
+  // 依處境改變背景氣氛（催收、視力受損、低健康）。
   function renderAtmosphere() {
     const assets = s.cash + E.positionTotal(s),
       due = s.loans.some((l) => l.due <= s.day + 1 && l.balance > s.cash),
@@ -531,10 +598,12 @@
       : "啟用視野輔助";
     $("vision-assist").setAttribute("aria-pressed", String(prefs.visionAssist));
   }
+  // 畫走勢圖：價格或身家，可以看全部、最近或某一天。
   function renderChart() {
     const wealth = chartMode === "wealth",
       all = wealth ? s.equityTape : s.markets[selected].series,
       day = chartDay === null ? s.day : Math.min(chartDay, s.day);
+    // 這段期間要畫的點。
     chartPoints = all.filter(
       (p) =>
         chartPeriod === "all" ||
@@ -545,6 +614,7 @@
     );
     const noData = !chartPoints.length;
     if (noData)
+      // 沒有資料時放一個點，避免圖表出錯。
       chartPoints = [
         {
           day,
@@ -552,6 +622,7 @@
           price: wealth ? s.history[day - 1] || 0 : s.markets[selected].price,
         },
       ];
+    // 計算座標。
     const values = chartPoints.map((p) => p.price),
       w = Math.max(240, $("chart").clientWidth || 500),
       h = 220,
@@ -576,19 +647,63 @@
         : values.at(-1) >= values[0]
           ? "#68e9ac"
           : "#ff7890";
+    // 用 SVG 畫出格線、面積、折線與時間刻度。
     let out = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" aria-hidden="true"><defs><linearGradient id="shade" x1="0" x2="0" y1="0" y2="1"><stop stop-color="${stroke}" stop-opacity=".22"/><stop offset="1" stop-color="${stroke}" stop-opacity="0"/></linearGradient></defs>`;
     for (let i = 0; i < 4; i++) {
       const val = max - ((max - min) * i) / 3,
         y = Y(val);
-      out += `<path d="M${pad} ${y}H${w - right}" stroke="#33405a" stroke-dasharray="4 6"/><text x="${w - right + 6}" y="${y + 4}" font-size="12" font-family="monospace" fill="#a5b0cc">${wealth ? (val / 1e8).toFixed(1) + "億" : val >= 1e5 ? (val / 1e4).toFixed(1) + "萬" : val < 1 ? val.toFixed(4) : val.toFixed(0)}</text>`;
+      out += /* HTML */ `<path
+          d="M${pad} ${y}H${w - right}"
+          stroke="#33405a"
+          stroke-dasharray="4 6"
+        /><text
+          x="${w - right + 6}"
+          y="${y + 4}"
+          font-size="12"
+          font-family="monospace"
+          fill="#a5b0cc"
+          >${
+            wealth
+              ? (val / 1e8).toFixed(1) + "億"
+              : val >= 1e5
+                ? (val / 1e4).toFixed(1) + "萬"
+                : val < 1
+                  ? val.toFixed(4)
+                  : val.toFixed(0)
+          }</text
+        >`;
     }
-    out += `<path d="${points}L${X(values.length - 1)} 180L${pad} 180Z" fill="url(#shade)"/><path d="${points}" fill="none" stroke="${stroke}" stroke-width="2.5" stroke-linejoin="round"/><circle cx="${X(values.length - 1)}" cy="${Y(values.at(-1))}" r="4" fill="${stroke}"/>`;
+    out += /* HTML */ `<path
+        d="${points}L${X(values.length - 1)} 180L${pad} 180Z"
+        fill="url(#shade)"
+      /><path
+        d="${points}"
+        fill="none"
+        stroke="${stroke}"
+        stroke-width="2.5"
+        stroke-linejoin="round"
+      /><circle
+        cx="${X(values.length - 1)}"
+        cy="${Y(values.at(-1))}"
+        r="4"
+        fill="${stroke}"
+      />`;
     for (const i of values.length === 1 ? [0] : [0, 1, 2]) {
       const n = Math.round((i * (values.length - 1)) / 2),
         p = chartPoints[n];
-      out += `<text x="${X(n)}" y="210" font-size="12" fill="#a5b0cc" text-anchor="${i === 0 ? "start" : i === 2 ? "end" : "middle"}">${chartPeriod === "day" ? clock(p.minute) : "第 " + p.day + " 天"}</text>`;
+      out += /* HTML */ `<text
+        x="${X(n)}"
+        y="210"
+        font-size="12"
+        fill="#a5b0cc"
+        text-anchor="${i === 0 ? "start" : i === 2 ? "end" : "middle"}"
+        >${
+          chartPeriod === "day" ? clock(p.minute) : "第 " + p.day + " 天"
+        }</text
+      >`;
     }
     let tip = "";
+    // 游標或手指停留處的數值提示。
     if (chartHover !== null) {
       const n = Math.max(
           0,
@@ -598,7 +713,11 @@
           ),
         ),
         p = chartPoints[n];
-      out += `<path d="M${X(n)} 14V180" stroke="#ffda69" stroke-dasharray="4 3"/><circle cx="${X(n)}" cy="${Y(p.price)}" r="5" fill="#ffda69"/>`;
+      out += /* HTML */ `<path
+          d="M${X(n)} 14V180"
+          stroke="#ffda69"
+          stroke-dasharray="4 3"
+        /><circle cx="${X(n)}" cy="${Y(p.price)}" r="5" fill="#ffda69" />`;
       tip = /* HTML */ `<div class="chart-tooltip" role="status">
         第 ${p.day} 天 ·
         ${clock(p.minute)}${p.kind ? " · " + esc(p.kind) : ""}<b
@@ -606,6 +725,7 @@
         >
       </div>`;
     }
+    // 把圖放上去，並更新旁邊的說明與按鈕。
     $("chart").innerHTML = out + "</svg>" + tip;
     $("chart").setAttribute(
       "aria-label",
@@ -647,6 +767,7 @@
       chartPoints = [];
     }
   }
+  // 依游標位置算出正在看哪一個點。
   function inspectChart(event) {
     if (lesson || !chartPoints.length) return;
     const r = $("chart").getBoundingClientRect(),
@@ -655,6 +776,10 @@
     chartHover = Math.max(0, Math.min(1, (relative - 16) / (w - 84)));
     renderChart();
   }
+
+  // ---------- 打工、設定、匯出與姓名 ----------
+
+  // 打工選單。
   function jobsModal() {
     if (lesson) {
       lessonIntro("work");
@@ -672,13 +797,27 @@
           一天只能領一班薪水。任務沒有倒數，可慢慢做；未完成不發薪。打工期間行情暫停，結束後繼續。
         </p>
         <div class="choices">
-          ${E.JOBS.map((j) => `<button data-job="${j.id}"><b>${j.icon} ${j.name} · ${money(j.pay)}</b><small>${j.description} 共 ${j.rounds} 筆，健康 −${j.damage + (s.organs.some((x) => x.startsWith("lung")) ? 2 : 0) + (s.organs.includes("stomach") ? 1 : 0)}，壓力 −8。每次選錯扣 5% 薪水，最多扣 40%。</small></button>`).join("")}
+          ${E.JOBS.map(
+            (j) => /* HTML */ `<button data-job="${j.id}">
+                <b>${j.icon} ${j.name} · ${money(j.pay)}</b
+                ><small
+                  >${j.description} 共 ${j.rounds} 筆，健康
+                  −${
+                    j.damage +
+                    (s.organs.some((x) => x.startsWith("lung")) ? 2 : 0) +
+                    (s.organs.includes("stomach") ? 1 : 0)
+                  }，壓力
+                  −8。每次選錯扣 5% 薪水，最多扣 40%。</small
+                >
+              </button>`,
+          ).join("")}
         </div>
         <div class="modal-actions">
           <button class="ghost" data-action="dismiss">先不接班</button>
         </div>`,
     );
   }
+  // 打工畫面：題目、選項與失誤次數。
   function jobScreen(message = "") {
     const j = s.job;
     if (!j) return;
@@ -693,21 +832,44 @@
           <i style="width:${(j.done / def.rounds) * 100}%"></i>
         </div>
         <p>
-          ${def.description}${s.reputation < 35 ? " 名譽受到謠言影響，這班薪水只剩 85%。" : ""}
+          ${def.description}${
+            s.reputation < 35 ? " 名譽受到謠言影響，這班薪水只剩 85%。" : ""
+          }
         </p>
         <div class="job-order">
           <span
-            >${j.id === "cafe" ? "客人的完整訂單" : j.id === "warehouse" ? "請按相同名稱的出口" : "先算一下，不用急"}</span
-          ><strong>${esc(j.task.prompt)}</strong
-          >${j.id === "cafe" ? "<small>現在選：" + ["杯型", "飲品", "溫度"][j.task.step] + "</small>" : ""}
+            >${
+              j.id === "cafe"
+                ? "客人的完整訂單"
+                : j.id === "warehouse"
+                  ? "請按相同名稱的出口"
+                  : "先算一下，不用急"
+            }</span
+          ><strong>${esc(j.task.prompt)}</strong>${
+            j.id === "cafe"
+              ? "<small>現在選：" +
+                ["杯型", "飲品", "溫度"][j.task.step] +
+                "</small>"
+              : ""
+          }
         </div>
         <div class="job-answers">
-          ${j.task.options.map((o) => `<button data-job-answer="${esc(o.id)}">${esc(o.label)}</button>`).join("")}
+          ${j.task.options
+            .map(
+              (o) => /* HTML */ `<button data-job-answer="${esc(o.id)}">
+                  ${esc(o.label)}
+                </button>`,
+            )
+            .join("")}
         </div>
         <p class="job-message" role="status">
           ${esc(message || "完成全部任務，才會拿到薪水。")}<br />目前失誤
           ${j.mistakes} 次 · 預計薪水
-          ${money(def.pay * (1 - Math.min(0.4, j.mistakes * 0.05)) * (s.reputation < 35 ? 0.85 : 1))}
+          ${money(
+            def.pay *
+              (1 - Math.min(0.4, j.mistakes * 0.05)) *
+              (s.reputation < 35 ? 0.85 : 1),
+          )}
         </p>
         <div class="modal-actions">
           <button class="ghost" data-action="pause-work">
@@ -718,6 +880,7 @@
         </div>`,
     );
   }
+  // 設定視窗。
   function settingsModal() {
     modal(
       "settings",
@@ -745,6 +908,7 @@
         </div>`,
     );
   }
+  // 把價格與身家走勢匯出成 CSV。
   function exportHistory() {
     let rows = ["商品代碼,商品名稱,遊戲日,時間,虛構價格,紀錄類型"];
     for (const a of E.ASSETS)
@@ -777,6 +941,7 @@
     );
     toast("完整盤中行情與身家紀錄已下載。");
   }
+  // 下載一個文字檔（加上 BOM，Excel 才不會亂碼）。
   function download(name, text, type) {
     const url = URL.createObjectURL(new Blob(["\uFEFF" + text], { type })),
       a = document.createElement("a");
@@ -785,6 +950,7 @@
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 2000);
   }
+  // 輸入角色名字的視窗。
   function nameModal() {
     modal(
       "name",
@@ -813,6 +979,7 @@
         </div>`,
     );
   }
+  // 確認名字，並回到原本該顯示的畫面。
   function chooseName() {
     const r = E.setName(s, $("character-name").value);
     if (!r.ok) {
@@ -827,6 +994,10 @@
     else if (s.gamble) gambleScreen();
     else toast(s.playerName + "，歡迎回來。");
   }
+
+  // ---------- 借款合約、催收與手機 ----------
+
+  // 虛構借款合約的確認畫面。
   function contractModal() {
     if (!contractDraft) return;
     const c = contractDraft,
@@ -863,7 +1034,11 @@
           ><button data-contract-ack="contacts">
             <b>${c.contactsAck ? "☑" : "☐"} 閱讀虛構聯絡人／抵債條款</b
             ><small
-              >${c.type === "online" ? "小夏、阿城、林店長是遊戲人物。逾期可能演出個資外洩、謠言群發和名譽損失。" : "逾期可能演出威脅、健康損傷、部件被低價抵債。"}日息可能逐輪升高。現實不應交出證件或接受違法催收。</small
+              >${
+                c.type === "online"
+                  ? "小夏、阿城、林店長是遊戲人物。逾期可能演出個資外洩、謠言群發和名譽損失。"
+                  : "逾期可能演出威脅、健康損傷、部件被低價抵債。"
+              }日息可能逐輪升高。現實不應交出證件或接受違法催收。</small
             >
           </button>
         </div>
@@ -881,6 +1056,7 @@
         </div>`,
     );
   }
+  // 簽約，成功後入帳。
   function signContract() {
     const c = contractDraft;
     if (!c || !c.idAck || !c.contactsAck) return;
@@ -895,6 +1071,7 @@
       after(r);
     } else toast(r.message, true);
   }
+  // 催收對話畫面。
   function collectionModal() {
     const scene = E.collectionScene(s);
     if (!scene) return;
@@ -906,12 +1083,20 @@
           x.id !== "core" && x.id !== "liver_whole" && E.organAvailable(s, x),
       ),
       danger = l.type !== "bank";
+    // 已經說過的對話。
     const transcript = (p.transcript || [])
       .map(
-        (x) =>
-          `<div class="chat-bubble ${x.who === "player" ? "from-player" : "from-collector"}"><small>${x.who === "player" ? esc(s.playerName) : scene.who}</small><p>${esc(x.text)}</p></div>`,
+        (x) => /* HTML */ `<div
+            class="chat-bubble ${
+              x.who === "player" ? "from-player" : "from-collector"
+            }"
+          >
+            <small>${x.who === "player" ? esc(s.playerName) : scene.who}</small>
+            <p>${esc(x.text)}</p>
+          </div>`,
       )
       .join("");
+    // 還能回覆就顯示回覆選項，否則顯示最後的選擇。
     const replies =
       turn < 3
         ? /* HTML */ `<div class="chat-current">
@@ -943,9 +1128,22 @@
                 ></button
               ><button data-choice="2" ${!o ? "disabled" : ""}>
                 <b
-                  >${o ? "自願交出" + o.name + "，先還一筆" : "沒有可用的部件"}</b
+                  >${
+                    o ? "自願交出" + o.name + "，先還一筆" : "沒有可用的部件"
+                  }</b
                 ><small
-                  >${o ? "健康 −" + o.damage + "，取得 " + money(o.price) + " 優先還款。" + (E.organFatal(s, o) ? "這會死亡。" : "代價不可逆；尚未還完再延兩天。") : "請選其他分支。"}</small
+                  >${
+                    o
+                      ? "健康 −" +
+                        o.damage +
+                        "，取得 " +
+                        money(o.price) +
+                        " 優先還款。" +
+                        (E.organFatal(s, o)
+                          ? "這會死亡。"
+                          : "代價不可逆；尚未還完再延兩天。")
+                      : "請選其他分支。"
+                  }</small
                 ></button
               ><button data-choice="3">
                 <b>掛斷，躲回螢幕裡</b
@@ -963,9 +1161,40 @@
             </div>`;
     modal(
       "debt",
-      `<div class="collector-scene ${danger ? "danger-scene" : ""}"><div class="collector-top"><span class="collector-avatar">${scene.icon}</span><div><div class="modal-kicker">第 ${s.day} 天 · 第 ${l.stage || 1} 輪催收</div><h2>${scene.who}</h2><small>${danger ? "這是遊戲內威脅劇情。你可以找人一起面對。" : "遊戲借款通知"}</small></div></div><div class="collector-meter"><i style="width:${Math.min(100, (l.stage || 1) * 25)}%"></i></div><div class="collector-bill"><span>欠 ${money(l.balance)}</span><span>口袋 ${money(s.cash)}</span><span>日息 ${(E.loanRate(l) * 100).toFixed(0)}%</span></div><div class="chat-history">${transcript}</div>${replies}<div class="conversation-foot">對話 ${Math.min(turn + 1, 3)} / 3 · 行情已暫停 · 沒有現實聯絡或訊息發送</div></div>`,
+      /* HTML */ `<div class="collector-scene ${danger ? "danger-scene" : ""}">
+        <div class="collector-top">
+          <span class="collector-avatar">${scene.icon}</span>
+          <div>
+            <div class="modal-kicker">
+              第 ${s.day} 天 · 第 ${l.stage || 1} 輪催收
+            </div>
+            <h2>${scene.who}</h2>
+            <small
+              >${
+                danger
+                  ? "這是遊戲內威脅劇情。你可以找人一起面對。"
+                  : "遊戲借款通知"
+              }</small
+            >
+          </div>
+        </div>
+        <div class="collector-meter">
+          <i style="width:${Math.min(100, (l.stage || 1) * 25)}%"></i>
+        </div>
+        <div class="collector-bill">
+          <span>欠 ${money(l.balance)}</span><span>口袋 ${money(s.cash)}</span
+          ><span>日息 ${(E.loanRate(l) * 100).toFixed(0)}%</span>
+        </div>
+        <div class="chat-history">${transcript}</div>
+        ${replies}
+        <div class="conversation-foot">
+          對話 ${Math.min(turn + 1, 3)} / 3 · 行情已暫停 ·
+          沒有現實聯絡或訊息發送
+        </div>
+      </div>`,
     );
   }
+  // 催收後顯示實際造成的影響。
   function collectionAfter(before) {
     const lost = s.organs.filter((x) => !before.organs.includes(x)),
       h = s.health - before.health,
@@ -989,9 +1218,21 @@
             <small>目前總欠款</small><b class="negative">${money(s.debt)}</b>
           </div>
         </div>
-        ${lost.length ? '<div class="collection-warning">失去：' + lost.map((id) => esc(E.ORGANS.find((o) => o.id === id).name)).join("、") + "。不顯示身體傷害畫面；部件和上限已永久改變。</div>" : ""}
+        ${
+          lost.length
+            ? '<div class="collection-warning">失去：' +
+              lost
+                .map((id) => esc(E.ORGANS.find((o) => o.id === id).name))
+                .join("、") +
+              "。不顯示身體傷害畫面；部件和上限已永久改變。</div>"
+            : ""
+        }
         <p>
-          ${s.reputation < 75 ? "遊戲手機裡的朋友已收到不實訊息。你可以打開朋友圈，看到他們的反應。" : "暫時告一段落。借條與下一個到期日，仍留在帳戶裡。"}
+          ${
+            s.reputation < 75
+              ? "遊戲手機裡的朋友已收到不實訊息。你可以打開朋友圈，看到他們的反應。"
+              : "暫時告一段落。借條與下一個到期日，仍留在帳戶裡。"
+          }
         </p>
         <div class="modal-actions">
           <button class="ghost" data-action="open-phone">看看遊戲手機</button
@@ -999,6 +1240,7 @@
         </div>`,
     );
   }
+  // 手機畫面：虛構社群貼文與訊息。
   function phoneModal() {
     modal(
       "phone",
@@ -1011,7 +1253,11 @@
         </div>
         <div class="phone-summary">
           名譽 <b>${s.reputation} / 100</b> ·
-          ${s.reputation < 35 ? "謠言影響工作，薪資只剩 85%" : "朋友還在等你回覆"}
+          ${
+            s.reputation < 35
+              ? "謠言影響工作，薪資只剩 85%"
+              : "朋友還在等你回覆"
+          }
         </div>
         <div class="social-feed">
           ${
@@ -1019,14 +1265,20 @@
               ? s.social
                   .map(
                     (x) => /* HTML */ `<article>
-                        <span
-                          >${x.who === "不明群發帳號" ? "⚠️" : x.who === "催收通知" ? "🚪" : "💬"}</span
-                        >
-                        <div>
-                          <b>${esc(x.who)}</b><small>第 ${x.day} 天</small>
-                          <p>${esc(x.text)}</p>
-                        </div>
-                      </article>`,
+                      <span
+                        >${
+                          x.who === "不明群發帳號"
+                            ? "⚠️"
+                            : x.who === "催收通知"
+                              ? "🚪"
+                              : "💬"
+                        }</span
+                      >
+                      <div>
+                        <b>${esc(x.who)}</b><small>第 ${x.day} 天</small>
+                        <p>${esc(x.text)}</p>
+                      </div>
+                    </article>`,
                   )
                   .join("")
               : "<article><span>💬</span><div><b>小夏</b><p>" +
@@ -1039,7 +1291,15 @@
           ><button
             class="primary"
             data-action="friend-support"
-            ${s.pending || s.job || s.gamble || s.ended || s.lastSupportDay === s.day ? "disabled" : ""}
+            ${
+              s.pending ||
+              s.job ||
+              s.gamble ||
+              s.ended ||
+              s.lastSupportDay === s.day
+                ? "disabled"
+                : ""
+            }
           >
             跟朋友坦承近況 · 名譽 +6
           </button>
@@ -1048,6 +1308,10 @@
   }
   let casinoType = "dice",
     casinoStake = "0.05";
+
+  // ---------- 小賭局畫面 ----------
+
+  // 賭場選單與下注金額。
   function casinoModal() {
     if (lesson) {
       lessonIntro("casino");
@@ -1065,7 +1329,14 @@
           <h2>股票之外，還能怎麼輸？</h2>
         </div>
         <div class="casino-menu">
-          ${E.CASINO.map((g) => `<button data-casino-mode="${g.id}" class="${g.id === casinoType ? "active" : ""}"><span>${g.icon}</span><b>${g.name}</b></button>`).join("")}
+          ${E.CASINO.map(
+            (g) => /* HTML */ `<button
+                data-casino-mode="${g.id}"
+                class="${g.id === casinoType ? "active" : ""}"
+              >
+                <span>${g.icon}</span><b>${g.name}</b>
+              </button>`,
+          ).join("")}
         </div>
         <p>${E.CASINO.find((g) => g.id === casinoType).description}</p>
         <label for="casino-stake">這局拿多少億？</label>
@@ -1102,23 +1373,42 @@
         </div>`,
     );
   }
+  // 撲克牌的 HTML，hidden 會蓋住莊家的第二張。
   function playingCards(cards, hidden = false) {
     return cards
       .map(
-        (c, i) =>
-          `<div class="playing-card ${i % 2 ? "red-suit" : ""}">${hidden && i > 0 ? "<span>✦</span><b>？</b>" : "<small>" + ["♠", "♥", "♣", "♦"][i % 4] + "</small><b>" + esc(c.label) + "</b>"}</div>`,
+        (
+          c,
+          i,
+        ) => /* HTML */ `<div class="playing-card ${i % 2 ? "red-suit" : ""}">
+            ${
+              hidden && i > 0
+                ? "<span>✦</span><b>？</b>"
+                : "<small>" +
+                  ["♠", "♥", "♣", "♦"][i % 4] +
+                  "</small><b>" +
+                  esc(c.label) +
+                  "</b>"
+            }
+          </div>`,
       )
       .join("");
   }
+  // 進行中的賭局畫面。
   function gambleScreen() {
     const g = s.gamble;
     if (!g) return;
     let board = "",
       actions = "";
+    // 依玩法產生不同的牌桌與按鈕。
     if (g.id === "dice") {
       board = /* HTML */ `<div class="dice-cup">🎲</div>
         <p class="table-prompt">
-          ${g.guess ? "你猜 " + (g.guess === "big" ? "大" : "小") + "。現在親手搖骰。" : "先猜大小，再搖骰。"}
+          ${
+            g.guess
+              ? "你猜 " + (g.guess === "big" ? "大" : "小") + "。現在親手搖骰。"
+              : "先猜大小，再搖骰。"
+          }
         </p>
         <div class="gamble-choice">
           <button
@@ -1133,7 +1423,13 @@
             大 · 11 至 18
           </button>
         </div>`;
-      actions = `<button class="primary" data-gamble-action="roll" ${!g.guess ? "disabled" : ""}>搖開骰盅</button>`;
+      actions = /* HTML */ `<button
+        class="primary"
+        data-gamble-action="roll"
+        ${!g.guess ? "disabled" : ""}
+      >
+        搖開骰盅
+      </button>`;
     } else if (g.id === "cards") {
       board = /* HTML */ `<div class="hand-label">莊家 · 一張暗牌</div>
         <div class="card-hand">${playingCards(g.dealer, true)}</div>
@@ -1152,12 +1448,31 @@
           <b>${E.mineMultiplier(g.revealed.length).toFixed(2)} 倍</b>
         </div>
         <div class="mine-board">
-          ${Array.from({ length: 9 }, (_, i) => `<button data-gamble-action="reveal" data-mine-index="${i}" class="${g.revealed.includes(i) ? "safe-tile" : ""}" ${g.revealed.includes(i) ? "disabled" : ""} aria-label="第 ${i + 1} 格${g.revealed.includes(i) ? "安全" : "未翻開"}">${g.revealed.includes(i) ? "💎" : "？"}</button>`).join("")}
+          ${Array.from(
+            { length: 9 },
+            (_, i) => /* HTML */ `<button
+                data-gamble-action="reveal"
+                data-mine-index="${i}"
+                class="${g.revealed.includes(i) ? "safe-tile" : ""}"
+                ${g.revealed.includes(i) ? "disabled" : ""}
+                aria-label="第 ${i + 1} 格${
+                  g.revealed.includes(i) ? "安全" : "未翻開"
+                }"
+              >
+                ${g.revealed.includes(i) ? "💎" : "？"}
+              </button>`,
+          ).join("")}
         </div>
         <p class="table-prompt">
           ${g.bombs.length} 個雷。每次翻開都可能整筆歸零，知道什麼時候收手嗎？
         </p>`;
-      actions = `<button class="primary" data-gamble-action="cashout" ${!g.revealed.length ? "disabled" : ""}>現在收手 · ${money(g.stake * E.mineMultiplier(g.revealed.length))}</button>`;
+      actions = /* HTML */ `<button
+        class="primary"
+        data-gamble-action="cashout"
+        ${!g.revealed.length ? "disabled" : ""}
+      >
+        現在收手 · ${money(g.stake * E.mineMultiplier(g.revealed.length))}
+      </button>`;
     }
     modal(
       "gamble",
@@ -1178,6 +1493,7 @@
       </div>`,
     );
   }
+  // 賭局結果。
   function gambleResult() {
     const g = s.lastGamble;
     if (!g) return;
@@ -1230,12 +1546,18 @@
         </div>`,
     );
   }
+
+  // ---------- 下單與持有清單 ----------
+
+  // 目前選的槓桿倍數。
   function leverage() {
     return product === "spot" ? 1 : LEV[Number($("leverage").value)] || 1;
   }
+  // 目前輸入的金額（畫面用億，內部用元）。
   function amount() {
     return Number($("amount").value) * 1e8;
   }
+  // 更新下單區：按鈕狀態、手續費與風險說明。
   function renderOrder() {
     const l = leverage(),
       amt = amount(),
@@ -1252,8 +1574,12 @@
       product === "spot";
     $("leverage-zone").hidden = product === "spot";
     $("leverage-label").textContent = l + " 倍";
-    $("order-preview").innerHTML =
-      `你拿出 <strong>${Number.isFinite(amt) ? money(amt) : "—"}</strong>，猜它會<strong>${direction === "long" ? "漲" : "跌"}</strong>。<small>另外扣 ${Number.isFinite(fee) ? money(fee) : "—"} 平台費${product !== "spot" ? "，每天還有放大費" : ""}。</small>`;
+    $("order-preview").innerHTML = /* HTML */ `你拿出
+      <strong>${Number.isFinite(amt) ? money(amt) : "—"}</strong
+      >，猜它會<strong>${direction === "long" ? "漲" : "跌"}</strong>。<small
+        >另外扣 ${Number.isFinite(fee) ? money(fee) : "—"}
+        平台費${product !== "spot" ? "，每天還有放大費" : ""}。</small
+      >`;
     $("risk-note").textContent =
       product === "spot"
         ? "先從普通買股開始：猜對不等於已賺到，還要賣掉才能收回現金。"
@@ -1271,6 +1597,7 @@
       busy ||
       (!unlocked && !lesson);
   }
+  // 更新持有、紀錄與成就三個分頁。
   function renderPortfolio() {
     document
       .querySelectorAll("[data-tab]")
@@ -1290,7 +1617,9 @@
                     <b>${a.name}</b
                     ><small
                       >猜會${p.sign === 1 ? "漲" : "跌"} · ${p.leverage}
-                      倍${p.expiry ? " · 第 " + p.expiry + " 天開獎" : ""}</small
+                      倍${
+                        p.expiry ? " · 第 " + p.expiry + " 天開獎" : ""
+                      }</small
                     >
                   </div>
                 </div>
@@ -1339,11 +1668,16 @@
       $("portfolio-content").innerHTML =
         '<div class="achievement-grid">' +
         E.ACHIEVEMENTS.map(
-          (a) =>
-            `<div class="achievement ${s.achievements.includes(a.id) ? "on" : ""}"><b>${s.achievements.includes(a.id) ? "🏅" : "🔒"} ${a.name}</b><small>${a.description}</small></div>`,
+          (a) => /* HTML */ `<div
+              class="achievement ${s.achievements.includes(a.id) ? "on" : ""}"
+            >
+              <b>${s.achievements.includes(a.id) ? "🏅" : "🔒"} ${a.name}</b
+              ><small>${a.description}</small>
+            </div>`,
         ).join("") +
         "</div>";
   }
+  // 更新新聞，只顯示最新三則。
   function renderNews() {
     $("news").innerHTML = s.news
       .slice(0, 3)
@@ -1355,6 +1689,7 @@
       )
       .join("");
   }
+  // 打開視窗並填入內容。
   function modal(type, html) {
     modalType = type;
     $("modal-content").innerHTML = html;
@@ -1364,6 +1699,7 @@
     if (lesson) $("coach-layer").hidden = true;
     renderChart();
   }
+  // 關閉視窗；必須做選擇的視窗不能直接關。
   function dismiss(force = false) {
     if (
       !force &&
@@ -1378,6 +1714,7 @@
       positionGuide();
     }
   }
+  // 一個操作之後共同要做的事：重畫、提示、特效、檢查結局。
   function after(result, { visual = false, delta = null } = {}) {
     if (!result.ok) {
       toast(result.message, true);
@@ -1390,6 +1727,7 @@
     else if (s.pending) pendingScreen();
     return result;
   }
+  // 前進幾天；遇到劇情或結局就停下來。
   function advance(count = 1, rest = false) {
     if ($("modal").open || busy || s.ended) return;
     const before = E.equity(s);
@@ -1432,6 +1770,7 @@
     }
     if (lesson) lessonAction("advance");
   }
+  // 第一次進入的歡迎畫面。
   function welcome() {
     modal(
       "welcome",
@@ -1474,6 +1813,10 @@
         </div>`,
     );
   }
+
+  // ---------- 新手教學 ----------
+
+  // 教學步驟：target 是手指要指的位置，key 是要做的動作。
   const LESSONS = [
     {
       key: "asset",
@@ -1547,6 +1890,7 @@
       task: "點「借錢再拚一次」。這次練習不會真的借款。",
     },
   ];
+  // 開始教學：先把正式進度收起來，換成練習帳戶。
   function startLesson() {
     stopEffects();
     busy = false;
@@ -1576,6 +1920,7 @@
     render();
     guideStep();
   }
+  // 玩家做對了目前這一步就前進。
   function lessonAction(key) {
     if (!lesson || LESSONS[lessonStep]?.key !== key) return;
     if (key === "loan") {
@@ -1585,6 +1930,7 @@
     lessonStep++;
     guideStep();
   }
+  // 這一步要指的元素；手機版可能是另一個。
   function guideTarget() {
     const step = LESSONS[lessonStep];
     if (!step) return null;
@@ -1593,6 +1939,7 @@
       el = document.querySelector(step.mobileTarget);
     return el;
   }
+  // 顯示這一步的說明並捲到目標位置。
   function guideStep() {
     if (!lesson || !LESSONS[lessonStep]) return;
     const step = LESSONS[lessonStep];
@@ -1613,6 +1960,7 @@
     positionGuide();
     setTimeout(positionGuide, 60);
   }
+  // 依目標位置擺放聚光燈與說明框。
   function positionGuide() {
     if (!lesson || $("modal").open) return;
     const el = guideTarget();
@@ -1637,6 +1985,7 @@
     coach.style.maxHeight =
       Math.max(120, (putAbove ? aboveSpace : belowSpace) - 18) + "px";
   }
+  // 教學中的打工與賭局介紹。
   function lessonIntro(kind) {
     const work = kind === "work";
     modal(
@@ -1651,13 +2000,24 @@
               (x) => /* HTML */ `<article>
                   <span>${x.icon}</span><b>${x.name}</b>
                   <p>${x.description}</p>
-                  ${work ? /* HTML */ `<small>完成 ${x.rounds} 筆領 ${money(x.pay)}；答錯會扣薪。</small>` : ""}
+                  ${
+                    work
+                      ? /* HTML */ `<small
+                        >完成 ${x.rounds} 筆領
+                        ${money(x.pay)}；答錯會扣薪。</small
+                      >`
+                      : ""
+                  }
                 </article>`,
             )
             .join("")}
         </div>
         <div class="modal-box">
-          ${work ? "工作期間時鐘暫停。暫時離開會保留任務；完成全部操作才拿錢，放棄不發薪。" : "賭局期間時鐘暫停。可以先休息再回來；必須完成或放棄本局，才能繼續交易。賭場每天最多 12 局，沒有真錢。"}
+          ${
+            work
+              ? "工作期間時鐘暫停。暫時離開會保留任務；完成全部操作才拿錢，放棄不發薪。"
+              : "賭局期間時鐘暫停。可以先休息再回來；必須完成或放棄本局，才能繼續交易。賭場每天最多 12 局，沒有真錢。"
+          }
         </div>
         <div class="modal-actions">
           <button class="ghost" data-action="skip-lesson">跳過剩餘說明</button
@@ -1667,6 +2027,7 @@
         </div>`,
     );
   }
+  // 教學中的借款介紹。
   function lessonLoan() {
     modal(
       "lesson-loan",
@@ -1702,6 +2063,7 @@
         </div>`,
     );
   }
+  // 結束教學，換回正式進度。
   function finishLesson(skipped = false) {
     s = formalBackup || s;
     formalBackup = null;
@@ -1728,10 +2090,15 @@
     if (s.pending) pendingScreen();
     else if (s.ended) ending();
   }
+
+  // ---------- 借款、還款與身體視窗 ----------
+
+  // 打開借款視窗。
   function loanModal() {
     loanType = "bank";
     renderLoanModal();
   }
+  // 借款視窗的內容。
   function renderLoanModal() {
     const t = E.LOAN_TYPES[loanType],
       max = E.loanLimit(s, loanType);
@@ -1742,8 +2109,13 @@
         <div class="loan-types">
           ${Object.entries(E.LOAN_TYPES)
             .map(
-              ([id, x]) =>
-                `<button class="loan-type ${loanType === id ? "active" : ""}" data-loan-type="${id}"><b>${x.name}</b><small>每日息 ${x.rate * 100}%</small><small>${x.days} 日催收</small></button>`,
+              ([id, x]) => /* HTML */ `<button
+                  class="loan-type ${loanType === id ? "active" : ""}"
+                  data-loan-type="${id}"
+                >
+                  <b>${x.name}</b><small>每日息 ${x.rate * 100}%</small
+                  ><small>${x.days} 日催收</small>
+                </button>`,
             )
             .join("")}
         </div>
@@ -1759,13 +2131,31 @@
             type="number"
             min="0.0001"
             step="0.1"
-            value="${(Math.floor(Math.min(1, max / 1e8) * 10000) / 10000).toFixed(4)}"
+            value="${(
+              Math.floor(Math.min(1, max / 1e8) * 10000) / 10000
+            ).toFixed(4)}"
             inputmode="decimal"
           /><span>億</span>
         </div>
         <p id="loan-error" class="loan-error" role="alert" hidden></p>
         <div id="loan-receipt" class="modal-box" style="margin-top:15px"></div>
-        ${s.loans.length ? '<div class="modal-box" style="margin-top:12px"><strong>你現在的借條</strong><br>' + s.loans.map((l) => E.LOAN_TYPES[l.type].name + "：" + money(l.balance) + "，第 " + l.due + " 天到期").join("<br>") + "</div>" : ""}
+        ${
+          s.loans.length
+            ? '<div class="modal-box" style="margin-top:12px"><strong>你現在的借條</strong><br>' +
+              s.loans
+                .map(
+                  (l) =>
+                    E.LOAN_TYPES[l.type].name +
+                    "：" +
+                    money(l.balance) +
+                    "，第 " +
+                    l.due +
+                    " 天到期",
+                )
+                .join("<br>") +
+              "</div>"
+            : ""
+        }
         <div class="modal-actions">
           <button class="ghost" data-action="dismiss">先不借</button
           ><button
@@ -1774,12 +2164,17 @@
             ${max < 10000 ? "disabled" : ""}
           >
             接受這張借條</button
-          >${s.debt > 0 ? '<button class="ghost" data-action="open-repay">先還一筆</button>' : ""}
+          >${
+            s.debt > 0
+              ? '<button class="ghost" data-action="open-repay">先還一筆</button>'
+              : ""
+          }
         </div>`,
     );
     loanReceipt();
     $("loan-amount").addEventListener("input", loanReceipt);
   }
+  // 在金額欄下方顯示錯誤原因。
   function showLoanError(validation) {
     const field = $("loan-amount"),
       error = $("loan-error");
@@ -1792,15 +2187,20 @@
           ? ` 目前最多可借 ${money(validation.limit)}。`
           : "");
   }
+  // 即時算出實拿金額與利息。
   function loanReceipt() {
     const amt = Number($("loan-amount").value) * 1e8,
       t = E.LOAN_TYPES[loanType];
     showLoanError(E.validateBorrow(s, amt, loanType));
     $("loan-receipt").innerHTML =
       Number.isFinite(amt) && amt > 0
-        ? `真正拿到 <strong>${money(amt * (1 - t.fee))}</strong>，欠款增加 <strong>${money(amt)}</strong>。<br>明天利息 ${money(amt * t.rate)}。這些是誇張的遊戲利率。`
+        ? /* HTML */ `真正拿到
+            <strong>${money(amt * (1 - t.fee))}</strong>，欠款增加
+            <strong>${money(amt)}</strong>。<br />明天利息
+            ${money(amt * t.rate)}。這些是誇張的遊戲利率。`
         : "請輸入有效金額。";
   }
+  // 還款視窗。
   function repayModal() {
     modal(
       "repay",
@@ -1808,7 +2208,9 @@
         <h2>現在欠 ${money(s.debt)}</h2>
         <p>
           口袋可用
-          ${money(s.cash)}。會優先還快到期的借條；未付的生活費債務也算在總欠款裡。
+          ${money(
+            s.cash,
+          )}。會優先還快到期的借條；未付的生活費債務也算在總欠款裡。
         </p>
         <div class="amount-field">
           <label class="sr-only" for="repay-amount">還款金額，單位億</label
@@ -1817,7 +2219,9 @@
             type="number"
             min="0.0001"
             step="0.1"
-            value="${(Math.floor(Math.min(s.cash, s.debt) / 10000) / 10000).toFixed(4)}"
+            value="${(
+              Math.floor(Math.min(s.cash, s.debt) / 10000) / 10000
+            ).toFixed(4)}"
             inputmode="decimal"
           /><span>億</span>
         </div>
@@ -1827,6 +2231,7 @@
         </div>`,
     );
   }
+  // 身體圖的分區名稱。
   const BODY_ZONES = {
     all: "全身",
     head: "頭頸",
@@ -1834,6 +2239,7 @@
     abdomen: "腹腔",
     structure: "骨骼與外層",
   };
+  // 部件屬於哪一區。
   function bodyZone(id) {
     return ["cornea_left", "cornea_right", "thyroid"].includes(id)
       ? "head"
@@ -1843,6 +2249,7 @@
           ? "structure"
           : "abdomen";
   }
+  // 部件目前的狀態文字。
   function bodyStatus(o) {
     const r = s.organRecords.find((x) => x.id === o.id);
     return s.organs.includes(o.id)
@@ -1855,6 +2262,7 @@
         ? "仍在身體裡"
         : "隨整體失去";
   }
+  // 身體總覽。
   function bodyModal(zone = "all") {
     const parts = E.ORGANS.filter(
         (o) => zone === "all" || bodyZone(o.id) === zone,
@@ -1897,8 +2305,13 @@
                 ["kidney_right", 113, 199, "●"],
               ]
                 .map(
-                  ([id, x, y, icon]) =>
-                    `<text class="${s.organs.includes(id) ? "missing-marker" : ""}" x="${x}" y="${y}" text-anchor="middle">${s.organs.includes(id) ? "×" : icon}</text>`,
+                  ([id, x, y, icon]) => /* HTML */ `<text
+                      class="${s.organs.includes(id) ? "missing-marker" : ""}"
+                      x="${x}"
+                      y="${y}"
+                      text-anchor="middle"
+                      >${s.organs.includes(id) ? "×" : icon}</text
+                    >`,
                 )
                 .join("")}</svg
             ><small>示意圖・不是醫學影像<br />紅色叉號代表已失去</small>
@@ -1906,7 +2319,8 @@
               ${Object.entries(BODY_ZONES)
                 .filter(([k]) => k !== "all")
                 .map(
-                  ([k, v]) => `<button data-body-zone="${k}">${v} ›</button>`,
+                  ([k, v]) =>
+                    /* HTML */ `<button data-body-zone="${k}">${v} ›</button>`,
                 )
                 .join("")}
             </div>
@@ -1915,13 +2329,36 @@
             <div class="body-zone-tabs">
               ${Object.entries(BODY_ZONES)
                 .map(
-                  ([k, v]) =>
-                    `<button class="${k === zone ? "active" : ""}" data-body-zone="${k}">${v}</button>`,
+                  ([k, v]) => /* HTML */ `<button
+                      class="${k === zone ? "active" : ""}"
+                      data-body-zone="${k}"
+                    >
+                      ${v}
+                    </button>`,
                 )
                 .join("")}
             </div>
             <div class="body-detail-grid">
-              ${parts.map((o) => `<button class="body-item ${!E.organAvailable(s, o) ? "missing" : ""}" data-body-part="${o.id}"><span>${o.icon}</span><b>${o.name}</b><small>${bodyStatus(o)}</small><em>${E.organAvailable(s, o) ? "看狀態與合約 ›" : "查看失去紀錄 ›"}</em></button>`).join("")}
+              ${parts
+                .map(
+                  (o) => /* HTML */ `<button
+                      class="body-item ${
+                        !E.organAvailable(s, o) ? "missing" : ""
+                      }"
+                      data-body-part="${o.id}"
+                    >
+                      <span>${o.icon}</span><b>${o.name}</b
+                      ><small>${bodyStatus(o)}</small
+                      ><em
+                        >${
+                          E.organAvailable(s, o)
+                            ? "看狀態與合約 ›"
+                            : "查看失去紀錄 ›"
+                        }</em
+                      >
+                    </button>`,
+                )
+                .join("")}
             </div>
           </div>
         </div>
@@ -1935,6 +2372,7 @@
         </div>`,
     );
   }
+  // 單一部件的詳細說明。
   function bodyDetail(id) {
     const o = E.ORGANS.find((x) => x.id === id);
     if (!o) return;
@@ -1968,20 +2406,59 @@
         </div>
         ${
           available
-            ? `<p class="${E.organFatal(s, o) ? "danger" : ""}">${E.organFatal(s, o) ? "⚠ 以你目前身體狀態，簽下這筆合約會直接死亡。" : "這筆合約不可撤銷，休息不會長回部件。"}${locked ? " 目前有事件／任務或已結局，只能查看。" : ""}</p>`
+            ? /* HTML */ `<p class="${E.organFatal(s, o) ? "danger" : ""}">
+              ${
+                E.organFatal(s, o)
+                  ? "⚠ 以你目前身體狀態，簽下這筆合約會直接死亡。"
+                  : "這筆合約不可撤銷，休息不會長回部件。"
+              }${locked ? " 目前有事件／任務或已結局，只能查看。" : ""}
+            </p>`
             : /* HTML */ `<div class="organ-loss-record">
-                <strong>失去紀錄</strong>
-                <p>
-                  ${r?.day ? `第 ${r.day} 天 ${clock(r.minute)} · ${r.cause === "seized" ? "催收強行抵債" : "主動簽下身體合約"}<br>現金入帳 ${money(r.cash || 0)}${r.credit !== undefined ? ` · 抵債 ${money(r.credit)}` : ""}${r.healthBefore !== undefined ? `<br>當時健康 ${Math.ceil(r.healthBefore)} → ${Math.ceil(r.healthAfter)}，永久上限 ${r.cap}` : ""}` : r?.cause === "legacy" ? "舊版存檔只記錄已失去，沒有日期與原因；沒有補造紀錄。" : "剩餘肝臟已失去，這個子部件也不可用。"}
-                </p>
-              </div>`
+              <strong>失去紀錄</strong>
+              <p>
+                ${
+                  r?.day
+                    ? /* HTML */ `第 ${r.day} 天 ${clock(r.minute)} ·
+                      ${
+                        r.cause === "seized"
+                          ? "催收強行抵債"
+                          : "主動簽下身體合約"
+                      }<br />現金入帳
+                      ${money(r.cash || 0)}${
+                        r.credit !== undefined
+                          ? ` · 抵債 ${money(r.credit)}`
+                          : ""
+                      }${
+                        r.healthBefore !== undefined
+                          ? /* HTML */ `<br />當時健康
+                            ${Math.ceil(r.healthBefore)} →
+                            ${Math.ceil(r.healthAfter)}，永久上限 ${r.cap}`
+                          : ""
+                      }`
+                    : r?.cause === "legacy"
+                      ? "舊版存檔只記錄已失去，沒有日期與原因；沒有補造紀錄。"
+                      : "剩餘肝臟已失去，這個子部件也不可用。"
+                }
+              </p>
+            </div>`
         }
         <div class="modal-actions">
           <button class="ghost" data-action="back-body">回到全身圖鑑</button
-          >${available ? `<button class="${E.organFatal(s, o) ? "danger-button" : "primary"}" data-organ="${id}" ${locked ? "disabled" : ""}>查看 ${o.name} 的合約</button>` : ""}
+          >${
+            available
+              ? /* HTML */ `<button
+                class="${E.organFatal(s, o) ? "danger-button" : "primary"}"
+                data-organ="${id}"
+                ${locked ? "disabled" : ""}
+              >
+                查看 ${o.name} 的合約
+              </button>`
+              : ""
+          }
         </div>`,
     );
   }
+  // 部件交易清單（虛構情節）。
   function organModal() {
     modal(
       "organs",
@@ -1993,13 +2470,27 @@
           >
         </p>
         <div class="organ-grid">
-          ${E.ORGANS.map((o) => `<button class="organ-option" data-organ="${o.id}" ${!E.organAvailable(s, o) ? "disabled" : ""}><span>${o.icon}</span><span><b>${o.name}${!E.organAvailable(s, o) ? " · 已不可用" : ""}</b><small>${o.note}</small></span><strong>換 ${money(o.price, 1)}</strong></button>`).join("")}
+          ${E.ORGANS.map(
+            (o) => /* HTML */ `<button
+                class="organ-option"
+                data-organ="${o.id}"
+                ${!E.organAvailable(s, o) ? "disabled" : ""}
+              >
+                <span>${o.icon}</span
+                ><span
+                  ><b
+                    >${o.name}${!E.organAvailable(s, o) ? " · 已不可用" : ""}</b
+                  ><small>${o.note}</small></span
+                ><strong>換 ${money(o.price, 1)}</strong>
+              </button>`,
+          ).join("")}
         </div>
         <div class="modal-actions">
           <button class="ghost" data-action="dismiss">身體先留著</button>
         </div>`,
     );
   }
+  // 部件交易的最後確認。
   function confirmOrgan(id) {
     const o = E.ORGANS.find((x) => x.id === id),
       bothKidneys =
@@ -2008,13 +2499,21 @@
       "organ-confirm",
       /* HTML */ `<div class="modal-kicker">黑市合約 · 確認不可逆代價</div>
         <h2>
-          ${E.organFatal(s, o) ? "這次會直接死亡。" : "失去" + o.name + "，能救回什麼？"}
+          ${
+            E.organFatal(s, o)
+              ? "這次會直接死亡。"
+              : "失去" + o.name + "，能救回什麼？"
+          }
         </h2>
         <p>
           取得 ${money(o.price)}。健康扣 ${o.damage}，永久健康上限最多
           ${bothKidneys ? 22 : Math.min(s.healthCap, o.cap)}。${esc(o.note)}
           目前健康 ${Math.ceil(s.health)}，<strong
-            >${E.organFatal(s, o) ? "這筆交易會觸發死亡結局。" : "之後的每一天都更難撐。"}</strong
+            >${
+              E.organFatal(s, o)
+                ? "這筆交易會觸發死亡結局。"
+                : "之後的每一天都更難撐。"
+            }</strong
           >
         </p>
         <div class="modal-actions">
@@ -2025,6 +2524,10 @@
         </div>`,
     );
   }
+
+  // ---------- 劇情、結局與說明 ----------
+
+  // 依待處理事件的種類，打開對應的畫面。
   function pendingScreen() {
     if (s.pending.type === "glitch") {
       showGlitch();
@@ -2040,7 +2543,13 @@
           <h2>${ev.title}</h2>
           <p>${ev.body}</p>
           <div class="choices">
-            ${ev.choices.map((c, i) => `<button data-choice="${i}"><b>${c.label}</b><small>${c.detail}</small></button>`).join("")}
+            ${ev.choices
+              .map(
+                (c, i) => /* HTML */ `<button data-choice="${i}">
+                    <b>${c.label}</b><small>${c.detail}</small>
+                  </button>`,
+              )
+              .join("")}
           </div>`,
       );
     } else if (s.pending.type === "debt") {
@@ -2071,15 +2580,33 @@
               ></button
             ><button data-choice="2" ${!organ ? "disabled" : ""}>
               <b
-                >${organ ? "交出" + organ.name + "，繼續撐" : "可交易的部件已用完"}</b
+                >${
+                  organ
+                    ? "交出" + organ.name + "，繼續撐"
+                    : "可交易的部件已用完"
+                }</b
               ><small
-                >${organ ? "換取 " + money(organ.price) + "。健康 −" + organ.damage + "，永久上限 " + organ.cap + "。" + (s.health <= organ.damage ? "這會觸發死亡結局。" : "代價不可逆。") : "你已沒有這種退路。"}</small
+                >${
+                  organ
+                    ? "換取 " +
+                      money(organ.price) +
+                      "。健康 −" +
+                      organ.damage +
+                      "，永久上限 " +
+                      organ.cap +
+                      "。" +
+                      (s.health <= organ.damage
+                        ? "這會觸發死亡結局。"
+                        : "代價不可逆。")
+                    : "你已沒有這種退路。"
+                }</small
               >
             </button>
           </div>`,
       );
     }
   }
+  // 遊戲內的假斷線畫面。
   function showGlitch() {
     clearTimeout(glitchTimer);
     busy = true;
@@ -2093,6 +2620,7 @@
         : "平台正在維修。你想跑，卻暫時沒有賣出按鈕。";
     render();
   }
+  // 重新連線並結算變動。
   function reconnect() {
     if (!s.pending || s.pending.type !== "glitch") return;
     const before = E.equity(s),
@@ -2108,6 +2636,7 @@
     if (s.ended) ending();
     else if (s.pending) pendingScreen();
   }
+  // 結局畫面。
   function ending() {
     stopEffects();
     busy = false;
@@ -2116,9 +2645,40 @@
       eq = E.equity(s);
     modal(
       "end",
-      `<div class="${death ? "ending-death" : ""}"><div class="modal-kicker">${death ? "結局 02 · 透支生命" : "結局 01 · 街頭乞丐"}</div><div class="end-avatar">${death ? "🪦" : "🧎"}</div><h2>${death ? "最後一個通知，你沒能按下。" : "你終於不用再盯著盤了。"}</h2><p style="line-height:1.8;color:var(--muted)">${esc(s.endReason)}</p><div class="end-values"><div><small>剩下的身家</small><b class="negative">${money(eq)}</b></div><div><small>活了多久</small><b>${s.day} 天</b></div><div><small>健康與壓力</small><b>${Math.ceil(s.health)} / ${Math.round(s.stress)}</b></div><div><small>失去的部件</small><b>${s.organs.length} 個</b></div><div><small>爆倉次數</small><b>${s.liquidations} 次</b></div><div><small>欠下的錢</small><b>${money(s.debt)}</b></div></div><div class="modal-box">結局是刻意安排的黑色幽默，不是現實投資或醫學判斷。真正要帶走的，是對「借錢翻本、保證獲利、拿健康換下注」的警惕。</div><div class="modal-actions"><button class="ghost" data-action="dismiss">看看最後的帳戶</button><button class="ghost" data-action="report">匯出人生戰報</button><button class="primary" data-action="new-life">重開一段人生</button></div></div>`,
+      /* HTML */ `<div class="${death ? "ending-death" : ""}">
+        <div class="modal-kicker">
+          ${death ? "結局 02 · 透支生命" : "結局 01 · 街頭乞丐"}
+        </div>
+        <div class="end-avatar">${death ? "🪦" : "🧎"}</div>
+        <h2>
+          ${death ? "最後一個通知，你沒能按下。" : "你終於不用再盯著盤了。"}
+        </h2>
+        <p style="line-height:1.8;color:var(--muted)">${esc(s.endReason)}</p>
+        <div class="end-values">
+          <div>
+            <small>剩下的身家</small><b class="negative">${money(eq)}</b>
+          </div>
+          <div><small>活了多久</small><b>${s.day} 天</b></div>
+          <div>
+            <small>健康與壓力</small
+            ><b>${Math.ceil(s.health)} / ${Math.round(s.stress)}</b>
+          </div>
+          <div><small>失去的部件</small><b>${s.organs.length} 個</b></div>
+          <div><small>爆倉次數</small><b>${s.liquidations} 次</b></div>
+          <div><small>欠下的錢</small><b>${money(s.debt)}</b></div>
+        </div>
+        <div class="modal-box">
+          結局是刻意安排的黑色幽默，不是現實投資或醫學判斷。真正要帶走的，是對「借錢翻本、保證獲利、拿健康換下注」的警惕。
+        </div>
+        <div class="modal-actions">
+          <button class="ghost" data-action="dismiss">看看最後的帳戶</button
+          ><button class="ghost" data-action="report">匯出人生戰報</button
+          ><button class="primary" data-action="new-life">重開一段人生</button>
+        </div>
+      </div>`,
     );
   }
+  // 玩法說明。
   function helpModal() {
     modal(
       "help",
@@ -2166,6 +2726,7 @@
         </div>`,
     );
   }
+  // 健康與壓力說明。
   function healthHelp() {
     if (lesson) {
       toast("健康歸零會死亡；壓力會加快耗損；已失去的部件不能恢復。");
@@ -2198,6 +2759,7 @@
         </div>`,
     );
   }
+  // 走勢圖說明。
   function chartHelp() {
     modal(
       "chart-help",
@@ -2218,6 +2780,7 @@
         </div>`,
     );
   }
+  // 下載這一局的人生戰報。
   function report() {
     const r = rank();
     let text = `百億炒股人生 1.2 — 人生戰報\n全虛構黑色幽默遊戲，不是真實財務或醫學紀錄。\n\n第 ${s.day} 天 / 最多 60 天\n角色：${s.playerName} · ${r.name}\n身家：${money(E.equity(s))}\n口袋：${money(s.cash)}\n欠款：${money(s.debt)}\n巔峰：${money(s.peak)}\n健康：${Math.ceil(s.health)} / ${s.healthCap}\n壓力：${Math.round(s.stress)} / 100\n名譽：${s.reputation} / 100\n催收輪數：${s.collectionCount}\n強行抵債部件：${s.seizedCount}\n賭局：${s.gambleStats.rounds} 局\n賭局累計損益：${money(s.gambleStats.net)}\n打工班數：${s.jobsDone}\n打工總收入：${money(s.workIncome)}\n失去的部件：${s.organs.map((id) => E.ORGANS.find((x) => x.id === id).name).join("、") || "沒有"}\n借條：${s.loans.length} 張\n爆倉：${s.liquidations} 次\n假斷線：${s.glitches} 次\n成就：${s.achievements.length} / ${E.ACHIEVEMENTS.length}\n結局：${s.endReason || "仍在進行"}\n\n完整人生紀錄\n${[
@@ -2237,6 +2800,7 @@
     setTimeout(() => URL.revokeObjectURL(url), 2000);
     toast("這段人生已匯出。");
   }
+  // 重新開始的確認視窗。
   function resetPrompt() {
     modal(
       "reset",
@@ -2252,6 +2816,7 @@
         </div>`,
     );
   }
+  // 開始新的人生，重設所有狀態。
   function newLife() {
     stopEffects();
     busy = false;
@@ -2286,6 +2851,7 @@
     window.scrollTo({ top: 0, behavior: "instant" });
     nameModal();
   }
+  // 切換現貨、槓桿或選擇權。
   function setProduct(p) {
     product = p;
     if (p === "spot") direction = "long";
@@ -2293,6 +2859,7 @@
       $("leverage").value = 3;
     renderOrder();
   }
+  // 下單；高倍槓桿會先要求再次確認。
   function trade() {
     const amt = amount(),
       l = leverage();
@@ -2304,6 +2871,7 @@
       toast("口袋不夠：投入金額還要加平台費。", true);
       return;
     }
+    // 真正送出這筆交易。
     const perform = () => {
       const r = E.open(s, {
         asset: selected,
@@ -2329,6 +2897,7 @@
             ><button id="confirm-trade" class="primary">我知道，買下去</button>
           </div>`,
       );
+      // 在確認視窗按下確定。
       $("confirm-trade").addEventListener(
         "click",
         () => {
@@ -2339,7 +2908,7 @@
       );
     } else perform();
   }
-  // Capture phase enforces real tutorial steps. Only the indicated control can act.
+  // 在最早的階段攔截，確保新手教學一步一步來，只有指定的按鈕能按。
   document.addEventListener(
     "click",
     (event) => {
@@ -2367,6 +2936,10 @@
     },
     true,
   );
+
+  // ---------- 事件綁定 ----------
+
+  // 所有按鈕的點擊都在這裡處理，依 data-… 屬性分派。
   document.addEventListener("click", (event) => {
     const b = event.target.closest("button");
     if (!b || b.disabled) return;
@@ -2470,6 +3043,7 @@
         if (s.ended) ending();
       } else toast(r.message, true);
     }
+    // 劇情選項：記下選擇前的狀態，之後顯示影響。
     if (b.dataset.choice !== undefined) {
       const before = {
           health: s.health,
@@ -2513,6 +3087,7 @@
       casinoType = b.dataset.casinoMode;
       casinoModal();
     }
+    // 賭局動作。
     if (b.dataset.gambleAction) {
       const r = E.gambleAction(
         s,
@@ -2532,6 +3107,7 @@
         } else gambleScreen();
       } else toast(r.message, true);
     }
+    // 一般按鈕用 data-action 分派。
     const a = b.dataset.action;
     if (a === "choose-name") chooseName();
     if (a === "cancel-contract") {
@@ -2597,6 +3173,7 @@
       document.body.classList.toggle("reduced-effects", !prefs.effects);
       welcome();
     }
+    // 借款：檢查金額，高風險的先進合約畫面。
     if (a === "borrow") {
       const amt = Number($("loan-amount").value) * 1e8;
       const validation = E.validateBorrow(s, amt, loanType);
@@ -2630,12 +3207,14 @@
     }
   });
   $("trade-button").addEventListener("click", trade);
+  // 輸入金額時即時更新；教學固定 1 億。
   $("amount").addEventListener("input", () => {
     if (lesson) {
       $("amount").value = "1";
     }
     renderOrder();
   });
+  // 調整槓桿；教學不使用槓桿。
   $("leverage").addEventListener("input", () => {
     if (lesson) $("leverage").value = 0;
     renderOrder();
@@ -2644,6 +3223,7 @@
   $("skip-button").addEventListener("click", () => advance(5));
   $("rest-button").addEventListener("click", () => advance(1, true));
   $("work-button").addEventListener("click", jobsModal);
+  // 借款按鈕。
   $("loan-button").addEventListener("click", () => {
     if (lesson) lessonAction("loan");
     else loanModal();
@@ -2657,6 +3237,7 @@
   $("chart-help").addEventListener("click", chartHelp);
   $("report-button").addEventListener("click", report);
   $("reset-button").addEventListener("click", resetPrompt);
+  // 全部賣掉前先確認。
   $("close-all").addEventListener("click", () => {
     modal(
       "close-all",
@@ -2671,6 +3252,7 @@
           ><button id="confirm-close" class="primary">全部賣掉</button>
         </div>`,
     );
+    // 確定全部賣掉。
     $("confirm-close").addEventListener(
       "click",
       () => {
@@ -2680,6 +3262,7 @@
       { once: true },
     );
   });
+  // 「梭哈」捷徑：自動填好高風險設定，但仍要玩家自己按下單。
   $("temptation-leverage").addEventListener("click", () => {
     selected = "future";
     filter = "risk";
@@ -2698,6 +3281,7 @@
       .scrollIntoView({ block: "center", behavior: "smooth" });
     toast("只設定了 100 倍，還沒買。你還能反悔。");
   });
+  // 神秘股票的說明與確認。
   $("temptation-mystery").addEventListener("click", () => {
     modal(
       "mystery",
@@ -2711,6 +3295,7 @@
           ><button id="confirm-mystery" class="primary">花 1 億，開獎</button>
         </div>`,
     );
+    // 確定購買神秘股票。
     $("confirm-mystery").addEventListener(
       "click",
       () => {
@@ -2722,11 +3307,13 @@
       { once: true },
     );
   });
+  // 音效開關。
   $("sound-button").addEventListener("click", () => {
     prefs.sound = !prefs.sound;
     beep();
     render();
   });
+  // 特效開關。
   $("motion-button").addEventListener("click", () => {
     prefs.effects = !prefs.effects;
     render();
@@ -2738,6 +3325,7 @@
   });
   $("reconnect-button").addEventListener("click", reconnect);
   $("skip-glitch-button").addEventListener("click", reconnect);
+  // 按 Esc 關視窗；必須做選擇的視窗會擋下來。
   $("modal").addEventListener("cancel", (event) => {
     if (
       lesson ||
@@ -2756,6 +3344,7 @@
       renderChart();
     }
   });
+  // 空白鍵前進一天。
   document.addEventListener("keydown", (event) => {
     if (
       event.code === "Space" &&
@@ -2772,6 +3361,7 @@
     }
   });
   let resizeTimer;
+  // 視窗大小改變後，重畫圖表並重新擺放教學。
   window.addEventListener("resize", () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
@@ -2779,6 +3369,7 @@
       positionGuide();
     }, 100);
   });
+  // 教學中捲動時，聚光燈跟著移動。
   window.addEventListener(
     "scroll",
     () => {
@@ -2786,7 +3377,7 @@
     },
     { passive: true },
   );
-  // Mobile keeps borrowing accessible even when the full loan list is collapsed.
+  // 手機上就算貸款清單收合，仍然可以借錢。
   const shortcut = document.createElement("button");
   shortcut.id = "tutorial-loan-shortcut";
   shortcut.className = "purple-button mobile-loan-button";
@@ -2799,6 +3390,7 @@
   const context = document.modelContext,
     life = new AbortController();
   if (context && typeof context.registerTool === "function") {
+    // 註冊一個瀏覽器工具（支援的瀏覽器才有）。
     const reg = (t) => {
       try {
         Promise.resolve(context.registerTool(t, { signal: life.signal })).catch(
@@ -2816,6 +3408,7 @@
         additionalProperties: false,
       },
       annotations: { readOnlyHint: true, untrustedContentHint: false },
+      // 回報目前的遊戲狀態。
       execute: () => ({
         playerName: s.playerName,
         reputation: s.reputation,
@@ -2842,6 +3435,7 @@
         additionalProperties: false,
       },
       annotations: { readOnlyHint: false, untrustedContentHint: false },
+      // 讓工具前進一天，條件和按鈕相同。
       execute: (input) => {
         if (
           !input ||
@@ -2866,10 +3460,12 @@
     });
     window.addEventListener("pagehide", () => life.abort(), { once: true });
   }
+  // 搜尋商品。
   $("asset-search").addEventListener("input", () => {
     assetSearch = $("asset-search").value;
     renderAssets();
   });
+  // 題材選單。
   $("sector-select").addEventListener("change", () => {
     sector = $("sector-select").value;
     renderAssets();
@@ -2878,11 +3474,13 @@
   $("casino-button").addEventListener("click", casinoModal);
   $("temptation-casino").addEventListener("click", casinoModal);
   $("settings-button").addEventListener("click", settingsModal);
+  // 視野輔助：角膜受損時讓文字仍然清楚。
   $("vision-assist").addEventListener("click", () => {
     prefs.visionAssist = !prefs.visionAssist;
     render();
   });
   $("history-export").addEventListener("click", exportHistory);
+  // 暫停或繼續行情。
   $("market-pause").addEventListener("click", () => {
     prefs.marketPaused = !prefs.marketPaused;
     render();
@@ -2893,6 +3491,7 @@
     chartHover = null;
     renderChart();
   });
+  // 走勢圖支援左右鍵查看。
   $("chart").addEventListener("keydown", (event) => {
     if (["ArrowLeft", "ArrowRight"].includes(event.key)) {
       event.preventDefault();
@@ -2908,24 +3507,28 @@
       renderChart();
     }
   });
+  // 拖曳日期滑桿。
   $("chart-day").addEventListener("input", () => {
     chartDay = Number($("chart-day").value);
     chartPeriod = "day";
     chartHover = null;
     renderChart();
   });
+  // 前一天。
   $("chart-prev").addEventListener("click", () => {
     chartDay = Math.max(1, (chartDay ?? s.day) - 1);
     chartPeriod = "day";
     chartHover = null;
     renderChart();
   });
+  // 後一天。
   $("chart-next").addEventListener("click", () => {
     chartDay = Math.min(s.day, (chartDay ?? s.day) + 1);
     chartPeriod = "day";
     chartHover = null;
     renderChart();
   });
+  // 回到今天。
   $("chart-live").addEventListener("click", () => {
     chartDay = null;
     chartPeriod = "day";
@@ -2936,6 +3539,7 @@
     interacting = false;
     renderChart();
   });
+  // 按住畫面時先不跳動行情，避免按鈕在手指下移動。
   document.addEventListener(
     "pointerdown",
     () => {
@@ -2964,6 +3568,7 @@
   // 返回遊戲館時保存，不改變玩家原本的暫停偏好。
   window.addEventListener("akane-portal-pause", save);
   window.addEventListener("pagehide", save);
+  // 行情主迴圈：條件都允許時才讓時間前進。
   function liveLoop() {
     const loopStarted = Date.now();
     if (

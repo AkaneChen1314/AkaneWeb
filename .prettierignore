@@ -1,12 +1,12 @@
-# Images, audio, fonts and provenance are maintained separately from source code.
+# 圖片、聲音、字型與來源紀錄另外管理，不當成程式排版。
 assets/
 **/assets/
 
-# Third-party libraries and generated deployment bundles are not hand-edited.
+# 第三方套件與自動打包的檔案不要手動修改。
 **/vendor/
 games/neonstrike/browser.js
 
-# Local tools and verification output must never become website source.
+# 本機工具與檢查時的輸出，不屬於網站程式。
 .git/
 .hallmark/
 node_modules/

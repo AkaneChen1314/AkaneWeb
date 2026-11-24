@@ -9,6 +9,7 @@
 (function () {
   "use strict";
   window.akanePortalPaused = false;
+  // 收到父頁通知時，更新暫停狀態並轉成遊戲自己的事件。
   window.addEventListener("message", (event) => {
     if (event.source !== window.parent) return;
     if (location.protocol !== "file:" && event.origin !== location.origin)
@@ -24,6 +25,7 @@
     );
   });
   if (window.parent !== window) return;
+  // 單獨打開遊戲（不在 iframe 裡）時，補上返回遊戲館的連結。
   document.addEventListener("DOMContentLoaded", () => {
     const nav = document.createElement("nav");
     nav.className = "standalone-portal-nav";

@@ -1,3 +1,6 @@
+/*
+ * 測試：v1.5 的首領依玩家強度調整、主題輪替與特效設定。
+ */
 const assert = require("node:assert/strict");
 const {
   Engine,
@@ -13,12 +16,15 @@ const {
   enemyPool,
 } = require("../game.js");
 let checks = 0;
+// 執行一項測試。
 function test(name, fn) {
   fn();
   checks++;
   console.log("PASS", name);
 }
+// 複製一份資料。
 const copy = (value) => JSON.parse(JSON.stringify(value));
+// 開始一場遠征。
 function run(difficulty = 0, config = {}, mode = "campaign", seed = 81237) {
   const e = new Engine(defaultProfile());
   e.newRun("scout", mode, difficulty, seed, {
@@ -28,6 +34,7 @@ function run(difficulty = 0, config = {}, mode = "campaign", seed = 81237) {
   });
   return e;
 }
+// 給滿後期裝備。
 function equipEndgame(e) {
   e.r.p.level = 25;
   e.r.weapons = Object.keys(WEAPONS).map((id) => ({
@@ -40,6 +47,7 @@ function equipEndgame(e) {
   e.r.p.maxHp += 120;
   e.r.relics = ["crit", "frost", "battery", "shield", "second", "vamp"];
 }
+// 首領的總耐久（本體加護盾）。
 function totalDurability(b, r) {
   const phases = r.config.bossSecondPhase
     ? r.config.bossThirdPhase
@@ -55,6 +63,7 @@ function totalDurability(b, r) {
   return b.body / (1 - b.armor) + b.shield * (1 + recovery + recharge);
 }
 
+// 六種 1 級起始武器都不會遇到過高的耐久。
 test("all six starter weapons at level 1 avoid the previous 5000+ durability trap", () => {
   for (const difficulty of DIFFICULTIES)
     for (const startingWeapon of Object.keys(WEAPONS)) {
@@ -73,6 +82,7 @@ test("all six starter weapons at level 1 avoid the previous 5000+ durability tra
       assert.equal(b.level, 1);
     }
 });
+// 裝備不變時，耐久隨等級穩定增加。
 test("level scaling is linear with unchanged equipment and monotonic in all difficulties", () => {
   for (const d of DIFFICULTIES) {
     const e = run(d.id),
@@ -92,6 +102,7 @@ test("level scaling is linear with unchanged equipment and monotonic in all diff
     );
   }
 });
+// 裝備變強會提高下一個首領的耐久，但玩家仍有優勢。
 test("equipment increases next encounter durability and pressure while retaining a DPS advantage", () => {
   for (const d of DIFFICULTIES) {
     const e = run(d.id),
@@ -109,6 +120,7 @@ test("equipment increases next encounter durability and pressure while retaining
     );
   }
 });
+// 同等級也會看實際裝備。
 test("actual gear is considered even at the same player level", () => {
   const e = run(2),
     weak = createBossEncounter(e.r);
@@ -118,6 +130,7 @@ test("actual gear is considered even at the same player level", () => {
   assert(strong.body > weak.body * 3);
   assert(strong.layersPenalty < weak.layersPenalty);
 });
+// 目前血量不影響強度；防禦強化只增加有限的壓力。
 test("current health never affects scaling; defensive upgrades only apply bounded damage pressure", () => {
   const e = run(4),
     weak = createBossEncounter(e.r);
@@ -132,6 +145,7 @@ test("current health never affects scaling; defensive upgrades only apply bounde
   assert(defensive.damage > weak.damage);
   assert(defensive.damage <= 1.2);
 });
+// 換階段與限次回盾共用耐久，不會重複相乘。
 test("phase and limited recharge shields share the durability budget instead of multiplying it", () => {
   const e = run(4, { bossShield: "fortress", bossThirdPhase: true });
   for (const recovery of ["none", "phase", "recharge"]) {
@@ -144,6 +158,7 @@ test("phase and limited recharge shields share the durability budget instead of 
   e.r.config.shieldRecovery = "phase";
   assert(createBossEncounter(e.r).body < oneBreak);
 });
+// 戰鬥中升級不會讓目前的首領變強。
 test("upgrading during an active fight does not increase current Boss health or attack multipliers", () => {
   const e = run(4),
     b = e.spawnEnemy("boss"),
@@ -159,6 +174,7 @@ test("upgrading during an active fight does not increase current Boss health or 
   assert(next.maxHp > b.maxHp);
   assert(next.adaptive.rate > original.rate);
 });
+// 1 級維持重疊攻擊；更強的裝備會多出第三、第四個攻擊通道。
 test("level 1 keeps catastrophe overlap but stronger builds unlock a third and fourth attack channel", () => {
   const e = run(4),
     low = e.spawnEnemy("boss");
@@ -170,6 +186,7 @@ test("level 1 keeps catastrophe overlap but stronger builds unlock a third and f
   assert.equal(bossLayers(e.r, 2, high), 4);
   assert(bossCooldown(e.r, 1, high) < bossCooldown(e.r, 1, low));
 });
+// 首領的子彈與地面攻擊使用開戰時記下的等級。
 test("Boss projectiles and ground attacks use the saved player-level snapshot", () => {
   const e = run(2),
     low = e.spawnEnemy("boss");
@@ -188,6 +205,7 @@ test("Boss projectiles and ground attacks use the saved player-level snapshot", 
   assert(e.r.hazards.at(-1).damage > ground.damage);
   assert(e.r.hazards.at(-1).warning < ground.warning);
 });
+// 新的戰鬥紀錄與破掉的護盾，重新載入後不會重算。
 test("new encounter snapshots and broken shields survive reload without recomputing", () => {
   const e = run(4),
     b = e.spawnEnemy("boss");
@@ -204,6 +222,7 @@ test("new encounter snapshots and broken shields survive reload without recomput
   assert.equal(f.zoomPulse, 0);
   assert.equal(f.screenPulse, 0);
 });
+// 舊戰鬥只會換算一次比例，玩家進度不變。
 test("legacy encounter rebases both remaining fractions once and preserves player progress", () => {
   const e = run(4),
     b = e.spawnEnemy("boss");
@@ -224,6 +243,7 @@ test("legacy encounter rebases both remaining fractions once and preserves playe
   assert(g.loadRun(copy(f.r)));
   assert.deepEqual(g.r.enemies, f.r.enemies);
 });
+// 難度在一開始與完整裝備時都由低到高。
 test("all difficulties are ordered at both initial and complete builds", () => {
   for (const endgame of [false, true]) {
     let prev = null;
@@ -242,6 +262,7 @@ test("all difficulties are ordered at both initial and complete builds", () => {
     }
   }
 });
+// 每日主題會固定輪替，並改變戰鬥規則。
 test("daily theme rotates deterministically and creates distinct combat rules", () => {
   const themes = new Set();
   for (const seed of [20261004, 20261005, 20261006]) {
@@ -275,6 +296,7 @@ test("daily theme rotates deterministically and creates distinct combat rules", 
   }
   assert.equal(themes.size, 3);
 });
+// 無盡模式每八波提高壓力，並有上限。
 test("endless pressure grows every eight waves and has an explicit ceiling", () => {
   const e = run(0, {}, "endless");
   const initial = createBossEncounter(e.r);
@@ -290,6 +312,7 @@ test("endless pressure grows every eight waves and has an explicit ceiling", () 
   assert(ceiling.budget / initial.budget <= 1.301);
   assert(ceiling.rate / initial.rate <= 1.201);
 });
+// 演出效果有數量與頻率限制，不影響亂數與遊戲時間。
 test("cinematic events are bounded, rate-limited and do not consume RNG or alter the game clock", () => {
   const e = run(4),
     b = e.spawnEnemy("boss");
@@ -312,6 +335,7 @@ test("cinematic events are bounded, rate-limited and do not consume RNG or alter
   e.updateEnemy(b, 0.05);
   assert(e.shake >= 12);
 });
+// 特效設定不會改變戰鬥結果。
 test("effect preferences cannot change deterministic combat results", () => {
   const a = run(3, { bossDelay: 15 }),
     b = run(3, { bossDelay: 15 });
@@ -329,6 +353,7 @@ test("effect preferences cannot change deterministic combat results", () => {
   }
   assert.deepEqual(a.r, b.r);
 });
+// 不合理的強度紀錄會被拒絕。
 test("corrupt adaptive snapshots reject invalid pressure and non-integer level values", () => {
   const e = run(4);
   e.spawnEnemy("boss");

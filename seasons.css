@@ -4,11 +4,15 @@
   --akane-aqua: #84f2e7;
   --akane-sky: #69beff;
 }
+/* 背景。 */
 body {
   background:
     radial-gradient(ellipse at 88% 12%, #25477742, transparent 40%),
     radial-gradient(ellipse at 5% 38%, #2859852e, transparent 40%), #061423;
 }
+
+/* ---------- 首頁封面 ---------- */
+
 .archive-hero {
   position: relative;
   isolation: isolate;
@@ -60,6 +64,7 @@ body {
   text-shadow: 0 0 24px #62d9ff8a;
   pointer-events: none;
 }
+/* 人物背後的圓環。 */
 .stage-ring {
   border-color: #91b9ff46;
   box-shadow: 0 0 24px #72cbff0d;
@@ -132,6 +137,7 @@ body {
   object-fit: contain;
   transition: transform 0.6s;
 }
+/* 入口人物：伸手。 */
 .reaching-guide {
   width: 76%;
   top: 45px;
@@ -156,6 +162,7 @@ body {
   inset: 0;
   background: linear-gradient(90deg, #0b213cef, #0b213c42 42%, transparent 64%);
 }
+/* 入口人物：歡迎。 */
 .welcome-guide {
   width: 57%;
   top: 0;
@@ -178,6 +185,7 @@ body {
   top: 17px;
   right: 15px;
 }
+/* 入口滑過時的人物動作。 */
 .gateway:hover .gateway-guide img {
   transform: translateY(-4px) scale(1.025);
 }
@@ -205,6 +213,9 @@ body {
   border-color: #a5efff;
   box-shadow: 0 0 24px #6ae2ff23;
 }
+
+/* ---------- 首頁的季數列 ---------- */
+
 .home-season-strip {
   display: grid;
   grid-template-columns: 1.1fr repeat(3, 1fr);
@@ -329,6 +340,7 @@ body {
   color: #a0b7cf;
   margin: 0;
 }
+/* 話數選單。 */
 .episode-control {
   display: grid;
   gap: 9px;
@@ -352,6 +364,7 @@ select:focus-visible {
   outline: 3px solid var(--cyan);
   outline-offset: 4px;
 }
+/* 話數說明。 */
 .episode-note {
   font-size: 10px;
   line-height: 1.9;
@@ -360,6 +373,9 @@ select:focus-visible {
   padding: 8px 15px;
   margin-bottom: 26px;
 }
+
+/* ---------- 圖庫狀態 ---------- */
+
 .gallery-status {
   padding: 4px 0 20px;
   margin-top: 0;
@@ -387,6 +403,7 @@ select:focus-visible {
   color: #90aac2;
   margin: -7px 0 22px;
 }
+/* 圖片比例。 */
 .gallery-still .gallery-image-button {
   height: auto;
   aspect-ratio: 16 / 9;
@@ -402,6 +419,7 @@ select:focus-visible {
 .gallery-card h3 {
   font-size: 17px;
 }
+/* 來源連結。 */
 .guide-source-links {
   display: flex;
   flex-wrap: wrap;
@@ -410,6 +428,9 @@ select:focus-visible {
   color: #8eb6d8;
   margin-bottom: 20px;
 }
+
+/* ---------- 平板 ---------- */
+
 @media (max-width: 1100px) {
   .gateway {
     padding: 25px;
@@ -439,6 +460,9 @@ select:focus-visible {
     grid-column: 1 / -1;
   }
 }
+
+/* ---------- 較小的平板 ---------- */
+
 @media (max-width: 900px) and (min-width: 761px) {
   .gateway-grid {
     grid-template-columns: 1fr;
@@ -456,6 +480,9 @@ select:focus-visible {
     width: 50%;
   }
 }
+
+/* ---------- 手機 ---------- */
+
 @media (max-width: 760px) {
   .hero-character::after {
     font-size: 42px;
@@ -567,6 +594,9 @@ select:focus-visible {
     letter-spacing: 1.4px;
   }
 }
+
+/* ---------- 最窄的手機 ---------- */
+
 @media (max-width: 360px) {
   .gateway {
     padding: 20px;
@@ -591,6 +621,9 @@ select:focus-visible {
     font-size: 7px;
   }
 }
+
+/* ---------- 減少動態效果 ---------- */
+
 @media (prefers-reduced-motion: reduce) {
   .gateway-guide img,
   .gateway::before {

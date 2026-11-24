@@ -14,6 +14,8 @@
   --shadow: 0 25px 80px rgba(0, 0, 0, 0.45);
 }
 
+/* ---------- 基本設定與背景 ---------- */
+
 * {
   box-sizing: border-box;
 }
@@ -38,6 +40,7 @@ button {
   color: inherit;
 }
 
+/* 背景光點。 */
 .ambient {
   position: fixed;
   inset: 0;
@@ -90,6 +93,8 @@ button {
   }
 }
 
+/* ---------- 畫面切換 ---------- */
+
 .screen {
   display: none;
   position: relative;
@@ -114,6 +119,7 @@ button {
   }
 }
 
+/* 半透明面板。 */
 .glass {
   background: linear-gradient(
     145deg,
@@ -134,6 +140,8 @@ button {
   color: var(--cyan);
   text-transform: uppercase;
 }
+
+/* ---------- 按鈕 ---------- */
 
 .btn {
   border: 1px solid transparent;
@@ -186,7 +194,7 @@ button {
   cursor: pointer;
 }
 
-/* Home */
+/* ---------- 首頁 ---------- */
 .home-screen {
   align-items: center;
   justify-content: center;
@@ -238,6 +246,7 @@ button {
   flex-wrap: wrap;
 }
 
+/* 首頁特色。 */
 .feature-row {
   display: flex;
   gap: 20px;
@@ -247,6 +256,8 @@ button {
   font-size: 0.82rem;
 }
 
+/* ---------- 首頁主圖 ---------- */
+
 .home-art {
   position: relative;
   width: min(42vw, 560px);
@@ -254,6 +265,7 @@ button {
   z-index: 2;
 }
 
+/* 月亮。 */
 .moon {
   position: absolute;
   width: 380px;
@@ -288,6 +300,7 @@ button {
   }
 }
 
+/* 海報。 */
 .poster {
   position: absolute;
   border-radius: 28px;
@@ -336,6 +349,7 @@ button {
   filter: saturate(0.8) brightness(0.7);
 }
 
+/* 漂浮的卡片。 */
 .floating-card {
   position: absolute;
   right: 0;
@@ -374,7 +388,7 @@ button {
   }
 }
 
-/* Selection */
+/* ---------- 角色選擇 ---------- */
 .selection-screen {
   padding: 48px max(4vw, 24px) 125px;
   display: none;
@@ -385,6 +399,7 @@ button {
   display: flex;
 }
 
+/* 選擇畫面的標題。 */
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -403,6 +418,8 @@ button {
   color: var(--muted);
   margin: 0;
 }
+
+/* ---------- 角色卡 ---------- */
 
 .fighter-grid {
   display: grid;
@@ -487,6 +504,7 @@ button {
   margin: 8px 0 14px;
 }
 
+/* 角色數值。 */
 .stats {
   display: flex;
   gap: 8px;
@@ -507,6 +525,7 @@ button {
   font-size: 0.95rem;
 }
 
+/* 角色被動。 */
 .passive {
   margin-top: 10px;
   color: #dce8ff;
@@ -518,6 +537,7 @@ button {
   font-style: normal;
 }
 
+/* 底部操作列。 */
 .dock {
   position: fixed;
   left: 50%;
@@ -547,6 +567,8 @@ button {
   display: flex;
   gap: 8px;
 }
+
+/* ---------- 技能卡 ---------- */
 
 .support-grid {
   display: grid;
@@ -614,7 +636,7 @@ button {
   opacity: 0.2;
 }
 
-/* Battle */
+/* ---------- 戰鬥 ---------- */
 .battle-screen {
   overflow: hidden;
   min-height: 100vh;
@@ -670,6 +692,7 @@ button {
   margin-top: 5px;
 }
 
+/* 回合數。 */
 .round {
   text-align: center;
   font: 600 0.72rem Orbitron;
@@ -708,6 +731,8 @@ button {
   margin: auto;
 }
 
+/* ---------- 雙方角色 ---------- */
+
 .unit {
   position: relative;
   height: 100%;
@@ -719,6 +744,7 @@ button {
   justify-content: flex-end;
 }
 
+/* 角色圖。 */
 .unit-art {
   height: 100%;
   width: 76%;
@@ -743,6 +769,7 @@ button {
   margin-right: -55px;
 }
 
+/* 角色腳下的光。 */
 .aura {
   position: absolute;
   inset: 15% 2% 5%;
@@ -760,6 +787,7 @@ button {
   }
 }
 
+/* 角色資訊。 */
 .unit-panel {
   position: relative;
   z-index: 3;
@@ -794,6 +822,7 @@ button {
   margin: 0;
 }
 
+/* 狀態標籤。 */
 .status {
   font-size: 0.62rem;
   padding: 4px 8px;
@@ -809,6 +838,7 @@ button {
   background: rgba(255, 70, 100, 0.1);
 }
 
+/* 血量與能量條。 */
 .meter-label {
   display: flex;
   justify-content: space-between;
@@ -845,6 +875,7 @@ button {
   box-shadow: 0 0 12px #ff5471;
 }
 
+/* 增益與減益。 */
 .buff-row {
   display: flex;
   gap: 5px;
@@ -861,6 +892,7 @@ button {
   color: #cbd7ef;
 }
 
+/* 中央資訊。 */
 .center-info {
   height: 100%;
   display: flex;
@@ -870,6 +902,7 @@ button {
   gap: 18px;
 }
 
+/* 敵人下一招。 */
 .enemy-intent {
   padding: 10px 13px;
   border-radius: 12px;
@@ -904,6 +937,7 @@ button {
   color: var(--red);
 }
 
+/* 牌庫數量。 */
 .deck-count {
   display: flex;
   gap: 8px;
@@ -918,6 +952,7 @@ button {
   border-radius: 7px;
 }
 
+/* 傷害數字。 */
 .damage-pop {
   position: absolute;
   left: 50%;
@@ -932,6 +967,7 @@ button {
   opacity: 0;
 }
 
+/* 受傷與施法。 */
 .unit-art.hit img {
   animation: hit 0.42s ease;
 }
@@ -948,6 +984,8 @@ button {
   color: #6dffc3;
   text-shadow: 0 0 20px #32d99b;
 }
+
+/* ---------- 戰鬥動畫 ---------- */
 
 @keyframes hit {
   30% {
@@ -984,6 +1022,8 @@ button {
   }
 }
 
+/* ---------- 手牌區 ---------- */
+
 .card-console {
   position: relative;
   z-index: 7;
@@ -1006,6 +1046,7 @@ button {
   gap: 9px;
 }
 
+/* 行動點數。 */
 .ap-orb {
   display: flex;
   align-items: center;
@@ -1029,6 +1070,7 @@ button {
   color: #b5c1da;
 }
 
+/* 輔助技能。 */
 .support-mini {
   font-size: 0.62rem;
   color: #9ca9c5;
@@ -1040,6 +1082,7 @@ button {
   padding: 9px;
 }
 
+/* 手牌。 */
 .hand {
   display: flex;
   align-items: flex-end;
@@ -1049,6 +1092,7 @@ button {
   width: min(1050px, 100%);
 }
 
+/* 一張牌。 */
 .battle-card {
   --card: #6494ff;
   width: 175px;
@@ -1090,6 +1134,7 @@ button {
   animation-delay: 0.2s;
 }
 
+/* 發牌動畫。 */
 @keyframes deal {
   from {
     opacity: 0;
@@ -1097,6 +1142,7 @@ button {
   }
 }
 
+/* 滑過手牌。 */
 .battle-card:hover {
   z-index: 5;
   transform: translateY(-35px) scale(1.06);
@@ -1114,6 +1160,7 @@ button {
   transform: none;
 }
 
+/* 費用。 */
 .card-cost {
   position: absolute;
   right: 10px;
@@ -1149,6 +1196,7 @@ button {
   text-shadow: 0 0 20px var(--card);
 }
 
+/* 牌上的文字。 */
 .battle-card h4 {
   margin: 0;
   font-size: 1rem;
@@ -1193,6 +1241,8 @@ button {
     transform: translateX(70%) rotate(25deg);
   }
 }
+
+/* ---------- 戰鬥紀錄 ---------- */
 
 .log-toggle {
   position: absolute;
@@ -1267,7 +1317,7 @@ button {
   color: #e7d49e;
 }
 
-/* Modal & Result */
+/* ---------- 視窗與結算 ---------- */
 .modal {
   position: fixed;
   inset: 0;
@@ -1308,6 +1358,7 @@ button {
   cursor: pointer;
 }
 
+/* 說明的排列。 */
 .rule-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1337,6 +1388,7 @@ button {
   margin: 0;
 }
 
+/* 提示訊息。 */
 .toast {
   position: fixed;
   left: 50%;
@@ -1356,6 +1408,8 @@ button {
   opacity: 1;
   transform: translate(-50%, 0);
 }
+
+/* ---------- 結算畫面 ---------- */
 
 .result-screen {
   align-items: center;
@@ -1402,6 +1456,7 @@ button {
   border-radius: 25px;
 }
 
+/* 評價。 */
 .rank {
   float: right;
   font: 900 5rem Orbitron;
@@ -1444,6 +1499,8 @@ button {
   font-size: 0.62rem;
   color: #9ba9c5;
 }
+
+/* ---------- 平板 ---------- */
 
 @media (max-width: 1050px) {
   .fighter-grid {
@@ -1496,6 +1553,8 @@ button {
     height: 230px;
   }
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 720px) {
   .home-screen {
@@ -1746,7 +1805,7 @@ button {
   }
 }
 
-/* Difficulty selection */
+/* ---------- 難度選擇 ---------- */
 .difficulty-section {
   width: min(860px, 100%);
   margin: 38px auto 55px;
@@ -1826,7 +1885,7 @@ button {
   vertical-align: 2px;
 }
 
-/* Clearer vitals and buffs */
+/* ---------- 更清楚的生命與增益 ---------- */
 .vital-stack {
   display: grid;
   gap: 7px;
@@ -1853,12 +1912,14 @@ button {
   font-size: 0.85rem;
 }
 
+/* 血量。 */
 .hp-vital .vital-icon {
   color: #ff8da3;
   background: rgba(255, 77, 111, 0.13);
   box-shadow: inset 0 0 14px rgba(255, 75, 108, 0.08);
 }
 
+/* 能量。 */
 .energy-vital .vital-icon {
   color: #8eeaff;
   background: rgba(62, 155, 255, 0.14);
@@ -1885,6 +1946,7 @@ button {
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+/* 效果列。 */
 .effects {
   margin-top: 8px;
 }
@@ -1897,6 +1959,7 @@ button {
   margin-bottom: 4px;
 }
 
+/* 增益與減益。 */
 .buff-row {
   min-height: 25px;
   margin-top: 0;
@@ -1940,7 +2003,7 @@ button {
   border-color: rgba(255, 99, 124, 0.2);
 }
 
-/* HP-sensitive battlefield */
+/* ---------- 依血量變化的戰場 ---------- */
 .battle-bg,
 .battle-vignette {
   transition:
@@ -1999,6 +2062,7 @@ button {
   box-shadow: 0 0 22px rgba(255, 41, 78, 0.16);
 }
 
+/* 危險時的閃爍。 */
 @keyframes dangerPulse {
   50% {
     opacity: 0.66;
@@ -2009,6 +2073,8 @@ button {
   display: inline-block;
   white-space: nowrap;
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 720px) {
   .home-copy {
@@ -2114,6 +2180,8 @@ button {
   }
 }
 
+/* ---------- 小手機 ---------- */
+
 @media (max-width: 380px) {
   .home-copy h1 {
     font-size: 2.65rem;
@@ -2136,6 +2204,7 @@ button {
   }
 }
 
+/* 血量低時的提示。 */
 .battle-screen.danger-low .player-unit .meter.hp i,
 .battle-screen.danger-critical .player-unit .meter.hp i {
   background: linear-gradient(90deg, #bd274d, #ff657e);
@@ -2147,10 +2216,12 @@ button {
   white-space: nowrap;
 }
 
+/* 結算數值。 */
 .result-stats {
   grid-template-columns: repeat(4, 1fr);
 }
 
+/* 手機的結算數值。 */
 @media (max-width: 720px) {
   .result-stats {
     grid-template-columns: repeat(2, 1fr);
@@ -2169,6 +2240,8 @@ button {
     url("assets/arena-celestial.webp") center/cover;
 }
 
+/* ---------- 選擇畫面的版面 ---------- */
+
 .selection-screen {
   background:
     radial-gradient(
@@ -2183,6 +2256,7 @@ button {
     );
 }
 
+/* 角色卡。 */
 .fighter-grid {
   grid-template-columns: repeat(3, minmax(270px, 1fr));
   gap: 20px;
@@ -2201,6 +2275,7 @@ button {
   );
 }
 
+/* 職業標籤。 */
 .class-pill {
   position: absolute;
   z-index: 3;
@@ -2225,6 +2300,7 @@ button {
   margin: 6px 0 10px;
 }
 
+/* 數值。 */
 .stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -2254,6 +2330,7 @@ button {
   font-weight: 800;
 }
 
+/* 特性。 */
 .trait-list {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2297,6 +2374,7 @@ button {
   -webkit-line-clamp: 2;
 }
 
+/* 技能卡。 */
 .support-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
@@ -2367,6 +2445,7 @@ button {
   font-weight: 900;
 }
 
+/* 已選技能。 */
 .loadout-summary {
   width: min(1050px, 100%);
   min-height: 64px;
@@ -2422,6 +2501,8 @@ button {
   padding: 8px 12px;
   font-size: 0.7rem;
 }
+
+/* ---------- 首領選擇 ---------- */
 
 .villain-section {
   width: min(1350px, 100%);
@@ -2514,10 +2595,12 @@ button {
   font-size: 0.6rem;
 }
 
+/* 難度。 */
 .difficulty-section {
   margin-bottom: 30px;
 }
 
+/* 回合規則。 */
 .turn-rule {
   border: 1px solid rgba(117, 211, 255, 0.16);
   border-radius: 8px;
@@ -2528,6 +2611,7 @@ button {
   text-align: center;
 }
 
+/* 手牌。 */
 .hand {
   max-width: calc(100% - 10px);
   overflow-x: auto;
@@ -2546,6 +2630,8 @@ button {
   color: #ffe5a0;
 }
 
+/* ---------- 平板 ---------- */
+
 @media (max-width: 1050px) {
   .fighter-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2556,6 +2642,8 @@ button {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 720px) {
   .fighter-card {
@@ -2699,6 +2787,8 @@ button {
   }
 }
 
+/* ---------- 小手機 ---------- */
+
 @media (max-width: 390px) {
   .fighter-card {
     height: 480px;
@@ -2761,6 +2851,7 @@ button {
   white-space: nowrap;
 }
 
+/* 數值說明。 */
 .stat-guide {
   width: min(1450px, 100%);
   display: grid;
@@ -2806,6 +2897,7 @@ button {
   height: 750px;
 }
 
+/* 回合節奏。 */
 .turn-profile {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2845,6 +2937,7 @@ button {
   font-size: 0.47rem;
 }
 
+/* 推薦說明。 */
 .recommend-note {
   color: #aebad1;
   font-size: 0.62rem;
@@ -2870,6 +2963,8 @@ button {
   font-size: 0.56rem;
 }
 
+/* ---------- 挑戰畫面 ---------- */
+
 .challenge-screen {
   padding-bottom: 125px;
 }
@@ -2879,6 +2974,7 @@ button {
   margin-top: 0;
 }
 
+/* 規則書。 */
 .rules-book {
   width: min(1040px, 100%);
   max-height: 92vh;
@@ -2919,6 +3015,8 @@ button {
   line-height: 1.45;
 }
 
+/* ---------- 手牌 ---------- */
+
 .card-console {
   height: 315px;
 }
@@ -2948,6 +3046,7 @@ button {
   border-radius: 12px;
 }
 
+/* 牌的標題與內容。 */
 .card-head {
   position: relative;
   z-index: 2;
@@ -3072,6 +3171,7 @@ button {
   white-space: nowrap;
 }
 
+/* 效果數值。 */
 .card-name em {
   flex: none;
   border-radius: 99px;
@@ -3126,6 +3226,7 @@ button {
   white-space: nowrap;
 }
 
+/* 牌的說明。 */
 .battle-card > p {
   display: -webkit-box;
   min-height: 28px;
@@ -3143,6 +3244,7 @@ button {
   font-size: 0.52rem;
 }
 
+/* 不能出的原因。 */
 .card-lock {
   position: absolute;
   z-index: 6;
@@ -3166,6 +3268,7 @@ button {
   font-size: 0.46rem;
 }
 
+/* 不能出的牌。 */
 .battle-card.disabled {
   filter: saturate(0.5) brightness(0.72);
 }
@@ -3174,6 +3277,7 @@ button {
   transform: none;
 }
 
+/* 各類牌的顏色。 */
 .card-kind-defense {
   --type-glow: #67ddff;
 }
@@ -3196,7 +3300,7 @@ button {
     0 0 30px color-mix(in srgb, var(--card) 36%, transparent);
 }
 
-/* 2.0 UI polish: keep boss details readable and align compact HUD elements. */
+/* ---------- 2.0 介面整理：保持首領資訊清楚，並對齊精簡 HUD ---------- */
 .villain-card {
   height: 244px;
 }
@@ -3242,6 +3346,7 @@ button {
   gap: 5px 12px;
 }
 
+/* 首領數值。 */
 .boss-stats em {
   color: #9aa8c4;
   font-style: normal;
@@ -3265,6 +3370,8 @@ button {
 .battle-card {
   flex: none;
 }
+
+/* ---------- 平板 ---------- */
 
 @media (min-width: 721px) and (max-width: 1366px) {
   .selection-screen {
@@ -3306,6 +3413,8 @@ button {
   }
 }
 
+/* ---------- 大螢幕 ---------- */
+
 @media (min-width: 1600px) {
   .battle-field {
     width: min(1380px, 100%);
@@ -3328,6 +3437,8 @@ button {
     padding-right: 22px;
   }
 }
+
+/* ---------- 高度較矮的電腦螢幕 ---------- */
 
 @media (max-height: 720px) and (min-width: 721px) {
   .battle-screen {
@@ -3389,6 +3500,8 @@ button {
   }
 }
 
+/* ---------- 較窄的視窗 ---------- */
+
 @media (max-width: 1050px) {
   .stat-guide {
     grid-template-columns: repeat(3, 1fr);
@@ -3402,6 +3515,8 @@ button {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 720px) {
   .home-guide {
@@ -3540,6 +3655,8 @@ button {
   }
 }
 
+/* ---------- 小手機 ---------- */
+
 @media (max-width: 390px) {
   .fighter-card {
     height: 550px;
@@ -3586,6 +3703,7 @@ button {
   }
 }
 
+/* 高度較矮的手機。 */
 @media (max-width: 720px) and (max-height: 740px) {
   .battle-screen {
     padding: 4px;
@@ -3633,7 +3751,7 @@ button {
   }
 }
 
-/* 2.0.2 release layout: one-screen battle UI for real mobile viewports. */
+/* ---------- 2.0.2 版面：手機上一個畫面就能看完戰鬥介面 ---------- */
 :root {
   --app-height: 100dvh;
   --battle-header: clamp(54px, 7dvh, 66px);
@@ -3644,6 +3762,8 @@ html {
   min-height: 100%;
   -webkit-text-size-adjust: 100%;
 }
+
+/* ---------- 戰鬥畫面的版面 ---------- */
 
 body.battle-mode {
   width: 100%;
@@ -3735,6 +3855,7 @@ body.battle-mode #app {
   min-height: 0;
 }
 
+/* 手牌區。 */
 .card-console {
   width: 100%;
   height: auto;
@@ -3759,6 +3880,7 @@ body.battle-mode #app {
   max-height: 282px;
 }
 
+/* 戰鬥紀錄。 */
 .log-toggle {
   right: 18px;
   bottom: calc(var(--battle-console) + 10px);
@@ -3770,6 +3892,7 @@ body.battle-mode #app {
   max-height: min(48dvh, 420px);
 }
 
+/* 難度卡。 */
 .difficulty-card {
   min-width: 0;
   overflow: hidden;
@@ -3778,6 +3901,8 @@ body.battle-mode #app {
 .difficulty-card small {
   overflow-wrap: anywhere;
 }
+
+/* ---------- 高度較矮的電腦螢幕 ---------- */
 
 @media (max-height: 720px) and (min-width: 721px) {
   :root {
@@ -3817,6 +3942,8 @@ body.battle-mode #app {
     bottom: calc(var(--battle-console) + 45px);
   }
 }
+
+/* ---------- 手機的戰鬥畫面 ---------- */
 
 @media (max-width: 720px) {
   :root {
@@ -3920,6 +4047,7 @@ body.battle-mode #app {
     overflow: visible;
   }
 
+  /* 雙方角色。 */
   .unit {
     min-width: 0;
     overflow: visible;
@@ -3943,6 +4071,7 @@ body.battle-mode #app {
     margin-right: -9% !important;
   }
 
+  /* 角色資訊。 */
   .unit-panel {
     bottom: 2px;
     width: min(42vw, 164px);
@@ -3977,6 +4106,7 @@ body.battle-mode #app {
     display: none;
   }
 
+  /* 血量與能量。 */
   .vital-stack {
     gap: 3px;
     margin-top: 5px;
@@ -4007,6 +4137,7 @@ body.battle-mode #app {
     height: 6px;
   }
 
+  /* 效果。 */
   .effects {
     margin-top: 3px;
   }
@@ -4041,6 +4172,7 @@ body.battle-mode #app {
     gap: 3px;
   }
 
+  /* 敵人下一招。 */
   .enemy-intent {
     min-width: 46px;
     max-width: 56px;
@@ -4078,6 +4210,7 @@ body.battle-mode #app {
     padding: 3px 4px;
   }
 
+  /* 手牌區。 */
   .card-console {
     min-height: 0;
     display: grid;
@@ -4135,6 +4268,7 @@ body.battle-mode #app {
     font-size: 0.58rem;
   }
 
+  /* 手牌。 */
   .hand {
     width: 100%;
     max-width: none;
@@ -4166,6 +4300,7 @@ body.battle-mode #app {
     margin-left: 7px;
   }
 
+  /* 牌的內容。 */
   .card-head {
     min-height: 23px;
   }
@@ -4255,6 +4390,7 @@ body.battle-mode #app {
     padding: 4px;
   }
 
+  /* 戰鬥紀錄。 */
   .log-toggle {
     right: 7px;
     bottom: calc(var(--battle-console) + 6px);
@@ -4274,6 +4410,7 @@ body.battle-mode #app {
   }
 }
 
+/* 最窄的手機。 */
 @media (max-width: 360px) {
   :root {
     --battle-console: clamp(210px, 32dvh, 272px);
@@ -4306,6 +4443,7 @@ body.battle-mode #app {
   }
 }
 
+/* 高度較矮的手機。 */
 @media (max-width: 720px) and (max-height: 620px) {
   :root {
     --battle-header: 44px;

@@ -75,6 +75,7 @@
     ["footF", "anF", "toF", 30],
   ];
 
+  // 點到線段的距離。
   function segmentDistance(px, py, [ax, ay], [bx, by]) {
     const dx = bx - ax;
     const dy = by - ay;
@@ -84,6 +85,7 @@
     return Math.hypot(px - ax - dx * t, py - ay - dy * t);
   }
 
+  // 依關節列出每根骨頭的線段。
   function segmentsFor(joints, fat) {
     const { neck, crown } = joints;
     // 頭從脖子稍微往上算起，領口才會留在身體上
@@ -118,12 +120,14 @@
     const [sx, sy, sw, sh, anchor] = frame;
     const cols = Math.ceil(sw / CELL);
     const rows = Math.ceil(sh / CELL);
+    // 圖上這個像素是否有內容。
     const solid = (x, y) =>
       x >= 0 &&
       y >= 0 &&
       x < sw &&
       y < sh &&
       pixels[((sy + y) * atlasW + sx + x) * 4 + 3] > ALPHA;
+    // 這個格子附近有沒有內容。
     const filled = (cx, cy) => {
       for (let y = -1; y <= CELL; y += 1)
         for (let x = -1; x <= CELL; x += 1)
@@ -134,6 +138,7 @@
     const ids = new Map(); // 格點 → 頂點編號
     const points = [];
     const links = [];
+    // 建立或重複使用一個頂點。
     const vertex = (gx, gy) => {
       const key = gy * (cols + 1) + gx;
       let id = ids.get(key);
@@ -145,6 +150,7 @@
       }
       return id;
     };
+    // 每個有內容的格子切成三角形。
     for (let cy = 0; cy < rows; cy += 1)
       for (let cx = 0; cx < cols; cx += 1) {
         if (!filled(cx, cy)) continue;
@@ -167,6 +173,7 @@
     // 先決定每個頂點屬於哪根骨頭，再沿著網格把交界柔化
     const segments = segmentsFor(joints, fat);
     const count = BONES.length;
+    // 每個頂點屬於哪些骨頭、比例多少。
     let weights = points.map(([x, y]) => {
       let best = 0;
       let bestCost = Infinity;
@@ -195,6 +202,7 @@
     }
 
     const data = new Float32Array(points.length * 12);
+    // 只留影響最大的幾根骨頭。
     points.forEach(([x, y], i) => {
       const order = [...weights[i].keys()]
         .sort((p, q) => weights[i][q] - weights[i][p])
@@ -212,6 +220,7 @@
         i * 12,
       );
     });
+    // 這一格要畫在哪一層。
     const layerOf = ([a, b, c, d]) => {
       let best = 0;
       let bestWeight = -1;
@@ -241,6 +250,10 @@
     m[0] * n[4] + m[2] * n[5] + m[4],
     m[1] * n[4] + m[3] * n[5] + m[5],
   ];
+
+  // ---------- 2D 矩陣的小工具 ----------
+
+  // 用矩陣轉換一個點。
   const apply = (m, [x, y]) => [
     m[0] * x + m[2] * y + m[4],
     m[1] * x + m[3] * y + m[5],
@@ -258,6 +271,7 @@
       to[1] - s * from[0] - c * from[1],
     ];
   };
+  // 繞著一點旋轉。
   const turn = (pivot, degrees) => place(pivot, pivot, degrees * RAD);
   // 沿著某個方向拉長（以 pivot 為中心）
   const stretch = (pivot, dir, amount) => {
@@ -270,6 +284,7 @@
     m[5] = pivot[1] - (m[1] * pivot[0] + m[3] * pivot[1]);
     return m;
   };
+  // 兩點相減。
   const sub = (p, q) => [p[0] - q[0], p[1] - q[1]];
 
   // 兩段 IK：大腿根到 hip、腳踝到 target，膝蓋彎的方向和原圖一樣
@@ -296,10 +311,7 @@
       hip[0] + Math.cos(thighAngle) * a,
       hip[1] + Math.sin(thighAngle) * a,
     ];
-    const ankle = [
-      hip[0] + Math.cos(base) * d,
-      hip[1] + Math.sin(base) * d,
-    ];
+    const ankle = [hip[0] + Math.cos(base) * d, hip[1] + Math.sin(base) * d];
     const shinAngle = Math.atan2(ankle[1] - knee[1], ankle[0] - knee[0]);
     const thighTurn = thighAngle - Math.atan2(thigh[1], thigh[0]);
     const shinTurn = shinAngle - Math.atan2(shin[1], shin[0]);
@@ -314,6 +326,7 @@
 
   // 一張圖的關節（換算成以腳底中央為原點），以及「姿勢參數 → 每根骨頭的矩陣」
   class Skeleton {
+    // 關節位置換成以腳底中央為原點。
     constructor(frame, joints) {
       const [, , , sh, anchor] = frame;
       const local = ([x, y]) => [x - anchor, y - sh];
@@ -328,6 +341,7 @@
     solve(p, idle) {
       const j = this.joints;
       const loose = 1 - p.st;
+      // 兩張圖關節的差，用來讓動作連續。
       const shift = (name) => {
         const from = j[name];
         const to = idle.joints[name];
@@ -339,12 +353,16 @@
       const torso = mul(pelvis, turn(j.waist, p.to));
       const head = mul(torso, turn(j.neck, p.hd));
       let armU = mul(torso, turn(j.shF, p.au));
-      if (p.ax !== 1)
-        armU = mul(armU, stretch(j.shF, sub(j.haF, j.shF), p.ax));
+      if (p.ax !== 1) armU = mul(armU, stretch(j.shF, sub(j.haF, j.shF), p.ax));
       const armL = mul(armU, turn(j.elF, p.al));
 
+      // 一條腿的位置與彎曲。
       const leg = (s, dx, dy, rot, follow) => {
-        const rest = { hip: j["hip" + s], knee: j["kn" + s], ankle: j["an" + s] };
+        const rest = {
+          hip: j["hip" + s],
+          knee: j["kn" + s],
+          ankle: j["an" + s],
+        };
         const slide = shift("an" + s);
         const target = [
           rest.ankle[0] + slide[0] + dx,
@@ -433,6 +451,7 @@ void main() {
   color = vec4(clamp(c, 0.0, 1.0) * a, a);
 }`;
 
+  // 編譯一段著色器。
   function compile(gl, type, source) {
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
@@ -449,12 +468,14 @@ void main() {
   /* 骨架渲染器：一張離屏的 WebGL 畫布，畫完由呼叫端貼到 2D 畫布上。
      logical 是畫布的尺寸（場地像素）與腳底中央的位置。 */
   class SpriteRig {
+    // 建立離屏畫布與 WebGL。
     constructor(atlas, logical, res) {
       this.logical = logical;
       this.res = res;
       this.canvas = document.createElement("canvas");
       this.canvas.width = Math.round(logical.width * res);
       this.canvas.height = Math.round(logical.height * res);
+      // 需要透明背景，並保留畫好的內容。
       const gl = this.canvas.getContext("webgl2", {
         alpha: true,
         antialias: false,
@@ -465,10 +486,12 @@ void main() {
       if (!gl) throw new Error("WebGL2 unavailable");
       this.gl = gl;
       this.lost = false;
+      // 繪圖連線中斷。
       this.canvas.addEventListener("webglcontextlost", (event) => {
         event.preventDefault();
         this.lost = true;
       });
+      // 恢復後重新建立。
       this.canvas.addEventListener("webglcontextrestored", () => {
         this.setup(atlas);
         this.lost = false;
@@ -476,6 +499,7 @@ void main() {
       this.setup(atlas);
     }
 
+    // 建立著色器、貼圖與所有圖的網格。
     setup(atlas) {
       const { gl } = this;
       const program = gl.createProgram();
@@ -486,6 +510,7 @@ void main() {
         throw new Error(gl.getProgramInfoLog(program));
       gl.useProgram(program);
       const at = (name) => gl.getUniformLocation(program, name);
+      // 著色器裡的變數位置。
       this.uniforms = {
         bones: at("uBones"),
         view: at("uView"),
@@ -526,6 +551,7 @@ void main() {
       set(gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
       this.fighters = new Map();
+      // 每位鬥士的每一張圖。
       for (const profile of game.FIGHTERS) {
         const rig = game.RIG[profile.id];
         const scale = profile.size / profile.frames.idle[3];
@@ -543,6 +569,7 @@ void main() {
       this.flat = new Float32Array(BONES.length * 6);
     }
 
+    // 上傳一張圖的網格。
     upload(program, { data, index }) {
       const { gl } = this;
       const vao = gl.createVertexArray();
@@ -612,6 +639,7 @@ void main() {
     }
   }
 
+  // 沒有動作時的姿勢；各欄位的意思見檔案開頭。
   SpriteRig.REST = {
     x: 0,
     y: 0,

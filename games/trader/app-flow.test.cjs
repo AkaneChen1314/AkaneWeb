@@ -1,10 +1,14 @@
-/* DOM/controller integration harness. This does NOT claim visual browser verification. */
+/*
+ * 用模擬的 DOM 測試介面流程；不代表真正的瀏覽器畫面檢查。
+ */
 const fs = require("fs"),
   vm = require("vm"),
   assert = require("assert");
 const root = require("path").resolve(__dirname);
+// 建立一個假的瀏覽器環境並執行遊戲；storage 可以帶入存檔。
 function env(storage = new Map(), width = 1440) {
   let doc;
+  // 假的網頁元素。
   class El {
     constructor(tag = "div", attrs = {}) {
       this.tagName = tag.toUpperCase();
@@ -94,6 +98,7 @@ function env(storage = new Map(), width = 1440) {
     addEventListener(type, fn, options) {
       this.listeners.push({ type, fn, once: options?.once });
     }
+    // 是否符合選擇器（id、class、屬性或標籤）。
     matches(sel) {
       if (sel.startsWith("#")) return this.id === sel.slice(1);
       if (sel.startsWith("."))
@@ -106,6 +111,7 @@ function env(storage = new Map(), width = 1440) {
         );
       return this.tagName.toLowerCase() === sel.toLowerCase();
     }
+    // 往下找所有符合的元素。
     querySelectorAll(sel) {
       let out = [];
       for (const c of this.children) {
@@ -117,6 +123,7 @@ function env(storage = new Map(), width = 1440) {
     querySelector(sel) {
       return this.querySelectorAll(sel)[0] || null;
     }
+    // 往上找第一個符合的元素。
     closest(sel) {
       for (let e = this; e; e = e.parentElement) if (e.matches(sel)) return e;
       return null;
@@ -128,6 +135,7 @@ function env(storage = new Map(), width = 1440) {
     get clientWidth() {
       return 500;
     }
+    // 假的位置大小；隱藏的元素高度是 0。
     getBoundingClientRect() {
       return {
         left: 50,
@@ -155,6 +163,7 @@ function env(storage = new Map(), width = 1440) {
       click(this);
     }
   }
+  // 把 HTML 文字轉成假元素。
   function parse(html, parent) {
     const stack = [parent],
       voids = new Set(["meta", "link", "input", "br", "img", "hr"]);
@@ -180,6 +189,7 @@ function env(storage = new Map(), width = 1440) {
     }
   }
   doc = new El("document");
+  // 載入實際的 index.html。
   parse(fs.readFileSync(root + "/index.html", "utf8"), doc);
   doc.body = doc.querySelector("body");
   doc.activeElement = doc.body;
@@ -190,12 +200,14 @@ function env(storage = new Map(), width = 1440) {
   const docListeners = [];
   doc.addEventListener = (type, fn, options) =>
     docListeners.push({ type, fn, capture: options === true });
+  // 觸發一個事件。
   function fire(el, type, extra = {}) {
     if (typeof el === "string") el = doc.querySelector(el);
     assert(el, "Event target missing");
     const e = { target: el, preventDefault() {}, ...extra };
     for (const l of el.listeners.filter((x) => x.type === type)) l.fn(e);
   }
+  // 模擬點擊；停用的按鈕不會有反應。
   function click(el) {
     if (typeof el === "string") el = doc.querySelector(el);
     assert(el, "Click target missing");
@@ -227,6 +239,7 @@ function env(storage = new Map(), width = 1440) {
       if (e.stopped) return;
     }
   }
+  // 排程的工作；測試可以自己決定何時執行。
   const tasks = new Map();
   let taskId = 0;
   const window = {
@@ -237,6 +250,7 @@ function env(storage = new Map(), width = 1440) {
     scrollTo() {},
     addEventListener() {},
   };
+  // 沙盒環境裡可以使用的東西。
   const sandbox = {
     window,
     document: doc,
@@ -259,11 +273,13 @@ function env(storage = new Map(), width = 1440) {
     btoa,
     atob,
   };
+  // 依序執行壓縮程式、規則與介面。
   vm.createContext(sandbox);
   vm.runInContext(fs.readFileSync(root + "/vendor/pako.js", "utf8"), sandbox);
   window.pako = sandbox.pako || window.pako;
   vm.runInContext(fs.readFileSync(root + "/engine.js", "utf8"), sandbox);
   vm.runInContext(fs.readFileSync(root + "/app.js", "utf8"), sandbox);
+  // 提供給測試使用的工具。
   return {
     doc,
     click,
@@ -276,6 +292,7 @@ function env(storage = new Map(), width = 1440) {
     engine: window.BillionEngine,
   };
 }
+// 輸入姓名並開始教學。
 function startLesson(a) {
   const input = a.doc.getElementById("character-name");
   if (input) {
@@ -284,11 +301,13 @@ function startLesson(a) {
   }
   a.click('[data-action="start-lesson"]');
 }
+// 勾選同意並簽約。
 function signContract(a) {
   a.click('[data-contract-ack="id"]');
   a.click('[data-contract-ack="contacts"]');
   a.click('[data-action="sign-contract"]');
 }
+// 依序完成教學。
 function finishTutorial(a) {
   a.click('[data-asset="sky"]');
   a.click('[data-budget="1"]');
@@ -308,6 +327,7 @@ function finishTutorial(a) {
   );
   a.click('[data-action="finish-lesson"]');
 }
+// 新玩家：要依順序完成教學，練習不影響正式資金。
 let a = env();
 assert(a.doc.getElementById("modal").open);
 assert(!a.storage.has("billion-to-zero-v2"));
@@ -321,10 +341,12 @@ assert.equal(a.state().day, 1);
 assert.equal(a.state().cash, 1e10, "Practice touched formal cash");
 assert.equal(a.state().health, 100);
 assert(a.storage.has("billion-to-zero-v2"));
+// 買進後前進一天。
 a.click("#trade-button");
 assert.equal(a.doc.getElementById("position-count").textContent, "1");
 a.click("#next-button");
 assert.equal(a.state().day, 2);
+// 重新載入後狀態不變。
 const persisted = a.storage.get("billion-to-zero-v2"),
   b = env(a.storage);
 assert.equal(b.state().day, 2);
@@ -335,6 +357,7 @@ assert.equal(
 );
 b.click("#loan-button");
 b.click('[data-loan-type="online"]');
+// 三種借款都能使用。
 for (const type of ["bank", "online", "shark"]) {
   b.click(`[data-loan-type="${type}"]`);
   b.doc.getElementById("loan-amount").value = "100000";
@@ -356,6 +379,7 @@ for (const type of ["bank", "online", "shark"]) {
     assert.equal(b.state().debt, 0);
   }
 }
+// 網路借款要簽約。
 b.click('[data-loan-type="online"]');
 b.click('[data-action="borrow"]');
 signContract(b);
@@ -364,6 +388,7 @@ assert.equal(
   JSON.parse(b.storage.get("billion-to-zero-v2")).loans[0].type,
   "online",
 );
+// 再看一次教學，不會影響正式進度。
 const snapshot = b.storage.get("billion-to-zero-v2");
 b.click("#help-button");
 startLesson(b);
@@ -373,6 +398,7 @@ assert.equal(
   snapshot,
   "Tutorial replay mutated current life",
 );
+// 故障畫面：重新連線後以實際價格恢復，只能按一次。
 const E = b.engine,
   g = E.create(44);
 E.open(g, { asset: "sky", amount: 1e8, product: "spot" });
@@ -397,12 +423,14 @@ assert.equal(
   1,
   "404 settled twice",
 );
+// 賣掉核心器官會直接結束。
 c.click("#organ-button");
 c.click('[data-organ="core"]');
 c.click('[data-confirm-organ="core"]');
 assert(c.state().ended);
 assert.equal(c.state().health, 0);
 assert(c.doc.getElementById("modal").open);
+// 手機寬度的教學流程。
 const mobile = env(new Map(), 390);
 startLesson(mobile);
 mobile.click('[data-asset="sky"]');
@@ -428,11 +456,12 @@ console.log(
   "PASS: app/controllers initialize, ordered optional finger tutorial, practice isolation, buy/advance/sell flow, persisted reload, online-loan selection, tutorial replay isolation, restored fake 404, one-time reconnection and organ death UI.",
 );
 
-// 3.0 UI integration, including simulated touch/pointer behavior (not visual QA).
+// 3.0 介面整合，包含模擬的觸控與指標操作（不檢查外觀）。
 const live = env(new Map(), 390);
 startLesson(live);
 finishTutorial(live);
 live.click("#trade-button");
+// 時鐘每走一步，價格與畫面都會更新。
 let previous = JSON.parse(live.storage.get("billion-to-zero-v2"));
 const loop = [...live.tasks].find(([, x]) => x.fn.name === "liveLoop");
 assert(loop);
@@ -441,10 +470,12 @@ loop[1].fn();
 let current = JSON.parse(live.storage.get("billion-to-zero-v2"));
 assert.equal(current.minute, previous.minute + 5);
 assert.notEqual(current.markets.sky.price, previous.markets.sky.price);
+// 圖表可以用觸控與鍵盤查看。
 live.fire("#chart", "pointermove", { clientX: 180 });
 assert(live.doc.querySelector(".chart-tooltip").textContent.includes("00:"));
 live.fire("#chart", "keydown", { key: "ArrowLeft" });
 assert(live.doc.querySelector(".chart-tooltip"));
+// 暫停後時鐘不再前進。
 live.click("#market-pause");
 previous = live.storage.get("billion-to-zero-v2");
 const pausedLoop = [...live.tasks].find(([, x]) => x.fn.name === "liveLoop");
@@ -455,6 +486,7 @@ assert.equal(
   "Pause still advanced the market",
 );
 live.click("#market-pause");
+// 工作可以中途離開，再接著做完。
 live.click("#work-button");
 live.click('[data-job="cafe"]');
 current = JSON.parse(live.storage.get("billion-to-zero-v2"));
@@ -475,6 +507,7 @@ while (JSON.parse(resumed.storage.get("billion-to-zero-v2")).job) {
 current = JSON.parse(resumed.storage.get("billion-to-zero-v2"));
 assert.equal(current.cash, cash + 3600000);
 assert.equal(current.lastWorkDay, current.day);
+// 賣掉一邊眼角膜後的視力輔助。
 resumed.click("#organ-button");
 resumed.click('[data-organ="cornea_left"]');
 resumed.click('[data-confirm-organ="cornea_left"]');
@@ -485,6 +518,7 @@ assert(!resumed.doc.body.classList.contains("vision-one"));
 resumed.click("#settings-button");
 assert(resumed.doc.querySelector('[data-setting="horror"]'));
 resumed.click('[data-action="dismiss"]');
+// 低血量與高負債時的氣氛設定，可以關閉。
 const terror = E.create(3);
 terror.health = 12;
 terror.debt = 2e10;
@@ -503,6 +537,7 @@ dark.click("#settings-button");
 dark.click('[data-setting="horror"]');
 assert(!dark.doc.body.classList.contains("dread-3"));
 dark.click('[data-action="dismiss"]');
+// 查看過去的價格。
 const archiveState = E.create(8);
 E.nextDay(archiveState);
 E.setName(archiveState, "歷史測試員");
@@ -530,7 +565,8 @@ assert.equal(
 console.log(
   "PASS: live timer/P&L, pointer and keyboard timestamp tooltip, pause, mobile work selection/reload/completion/locks, cornea blur and aid, scary atmosphere/settings, and historical chart navigation.",
 );
-// v4 UI: names/fictional consent, collector dialogue persistence, and all gambling boards.
+// v4 介面：姓名與虛構同意、催收對話保留、所有賭桌。
+// 先取名字，再進入教學。
 const named = env(new Map(), 320);
 assert(named.doc.getElementById("character-name"));
 named.doc.getElementById("character-name").value = "星雨";
@@ -541,6 +577,7 @@ assert(named.doc.querySelector('[data-action="start-lesson"]'));
 named.click('[data-action="start-lesson"]');
 finishTutorial(named);
 assert.equal(named.state().playerName, "星雨");
+// 簽約前要勾選兩項同意。
 named.click("#tutorial-loan-shortcut");
 named.click('[data-loan-type="online"]');
 named.click('[data-action="borrow"]');
@@ -556,6 +593,7 @@ assert.equal(named.state().debt, 1e8);
 const namedState = JSON.parse(named.storage.get("billion-to-zero-v2"));
 assert.equal(namedState.contracts[0].signedName, "星雨");
 assert(namedState.contracts[0].fictionId.startsWith("SIM-"));
+// 逾期的催收對話，重新載入後接得上。
 const dueState = E.create(98);
 E.setName(dueState, "夜星");
 E.borrow(dueState, 5e8, "online", false, {
@@ -593,6 +631,7 @@ assert(dialogue.doc.querySelector('[data-choice="4"]'));
 dialogue.click('[data-choice="1"]');
 assert.equal(dialogue.state().reputation, 72);
 assert(dialogue.doc.querySelector(".aftermath-grid"));
+// 手機裡的朋友支持。
 dialogue.click('[data-action="open-phone"]');
 assert(
   dialogue.doc.querySelector(".social-feed").textContent.includes("不實抹黑"),
@@ -600,6 +639,7 @@ assert(
 dialogue.click('[data-action="friend-support"]');
 assert.equal(dialogue.state().reputation, 78);
 dialogue.click('[data-action="dismiss"]');
+// 骰子：中途離開後可以接著完成。
 const gameState = E.create(83);
 E.setName(gameState, "骰子玩家");
 const casinoMap = new Map([
@@ -624,6 +664,7 @@ assert(gambler.doc.querySelector(".gamble-receipt"));
 const settled = gambler.state().cash;
 gambler.click('[data-action="casino-again"]');
 assert.equal(gambler.state().cash, settled, "Browsing another gamble auto-bet");
+// 撲克牌與踩地雷。
 gambler.click('[data-casino-mode="cards"]');
 gambler.click('[data-action="start-gamble"]');
 assert(gambler.doc.querySelector(".card-hand"));
@@ -640,6 +681,7 @@ assert.equal(
   JSON.parse(casinoMap.get("billion-to-zero-v2")).gambleStats.rounds,
   3,
 );
+// 搜尋與篩選商品。
 gambler.doc.getElementById("asset-search").value = "機械";
 gambler.fire("#asset-search", "input");
 assert.equal(gambler.doc.querySelectorAll("[data-asset]").length, 1);
@@ -652,7 +694,8 @@ console.log(
   "PASS: named onboarding/tutorial, simulated ID/contract gates, personal collector dialogue/reload/choices/consequences/phone support, dice/card/mine boards and wager reload/locks/no duplicate payouts, and 24-asset search/filter.",
 );
 
-// 5.0 controller regressions: skip, body inspection, accessible action location, all-day timer.
+// 5.0 回歸測試：略過、查看身體、行動地點可操作、整天的計時。
+// 略過教學，之後仍可重看並再次略過。
 const skipping = env();
 skipping.doc.getElementById("character-name").value = "跳過玩家";
 skipping.click('[data-action="choose-name"]');
@@ -674,6 +717,7 @@ assert(!skipping.state().practice);
 assert.equal(skipping.state().cash, 1e10);
 assert.equal(skipping.state().day, 1);
 assert.equal(skipping.state().playerName, "跳過玩家");
+// 查看身體部位並賣出。
 skipping.click("#avatar");
 assert(skipping.doc.querySelector('[data-body-part="lung"]'));
 assert(skipping.doc.querySelector('[data-body-part="lung_right"]'));
@@ -702,12 +746,14 @@ skipping.click('[data-action="back-body"]');
 skipping.click('[data-body-zone="chest"]');
 assert.equal(skipping.doc.querySelectorAll(".body-item").length, 3);
 skipping.click('[data-action="dismiss"]');
+// 讓時鐘走一步。
 function clockTick(app) {
   const t = [...app.tasks].find(([, x]) => x.fn.name === "liveLoop");
   assert(t);
   app.tasks.delete(t[0]);
   t[1].fn();
 }
+// 一整天的時鐘；開啟視窗時會暫停。
 const fullDay = E.create(237);
 E.setName(fullDay, "全天玩家");
 fullDay.minute = 810;

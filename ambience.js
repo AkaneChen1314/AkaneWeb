@@ -27,6 +27,7 @@
   let pointer = null;
   let hoveredCard = null;
 
+  // 依視窗大小重設畫布，並重新撒一批星星（手機的星星比較少）。
   function resizeStars() {
     width = innerWidth;
     height = innerHeight;
@@ -43,6 +44,7 @@
     updateAnimation();
   }
 
+  // 畫出所有星星；亮度用正弦波緩慢變化，看起來像在閃爍。
   function drawStars(time = 0) {
     context.clearRect(0, 0, width, height);
     stars.forEach((star) => {
@@ -62,6 +64,7 @@
     });
   }
 
+  // 每一幀重畫一次，形成動畫。
   function animate(time) {
     drawStars(time);
     animationFrame = requestAnimationFrame(animate);
@@ -83,6 +86,7 @@
     if (shouldAnimate) animationFrame = requestAnimationFrame(animate);
   }
 
+  // 滑鼠移動時更新光暈位置與卡片的微微傾斜；一幀最多更新一次。
   document.addEventListener(
     "pointermove",
     (event) => {
@@ -117,6 +121,7 @@
     { passive: true },
   );
 
+  // 滑鼠離開頁面，把光暈收起來。
   document.documentElement.addEventListener("pointerleave", () => {
     pointer = null;
     document.body.classList.remove("pointer-active");

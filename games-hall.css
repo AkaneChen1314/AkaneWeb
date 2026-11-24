@@ -6,6 +6,7 @@
  * 本檔在 ui-refresh.css 之後載入，選擇器都以 #games 開頭，用來蓋過舊版卡片樣式。
  */
 
+/* 遊戲專區的顏色與間距。 */
 #games {
   --hall-accent: var(--world-light, #79d5ff);
   --hall-accent-2: var(--world-second, #a294fa);
@@ -402,6 +403,7 @@
   margin-top: 34px;
 }
 
+/* 卡片淡入的動畫。 */
 @keyframes hall-fade-in {
   from {
     opacity: 0;
@@ -428,7 +430,6 @@
   #games .hall-grid > .hall-card.tail2-one {
     grid-column: 2 / span 2;
   }
-
 }
 
 /* ---------- 手機 ---------- */
@@ -501,6 +502,7 @@
   }
 }
 
+/* 減少動態效果。 */
 @media (prefers-reduced-motion: reduce) {
   #games .hall-card {
     animation: none;

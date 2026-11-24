@@ -1,5 +1,5 @@
 /* 檔案導讀：與畫面獨立的遊戲規則、敵人、成長與存檔資料；修改後可執行 tests/*.test.cjs。 */
-/* Neon Serpent — deterministic simulation, independent of rendering and DOM. */
+// 霓虹吞噬者的規則引擎：同樣的輸入會得到同樣的結果，不依賴畫面與網頁。
 (function (root, factory) {
   const api = factory();
   if (typeof module === "object" && module.exports) module.exports = api;
@@ -8,8 +8,14 @@
   "use strict";
   const TAU = Math.PI * 2,
     SEG = 0.53;
+
+  // ---------- 數學工具 ----------
+
+  // 限制在範圍內。
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+  // 兩點的平面距離。
   const distance = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
+  // 固定種子的亂數，同一個種子每次結果相同。
   function seeded(seed) {
     let t = seed >>> 0;
     return () => {
@@ -19,12 +25,14 @@
       return ((n ^ (n >>> 14)) >>> 0) / 4294967296;
     };
   }
+  // 多邊形面積（判斷纏繞圈夠不夠大）。
   function polygonArea(points) {
     let a = 0;
     for (let i = 0, j = points.length - 1; i < points.length; j = i++)
       a += (points[j].x + points[i].x) * (points[j].z - points[i].z);
     return Math.abs(a / 2);
   }
+  // 點是否在多邊形裡面。
   function insidePolygon(p, poly) {
     let hit = false;
     for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
@@ -38,13 +46,17 @@
     }
     return hit;
   }
-  // Distance from point p to the segment that starts at (x, z) and runs `length` along `angle`.
+  // 點 p 到一條線段的距離；線段從 (x, z) 出發，沿 angle 延伸 length。
   function segmentDistance(p, x, z, angle, length) {
     const dx = Math.cos(angle),
       dz = Math.sin(angle),
       t = clamp((p.x - x) * dx + (p.z - z) * dz, 0, length);
     return Math.hypot(p.x - (x + dx * t), p.z - (z + dz * t));
   }
+
+  // ---------- 遊戲資料：角色、模式、敵人、首領、道具 ----------
+
+  // 四位角色的名稱、配色、能力與技能。
   const CHARACTERS = [
     {
       id: "verdant",
@@ -123,7 +135,7 @@
       flavor: "帶著星辰的重量，穩穩走向下一場勝利。",
     },
   ];
-  // Each world has its own terrain zone so the three maps play differently, not just look different.
+  // 每個戰場有自己的特殊地形，玩法不同，不只是外觀不同。
   const WORLDS = [
     {
       name: "螢光森境",
@@ -180,6 +192,7 @@
       landmark: "遠古方碑",
     },
   ];
+  // 遊戲模式：時間、目標與說明。
   const MODES = {
     arena: {
       name: "蟲群對戰",
@@ -224,7 +237,7 @@
       goal: "沒有敵人、不會受傷。從暫停選單結算，才能保存本局獎勵。",
     },
   };
-  // Difficulty changes which monsters appear, how hard they hit, how fast they act and how long warnings last.
+  // 難度會影響敵人種類、傷害、行動速度與預警時間。
   const DIFFICULTIES = {
     easy: {
       name: "普通",
@@ -411,7 +424,7 @@
       desc: "分裂蟲死後留下的小蟲。",
     },
   };
-  // Attacks: bite fires by itself, ram needs a held dash, coil closes a loop of your own body.
+  // 攻擊：咬擊自動觸發、衝撞要按住衝刺、纏繞要用身體圍成一圈。
   const COMBAT = {
     bite: 40,
     biteRange: 3.8,
@@ -480,6 +493,7 @@
       desc: "連續放出擴散的電磁環，按住衝刺可以直接穿過。",
     },
   };
+  // 三位首領：血量、招式與各階段名稱。
   const BOSSES = [
     {
       name: "裂地守衛",
@@ -572,6 +586,7 @@
       advice: "能量環按住衝刺就能直接穿過。",
     },
   };
+  // 食物與道具：分數、經驗、成長與效果。
   const FOODS = {
     energy: {
       name: "能量球",
@@ -670,6 +685,7 @@
   };
   const POWER_IDS = ["speed", "magnet", "fury", "shield", "bomb", "rainbow"],
     POWER_WEIGHTS = [18, 17, 18, 16, 18, 10];
+  // 地圖上的特殊設施說明。
   const FEATURES = {
     spring: {
       name: "治癒泉",
@@ -697,6 +713,7 @@
       color: "#7a8f8a",
     },
   };
+  // 升級三選一的內容；apply 直接修改這一局的數值。
   const UPGRADES = [
     {
       id: "magnet",
@@ -807,6 +824,7 @@
       },
     },
   ];
+  // 研究所的永久強化。
   const META = [
     {
       id: "vitality",
@@ -830,6 +848,7 @@
       base: 35,
     },
   ];
+  // 成就與達成條件。
   const ACHIEVEMENTS = [
     {
       id: "first",
@@ -899,6 +918,10 @@
     },
   ];
   const GUIDE_VERSION = 5;
+
+  // ---------- 存檔 ----------
+
+  // 全新的個人檔案。
   function defaultProfile() {
     return {
       version: 2,
@@ -928,6 +951,7 @@
       difficulty: "normal",
     };
   }
+  // 檢查並修正讀到的存檔，缺漏或不合理的值改回預設。
   function sanitizeProfile(raw) {
     const p = defaultProfile();
     if (!raw || typeof raw !== "object") return p;
@@ -966,6 +990,7 @@
           : [],
       ),
     ];
+    // 歷史紀錄只留最近幾筆。
     if (Array.isArray(raw.history))
       p.history = raw.history
         .filter(
@@ -988,6 +1013,7 @@
           date: Number(x.date) || 0,
           difficulty: DIFFICULTIES[x.difficulty] ? x.difficulty : "normal",
         }));
+    // 設定值逐項檢查型別。
     if (raw.settings) {
       const s = raw.settings;
       for (const k of ["sound", "reducedMotion", "briefing"])
@@ -998,7 +1024,7 @@
       p.settings.quality = ["high", "low"].includes(s.quality)
         ? s.quality
         : "high";
-      // Version 1 saved "keyboard" as the default; upgrade those players to automatic keyboard + mouse steering.
+      // 第一版存檔預設是「鍵盤」，幫那些玩家改成自動判斷鍵盤與滑鼠。
       p.settings.control =
         s.control === "pointer"
           ? "pointer"
@@ -1012,6 +1038,7 @@
     p.difficulty = DIFFICULTIES[raw.difficulty] ? raw.difficulty : "normal";
     return p;
   }
+  // 花晶體買永久強化，最多五級。
   function buyUpgrade(p, id) {
     const def = META.find((x) => x.id === id);
     if (!def || p.upgrades[id] >= 5) return false;
@@ -1021,6 +1048,7 @@
     p.upgrades[id]++;
     return true;
   }
+  // 一局結束後結算獎勵、紀錄與成就，只會結算一次。
   function settle(p, g) {
     if (g.training || g.settled || !g.over) return null;
     g.settled = true;
@@ -1057,7 +1085,12 @@
     p.history = p.history.slice(0, 15);
     return { reward: reward + earned.length * 10, earned, record };
   }
+
+  // ---------- 遊戲規則 ----------
+
+  // 一局遊戲的所有狀態與規則；不碰畫面，可以單獨測試。
   class Game {
+    // 依角色、戰場、模式與永久強化建立一局。
     constructor({
       character = 0,
       world = 0,
@@ -1081,7 +1114,7 @@
       this.mode = mode;
       this.duration = MODES[mode].duration;
       this.compact = mode === "arena" || mode === "boss";
-      // Formal maps are twice as wide and tall as before (4× the area); the tutorial stays small.
+      // 正式地圖長寬都是以前的兩倍（面積四倍）；新手練習維持小地圖。
       this.bound = training ? 42 : this.compact ? 84 : 126;
       this.time = 0;
       this.score = 0;
@@ -1170,13 +1203,13 @@
       this.bossesDefeated = 0;
       this.bossStageRewarded = 0;
       this.nextBossAt = 60;
-      // Food density is deliberately lean; clusters and power-ups make each pickup matter.
+      // 食物刻意放得少一點，讓每次撿到都有感覺。
       const area = (this.bound * 2) ** 2,
         density = mode === "blitz" ? 0.019 : mode === "zen" ? 0.014 : 0.012;
       this.foodTarget = training ? 0 : Math.round(area * density);
       this.foodLimit =
         this.foodTarget + Math.round(this.foodTarget * 0.15) + 60;
-      // Power-ups spawn near the player, so their cap tracks local density rather than map size.
+      // 道具會出現在玩家附近，所以上限看附近密度，不看地圖大小。
       this.powerCap = training ? 0 : this.compact ? 3 : 5;
       this.cacheTarget = training ? 0 : this.compact ? 10 : 24;
       if (training) {
@@ -1185,7 +1218,7 @@
       }
       this.buildMap();
       while (this.food.length < this.foodTarget) this.spawnAmbientFood();
-      // A short trail in front immediately teaches movement and collecting.
+      // 開場在前方放一小排食物，馬上學會移動與撿取。
       for (let i = 2; i <= 10; i++) {
         const p = { x: Math.sin(i * 0.32) * 2, z: -i * 1.3 };
         if (!this.obstacles.some((o) => distance(o, p) < o.r + 0.6))
@@ -1205,6 +1238,7 @@
         this.emitBoss(e);
       }
     }
+    // 這個位置是否已經有障礙或設施。
     occupied(p, clearance) {
       return (
         this.obstacles.some((o) => distance(o, p) < o.r + clearance) ||
@@ -1214,6 +1248,7 @@
         this.caches.some((o) => distance(o, p) < 1.2 + clearance)
       );
     }
+    // 找一個放設施的空位，最多試 80 次。
     featurePosition(minCenter = 8, clearance = 2, margin = 6) {
       let p;
       for (let n = 0; n < 80; n++) {
@@ -1226,12 +1261,14 @@
       }
       return p;
     }
+    // 建立地圖：障礙、特殊區域、加速板、傳送門與裝飾。
     buildMap() {
       const R = this.random,
         big = !this.compact,
         b = this.bound;
+      // 大地圖：外圍八個區塊各放一組，再散佈小障礙。
       if (big) {
-        // Eight landmarks on a 3×3 grid (centre left open) so every region of the big map has something to steer by.
+        // 在 3×3 格子上放八個地標（中間留空），大地圖每一區都有目標可以靠近。
         for (const gx of [-1, 0, 1])
           for (const gz of [-1, 0, 1]) {
             if (!gx && !gz) continue;
@@ -1255,6 +1292,7 @@
         }
       } else {
         // Two rings of pillars give cover across the larger arena, plus a few scattered rocks.
+        // 兩圈環狀的大型障礙。
         for (const [ring, offset] of [
           [0.3, 0.4],
           [0.64, 0.4 + Math.PI / 4],
@@ -1280,6 +1318,7 @@
           });
         }
       }
+      // 治癒泉。
       for (let i = 0; i < (big ? 9 : 3); i++)
         this.zones.push({
           type: "spring",
@@ -1288,6 +1327,7 @@
           charge: 60,
           max: 60,
         });
+      // 減速或滑行的特殊區域。
       for (let i = 0; i < (big ? 20 : 6); i++) {
         const r = 4.5 + R() * 3;
         this.zones.push({
@@ -1296,6 +1336,7 @@
           r,
         });
       }
+      // 加速板。
       for (let i = 0; i < (big ? 40 : 16); i++)
         this.pads.push({
           ...this.featurePosition(8, 3),
@@ -1303,6 +1344,7 @@
           cooldown: 0,
         });
       // Portals matter more on a big map: they are the fast lanes between distant regions.
+      // 成對的傳送門，兩端要離得夠遠。
       for (let k = 0; k < (big ? 5 : 2); k++) {
         let a,
           c,
@@ -1317,6 +1359,7 @@
           { ...c, link: i, pair: k },
         );
       }
+      // 地面花紋。
       for (let i = 0; i < (big ? 100 : 44); i++)
         this.patches.push({
           ...this.randomPosition(),
@@ -1324,6 +1367,7 @@
           tint: i % 3,
           rotation: R() * TAU,
         });
+      // 不影響規則的小裝飾。
       for (let i = 0; i < (big ? 900 : 420); i++) {
         const p = this.randomPosition();
         if (this.zones.some((z) => distance(z, p) < z.r)) continue;
@@ -1335,6 +1379,7 @@
         });
       }
     }
+    // 隨機找一個不撞到障礙的位置。
     randomPosition(minCenter = 0) {
       let p;
       for (let n = 0; n < 60; n++) {
@@ -1350,6 +1395,7 @@
       }
       return p;
     }
+    // 決定一般食物的種類；血少時比較容易出現治療。
     basicFoodType() {
       const r = this.random(),
         heal = this.health < this.maxHealth * 0.5 ? 0.07 : 0.035;
@@ -1361,6 +1407,7 @@
             ? "heal"
             : "energy";
     }
+    // 放一份食物，數量有上限。
     spawnFood(position, type) {
       if (this.food.length >= this.foodLimit) return null;
       const pos = position
@@ -1378,9 +1425,10 @@
       this.food.push(f);
       return f;
     }
+    // 地圖上自然出現的食物，有時一次一小群。
     spawnAmbientFood() {
       if (this.random() < 0.45) {
-        // Small clusters are more satisfying to sweep than evenly scattered dots.
+        // 一小群食物比平均散布更有掃過去的快感。
         const c = this.randomPosition(),
           n = 4 + Math.floor(this.random() * 3);
         for (let i = 0; i < n; i++) {
@@ -1398,6 +1446,7 @@
     powerCount() {
       return this.food.reduce((n, f) => n + (FOODS[f.type].power ? 1 : 0), 0);
     }
+    // 放一個道具，沒指定就依權重抽。
     spawnPower(position, id) {
       if (!id) {
         let r = this.random() * POWER_WEIGHTS.reduce((a, b) => a + b, 0);
@@ -1420,6 +1469,7 @@
       if (f) f.life = 45;
       return f;
     }
+    // 放一個寶箱。
     spawnCache() {
       const p = this.featurePosition(10, 2, 5);
       const c = {
@@ -1437,11 +1487,13 @@
     emit(type, data = {}) {
       this.events.push({ type, ...data });
     }
+    // 同一種提示在 gap 秒內只送一次。
     notice(type, data, gap = 0.5) {
       if (this.time - (this.lastNotice[type] ?? -9) < gap) return;
       this.lastNotice[type] = this.time;
       this.emit(type, data);
     }
+    // 噴出一團粒子。
     burst(x, z, color, count = 10, power = 5) {
       for (let i = 0; i < count; i++) {
         const a = this.random() * TAU,
@@ -1468,6 +1520,7 @@
     power() {
       return this.damage * (this.powers.fury > 0 ? 1.8 : 1);
     }
+    // 使用角色技能。
     useSkill() {
       if (this.over || this.paused || this.needsUpgrade || this.cooldown > 0)
         return false;
@@ -1492,10 +1545,11 @@
       this.emit("skill", { name: this.character.skill, id: this.character.id });
       return true;
     }
+    // 對敵人造成傷害，處理護盾、無敵與來源限制。
     damageEnemy(e, amount, source = "passive") {
       if (e.dead || (e.requiredAttack && e.requiredAttack !== source))
         return false;
-      // Bosses roar between phases and cannot be hurt during the roar.
+      // 首領換階段時會吼叫，吼叫期間不會受傷。
       if (e.boss && e.roar > 0) {
         if (source !== "passive") this.notice("immune", { x: e.x, z: e.z });
         return false;
@@ -1536,6 +1590,7 @@
       if (e.hp <= 0) this.kill(e, source);
       return true;
     }
+    // 對寶箱造成傷害。
     damageCache(c, amount, source = "passive") {
       if (c.dead) return false;
       c.hp -= amount;
@@ -1551,6 +1606,7 @@
       if (c.hp <= 0) this.breakCache(c);
       return true;
     }
+    // 寶箱破裂，掉出食物與道具。
     breakCache(c) {
       if (c.dead) return;
       c.dead = true;
@@ -1570,6 +1626,7 @@
       else if (roll < 0.75) this.spawnFood({ x: c.x, z: c.z }, "crystal");
       this.emit("cache", { x: c.x, z: c.z });
     }
+    // 目標是否在咬擊的距離與角度內。
     biteHits(p, r) {
       const h = this.snake[0],
         d = distance(h, p);
@@ -1577,6 +1634,7 @@
       if (d < r + 0.7) return true;
       return Math.cos(Math.atan2(p.z - h.z, p.x - h.x) - this.angle) >= 0.5;
     }
+    // 目前咬得到的敵人與寶箱。
     biteTargets() {
       const enemies = this.enemies.filter(
         (e) =>
@@ -1588,12 +1646,13 @@
       );
       return { enemies, caches };
     }
-    // Biting is automatic: whenever something is inside the front cone and the jaw is ready.
+    // 咬擊自動進行：前方扇形內有目標、而且冷卻好了就咬。
     autoBite() {
       if (this.biteCooldown > 0) return false;
       const t = this.biteTargets();
       return t.enemies.length || t.caches.length ? this.bite(t) : false;
     }
+    // 咬一口，對所有目標造成傷害。
     bite(targets = this.biteTargets()) {
       if (
         this.over ||
@@ -1611,6 +1670,7 @@
         this.damageCache(c, COMBAT.bite * this.power(), "bite");
       return true;
     }
+    // 範圍傷害。
     areaDamage(pos, radius, damage, source = "passive") {
       for (const e of this.enemies)
         if (!e.dead && distance(e, pos) < radius + e.r)
@@ -1619,6 +1679,7 @@
         if (!c.dead && distance(c, pos) < radius + c.r)
           this.damageCache(c, damage, source);
     }
+    // 偵測蛇頭是否碰到自己的身體，圍成一圈就觸發纏繞。
     detectCoil() {
       if (this.coilCooldown > 0 || this.snake.length < COMBAT.coilMinLength)
         return false;
@@ -1631,6 +1692,7 @@
       }
       return false;
     }
+    // 纏繞成功：圈內的敵人、寶箱受傷，食物直接吃掉。
     triggerCoil(poly) {
       const enemies = this.enemies.filter(
           (e) => !e.dead && insidePolygon(e, poly),
@@ -1672,10 +1734,11 @@
       });
       return true;
     }
-    // Combo: every attack that lands on a monster within 3 s of the last one. Food never counts.
+    // 連擊：3 秒內再次打中敵人就累積；吃食物不算。
     comboMultiplier() {
       return 1 + Math.min(1, Math.floor(this.combo / 10) * 0.1);
     }
+    // 累積連擊。
     addCombo() {
       this.combo = this.comboTimer > 0 ? this.combo + 1 : 1;
       this.comboTimer = 3;
@@ -1683,6 +1746,7 @@
       if (this.combo >= 10 && this.combo % 10 === 0)
         this.emit("combo", { combo: this.combo });
     }
+    // 擊敗敵人：計分、經驗、掉落物與首領獎勵。
     kill(e, source = "passive") {
       if (e.dead) return;
       e.dead = true;
@@ -1713,6 +1777,7 @@
         });
         return;
       }
+      // 首領：掉一圈食物，清掉它留下的攻擊。
       if (e.boss) {
         for (let i = 0; i < 16; i++) {
           const a = (i / 16) * TAU;
@@ -1733,6 +1798,7 @@
         this.crystals += 20;
         this.emit("boss-killed", { name: e.name });
       } else {
+        // 分裂蟲死後變成幾隻小蟲。
         if (e.kind === "splitter") {
           const n = this.diff.tier >= 3 ? 3 : 2;
           for (let i = 0; i < n; i++) {
@@ -1781,6 +1847,7 @@
         kind: e.kind,
       });
     }
+    // 玩家受傷：先看無敵、技能與護盾，再扣血。
     hurt(amount, cause = "enemy") {
       if (
         this.mode === "zen" ||
@@ -1816,6 +1883,7 @@
       if (this.health <= 0) this.end(false, "defeated");
       return true;
     }
+    // 累積成長，每 3 點身體加長一節。
     addGrowth(n) {
       this.growth += n;
       while (this.growth >= 3) {
@@ -1823,6 +1891,7 @@
         this.targetLength = Math.min(160, this.targetLength + 1);
       }
     }
+    // 吃到一份食物或道具。
     collect(f) {
       const def = FOODS[f.type] || FOODS.energy;
       this.foodEaten++;
@@ -1851,6 +1920,7 @@
         z: f.z,
       });
     }
+    // 套用道具效果。
     applyPower(id) {
       const def = FOODS[id],
         h = this.snake[0];
@@ -1872,9 +1942,10 @@
         color: def.color,
       });
     }
+    // 經驗夠了就升級，抽出三個選項。
     checkLevel() {
       if (this.xp < this.nextXP || this.over || this.needsUpgrade) return;
-      // Later levels need noticeably more XP so evolution menus stay exciting instead of constant.
+      // 後面的等級需要明顯更多經驗，升級選單才不會一直跳出來。
       this.xp -= this.nextXP;
       this.level++;
       this.nextXP = Math.round(
@@ -1892,6 +1963,7 @@
         );
       this.emit("level");
     }
+    // 套用選到的升級。
     chooseUpgrade(id) {
       if (!this.needsUpgrade || !this.choices.includes(id)) return false;
       const u = UPGRADES.find((u) => u.id === id);
@@ -1901,7 +1973,7 @@
       this.choices = [];
       return true;
     }
-    // ---------- Enemies ----------
+    // ---------- 敵人 ----------
     enemyPool(wave = this.wave) {
       return Object.keys(ENEMIES).filter(
         (k) =>
@@ -1910,12 +1982,14 @@
           ENEMIES[k].wave <= wave,
       );
     }
+    // 依權重抽一種敵人。
     pickKind(pool = this.enemyPool()) {
       let r = this.random() * pool.reduce((s, k) => s + ENEMIES[k].weight, 0);
       return (
         pool.find((k) => (r -= ENEMIES[k].weight) < 0) || pool[0] || "chaser"
       );
     }
+    // 生一群敵人（群聚型會一次多隻）。
     spawnPack(kind = this.pickKind(), at = null) {
       const t = ENEMIES[kind],
         first = this.spawnEnemy(false, 0, kind, at);
@@ -1937,12 +2011,14 @@
       }
       return list;
     }
+    // 生一隻敵人或首領，依難度與波數調整數值。
     spawnEnemy(boss = false, variant = 0, kind = null, at = null) {
       if (this.enemies.filter((e) => !e.dead).length >= 45) return null;
       const h = this.snake[0],
         edge = this.bound - 3,
         D = this.diff;
       let x, z;
+      // 位置：指定處，或離玩家一段距離的地方。
       if (at) {
         x = clamp(at.x, -edge, edge);
         z = clamp(at.z, -edge, edge);
@@ -1970,13 +2046,14 @@
         body: Array.from({ length: 9 }, () => ({ x, z })),
       };
       let e;
+      // 首領的數值。
       if (boss) {
         const def = BOSSES[variant % 3],
           hp =
             def.hp *
             D.bossHp *
             (this.mode === "endless" ? 1 + this.wave * 0.06 : 1);
-        // A negative age gives the intro banner two seconds before the boss starts acting.
+        // 年齡先設成負數，讓登場介紹播兩秒後首領才行動。
         e = {
           ...base,
           r: 2.4,
@@ -2037,6 +2114,7 @@
       this.enemies.push(e);
       return e;
     }
+    // 通知畫面首領登場。
     emitBoss(e) {
       const def = BOSSES[e.variant];
       this.emit("boss", {
@@ -2046,6 +2124,7 @@
         color: def.color,
       });
     }
+    // 發射子彈：扇形，或 radial 時往四周一圈。
     shoot(e, count, spread, radial = false, opts = {}) {
       const speed = (opts.speed || 8) * this.diff.bullet;
       for (let i = 0; i < count && this.projectiles.length < 160; i++) {
@@ -2066,6 +2145,7 @@
         });
       }
     }
+    // 過關獎勵：補血、清掉子彈並給經驗。
     stageReward(heal) {
       this.health = Math.min(this.maxHealth, this.health + heal);
       this.projectiles = [];
@@ -2075,6 +2155,7 @@
       this.checkLevel();
       this.emit("intermission", { heal });
     }
+    // 各模式的進度：生怪、換波與勝利條件。
     updateMode(dt) {
       if (this.mode === "zen") return;
       const living = this.enemies.filter((e) => !e.dead);
@@ -2083,6 +2164,7 @@
         return;
       }
       this.spawnTimer -= dt;
+      // 蟲群對戰：四波全部清完才獲勝。
       if (this.mode === "arena") {
         if (!this.waveRemaining && !living.length) {
           if (this.wave === 4) {
@@ -2151,13 +2233,14 @@
         }
       }
     }
+    // 這一波新出現的敵人種類。
     newKinds(wave) {
       const before = new Set(this.enemyPool(wave - 1));
       return this.enemyPool(wave)
         .filter((k) => !before.has(k))
         .map((k) => ENEMIES[k].name);
     }
-    // Bugs gently push each other apart so a crowd reads as individuals instead of one overlapping blob.
+    // 蟲子之間會輕輕推開，一大群看起來仍是一隻一隻。
     separateEnemies() {
       const list = this.enemies;
       for (let i = 0; i < list.length; i++) {
@@ -2184,12 +2267,14 @@
         }
       }
     }
+    // 目前位置所在的減速區。
     slowZoneAt(p) {
       return (
         this.zones.find((z) => z.type === "slow" && distance(z, p) < z.r) ||
         null
       );
     }
+    // 一隻普通敵人的行動。
     updateEnemy(e, dt) {
       const h = this.snake[0],
         d = distance(h, e);
@@ -2207,16 +2292,18 @@
       const D = this.diff,
         step =
           e.speed * dt * (this.world !== 1 && this.slowZoneAt(e) ? 0.55 : 1);
+      // 往指定方向移動。
       const move = (a, k = 1) => {
         e.x += Math.cos(a) * step * k;
         e.z += Math.sin(a) * step * k;
       };
-      // Ranged monsters keep a band of distance and circle the player inside it.
+      // 遠程敵人保持一段距離，並繞著玩家走。
       const keep = (near, far) => {
         if (d > far) move(e.angle);
         else if (d < near) move(e.angle, -1);
         else move(e.angle + (Math.PI / 2) * e.strafe, 0.6);
       };
+      // 各種敵人不同的行動方式。
       switch (e.kind) {
         case "ranged":
           keep(6, 10);
@@ -2287,6 +2374,7 @@
       e.x = clamp(e.x, -this.bound + 2, this.bound - 2);
       e.z = clamp(e.z, -this.bound + 2, this.bound - 2);
     }
+    // 衝撞型：蓄力 → 衝刺 → 休息。
     updateCharger(e, dt, d, move) {
       if (e.windup > 0) {
         e.windup -= dt;
@@ -2318,6 +2406,7 @@
         e.state = "windup";
       }
     }
+    // 自爆型爆炸。
     explodeBomber(e) {
       const h = this.snake[0],
         r = 3;
@@ -2331,6 +2420,7 @@
         if (o !== e && !o.dead && distance(o, e) < r + o.r)
           this.damageEnemy(o, 60, "blast");
     }
+    // 治療型幫附近同伴補血。
     healAllies(e) {
       let n = 0;
       for (const o of this.enemies)
@@ -2341,7 +2431,7 @@
       this.ring(e.x, e.z, 6, "#b8ffcf", 0.7);
       if (n) this.emit("heal", { x: e.x, z: e.z, count: n });
     }
-    // ---------- Bosses: three phases, four signature moves each ----------
+    // ---------- 首領：三個階段，各有四個招牌招式 ----------
     updateBoss(e, dt, h, d) {
       const def = BOSSES[e.variant];
       const want = e.hp <= e.maxHp * 0.33 ? 3 : e.hp <= e.maxHp * 0.66 ? 2 : 1;
@@ -2390,7 +2480,7 @@
         e.special -= dt * rate;
         if (e.special <= 0) this.startCast(e, h);
       }
-      // Basic shots speed up more gently than special moves so bullets never become a wall.
+      // 一般射擊加快得比招式慢，子彈不會變成一面牆。
       if (!e.cast || !e.cast.still) {
         e.shot -=
           dt * (1 + (this.diff.rate - 1) * 0.5) * (1 + (e.phase - 1) * 0.12);
@@ -2399,8 +2489,10 @@
       e.x = clamp(e.x, -this.bound + 3, this.bound - 3);
       e.z = clamp(e.z, -this.bound + 3, this.bound - 3);
     }
+    // 首領的移動方式。
     moveBoss(e, dt, d) {
       const step = e.speed * dt,
+        // 往指定方向移動。
         move = (a, k = 1) => {
           e.x += Math.cos(a) * step * k;
           e.z += Math.sin(a) * step * k;
@@ -2412,10 +2504,11 @@
       } else if (d > (e.variant === 0 ? 7 : 6))
         move(e.angle, e.variant === 2 ? 1.15 : 1);
     }
+    // 首領的一般射擊，依階段變強。
     bossShot(e) {
       const p = e.phase,
         x = this.diff.extra;
-      // Fans always leave gaps wide enough to slip through sideways.
+      // 扇形彈幕一定留有可以側身閃過的空隙。
       if (e.variant === 0) {
         e.shot = [2.4, 2.0, 1.7][p - 1];
         this.shoot(e, Math.max(3, [5, 5, 7][p - 1] + x), 0.3, false, {
@@ -2445,12 +2538,14 @@
           });
       }
     }
+    // 目前階段可以用的招式。
     bossMoves(e) {
       const def = BOSSES[e.variant];
       return def.moves.filter(
         (m) => BOSS_MOVES[m].phase <= e.phase + (this.diff.extra > 0 ? 1 : 0),
       );
     }
+    // 首領開始一個招式；warn 是預警時間的倍率。
     startCast(e, h, forced) {
       const list = this.bossMoves(e);
       let move = forced;
@@ -2479,6 +2574,7 @@
         color: e.color,
       });
       switch (move) {
+        // 震波：在玩家前方連續落下。
         case "quake": {
           const k = n([1, 3, 5]);
           for (let i = 0; i < k; i++) {
@@ -2501,6 +2597,7 @@
           }
           break;
         }
+        // 裂地：直線裂縫，第三階段往四周。
         case "fissure": {
           const k = n([3, 5, 8]),
             radial = p >= 3;
@@ -2525,6 +2622,7 @@
           }
           break;
         }
+        // 落石。
         case "rockfall": {
           const k = n([4, 6, 10]);
           for (let i = 0; i < k; i++) {
@@ -2569,12 +2667,14 @@
             still: false,
           };
           break;
+        // 召喚小怪。
         case "brood": {
           const k = n([3, 4, 5]);
           for (let i = 0; i < k; i++) this.summon(e, (i / k) * TAU);
           this.ring(e.x, e.z, 5, e.color);
           break;
         }
+        // 圓形落點攻擊。
         case "miasma": {
           const k = n([2, 3, 4]);
           for (let i = 0; i < k; i++) {
@@ -2606,6 +2706,7 @@
             still: true,
           };
           break;
+        // 護衛：有小怪在場時自己受到保護。
         case "guard": {
           e.guard = 7;
           if (!this.enemies.some((o) => o.minion && !o.dead))
@@ -2618,6 +2719,7 @@
           e.cast = { move, left: Math.min(4, n([1, 2, 3])), still: true };
           this.beginCharge(e);
           break;
+        // 隨機落點攻擊。
         case "thunder": {
           const k = n([4, 6, 8]);
           for (let i = 0; i < k; i++) {
@@ -2638,6 +2740,7 @@
           }
           break;
         }
+        // 旋轉光束。
         case "laser": {
           const beams = p >= 3 ? 2 : 1,
             dir = R() < 0.5 ? 1 : -1,
@@ -2666,7 +2769,9 @@
         }
       }
     }
+    // 首領召喚一群小怪。
     summon(e, a) {
+      // 可以召喚的種類，難度越高越多。
       const pool = [
         "swarm",
         "chaser",
@@ -2685,12 +2790,14 @@
       }
       return list;
     }
+    // 開始衝撞的蓄力。
     beginCharge(e) {
       e.windup = e.windupMax = 0.9 * this.diff.warn;
       e.chargeAngle = e.angle;
       e.chargeLen = 21 * this.diff.speed * 0.6;
       e.charge = 0;
     }
+    // 持續中的招式每一步要做的事。
     continueCast(e, dt, rate) {
       const c = e.cast;
       c.t = (c.t || 0) + dt;
@@ -2759,6 +2866,7 @@
         }
       }
     }
+    // 環繞玩家的光球位置。
     orbits() {
       const h = this.snake[0];
       return Array.from({ length: this.orbitCount }, (_, i) => {
@@ -2766,6 +2874,7 @@
         return { x: h.x + Math.cos(a) * 2.7, z: h.z + Math.sin(a) * 2.7 };
       });
     }
+    // 結束這一局。
     end(won = false, reason) {
       if (this.over) return;
       this.over = true;
@@ -2775,7 +2884,7 @@
         (won ? "completed" : this.health <= 0 ? "defeated" : "retired");
       this.emit("end");
     }
-    // Walls and rocks block and deflect the head along their surface. They never cost health.
+    // 牆與石頭會擋住蛇頭並讓它沿表面滑開，不會扣血。
     resolveTerrain(h) {
       const lim = this.bound - 0.7;
       if (Math.abs(h.x) > lim) {
@@ -2816,6 +2925,7 @@
         this.emit("bump");
       }
     }
+    // 踩到加速板或傳送門。
     useTerrain(h) {
       for (const p of this.pads)
         if (p.cooldown <= 0 && distance(h, p) < 1.6) {
@@ -2850,7 +2960,7 @@
         return;
       }
     }
-    // Hazards: circle / line erupt once after their warning; beams and pools stay active; rings expand outward.
+    // 危險區域：圓形與直線預警後爆一次；光束與毒池會持續；圓環往外擴。
     updateHazards(dt, h) {
       for (const hz of this.hazards) {
         const type = hz.type || "circle",
@@ -2859,7 +2969,7 @@
         if (this.frozen > 0) continue;
         if (type === "ring") {
           hz.radius += hz.speed * dt;
-          // Dashing jumps over expanding rings.
+          // 衝刺可以跳過擴散的圓環。
           if (
             !hz.hit &&
             !this.dashing &&
@@ -2928,10 +3038,12 @@
       }
       this.hazards = this.hazards.filter((x) => !x.done);
     }
+    // 一步更新：計時 → 轉向移動 → 地形 → 吃東西 → 技能 → 敵人 → 子彈。
     update(dt, input = {}) {
       if (this.over || this.paused || this.needsUpgrade) return;
       dt = clamp(dt, 0, 0.05);
       this.time += dt;
+      // 往 0 倒數的小工具。
       const tick = (v) => Math.max(0, v - dt);
       this.biteCooldown = tick(this.biteCooldown);
       this.biteVisual = tick(this.biteVisual);
@@ -2953,6 +3065,7 @@
         ice = !!slow && this.world === 1;
       this.zone = slow ? "slow" : null;
       if (Number.isFinite(input.angle)) this.targetAngle = input.angle;
+      // 轉向有角速度上限，走最短的方向。
       const diff = Math.atan2(
           Math.sin(this.targetAngle - this.angle),
           Math.cos(this.targetAngle - this.angle),
@@ -2962,6 +3075,7 @@
       if (!input.dash) this.dashLocked = false;
       this.dashing = !!input.dash && !this.dashLocked && this.dash > 0;
       const free = this.powers.speed > 0;
+      // 衝刺消耗與恢復；耗盡後要放開按鍵才能再用。
       this.dash = clamp(
         this.dash + dt * (this.dashing ? (free ? 0 : -38) : this.dashRegen),
         0,
@@ -2977,6 +3091,7 @@
       this.currentSpeed = speed;
       h.x += Math.cos(this.angle) * speed * dt;
       h.z += Math.sin(this.angle) * speed * dt;
+      // 漩渦區會把蛇頭往中心拉。
       if (slow && this.world === 2) {
         const d = distance(slow, h);
         if (d > 0.3) {
@@ -2986,10 +3101,12 @@
       }
       this.resolveTerrain(h);
       this.useTerrain(h);
+      // 身體長度補到目標值。
       while (this.snake.length < this.targetLength)
         this.snake.push({ ...this.snake[this.snake.length - 1] });
       if (this.snake.length > this.targetLength)
         this.snake.length = this.targetLength;
+      // 每一節跟著前一節，保持固定間距。
       for (let i = 1; i < this.snake.length; i++) {
         const prev = this.snake[i - 1],
           s = this.snake[i],
@@ -3002,6 +3119,7 @@
       this.maxLength = Math.max(this.maxLength, this.snake.length);
       if (this.over) return;
       this.inSpring = false;
+      // 治癒泉。
       for (const z of this.zones)
         if (z.type === "spring") {
           z.charge = Math.min(z.max, z.charge + 1.5 * dt);
@@ -3018,10 +3136,12 @@
             }
           }
         }
+      // 吸附範圍，把附近食物吸過來。
       const radius =
         this.magnet +
         (this.characterIndex === 0 && this.activeSkill > 0 ? 11 : 0) +
         (this.powers.magnet > 0 ? 9 : 0);
+      // 食物的壽命、吸附與吃下。
       for (let i = this.food.length - 1; i >= 0; i--) {
         const f = this.food[i];
         if (f.life !== undefined) {
@@ -3045,6 +3165,7 @@
         }
       }
       if (!this.training) this.detectCoil();
+      // 定時補充食物、道具與寶箱。
       if (!this.training) {
         this.foodTimer -= dt;
         if (this.foodTimer <= 0) {
@@ -3069,6 +3190,7 @@
       this.orbitAngle += dt * 2.8;
       const orbits = this.orbits();
       this.pulseTimer -= dt;
+      // 脈衝強化定時放出一圈傷害。
       if (this.pulseTimer <= 0) {
         this.pulseTimer = 4;
         if (this.pulseLevel > 0) {
@@ -3080,6 +3202,7 @@
           );
         }
       }
+      // 衝刺時的尾跡粒子。
       this.trailTimer -= dt;
       if ((this.dashing || this.boost > 0) && this.trailTimer <= 0) {
         this.trailTimer = 0.05;
@@ -3094,6 +3217,7 @@
       if (this.over || this.needsUpgrade) return;
       this.autoBite();
       const power = this.power();
+      // 每隻敵人的計時、行動與碰撞。
       for (const e of [...this.enemies]) {
         if (e.dead) continue;
         e.age += dt;
@@ -3151,7 +3275,7 @@
                 this.bound - 2,
               );
             }
-            // Ramming a boss bounces the head back out with a moment of protection, so a good ram is never punished.
+            // 衝撞首領會彈開並有短暫保護，撞得好不會反而受傷。
             if (e.boss && !e.dead && contact) {
               const d = distance(h, e) || 0.001,
                 nx = (h.x - e.x) / d,
@@ -3227,7 +3351,7 @@
           p.life = 0;
           continue;
         }
-        // Rocks, pillars and landmarks are cover: they absorb enemy bullets.
+        // 石頭、柱子與地標可以當掩護，會擋下敵人的子彈。
         for (const o of this.obstacles)
           if (Math.abs(p.x - o.x) < o.r + 0.3 && distance(p, o) < o.r + 0.2) {
             p.life = 0;
@@ -3255,7 +3379,12 @@
       else if (!this.training) this.checkLevel();
     }
   }
+
+  // ---------- 新手練習 ----------
+
+  // 八步練習：轉向、衝刺、吃食物、咬擊、纏繞、技能、升級。
   class Tutorial {
+    // 只能搭配練習用的一局。
     constructor(game) {
       if (!game.training) throw new Error("Tutorial requires a training game");
       this.game = game;
@@ -3264,6 +3393,7 @@
       this.completed = false;
       this.lastAngle = game.angle;
     }
+    // 進到下一步，並準備那一步需要的東西。
     advance() {
       this.step++;
       this.progress = 0;
@@ -3291,6 +3421,7 @@
         g.paused = true;
       }
     }
+    // 在玩家前方放一隻練習用的敵人。
     placeTarget() {
       const g = this.game,
         h = g.snake[0],
@@ -3309,6 +3440,7 @@
       g.dash = 100;
       g.dashLocked = false;
     }
+    // 在玩家前方排一列食物。
     placeFood() {
       const g = this.game,
         h = g.snake[0];
@@ -3331,6 +3463,7 @@
         );
       this.placedAt = g.time;
     }
+    // 檢查目前這一步是否完成。
     update(dt, input) {
       const g = this.game;
       if (g.paused || g.over || g.needsUpgrade || this.completed) return;
@@ -3355,6 +3488,7 @@
       }
       this.lastAngle = g.angle;
     }
+    // 玩家做了技能或升級的動作。
     action(type) {
       if (
         (this.step === 6 && type === "skill") ||

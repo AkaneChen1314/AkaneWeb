@@ -1,4 +1,4 @@
-/* Shield/body distinction, kept inside the existing compact Boss HUD. */
+/* 在原本精簡的首領資訊列中，區分護盾與本體的血量。 */
 .boss-vitals small {
   display: block;
   font-size: 12px;
@@ -37,6 +37,9 @@
   color: #d7e8f6 !important;
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------- 手機 ---------- */
+
 @media (max-width: 760px) {
   .boss-hud {
     left: 5%;
@@ -61,6 +64,9 @@
     font-size: 12px !important;
   }
 }
+
+/* ---------- 橫拿手機 ---------- */
+
 @media (max-height: 500px) and (orientation: landscape) {
   .boss-hud {
     left: 26%;

@@ -94,6 +94,7 @@
       evoDesc: "環形冰晶風暴，凍結低血量敵人。",
     },
   };
+  // 每種起始武器的優缺點與對應的生命調整。
   const WEAPON_LOADOUTS = {
     pulse: {
       hp: 0,
@@ -132,6 +133,7 @@
       cost: "單發傷害較低，打高血量目標較慢",
     },
   };
+  // 六檔難度：敵人生命、速度、傷害、出怪量與預警時間。
   const DIFFICULTIES = [
     {
       id: -1,
@@ -236,6 +238,7 @@
       desc: "高傷害、快速彈幕與短預警，留給熟悉構築的駕駛。",
     },
   ];
+  // 目前這一局的難度設定。
   function difficultyRule(r) {
     return DIFFICULTIES.find((d) => d.id === r.difficulty) || DIFFICULTIES[1];
   }
@@ -332,6 +335,7 @@
     powerWeight: 0.65,
     powerExponent: 0.8,
   };
+  // 三種模式的共用規則。
   const MODE_RULES = {
     campaign: {
       id: "expedition",
@@ -354,6 +358,7 @@
       desc: "每 8 波提升一級壓力；額外耐久最多 +30%、出招最多 +20%。",
     },
   };
+  // 每日挑戰的輪替主題。
   const DAILY_THEMES = [
     {
       id: "comet",
@@ -389,6 +394,7 @@
       desc: "更多低生命小怪與蜂群護衛，適合範圍構築。",
     },
   ];
+  // 目前適用的模式規則；無盡模式越後面越強。
   function modeRule(r) {
     if (r.mode === "daily")
       return DAILY_THEMES[(r.seed >>> 0) % DAILY_THEMES.length];
@@ -408,6 +414,7 @@
     const stats = r.stats || {},
       research = r.research || {},
       has = (id) => (r.relics || []).includes(id);
+    // 爆擊率，最高 100%。
     const crit = clamp(
       0.04 +
         (stats.crit || 0) * 0.08 +
@@ -431,6 +438,7 @@
         (r.config.mutator === "overclock" ? 1.2 : 1),
       extra = stats.projectile || 0;
     let offense = 0;
+    // 每把武器換算成每秒傷害。
     for (const w of r.weapons) {
       const base = WEAPONS[w.id],
         lv = w.level,
@@ -470,6 +478,7 @@
     }
     if (has("frost") && r.weapons.some((w) => w.id === "frost"))
       offense *= 1.12;
+    // 防禦力：生命、護甲與回血。
     const defense =
       r.p.maxHp / Math.max(0.45, 1 - (stats.armor || 0) * 0.08) +
       (stats.regen || 0) * 10 +
@@ -486,6 +495,7 @@
       level = Math.max(1, r.p.level);
     const b = BOSS_BALANCE,
       levelScale = 1 + (level - 1) * b.levelGain;
+    // 依等級與火力估算頭目該有多少耐久。
     const weightedDps =
       b.referenceDps *
       (b.levelWeight * levelScale +
@@ -510,6 +520,7 @@
       (1 + r.config.bossStrength * 0.35) *
       mode.hp *
       shieldWeight;
+    // 護甲與本體血量。
     const armor = d.bossArmor,
       body = Math.max(
         70,
@@ -520,6 +531,7 @@
       0,
       1.8,
     );
+    // 記下這一隻頭目的配置，出場後不再改變。
     return {
       level,
       offense: Math.round(power.offense),
@@ -542,9 +554,11 @@
       modeId: mode.id,
     };
   }
+  // 頭目的預警時間倍率。
   function bossWarningScale(r, e) {
     return difficultyRule(r).warning * (e?.adaptive?.warning || 1);
   }
+  // 頭目護盾選項的名稱。
   const BOSS_SHIELDS = {
     auto: "依難度",
     none: "無護盾",
@@ -557,12 +571,14 @@
     phase: "換階段恢復",
     recharge: "階段＋限次充能",
   };
+  // 頭目護盾占本體的比例。
   function bossShieldRatio(r) {
     const key = r.config.bossShield;
     return key === "auto"
       ? difficultyRule(r).bossShield
       : ({ none: 0, light: 0.25, heavy: 0.7, fortress: 1.15 }[key] ?? 0);
   }
+  // 頭目同時疊加幾種攻擊。
   function bossLayers(r, phase = 1, e = null) {
     const d = difficultyRule(r);
     return Math.min(
@@ -571,14 +587,17 @@
         (phase > 1 && d.id >= 0 ? 1 : 0),
     );
   }
+  // 起始武器（沒選就用星艦預設）。
   function startingWeapon(ship, config) {
     return WEAPONS[config.startingWeapon] ? config.startingWeapon : ship.weapon;
   }
+  // 依起始武器調整後的生命。
   function startingHp(ship, weapon) {
     return (
       ship.hp + WEAPON_LOADOUTS[weapon].hp - WEAPON_LOADOUTS[ship.weapon].hp
     );
   }
+  // 出航前的數值預覽。
   function launchPreview(profile, ship, config) {
     const weapon = startingWeapon(ship, config),
       mod = profile.moduleOwned?.includes(profile.moduleEquipped)
@@ -601,6 +620,7 @@
       crit: 4 + (ship.id === "storm" ? 12 : 0),
     };
   }
+  // 可升級的能力。
   const STATS = {
     damage: {
       name: "反應爐增壓",
@@ -637,6 +657,7 @@
       max: 3,
     },
   };
+  // 遺物清單。
   const RELICS = [
     {
       id: "glass",
@@ -711,6 +732,7 @@
       desc: "每完成一波，最大生命 +6 並回復 6 生命。",
     },
   ];
+  // 星艦清單。
   const SHIPS = [
     {
       id: "scout",
@@ -740,6 +762,7 @@
       desc: "電弧連鎖清群，暴擊 +12%。移速高，代價是起始生命較低。",
     },
   ];
+  // 航道區域與特性。
   const REGIONS = [
     {
       id: "nebula",
@@ -767,6 +790,7 @@
     },
   ];
   const BOSSES = ["裂隙吞噬者", "鋼鐵暴君", "星雲女皇", "永夜核心"];
+  // 頭目的名稱、顏色、圖片與說明。
   const BOSS_DATA = [
     {
       id: "rift",
@@ -805,6 +829,7 @@
       skills: "雙旋星環、末日連鎖、奇點斬擊、反轉星潮、終焉矩陣",
     },
   ];
+  // 起始模組（局外購買）。
   const MODULES = [
     {
       id: "scanner",
@@ -842,6 +867,7 @@
       desc: "出航自帶偏轉護盾 Lv.1，每波開始獲得一次護盾。",
     },
   ];
+  // 每一波的類型。
   const WAVE_TYPES = [
     {
       id: "normal",
@@ -885,6 +911,7 @@
     dense: { name: "密集", rate: 1.4, cap: 115 },
     swarm: { name: "海量", rate: 1.85, cap: 160 },
   };
+  // 敵人組合。
   const ENEMY_SETS = {
     mixed: "綜合編隊",
     mobile: "高速追擊",
@@ -894,6 +921,7 @@
   };
   const BOSS_FREQUENCIES = { slow: 0.7, normal: 1, fast: 1.4, relentless: 1.8 };
   const BOSS_DENSITIES = { sparse: 0.65, normal: 1, dense: 1.45, extreme: 1.9 };
+  // 所有敵人種類，存檔檢查時使用。
   const ENEMY_TYPES = [
     "scout",
     "runner",
@@ -908,7 +936,7 @@
     "gunner",
     "boss",
   ];
-  // waveSeconds remains only for importing old saves; waves are completed by kills.
+  // waveSeconds 只在匯入舊存檔時使用；現在每一波以擊破數量結束。
   const DEFAULT_CONFIG = {
     totalWaves: 16,
     waveSeconds: 50,
@@ -932,12 +960,14 @@
     finalBoss: true,
     mutator: "none",
   };
+  // 這一波要擊破幾隻。
   function killQuota(config, wave) {
     return (
       config.killsPerWave +
       (config.quotaGrowth === "rising" ? Math.min(60, (wave - 1) * 3) : 0)
     );
   }
+  // 頭目目前第幾階段。
   function bossPhase(r, e) {
     if (!r.config.bossSecondPhase) return 1;
     return r.config.bossThirdPhase && e.hp / e.maxHp < 0.3
@@ -946,6 +976,7 @@
         ? 2
         : 1;
   }
+  // 頭目兩次招式的間隔。
   function bossCooldown(r, phase, e = null) {
     return (
       (phase === 3 ? 2.2 : phase === 2 ? 2.9 : 4) /
@@ -954,6 +985,7 @@
       (e?.adaptive?.rate || 1)
     );
   }
+  // 這一波會出現的敵人種類，重複代表機率較高。
   function enemyPool(r) {
     const w = r.wave,
       c = r.config,
@@ -978,6 +1010,7 @@
       p.push("gunner", "sniper");
     return p;
   }
+  // 整理出航設定，超出範圍或不認識的值改回預設。
   function normalizeConfig(value = {}) {
     const c = { ...DEFAULT_CONFIG, ...value },
       num = (v, a, b, d) =>
@@ -1018,6 +1051,7 @@
     c.finalBoss = !!c.finalBoss;
     return c;
   }
+  // 這一波是不是頭目波。
   function isBossWave(r, wave = r.wave) {
     const c = r.config || DEFAULT_CONFIG;
     if (c.bossRule === "none") return false;
@@ -1026,6 +1060,7 @@
     if (c.bossRule === "final") return last;
     return wave % c.bossEvery === 0 || (last && c.finalBoss);
   }
+  // 結算獎勵倍率。
   function rewardMultiplier(difficulty, config, mode) {
     const enabled =
       config.bossRule !== "none" &&
@@ -1035,6 +1070,7 @@
       (!enabled ? 0.85 : config.bossRule === "rush" ? 1.2 : 1)
     );
   }
+  // 頭目出現規則的文字。
   function bossRuleText(config, mode) {
     return config.bossRule === "none"
       ? "無 Boss"
@@ -1046,9 +1082,11 @@
             : "最後一波 Boss"
           : `每 ${config.bossEvery} 波 Boss${mode !== "endless" && config.finalBoss ? " · 最終 Boss" : ""}`;
   }
+  // 目前這一波的類型資料。
   function waveType(r) {
     return WAVE_TYPES.find((x) => x.id === r.waveType) || WAVE_TYPES[0];
   }
+  // 永久研究。
   const RESEARCH = [
     { id: "hull", name: "船體強化", desc: "每級最大生命 +8", cost: 40 },
     { id: "reactor", name: "反應爐", desc: "每級武器傷害 +4%", cost: 50 },
@@ -1062,6 +1100,7 @@
     },
     { id: "fortune", name: "資源掃描", desc: "每級晶礦收益 +5%", cost: 40 },
   ];
+  // 成就與條件。
   const ACHIEVEMENTS = [
     {
       id: "first",
@@ -1135,6 +1174,7 @@
       test: (p) => Object.values(p.research).reduce((a, b) => a + b, 0) >= 10,
     },
   ];
+  // 全新的個人檔案。
   function defaultProfile() {
     return {
       version: VERSION,
@@ -1164,8 +1204,11 @@
       customWins: 0,
     };
   }
+  // 限制在範圍內。
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  // 兩點距離。
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  // 可重現的亂數；狀態存在 state.rng，存檔後能接續。
   function seeded(state) {
     let n = state.rng | 0;
     n ^= n << 13;
@@ -1174,9 +1217,11 @@
     state.rng = n >>> 0;
     return (state.rng >>> 0) / 4294967296;
   }
+  // 從陣列隨機挑一個。
   function pick(state, array) {
     return array[Math.floor(seeded(state) * array.length)];
   }
+  // 隨機排序，不改原本的陣列。
   function shuffle(state, array) {
     let a = [...array];
     for (let i = a.length - 1; i > 0; i--) {
@@ -1185,12 +1230,14 @@
     }
     return a;
   }
+  // 秒數換成 分:秒。
   function timeText(v) {
     const s = Math.floor(v);
     return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
   }
   // 2. 存檔驗證：先檢查資料範圍，再進行舊版轉換。
   function validateRun(r) {
+    // 合法的數字；位置必須在場地範圍內。
     const finite = (v) =>
       typeof v === "number" && Number.isFinite(v) && Math.abs(v) < 1e15;
     const validPoint = (o) => o && finite(o.x) && finite(o.y);
@@ -1223,6 +1270,7 @@
       r.p.xpNeed <= 0
     )
       return false;
+    // 玩家的計時與方向。
     for (const k of [
       "level",
       "inv",
@@ -1234,6 +1282,7 @@
       "speed",
     ])
       if (!finite(r.p[k])) return false;
+    // 各種計數與旗標。
     for (const k of [
       "gold",
       "kills",
@@ -1262,6 +1311,7 @@
       new Set(r.weapons.map((x) => x.id)).size !== r.weapons.length
     )
       return false;
+    // 武器種類、等級與冷卻。
     if (
       r.weapons.some(
         (w) =>
@@ -1273,6 +1323,7 @@
       )
     )
       return false;
+    // 各種物件的數量上限。
     const caps = {
       enemies: 180,
       bullets: 360,
@@ -1289,6 +1340,7 @@
       )
         return false;
     }
+    // 敵人。
     if (
       r.enemies.some(
         (e) =>
@@ -1303,6 +1355,7 @@
       )
     )
       return false;
+    // 我方子彈。
     if (
       r.bullets.some(
         (b) =>
@@ -1315,6 +1368,7 @@
       )
     )
       return false;
+    // 敵方子彈。
     if (
       r.enemyBullets.some(
         (b) =>
@@ -1334,6 +1388,7 @@
       r.relics.some((id) => !RELICS.some((x) => x.id === id))
     )
       return false;
+    // 停在升級、遺物、路線或事件畫面時，選項也要合法。
     if (
       r.phase === "upgrade" &&
       (!Array.isArray(r.offers) ||
@@ -1369,6 +1424,7 @@
         r.event.choices.length !== 3)
     )
       return false;
+    // 新版設定的範圍。
     if (r.config) {
       const c = r.config;
       if (
@@ -1390,6 +1446,7 @@
       )
         return false;
     }
+    // 設定要與整理後的結果一致。
     if (r.config) {
       const c = r.config,
         n = normalizeConfig(c);
@@ -1436,6 +1493,7 @@
       )
     )
       return false;
+    // 頭目的護盾、自適應與彈幕資料。
     for (const e of r.enemies) {
       if (
         [
@@ -1536,6 +1594,7 @@
         ))
     )
       return false;
+    // 商城存貨。
     if (r.shopStock) {
       if (!Array.isArray(r.shopStock) || r.shopStock.length > 6) return false;
       for (const item of r.shopStock) {
@@ -1553,6 +1612,7 @@
           return false;
       }
     }
+    // 任務目標。
     if (
       r.objective &&
       (!["kills", "collect", "dash", "elite"].includes(r.objective.kind) ||
@@ -1575,6 +1635,7 @@
   }
   // 3. 戰鬥引擎：只管理遊戲數據，不依賴瀏覽器畫面。
   class Engine {
+    // 建立引擎；畫面透過 onPhase、onSound、onToast 接收通知。
     constructor(profile) {
       this.profile = profile;
       this.r = null;
@@ -1593,6 +1654,7 @@
       this.nextId = 1;
       this.hash = new Map();
     }
+    // 套用起始模組的效果。
     applyStartingModule() {
       const r = this.r,
         p = r.p,
@@ -1686,6 +1748,7 @@
           e.guardTimer = e.guardTimer ?? 4;
         }
     }
+    // 準備新的一波：類型、目標、計時與任務。
     prepareWave() {
       const r = this.r;
       r.waveType =
@@ -1723,6 +1786,7 @@
       r.objective = { kind, target, progress: 0, reward: 15 + r.wave * 2 };
       this.log(`${waveType(r).name}：${waveType(r).desc}`);
     }
+    // 放一個補給箱，最多三個。
     spawnCache() {
       const r = this.r;
       if (r.caches.length >= 3) return;
@@ -1734,6 +1798,7 @@
         age: 0,
       });
     }
+    // 打開補給箱。
     openCache(cache) {
       if (cache.dead) return;
       cache.dead = true;
@@ -1751,6 +1816,7 @@
       this.addFx("ring", cache.x, cache.y, { radius: 70, color: "#a0f8c9" });
       this.onSound("level");
     }
+    // 準備休息時的商城存貨；同一波不會重複產生。
     ensureShop(force = false) {
       const r = this.r;
       if (!force && r.shopWave === r.wave && r.shopStock.length) return;
@@ -1771,6 +1837,7 @@
         r,
         RELICS.filter((x) => !r.relics.includes(x.id)),
       );
+      // 每三波多賣一件遺物。
       if (relic && r.wave % 3 === 0)
         r.shopStock.push({
           kind: "relic",
@@ -1805,6 +1872,7 @@
       });
       r.shopWave = r.wave;
     }
+    // 能不能買這一項。
     canBuy(item) {
       const r = this.r;
       if (
@@ -1831,6 +1899,7 @@
       if (item.kind === "shield") return !r.p.shield;
       return item.kind === "reroll";
     }
+    // 購買。
     buy(index) {
       const r = this.r,
         item = r.shopStock[index];
@@ -1849,6 +1918,7 @@
       this.onPhase();
       return true;
     }
+    // 花晶礦換一批商品。
     refreshShop() {
       const r = this.r,
         cost = 12 + r.shopRefreshes * 4;
@@ -1860,6 +1930,7 @@
       this.onPhase();
       return true;
     }
+    // 新增一個預警區域；頭目的預警與傷害另外調整。
     addHazard(x, y, radius, warning, damage, extra = {}) {
       const r = this.r;
       if (r.hazards.length >= 60) return;
@@ -1884,6 +1955,7 @@
         ...extra,
       });
     }
+    // 頭目護盾的初始值。
     initBossShield(e, r = this.r) {
       e.maxShield = e.maxShield ?? Math.round(e.maxHp * bossShieldRatio(r));
       e.shieldHp = e.shieldHp ?? e.maxShield;
@@ -1891,6 +1963,7 @@
       e.shieldRecharges = e.shieldRecharges ?? 0;
       e.shieldBreaks = e.shieldBreaks ?? 0;
     }
+    // 恢復頭目護盾。
     restoreBossShield(e, ratio = 0.55) {
       if (!e.maxShield) return;
       e.shieldHp = Math.round(e.maxShield * ratio);
@@ -1902,6 +1975,7 @@
       });
       this.log("Boss 防護罩重新啟動：先破盾才能傷害本體。");
     }
+    // 頭目召喚小怪。
     bossSummon(e, n, types = ["runner", "gunner"]) {
       const r = this.r;
       if (e.adaptive?.modeId === "swarm")
@@ -1925,6 +1999,7 @@
         }
       }
     }
+    // 排一組連續彈幕，由 updateBarrages 逐次發射。
     queueBarrage(
       e,
       kind,
@@ -1951,6 +2026,7 @@
         color: BOSS_DATA[e.bossIndex].color,
       });
     }
+    // 推進頭目的連續彈幕。
     updateBarrages(e, dt) {
       for (const b of e.barrages || []) {
         b.timer -= dt;
@@ -1995,6 +2071,7 @@
         layers = bossLayers(r, phase, e);
       e.attackCycle = (e.attackCycle || 0) + 1;
       e.activeLayers = layers;
+      // 各頭目五種主招的名稱。
       const moves = [
         ["裂隙衝鋒", "噬星彈環", "虛空吞噬", "螺旋裂流", "十字裂隙"],
         ["熔核齊射", "天火轟炸", "衛隊與鎖定炮", "交錯火炮", "熔核封鎖"],
@@ -2003,6 +2080,7 @@
       ];
       e.currentMove =
         moves[index][pattern] + (layers > 1 ? " · " + layers + " 重連攻" : "");
+      // 一圈子彈。
       const ring = (n, speed = 145, offset = 0, turn = 0) => {
         for (let i = 0; i < count(n); i++)
           this.enemyShot(
@@ -2020,6 +2098,7 @@
             },
           );
       };
+      // 圓形預警，排成一圈。
       const circles = (n, rad = 58, spread = 130) => {
         for (let i = 0; i < n; i++) {
           const a = (i / n) * Math.PI * 2 + e.age * 0.15;
@@ -2033,6 +2112,7 @@
           );
         }
       };
+      // 光束預警。
       const beam = (a, warning = 1.15, width = 23) =>
         this.addHazard(e.x, e.y, 0, warning, 27 + r.wave, {
           shape: "beam",
@@ -2042,6 +2122,7 @@
           bossOwner: e.id,
           life: 0.55,
         });
+      // 第一位：裂隙系招式。
       if (index === 0) {
         if (pattern === 0) {
           e.angle = angle;
@@ -2089,6 +2170,7 @@
           ring(16, 150, angle + 0.15);
         }
       }
+      // 第二位：熔核系招式。
       if (index === 1) {
         if (pattern === 0) {
           const n = count(10);
@@ -2125,6 +2207,7 @@
           circles(4 + phase, 48, 195);
         }
       }
+      // 第三位：召喚與彈幕。
       if (index === 2) {
         if (pattern === 0)
           this.bossSummon(e, Math.min(10, count(3 + phase)), [
@@ -2163,6 +2246,7 @@
           circles(3, 60, 120);
         }
       }
+      // 第四位：環形與螺旋。
       if (index === 3) {
         if (pattern === 0) {
           ring(18 + phase * 3, 130, e.age * 0.13, 0.14);
@@ -2223,7 +2307,7 @@
           beam(angle + Math.PI / 2, 1.65);
         }
       }
-      // Independent channels overlap the primary move, including while a charge is active.
+      // 獨立通道會與主要招式同時進行，蓄力中也一樣。
       if (layers >= 2)
         this.queueBarrage(
           e,
@@ -2253,6 +2337,7 @@
           20,
           { bossOwner: e.id },
         );
+      // 施放時的光圈、衝擊與音效。
       this.addFx("chargeAura", e.x, e.y, {
         radius: 75,
         color: BOSS_DATA[index].color,
@@ -2282,12 +2367,14 @@
       seed = Date.now(),
       config = {},
     ) {
+      // 找不到指定的星艦就用第一艘。
       const s = SHIPS.find((s) => s.id === shipId) || SHIPS[0],
         m = this.profile.research;
       const cfg = normalizeConfig(config),
         weapon = startingWeapon(s, cfg),
         hp = startingHp(s, weapon) + (m.hull || 0) * 8;
       difficulty = clamp(Math.round(Number(difficulty) || 0), -1, 4);
+      // 這一局的所有狀態，也是存檔內容。
       this.r = {
         version: VERSION,
         id: `${Date.now()}-${seed}`,
@@ -2402,6 +2489,7 @@
     region() {
       return REGIONS.find((x) => x.id === this.r.region) || REGIONS[0];
     }
+    // 武器傷害的總倍率。
     damageMult(id) {
       const m = this.r.research || this.profile.research;
       return (
@@ -2416,15 +2504,18 @@
             : 1)
       );
     }
+    // 切換階段並通知畫面。
     setPhase(phase) {
       this.r.phase = phase;
       if (phase === "intermission") this.ensureShop();
       this.onPhase();
     }
+    // 航行紀錄，最多 8 則。
     log(text) {
       this.r.log.unshift(text);
       this.r.log = this.r.log.slice(0, 8);
     }
+    // 新增一個特效，最多 220 個。
     addFx(type, x, y, opts = {}) {
       if (this.fx.length >= 220) this.fx.shift();
       this.fx.push({
@@ -2488,6 +2579,7 @@
     spawnEnemy(type = null, radius = null) {
       const r = this.r,
         cap = ENEMY_AMOUNTS[r.config.enemyAmount].cap;
+      // 敵人太多時就不再生成；頭目例外，會先清掉一隻。
       if (r.enemies.filter((e) => !e.dead).length >= cap) {
         if (type === "boss") {
           const i = r.enemies.findIndex((e) => e.type !== "boss");
@@ -2509,6 +2601,7 @@
       }
       const hp = (16 + wave * 4.2) * d.hp * variant.hp,
         speed = (56 + wave * 2) * d.speed * (this.region().speed || 1);
+      // 共用的基本數值。
       const e = {
         id: this.nextId++,
         type,
@@ -2530,6 +2623,7 @@
         dy: 0,
         age: 0,
       };
+      // 各種敵人的差異。
       if (type === "runner") {
         e.hp *= 0.65;
         e.speed *= 1.9;
@@ -2582,6 +2676,7 @@
         e.speed *= 0.7;
         e.radius = 16;
       }
+      // 精英機率，依設定與波數決定。
       const eliteChance =
         r.config.eliteRate === "none"
           ? 0
@@ -2605,6 +2700,7 @@
           e.contact *= 1.15;
         }
       }
+      // 頭目的數值、護盾與登場演出。
       if (type === "boss") {
         const c = r.config,
           choice = BOSS_DATA.findIndex((x) => x.id === c.bossRoster);
@@ -2656,6 +2752,7 @@
       r.enemies.push(e);
       return e;
     }
+    // 衝刺：短時間無敵並高速移動。
     dash(dx = 0, dy = 0) {
       const r = this.r;
       if (!r || r.phase !== "play" || r.p.dashCD > 0) return false;
@@ -2676,6 +2773,7 @@
       this.onSound("dash");
       return true;
     }
+    // 能量爆發：範圍傷害並清掉敵方子彈。
     burst() {
       const r = this.r;
       if (!r || r.phase !== "play" || r.p.burstCD > 0) return false;
@@ -2696,6 +2794,7 @@
       this.onSound("burst");
       return true;
     }
+    // 玩家受傷：無敵、護盾、護甲與保命效果。
     hurtPlayer(amount) {
       const r = this.r,
         p = r.p;
@@ -2748,6 +2847,7 @@
       const crit = seeded(r) < critChance;
       if (crit) dmg *= this.has("crit") ? 2.6 : 2;
       if (e.slow > 0 && this.has("frost")) dmg *= 1.45;
+      // 先扣護盾，破盾時有演出。
       if (e.type === "boss" && e.shieldHp > 0) {
         const absorbed = Math.min(e.shieldHp, dmg);
         e.shieldHp = Math.max(0, e.shieldHp - dmg);
@@ -2777,6 +2877,7 @@
         dmg *= 1 - (e.adaptive?.armor ?? difficultyRule(r).bossArmor);
       e.hp -= dmg;
       r.damageTotal += dmg;
+      // 受擊、減速與暈眩；頭目的控制效果較短。
       e.hit = 0.11;
       if (effects.slow)
         e.slow = Math.max(
@@ -2797,6 +2898,7 @@
         });
       if (e.hp <= 0) this.killEnemy(e);
     }
+    // 擊破敵人：計分、掉落、任務與特殊效果。
     killEnemy(e) {
       if (e.dead) return;
       e.dead = true;
@@ -2816,6 +2918,7 @@
           (r.objective.kind === "elite" && e.elite))
       )
         r.objective.progress++;
+      // 掉落的晶礦。
       const reward =
         e.type === "boss"
           ? 25
@@ -2832,6 +2935,7 @@
         (this.region().gold || 1) *
         (1 + (r.research.fortune || 0) * 0.05) *
         (r.config.mutator === "salvage" ? 1.3 : 1);
+      // 晶體太多就併入舊的一顆。
       if (r.gems.length >= 250) {
         const g = r.gems[0];
         g.value += e.type === "boss" ? 35 : e.type === "tank" ? 4 : 2;
@@ -2844,6 +2948,7 @@
         });
       if (e.elite === "volatile")
         this.addHazard(e.x, e.y, 58, 1, 12 + r.wave, { life: 0.3 });
+      // 頭目：清除敵彈並掉落大量獎勵。
       if (e.type === "boss") {
         r.enemyBullets = r.enemyBullets.filter((b) => !b.boss);
         r.hazards = r.hazards.filter((h) => h.bossOwner !== e.id);
@@ -2866,6 +2971,7 @@
         );
         this.onSound("victory");
       }
+      // 分裂機死後變成兩隻小機。
       if (e.type === "splitter") {
         for (let i = 0; i < 2; i++) {
           const child = this.spawnEnemy("mini", 500);
@@ -2898,6 +3004,7 @@
         this.addFx("ring", e.x, e.y, { radius: 60, color: "#ff94c7" });
       }
     }
+    // 重建格子索引，加快找附近敵人。
     rebuildHash() {
       this.hash.clear();
       for (const e of this.r.enemies) {
@@ -2907,6 +3014,7 @@
         this.hash.get(k).push(e);
       }
     }
+    // 附近格子裡的敵人。
     nearby(x, y, radius) {
       const list = [];
       for (
@@ -2924,6 +3032,7 @@
         }
       return list;
     }
+    // 範圍爆炸。
     explode(x, y, radius, damage, source, stun = false) {
       if (source === "burst" || source === "nova")
         this.combatImpact(
@@ -2954,6 +3063,7 @@
         }
       }
     }
+    // 最近的敵人。
     closest(x, y, max = 620, exclude = []) {
       let target = null,
         best = max;
@@ -2967,6 +3077,7 @@
       }
       return target;
     }
+    // 發射一把武器。
     fireWeapon(w) {
       const r = this.r,
         p = r.p,
@@ -2976,6 +3087,7 @@
         target = this.closest(p.x, p.y),
         damage = base.damage * (1 + (lv - 1) * 0.24) * (w.evolved ? 1.5 : 1);
       if (!target && w.id !== "nova" && w.id !== "orbit") return;
+      // 脈衝、霜彈與飛彈：朝最近的敵人發射。
       if (w.id === "pulse" || w.id === "frost" || w.id === "missile") {
         const count =
           (w.id === "pulse"
@@ -3054,6 +3166,7 @@
         this.onSound("nova");
       }
     }
+    // 撿到晶體或補給。
     collectGem(g) {
       const r = this.r;
       if (g.dead) return;
@@ -3080,6 +3193,7 @@
       }
       g.dead = true;
     }
+    // 敵人發射一顆子彈，最多 480 顆。
     enemyShot(x, y, angle, speed = 160, life = 5, radius = 6, opts = {}) {
       const r = this.r;
       if (r.enemyBullets.length >= 480) return;
@@ -3104,6 +3218,7 @@
         ...opts,
       });
     }
+    // 一隻敵人每一步的行動。
     updateEnemy(e, dt) {
       const r = this.r,
         p = r.p,
@@ -3119,6 +3234,7 @@
       if (e.stun > 0) speed = 0;
       if (e.elite === "regenerating")
         e.hp = Math.min(e.maxHp, e.hp + e.maxHp * 0.014 * dt);
+      // 狙擊機：保持距離，鎖定後射擊。
       if (e.type === "sniper") {
         if (d < 220) speed = -speed;
         if (d > 220 && d < 360) speed = 0;
@@ -3141,6 +3257,7 @@
           }
         }
       }
+      // 衝鋒機：蓄力後突進。
       if (e.type === "charger") {
         if (e.cd <= 0 && e.charge === 0) {
           e.charge = 0.55 * warningScale;
@@ -3169,6 +3286,7 @@
         }
       }
       if (e.type === "shield" && d < 150) speed *= 0.5;
+      // 治療機：躲遠並幫同伴補血。
       if (e.type === "healer") {
         if (d < 250) speed = -speed;
         else if (d < 380) speed = 0;
@@ -3195,6 +3313,7 @@
           e.cd = 5;
         }
       }
+      // 彈幕機：保持距離發射扇形子彈。
       if (e.type === "gunner") {
         if (d < 210) speed = -speed;
         else if (d < 350) speed = 0;
@@ -3218,6 +3337,7 @@
           }
         }
       }
+      // 自爆機：靠近後預警爆炸。
       if (e.type === "bomber") {
         if (d < 100 && !e.detonating) {
           e.detonating = true;
@@ -3233,6 +3353,7 @@
           }
         }
       }
+      // 頭目：轉階段、衝鋒、彈幕、召喚、恢復護盾與施放主招。
       if (e.type === "boss") {
         if (d < 170) speed *= 0.25;
         const phase = bossPhase(r, e);
@@ -3306,6 +3427,7 @@
       }
       e.x = clamp(e.x + Math.cos(angle) * speed * dt, 0, 2400);
       e.y = clamp(e.y + Math.sin(angle) * speed * dt, 0, 2400);
+      // 碰到玩家造成接觸傷害。
       if (d < e.radius + 13 && r.phase === "play") {
         if (p.dashTime > 0 && this.has("dash")) this.hitEnemy(e, 50, "burst");
         this.hurtPlayer(e.contact);
@@ -3317,6 +3439,7 @@
       if (!r || r.phase !== "play") return;
       dt = Math.min(dt, 0.05);
       const p = r.p;
+      // 各種計時。
       r.time += dt;
       r.waveTime += dt;
       r.stepCount++;
@@ -3326,6 +3449,7 @@
       r.magnetPulse = Math.max(0, (r.magnetPulse || 0) - dt);
       for (const name of ["inv", "dashCD", "burstCD", "dashTime"])
         p[name] = Math.max(0, p[name] - dt);
+      // 移動與衝刺。
       const mag = Math.hypot(input.x, input.y);
       if (mag > 0.05) {
         p.dx = input.x / mag;
@@ -3341,6 +3465,7 @@
                 (r.research.thruster || 0) * 0.03);
       p.x = clamp(p.x + p.dx * move * speed * dt, 22, 2378);
       p.y = clamp(p.y + p.dy * move * speed * dt, 22, 2378);
+      // 回血與自動護盾。
       p.hp = Math.min(
         p.maxHp,
         p.hp +
@@ -3373,6 +3498,7 @@
               ? 2.5
               : 1);
       }
+      // 頭目倒數。
       if (isBossWave(r) && !r.bossSpawned) {
         const left = r.config.bossDelay - r.waveTime;
         if (left <= 5 && !r.bossWarned) {
@@ -3383,6 +3509,7 @@
         if (left <= 0) this.spawnEnemy("boss");
       }
       r.hazardTimer -= dt;
+      // 危險區域或離子暴雨。
       if (
         (this.region().hazard || waveType(r).id === "storm") &&
         r.hazardTimer <= 0
@@ -3397,13 +3524,16 @@
         );
         r.hazardTimer = 7;
       }
+      // 敵人。
       for (const e of r.enemies) {
         if (!e.dead) this.updateEnemy(e, dt);
         if (r.phase !== "play") return;
       }
       this.rebuildHash();
+      // 武器。
       for (const w of r.weapons) {
         w.cd -= dt;
+        // 環繞武器：算出每顆光球的位置。
         if (w.id === "orbit") {
           const count = 2 + Math.floor(w.level / 2) + (w.evolved ? 3 : 0),
             radius = 63 + w.level * 5 + (w.evolved ? 25 : 0);
@@ -3435,9 +3565,11 @@
             (1 + (w.level - 1) * 0.06);
         }
       }
+      // 我方子彈的移動與命中。
       for (const b of r.bullets) {
         if (b.dead) continue;
         b.life -= dt;
+        // 飛彈會追蹤目標。
         if (b.source === "missile") {
           let t =
             r.enemies.find((e) => e.id === b.targetId && !e.dead) ||
@@ -3457,6 +3589,7 @@
         b.py = b.y;
         b.x += b.vx * dt;
         b.y += b.vy * dt;
+        // 用線段判定，高速子彈不會穿過敵人。
         for (const e of this.nearby(b.x, b.y, 65)) {
           if (e.dead || b.hitIds.includes(e.id)) continue;
           const vx = b.x - b.px,
@@ -3508,6 +3641,7 @@
         }
         if (b.life <= 0) b.dead = true;
       }
+      // 敵方子彈。
       for (const b of r.enemyBullets) {
         b.life -= dt;
         if (b.turn) {
@@ -3524,6 +3658,7 @@
         }
         if (r.phase !== "play") return;
       }
+      // 預警區域：倒數結束後造成傷害。
       for (const h of r.hazards) {
         if (h.warning > 0) {
           h.warning -= dt;
@@ -3562,6 +3697,7 @@
         }
         if (r.phase !== "play") return;
       }
+      // 地面燃燒。
       for (const a of r.burns) {
         a.life -= dt;
         a.tick -= dt;
@@ -3573,6 +3709,7 @@
         }
       }
       r.cacheTimer -= dt;
+      // 定時出現補給箱。
       if (r.cacheTimer <= 0) {
         this.spawnCache();
         r.cacheTimer = 18;
@@ -3581,6 +3718,7 @@
         if (!cache.dead && dist(cache, p) < 27) this.openCache(cache);
       }
       r.caches = r.caches.filter((x) => !x.dead);
+      // 拾取範圍，吸過來並撿起。
       const pickup =
         (r.magnetPulse > 0 ? 3000 : 80) +
         this.stat("magnet") * 40 +
@@ -3599,6 +3737,7 @@
       );
       r.bullets = r.bullets.filter((b) => !b.dead);
       r.enemyBullets = r.enemyBullets.filter((b) => b.life > 0);
+      // 清掉已經消失的物件。
       r.gems = r.gems.filter((g) => !g.dead);
       r.hazards = r.hazards.filter((h) => h.warning > 0 || h.life > 0);
       r.burns = r.burns.filter((a) => a.life > 0);
@@ -3607,6 +3746,7 @@
       this.shake = Math.max(0, this.shake - dt * 32);
       this.zoomPulse = Math.max(0, this.zoomPulse - dt * 2.5);
       this.screenPulse = Math.max(0, this.screenPulse - dt * 2.2);
+      // 有未選的升級就先停下來選。
       if (r.pendingLevels > 0) {
         this.offerUpgrades("level");
         return;
@@ -3615,9 +3755,11 @@
         this.completeWave();
       }
     }
+    // 目前可以選的所有升級。
     availableUpgrades() {
       const r = this.r,
         options = [];
+      // 武器：新武器、升級或進化。
       for (const [id, w] of Object.entries(WEAPONS)) {
         const owned = r.weapons.find((x) => x.id === id);
         if (!owned && r.weapons.length < 6)
@@ -3653,6 +3795,7 @@
             tag: "武器進化",
           });
       }
+      // 能力。
       for (const [id, s] of Object.entries(STATS))
         if (this.stat(id) < s.max)
           options.push({
@@ -3673,6 +3816,7 @@
       });
       return options;
     }
+    // 抽出三個選項；可進化時優先出現。
     offerUpgrades(reason) {
       const r = this.r;
       r.offerReason = reason;
@@ -3686,12 +3830,14 @@
       this.setPhase("upgrade");
       this.onSound("level");
     }
+    // 重抽一次。
     reroll() {
       const r = this.r;
       if (r.phase !== "upgrade" || r.rerolls <= 0) return;
       r.rerolls--;
       this.offerUpgrades(r.offerReason);
     }
+    // 選擇一個升級。
     chooseUpgrade(index) {
       const r = this.r;
       if (r.phase !== "upgrade" || !r.offers[index]) return false;
@@ -3704,6 +3850,7 @@
       } else this.afterWaveReward();
       return true;
     }
+    // 套用升級的效果。
     applyUpgrade(c) {
       const r = this.r;
       if (c.kind === "weapon") {
@@ -3729,6 +3876,7 @@
         r.gold += 8;
       }
     }
+    // 完成一波：收集晶體、清場並補血。
     completeWave() {
       const r = this.r;
       for (const g of r.gems) this.collectGem(g);
@@ -3759,6 +3907,7 @@
       }
       this.offerUpgrades("wave");
     }
+    // 決定接下來是遺物、路線、事件還是休息。
     afterWaveReward() {
       const r = this.r;
       if (r.wave % 4 === 0) {
@@ -3775,6 +3924,7 @@
         this.offerEvent();
       } else this.setPhase("intermission");
     }
+    // 選擇遺物。
     chooseRelic(index) {
       const r = this.r;
       if (r.phase !== "relic" || !r.relicOffers[index]) return;
@@ -3783,10 +3933,12 @@
       this.log(`取得遺物：${c.name}。`);
       this.offerRoute();
     }
+    // 提供航道選擇。
     offerRoute() {
       this.r.routeOffers = shuffle(this.r, REGIONS);
       this.setPhase("route");
     }
+    // 選擇航道。
     chooseRoute(index) {
       const r = this.r;
       if (r.phase !== "route" || !r.routeOffers[index]) return;
@@ -3795,6 +3947,7 @@
       this.log(`航道轉向${this.region().name}。`);
       this.setPhase("intermission");
     }
+    // 隨機事件。
     offerEvent() {
       const r = this.r;
       r.event = pick(r, [
@@ -3847,6 +4000,7 @@
       ]);
       this.setPhase("event");
     }
+    // 選擇事件的其中一項。
     chooseEvent(index) {
       const r = this.r;
       if (r.phase !== "event" || !r.event.choices[index]) return;
@@ -3874,6 +4028,7 @@
       this.log(`航道事件：${r.event.choices[index].label}。`);
       this.setPhase("intermission");
     }
+    // 休息時花晶礦修理。
     repair() {
       const r = this.r;
       if (r.phase !== "intermission" || r.gold < 25 || r.p.hp >= r.p.maxHp)
@@ -3883,6 +4038,7 @@
       this.onPhase();
       return true;
     }
+    // 前往下一波。
     nextWave() {
       const r = this.r;
       if (r.phase !== "intermission") return;
@@ -3899,6 +4055,7 @@
       this.setPhase("play");
       if (r.pendingLevels > 0) this.offerUpgrades("level");
     }
+    // 暫停。
     pause() {
       const r = this.r;
       if (r?.phase === "play") {
@@ -3906,10 +4063,12 @@
         this.setPhase("paused");
       }
     }
+    // 繼續。
     resume() {
       const r = this.r;
       if (r?.phase === "paused") this.setPhase(r.resumePhase || "play");
     }
+    // 結束這一局：計算獎勵、更新紀錄與成就。
     finish(win, retreat = false) {
       const r = this.r;
       if (!r || r.rewarded) return;
@@ -3937,6 +4096,7 @@
         else p.customWins = (p.customWins || 0) + 1;
       }
       if (r.weapons.length >= 6) p.arsenal = true;
+      // 留下這一局的紀錄。
       p.records.unshift({
         ship: r.ship,
         wave: r.wave,
@@ -3957,6 +4117,7 @@
       this.checkAchievements();
       this.onPhase();
     }
+    // 檢查成就。
     checkAchievements() {
       const p = this.profile;
       for (const a of ACHIEVEMENTS) {
@@ -3967,6 +4128,7 @@
         }
       }
     }
+    // 讀取進行中的存檔；資料不合法就拒絕。
     loadRun(data) {
       if (
         !data ||
@@ -4012,6 +4174,7 @@
     }
   }
   if (typeof module !== "undefined" && module.exports) {
+    // 給自動測試使用的介面。
     module.exports = {
       Engine,
       defaultProfile,
@@ -4056,6 +4219,7 @@
     return;
   }
   let storageAvailable = true;
+  // 讀取瀏覽器儲存的 JSON。
   function readJSON(key, fallback) {
     try {
       return JSON.parse(localStorage.getItem(key)) || fallback;
@@ -4115,6 +4279,7 @@
     view = { x: 0, y: 0, ready: false },
     debris = [],
     frameDt = 0;
+  // 避免文字被當成 HTML。
   const escapeHTML = (s) =>
     String(s).replace(
       /[&<>"']/g,
@@ -4127,6 +4292,7 @@
           "'": "&#39;",
         })[c],
     );
+  // 畫面上的短訊息。
   function toast(text) {
     const e = document.getElementById("toast");
     e.textContent = text;
@@ -4134,6 +4300,7 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => e.classList.remove("show"), 3500);
   }
+  // 寫入瀏覽器儲存，失敗只提醒一次。
   function writeStorage(key, data) {
     try {
       if (data === null) localStorage.removeItem(key);
@@ -4147,6 +4314,7 @@
       return false;
     }
   }
+  // 儲存個人檔案與進行中的一局。
   function save() {
     const creditLabel = document.getElementById("home-credits");
     if (creditLabel)
@@ -4158,6 +4326,7 @@
     }
     lastSave = performance.now();
   }
+  // 有沒有可以繼續的一局。
   function hasActiveRun() {
     return !!(
       (engine.r && !engine.r.rewarded) ||
@@ -4181,6 +4350,7 @@
       if (!audioContext)
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
       if (audioContext.state === "suspended") audioContext.resume();
+      // 每種音效的起始與結束頻率。
       const freqs = {
         shot: [490, 270],
         electric: [950, 220],
@@ -4200,6 +4370,7 @@
       const f = freqs[type] || [440, 660],
         heavy = ["slam", "phase", "shieldBreak"].includes(type),
         duration = heavy ? 0.36 : quick ? 0.11 : 0.22;
+      // 一個滑音。
       const voice = (from, to, gain, wave, delay = 0) => {
         const o = audioContext.createOscillator(),
           g = audioContext.createGain(),
@@ -4236,6 +4407,7 @@
   }
   engine.onSound = sound;
   engine.onToast = toast;
+  // 階段改變時更新畫面並存檔。
   engine.onPhase = () => {
     if (screen === "game") {
       renderOverlay();
@@ -4243,6 +4415,7 @@
     }
     save();
   };
+  // 更新音效按鈕的文字。
   function syncSound() {
     const b = document.getElementById("sound-btn");
     b.textContent = `音效：${profile.settings.sound ? "開" : "關"}`;
@@ -4675,6 +4848,7 @@
       <p class="footer-note">
         進度保存在此瀏覽器；舊版研究與存檔可繼續使用。換裝置或換本機資料夾前，請匯出備份。
       </p>`;
+    // 設定欄位對應的設定名稱。
     const inputs = {
         "starting-weapon": "startingWeapon",
         "wave-count": "totalWaves",
@@ -4702,6 +4876,7 @@
       const el = document.getElementById(id);
       if (checks.includes(id)) el.checked = !!c[key];
       else el.value = String(c[key]);
+      // 改設定後整理一次，並把結果寫回所有欄位。
       el.onchange = () => {
         selectedConfig[key] = checks.includes(id) ? el.checked : el.value;
         selectedConfig = normalizeConfig(selectedConfig);
@@ -4723,6 +4898,7 @@
       }),
     );
     document.getElementById("enemy-details").onclick = showEnemyCodex;
+    // 選擇星艦。
     document.querySelectorAll("[data-ship]").forEach(
       (b) =>
         (b.onclick = () => {
@@ -4737,6 +4913,7 @@
     document.querySelectorAll("[data-preset]").forEach(
       (b) =>
         (b.onclick = () => {
+          // 快速套用的航行方案。
           const presets = {
             quick: {
               totalWaves: 8,
@@ -4785,10 +4962,12 @@
       diff = document.getElementById("difficulty");
     mode.value = selectedMode;
     diff.value = String(selectedDifficulty);
+    // 切換模式。
     mode.onchange = () => {
       selectedMode = mode.value;
       syncPlan();
     };
+    // 切換難度。
     diff.onchange = () => {
       selectedDifficulty = Number(diff.value);
       syncPlan();
@@ -4808,6 +4987,7 @@
     syncPlan();
     syncSound();
   }
+  // 依目前設定更新摘要、說明與可用的欄位。
   function syncPlan() {
     const c = selectedConfig,
       mode = selectedMode,
@@ -4843,7 +5023,15 @@
     );
     set(
       "flight-more-summary",
-      `${mode === "endless" ? "無盡星域" : mode === "daily" ? "每日種子" : `${c.totalWaves} 波`} · ${WEAPONS[launchPreview(profile, SHIPS.find((x) => x.id === selectedShip), c).weapon].name} · ${ENEMY_AMOUNTS[c.enemyAmount].name}敵潮 · ${bossText}`,
+      `${mode === "endless" ? "無盡星域" : mode === "daily" ? "每日種子" : `${c.totalWaves} 波`} · ${
+        WEAPONS[
+          launchPreview(
+            profile,
+            SHIPS.find((x) => x.id === selectedShip),
+            c,
+          ).weapon
+        ].name
+      } · ${ENEMY_AMOUNTS[c.enemyAmount].name}敵潮 · ${bossText}`,
     );
     set(
       "hero-plan",
@@ -4884,6 +5072,7 @@
           ? "沒有最後一波。每 8 波增加壓力，Boss 額外耐久上限 +30%、出招上限 +20%；可隨時保存或結算。"
           : `分段探索星域，逐步完成航行。結算晶礦倍率 ×${rewardMultiplier(selectedDifficulty, c, mode).toFixed(2)}。`,
     );
+    // 標出目前符合哪個方案。
     document.querySelectorAll("[data-preset]").forEach((b) => {
       const name = b.dataset.preset,
         active =
@@ -4919,12 +5108,16 @@
       "loadout-setting-summary",
       `${WEAPONS[preview.weapon].name} · ${preview.hp} 生命`,
     );
-    document.getElementById("launch-stats").innerHTML =
-      `<span>起始生命 <b>${preview.hp}</b></span><span>移動速度 <b>${preview.speed}</b></span><span>減傷 <b>${preview.armor}%</b></span><span>暴擊 <b>${preview.crit}%</b></span>`;
+    document.getElementById("launch-stats").innerHTML = /* HTML */ `<span
+        >起始生命 <b>${preview.hp}</b></span
+      ><span>移動速度 <b>${preview.speed}</b></span
+      ><span>減傷 <b>${preview.armor}%</b></span
+      ><span>暴擊 <b>${preview.crit}%</b></span>`;
     set("loadout-advantage", `優勢：${build.advantage}`);
     set("loadout-cost", `代價：${build.cost}`);
     const info = document.getElementById("difficulty-info");
     info.style.setProperty("--difficulty-color", d.color);
+    // 難度說明。
     let difficultyHTML = /* HTML */ `<div class="difficulty-heading">
         <b>${d.name} · ${d.title}</b
         ><span>基礎晶礦 ×${d.reward.toFixed(2)}</span>
@@ -4959,6 +5152,7 @@
       d.bossPressure.toFixed(2) +
       "（頻率／密度設定另乘）</p></details>";
     info.innerHTML = difficultyHTML;
+    // 記住這次的設定，下次直接沿用。
     profile.lastConfig = {
       ship: selectedShip,
       mode: selectedMode,
@@ -4967,6 +5161,7 @@
     };
     save();
   }
+  // 敵人圖鑑。
   function showEnemyCodex() {
     const enemies = [
       ["偵察機", "均衡的追蹤型敵人。"],
@@ -4997,6 +5192,7 @@
           精英：裝甲減傷、迅捷加速、爆裂死亡留下預警、再生緩慢回血。冠軍有雙重外圈，更高生命與接觸傷害，擊破獲得更多晶礦。
         </p>`);
   }
+  // 起始模組商店。
   function showBaseShop() {
     const owned = profile.moduleOwned || [],
       equipped = profile.moduleEquipped || "none";
@@ -5041,6 +5237,7 @@
             卸下模組
           </button>
         </div>`);
+    // 購買或裝備模組。
     dialogContent.querySelectorAll("[data-module]").forEach(
       (b) =>
         (b.onclick = () => {
@@ -5058,6 +5255,7 @@
           sound("level");
         }),
     );
+    // 卸下模組。
     document.getElementById("unequip").onclick = () => {
       profile.moduleEquipped = "none";
       save();
@@ -5065,6 +5263,7 @@
       showBaseShop();
     };
   }
+  // 首頁的模組圖示。
   function updateBaseModule() {
     const icon = document.getElementById("equipped-icon");
     if (icon)
@@ -5077,6 +5276,7 @@
         "未裝備模組";
     if (screen === "home") syncPlan();
   }
+  // 頭目圖鑑；focus 指定只看一隻。
   function showBossCodex(focus = -1) {
     const list = focus >= 0 ? [BOSS_DATA[focus]] : BOSS_DATA;
     openDialog(/* HTML */ `<div class="eyebrow">HOSTILE ARCHIVE</div>
@@ -5107,6 +5307,7 @@
             .join("")}
         </div>`);
   }
+  // 開始新航行；已有進行中的一局就先確認。
   function requestStart() {
     sound("level");
     if (hasActiveRun()) {
@@ -5118,6 +5319,7 @@
             <button class="primary" id="confirm-new">結算並重新出航</button
             ><button id="cancel-new">繼續舊遠征</button>
           </div>`);
+      // 放棄舊的一局。
       document.getElementById("confirm-new").onclick = () => {
         if (!engine.r && savedRun) engine.loadRun(savedRun);
         engine.finish(false, true);
@@ -5125,17 +5327,20 @@
         dialog.close();
         startWithGuide();
       };
+      // 繼續舊的一局。
       document.getElementById("cancel-new").onclick = () => {
         dialog.close();
         continueRun();
       };
     } else startWithGuide();
   }
+  // 第一次玩先看說明。
   function startWithGuide() {
     if (!profile.tutorial) {
       showGuide(true);
     } else startRun();
   }
+  // 開始一局；每日挑戰用台灣日期當種子。
   function startRun() {
     profile.tutorial = true;
     let seed =
@@ -5168,6 +5373,7 @@
     showGame();
     save();
   }
+  // 繼續上次的一局。
   function continueRun() {
     if (engine.r && !engine.r.rewarded) {
       showGame();
@@ -5182,6 +5388,7 @@
       showHome();
     }
   }
+  // 進入戰鬥畫面並綁定操作。
   function showGame() {
     resetControls();
     arenaObserver?.disconnect();
@@ -5343,27 +5550,32 @@
     ctx = canvas.getContext("2d", { alpha: false });
     canvasWidth = canvasHeight = canvasDpr = 0;
     renderedPhase = "";
+    // 暫停鈕。
     document.getElementById("pause").onclick = () => {
       if (engine.r.phase === "play") engine.pause();
       else if (engine.r.phase === "paused") engine.resume();
     };
+    // 回首頁。
     document.getElementById("return").onclick = () => {
       engine.pause();
       save();
       showHome();
     };
     document.getElementById("boss-status-details").onclick = showBossStatus;
+    // 衝刺。
     const useDash = () => {
         const move = keyboardInput();
         engine.dash(move.x, move.y);
       },
       useBurst = () => engine.burst();
+    // 衝刺與爆發按鈕。
     for (const [id, action] of [
       ["dash", useDash],
       ["burst", useBurst],
     ]) {
       const button = document.getElementById(id);
       button.onclick = action;
+      // 觸控與觸控筆按下就觸發，不等放開。
       button.addEventListener("pointerdown", (e) => {
         if (e.pointerType === "touch" || e.pointerType === "pen") {
           e.preventDefault();
@@ -5399,6 +5611,7 @@
     // 出航設定頁可能已捲到很下面；開始或接續時回到戰場頂端。
     window.scrollTo?.({ top: 0, behavior: "instant" });
   }
+  // 依螢幕調整觸控按鈕的位置與大小。
   function syncTouchLayout() {
     if (screen !== "game") return;
     const layout = document.querySelector(".game-layout"),
@@ -5461,6 +5674,7 @@
         short < 600 ? clamp(short / 560, 0.62, 1) : clamp(short / 600, 1, 1.35);
     return base * scale;
   }
+  // 依畫面大小調整畫布解析度。
   function resizeCanvas() {
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect(),
@@ -5492,10 +5706,12 @@
     canvas.height = pixelHeight;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
+  // 清空所有輸入。
   function resetControls() {
     keys.clear();
     releaseMovePointer();
   }
+  // 放開搖桿。
   function releaseMovePointer() {
     input = { x: 0, y: 0 };
     const id = pointer?.id,
@@ -5510,6 +5726,7 @@
     const thumb = dockJoy?.querySelector("i");
     if (thumb) thumb.style.transform = "translate(0px, 0px)";
   }
+  // 按下搖桿或畫面開始移動。
   function pointerDown(e) {
     if (!engine.r || engine.r.phase !== "play" || pointer || e.button > 0)
       return;
@@ -5520,6 +5737,7 @@
     if (element.id === "dock-move-pad") {
       const joy = document.getElementById("dock-joystick"),
         rect = joy.getBoundingClientRect();
+      // 固定位置的搖桿。
       pointer = {
         id: e.pointerId,
         element,
@@ -5535,6 +5753,7 @@
     const rect = canvas.getBoundingClientRect(),
       x = clamp(e.clientX, rect.left + 56, rect.right - 56),
       y = clamp(e.clientY, rect.top + 80, rect.bottom - 56);
+    // 按在畫面上的浮動搖桿。
     pointer = {
       id: e.pointerId,
       element,
@@ -5550,6 +5769,7 @@
     joy.style.bottom = "auto";
     pointerMove(e);
   }
+  // 拖曳搖桿。
   function pointerMove(e) {
     if (!pointer || pointer.id !== e.pointerId || engine.r.phase !== "play")
       return;
@@ -5567,10 +5787,12 @@
     if (joy)
       joy.style.transform = `translate(${n ? (x / n) * m : 0}px,${n ? (y / n) * m : 0}px)`;
   }
+  // 放開。
   function pointerUp(e) {
     if (!pointer || e.pointerId !== pointer.id) return;
     releaseMovePointer();
   }
+  // 一張選項卡片。
   function card(c, i, kind = "upgrade") {
     return /* HTML */ `<button
       class="choice ${c.kind === "evolve" ? "evolution" : ""}"
@@ -5583,15 +5805,19 @@
       ><small>${escapeHTML(c.desc)}</small>
     </button>`;
   }
+  // 依目前階段顯示覆蓋畫面（升級、遺物、路線、商城、暫停、結算）。
   function renderOverlay() {
     if (screen !== "game" || !engine.r) return;
     const r = engine.r,
       host = document.getElementById("game-overlay");
     renderedPhase = r.phase;
     // CSS 依階段決定是否展開遠征詳情側欄（只在暫停時顯示）。
-    document.querySelector(".flight-layout")?.setAttribute("data-phase", r.phase);
+    document
+      .querySelector(".flight-layout")
+      ?.setAttribute("data-phase", r.phase);
     resetControls();
     let content = "";
+    // 升級選擇。
     if (r.phase === "upgrade") {
       content = /* HTML */ `<div class="eyebrow">
           ${
@@ -5639,6 +5865,7 @@
           ${r.event.choices.map((c, i) => card(c, i, "event")).join("")}
         </div>`;
     }
+    // 休息商城。
     if (r.phase === "intermission") {
       engine.ensureShop();
       content = /* HTML */ `<div class="shop-heading">
@@ -5720,6 +5947,7 @@
           ><button class="danger" id="retreat">結算撤退</button>
         </div>`;
     }
+    // 結算。
     if (r.phase === "result") {
       const result = r.result;
       content = /* HTML */ `<div class="eyebrow">
@@ -5763,6 +5991,7 @@
           <div class="overlay-inner">${content}</div>
         </div>`
       : "";
+    // 選項按鈕。
     host.querySelectorAll("[data-choice]").forEach(
       (b) =>
         (b.onclick = () => {
@@ -5800,6 +6029,7 @@
       openDialog(
         '<h2>結束這次遠征？</h2><p class="muted">帶回目前取得的晶礦。這次航行將無法繼續。</p><button class="primary" id="confirm-retreat">結算返回</button>',
       );
+      // 確認撤退。
       document.getElementById("confirm-retreat").onclick = () => {
         dialog.close();
         engine.finish(false, true);
@@ -5816,15 +6046,18 @@
     document.getElementById("pause").textContent =
       r.phase === "paused" ? "繼續" : "暫停";
   }
+  // 更新戰鬥畫面的所有數值。
   function updateHUD(force = false) {
     if (screen !== "game" || !engine.r) return;
     const r = engine.r,
       p = r.p,
       c = r.config,
+      // 設定文字。
       set = (id, text) => {
         const e = document.getElementById(id);
         if (e) e.textContent = text;
       },
+      // 設定長條比例。
       fill = (id, value) => {
         const e = document.getElementById(id);
         if (e) e.style.width = `${clamp(value, 0, 100)}%`;
@@ -5906,6 +6139,7 @@
     const boss = r.enemies.find((e) => e.type === "boss" && !e.dead);
     const bossHud = document.getElementById("boss-hud");
     bossHud.hidden = !boss;
+    // 頭目血條、護盾與目前招式。
     if (boss) {
       set(
         "boss-name",
@@ -5950,6 +6184,7 @@
         `Lv.${boss.adaptive?.level || p.level} 接戰配置 · 本體與護盾已固定`,
       );
     }
+    // 武器與遺物列表，每 0.4 秒更新一次。
     if (force || performance.now() - lastHud > 400) {
       // 戰場右下的精簡武器列：圖示、等級與進化星號，詳細說明在暫停側欄。
       const strip = document.getElementById("weapon-strip");
@@ -5997,6 +6232,7 @@
       lastHud = performance.now();
     }
   }
+  // 打開視窗，遊戲中會先暫停。
   function openDialog(html) {
     if (engine.r?.phase === "play") engine.pause();
     dialogContent.innerHTML = html;
@@ -6034,6 +6270,7 @@
       <p class="muted">閱讀時已暫停。關閉後按「繼續航行」，再回到戰場。</p>
     `);
   }
+  // 玩法說明；launch 為 true 時看完就出發。
   function showGuide(launch = false) {
     openDialog(/* HTML */ `<div class="eyebrow">PILOT HANDBOOK / v1.2</div>
         <h2>駕駛操作手冊</h2>
@@ -6259,6 +6496,7 @@
       };
     }
   }
+  // 武器圖鑑。
   function showCodex() {
     openDialog(/* HTML */ `<div class="eyebrow">ARSENAL DATABASE</div>
         <h2>武器與進化配方</h2>
@@ -6302,6 +6540,7 @@
     document.getElementById("codex-boss-link").onclick = () => showBossCodex();
     document.getElementById("codex-enemy-link").onclick = showEnemyCodex;
   }
+  // 永久研究。
   function showResearch() {
     openDialog(/* HTML */ `<div class="eyebrow">PERMANENT RESEARCH</div>
         <h2>讓下一趟航行走得更遠</h2>
@@ -6340,6 +6579,7 @@
         }),
     );
   }
+  // 成就。
   function showAchievements() {
     openDialog(/* HTML */ `<div class="eyebrow">FLIGHT MILESTONES</div>
         <h2>
@@ -6365,6 +6605,7 @@
             </article>`,
         ).join("")}`);
   }
+  // 設定與存檔備份。
   function showSettings() {
     openDialog(/* HTML */ `<div class="eyebrow">SYSTEM & SAVE DATA</div>
         <h2>設定與進度備份</h2>
@@ -6415,17 +6656,20 @@
         <p id="import-message" class="muted"></p>`);
     document.getElementById("setting-effects").value =
       profile.settings.effectsLevel || "auto";
+    // 特效等級。
     document.getElementById("setting-effects").onchange = (e) => {
       profile.settings.effectsLevel = e.target.value;
       save();
     };
     for (const key of ["sound", "shake", "particles"])
+      // 音效、震動與粒子開關。
       document.getElementById(`setting-${key}`).onchange = (e) => {
         profile.settings[key] = e.target.checked;
         save();
         syncSound();
         if (key === "sound") sound("level");
       };
+    // 匯出備份檔。
     document.getElementById("export-save").onclick = () => {
       save();
       const blob = new Blob(
@@ -6451,6 +6695,7 @@
     };
     document.getElementById("import-save").onclick = () =>
       document.getElementById("save-file").click();
+    // 匯入備份檔，先檢查再確認。
     document.getElementById("save-file").onchange = async (e) => {
       const f = e.target.files[0];
       if (!f) return;
@@ -6480,6 +6725,7 @@
         openDialog(
           '<h2>使用這份備份？</h2><p class="muted">匯入會取代此瀏覽器的永久研究、紀錄與遠征進度。</p><button class="primary" id="confirm-import">取代並匯入</button>',
         );
+        // 確認匯入。
         document.getElementById("confirm-import").onclick = () => {
           profile = Object.assign(defaultProfile(), d.profile);
           profile.settings = Object.assign(
@@ -6554,6 +6800,7 @@
       });
     }
   }
+  // 畫正多邊形。
   function polygon(x, y, r, n, angle = 0, fill = "#fff", stroke = null) {
     ctx.beginPath();
     for (let i = 0; i < n; i++) {
@@ -6573,6 +6820,7 @@
       ctx.stroke();
     }
   }
+  // 畫圓。
   function circle(x, y, r, fill, stroke = null, width = 1) {
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
@@ -6606,6 +6854,7 @@
               : 2;
     return { quality, motion: quality > 0 && !reduced, mobile };
   }
+  // 畫光束預警與光束。
   function drawBeam(h, outline = false, quality = 1) {
     ctx.save();
     ctx.translate(h.x, h.y);
@@ -6685,6 +6934,7 @@
     ctx.stroke();
     ctx.restore();
   }
+  // 畫蓄力光圈。
   function drawCharge(f, frac, quality) {
     ctx.save();
     ctx.translate(f.x, f.y);
@@ -6702,6 +6952,7 @@
     circle(0, 0, 10 + frac * 12, f.color + "44", f.color + "aa", 1);
     ctx.restore();
   }
+  // 各模式的背景點綴。
   function drawModeAccent(r, cam, w, h, zoom, quality) {
     if (!quality) return;
     const rule = modeRule(r);
@@ -6745,6 +6996,7 @@
     }
     ctx.restore();
   }
+  // 畫整個戰場：背景、預警、掉落物、敵人、子彈、星艦與特效。
   function draw() {
     if (!ctx || !engine.r) return;
     const r = engine.r,
@@ -6766,9 +7018,12 @@
       Math.hypot(input.x, input.y) > 0.05 || keys.size > 0 || p.dashTime > 0;
     // 鏡頭平滑跟隨，並略微看向移動方向；減少動態時直接鎖定星艦。
     const lead =
-        visual.motion && moving ? Math.min(80, (Math.min(w, h) / zoom) * 0.12) : 0,
+        visual.motion && moving
+          ? Math.min(80, (Math.min(w, h) / zoom) * 0.12)
+          : 0,
       targetX = p.x + p.dx * lead,
       targetY = p.y + p.dy * lead;
+    // 鏡頭跟隨。
     if (!view.ready || !visual.motion) {
       view.x = targetX;
       view.y = targetY;
@@ -6798,6 +7053,7 @@
     gradient.addColorStop(1, "#080d1d00");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, w, h);
+    // 震動。
     let sx = 0,
       sy = 0;
     if (visual.motion && profile.settings.shake && engine.shake) {
@@ -6812,6 +7068,7 @@
     ctx.translate(sx, sy);
     ctx.scale(zoom, zoom);
     ctx.translate(-cam.x, -cam.y);
+    // 星星背景。
     for (const s of stars) {
       const x = (s.x + 2600) % 2600,
         y = (s.y + 2600) % 2600;
@@ -6827,6 +7084,7 @@
       ctx.fillRect(x, y, s.size, s.size);
     }
     ctx.globalAlpha = 1;
+    // 格線。
     ctx.strokeStyle = "#556b9e15";
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -6854,6 +7112,7 @@
     for (const b of r.burns) {
       circle(b.x, b.y, b.radius, "#ff8c5922", "#ffac7144");
     }
+    // 預警區域。
     for (const hz of r.hazards) {
       if (hz.shape === "beam") {
         drawBeam(hz, false, quality);
@@ -6877,6 +7136,7 @@
         ctx.fillText("!", hz.x, hz.y + 7);
       }
     }
+    // 補給箱。
     for (const cache of r.caches) {
       circle(cache.x, cache.y, 25, null, "#91f5e444");
       polygon(cache.x, cache.y, 14, 4, Math.PI / 4, "#153c46", "#b0fff0");
@@ -6889,6 +7149,7 @@
         cache.y + 6,
       );
     }
+    // 晶體。
     for (const g of r.gems) {
       if (
         g.x < cam.x - 10 ||
@@ -6908,6 +7169,7 @@
       );
       if (g.value > 8) circle(g.x, g.y, rad + 5, null, "#c1b6ff55");
     }
+    // 敵人。
     for (const e of r.enemies) {
       const margin = e.type === "boss" ? 160 : 80;
       if (
@@ -6917,6 +7179,7 @@
         e.y > cam.y + h / zoom + margin
       )
         continue;
+      // 各種敵人的顏色。
       const colors = {
           scout: "#c483d8",
           runner: "#f68cbc",
@@ -6937,6 +7200,7 @@
         ctx.scale(s, s);
         ctx.translate(-e.x, -e.y);
       }
+      // 頭目：圖片、護盾與光圈。
       if (e.type === "boss") {
         const data = BOSS_DATA[e.bossIndex],
           sprite = bossImages[e.bossIndex],
@@ -7064,6 +7328,7 @@
         polygon(e.x, e.y, e.radius * 0.48, 4, -t * 0.4, c);
       }
       if (squash) ctx.restore();
+      // 精英標記。
       if (e.elite) {
         circle(
           e.x,
@@ -7096,6 +7361,7 @@
         );
         if (e.champion) circle(e.x, e.y, e.radius + 10, null, "#ffdf91", 2);
       }
+      // 一般敵人的血條。
       if (e.bossGuard) circle(e.x, e.y, e.radius + 8, null, "#8deaff88", 1);
       if (e.hp < e.maxHp && e.type !== "boss") {
         ctx.fillStyle = "#29192d";
@@ -7126,6 +7392,7 @@
       circle(b.x, b.y, Math.max(1.5, b.radius * 0.55), "#f4fffd");
     }
     ctx.restore();
+    // 敵方子彈。
     for (const b of r.enemyBullets) {
       if (
         b.x < cam.x - 20 ||
@@ -7147,6 +7414,7 @@
       circle(b.x, b.y, b.radius + 3, null, (b.color || "#ff6e96") + "55");
     }
     const orbit = r.weapons.find((w) => w.id === "orbit");
+    // 環繞武器的光球。
     if (orbit) {
       const count = 2 + Math.floor(orbit.level / 2) + (orbit.evolved ? 3 : 0),
         radius = 63 + orbit.level * 5 + (orbit.evolved ? 25 : 0);
@@ -7355,6 +7623,7 @@
     // 邊緣脈衝只染色外圈；中央、敵彈及 HUD 保持清楚。
     if (visual.motion && quality > 0 && engine.screenPulse > 0) {
       ctx.save();
+      // 畫面邊緣的脈衝。
       const edge = ctx.createRadialGradient(
         w / 2,
         h / 2,
@@ -7428,6 +7697,7 @@
         (keys.has("w") || keys.has("arrowup") ? 1 : 0),
     };
   }
+  // 鍵盤操作。
   window.addEventListener("keydown", (e) => {
     if (
       screen !== "game" ||
@@ -7457,11 +7727,13 @@
     )
       e.preventDefault();
     if (e.repeat) return;
+    // 暫停。
     if (k === "p" || k === "escape") {
       if (engine.r.phase === "play") engine.pause();
       else if (engine.r.phase === "paused") engine.resume();
       return;
     }
+    // 數字鍵選升級。
     if (["1", "2", "3"].includes(k) && engine.r.phase !== "play") {
       const b = document.querySelector(`[data-choice="${Number(k) - 1}"]`);
       b?.click();
@@ -7485,15 +7757,18 @@
     if (k === " ") engine.dash(input.x, input.y);
     if (k === "q") engine.burst();
   });
+  // 放開按鍵。
   window.addEventListener("keyup", (e) => {
     keys.delete(e.key.toLowerCase());
     if (!pointer) input = keyboardInput();
   });
+  // 失去焦點：清空輸入、暫停並存檔。
   window.addEventListener("blur", () => {
     resetControls();
     engine.pause();
     save();
   });
+  // 切到背景分頁。
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       resetControls();
@@ -7502,6 +7777,7 @@
     }
   });
   window.addEventListener("pagehide", save);
+  // 從總大廳切換時暫停或恢復。
   window.addEventListener("akane-portal-pause", (event) => {
     resetControls();
     previous = 0;
@@ -7513,12 +7789,14 @@
     }
     // 再次進入保留暫停或選擇畫面，避免自動繼續後立即受傷。
   });
+  // 重新排版。
   function resizeGameLayout() {
     syncTouchLayout();
     resizeCanvas();
   }
   window.addEventListener("resize", resizeGameLayout);
   window.visualViewport?.addEventListener("resize", resizeGameLayout);
+  // 主迴圈：固定步長推進戰鬥，再更新畫面。
   function frame(ts) {
     if (window.akanePortalPaused || document.hidden) {
       previous = 0;
@@ -7552,20 +7830,25 @@
     }
     requestAnimationFrame(frame);
   }
+  // 標題回首頁。
   document.getElementById("home-link").onclick = (e) => {
     e.preventDefault();
     if (screen === "game") engine.pause();
     showHome();
   };
+  // 說明。
   document.getElementById("guide-btn").onclick = () => showGuide();
   document.getElementById("codex-btn").onclick = showCodex;
+  // 音效開關。
   document.getElementById("sound-btn").onclick = () => {
     profile.settings.sound = !profile.settings.sound;
     syncSound();
     save();
     sound("level");
   };
+  // 關閉視窗。
   document.getElementById("dialog-close").onclick = () => dialog.close();
+  // 點視窗外面關閉。
   dialog.addEventListener("click", (e) => {
     if (e.target === dialog) {
       const rect = dialog.getBoundingClientRect();
@@ -7578,6 +7861,7 @@
         dialog.close();
     }
   });
+  // 給瀏覽器主控台與測試使用。
   window.Starbreak = {
     engine,
     get profile() {

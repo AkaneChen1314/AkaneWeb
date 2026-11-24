@@ -14,6 +14,7 @@
   const FLOOR = ground * 0.955; // 拉近時地面在畫面上的高度（讓出下方資訊列）
   const SHAKE = { light: 3, heavy: 6, special: 8, skill2: 8, super: 9 };
 
+  // 載入一張圖片。
   function loadImage(url) {
     const image = new Image();
     return new Promise((resolve, reject) => {
@@ -23,7 +24,9 @@
     });
   }
 
+  // 把一場比賽畫到畫布上。
   class Renderer {
+    // 建立畫布、解析度、泛光與暗角。
     constructor(canvas) {
       this.canvas = canvas;
       this.ctx = canvas.getContext("2d", { alpha: false });
@@ -61,11 +64,13 @@
       this.canvas.height = Math.round(height * scale);
     }
 
+    // 畫面四周的暗角。
     makeVignette() {
       const canvas = document.createElement("canvas");
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext("2d");
+      // 暗角的漸層。
       const gradient = ctx.createRadialGradient(
         width / 2,
         height / 2,
@@ -119,6 +124,7 @@
       ctx.restore();
     }
 
+    // 清空所有效果。
     reset() {
       this.effects.reset();
       this.time = 0;
@@ -138,6 +144,7 @@
       return this.motion.matches;
     }
 
+    // 整個畫面閃一下。
     flash(color, alpha) {
       const limited = this.calm ? Math.min(alpha, 0.15) : alpha;
       if (limited >= this.screenFlash.alpha)
@@ -148,6 +155,7 @@
       this.focus = { x, y, zoom, time: duration };
     }
 
+    // 依事件加上鏡頭震動、文字與殘影。
     cue(event) {
       const { fighter } = event;
       const anim = this.animation;
@@ -420,6 +428,7 @@
       }
     }
 
+    // 場上的文字。
     caption(x, y, text, color, size, life, style = "plain") {
       this.callouts = this.callouts.filter(
         (item) => item.text !== text || Math.abs(item.x - x) > 80,
@@ -438,6 +447,7 @@
       if (this.callouts.length > 18) this.callouts.shift();
     }
 
+    // 傷害數字。
     number(x, y, value, color, big) {
       if (!value) return;
       this.callouts.push({
@@ -472,6 +482,7 @@
         this.animation.release(this.ghosts.shift().canvas);
     }
 
+    // 高速移動時留下殘影。
     trail(fighter, dt) {
       const move = fighter.move;
       const travel = move?.spec.travel;
@@ -497,6 +508,7 @@
       }
     }
 
+    // 推進震動、閃光與文字。
     update(dt, real = dt) {
       this.time += dt;
       this.shake = Math.max(0, this.shake - 55 * dt);
@@ -567,6 +579,7 @@
         shot.drawX = shot.previousX + (shot.x - shot.previousX) * alpha;
       this.update(dt, real);
       ctx.setTransform(this.scale, 0, 0, this.scale, 0, 0);
+      // 每位鬥士的動畫狀態。
       const fighters = match.fighters.map((fighter) => {
         const state = this.animation.update(fighter, dt, frozen, match, lag);
         if (!frozen) this.trail(fighter, dt);
@@ -590,6 +603,7 @@
       this.stage.draw(ctx, this.calm);
       this.effects.behind(ctx, fighters);
       for (const fighter of fighters) this.drawShadow(fighter);
+      // 地面的倒影。
       if (!this.calm)
         for (const fighter of fighters) this.drawReflection(fighter);
       this.drawGhosts();
@@ -606,6 +620,7 @@
       this.bloom();
       ctx.save();
       this.aimCamera(shakeX, shakeY);
+      // 文字最後畫，永遠看得到。
       for (const item of this.callouts) this.drawCaption(item);
       if (match.profiles[0] === match.profiles[1]) {
         this.drawMarker(fighters[0], "1P", GOLD);
@@ -706,6 +721,7 @@
       ctx.restore();
     }
 
+    // 殘影。
     drawGhosts() {
       const { ctx } = this;
       const { x: originX, y: originY } = game.FighterAnimation.ORIGIN;
@@ -729,6 +745,7 @@
       ctx.restore();
     }
 
+    // 一位鬥士。
     drawFighter(fighter, tremble = 0) {
       const { ctx } = this;
       const state = fighter.animationState;
@@ -790,6 +807,7 @@
       ctx.restore();
     }
 
+    // 一段文字，剛出現時放大。
     drawCaption({ x, y, text, color, edge, size, life, total, style, drift }) {
       const { ctx } = this;
       const age = total - life;
@@ -826,6 +844,7 @@
       ctx.restore();
     }
 
+    // 同角色對戰時，頭上標示 1P、2P。
     drawMarker(fighter, label, color) {
       const { ctx } = this;
       if (fighter.hp === 0) return;

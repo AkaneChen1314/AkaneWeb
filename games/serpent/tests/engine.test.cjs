@@ -1,8 +1,13 @@
+/*
+ * 測試：霓虹蛇的核心規則、碰撞、存檔與教學。
+ */
 "use strict";
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const S = require("../engine.js");
+// 建立一局固定亂數的遊戲。
 const make = (opts) => new S.Game({ seed: 2026, ...opts });
+// 前進指定秒數；遇到強化選擇就選第一個。
 function step(g, seconds, input = {}) {
   for (let i = 0; i < Math.ceil(seconds * 60); i++) {
     g.update(1 / 60, input);
@@ -10,6 +15,7 @@ function step(g, seconds, input = {}) {
   }
 }
 
+// 相同亂數種子會產生相同地圖，食物避開障礙。
 test("seeded worlds are reproducible and food avoids obstacles", () => {
   const a = make(),
     b = make();
@@ -18,6 +24,7 @@ test("seeded worlds are reproducible and food avoids obstacles", () => {
   for (const f of a.food)
     assert.ok(a.obstacles.every((o) => S.distance(o, f) >= o.r + 0.6));
 });
+// 移動與變長後，身體仍然連在一起。
 test("moving and growing preserves finite, connected segments", () => {
   const g = make({ mode: "zen" });
   step(g, 30, { angle: -Math.PI / 2 });
@@ -28,6 +35,7 @@ test("moving and growing preserves finite, connected segments", () => {
     assert.ok(S.distance(g.snake[i], g.snake[i - 1]) <= 0.531);
   }
 });
+// 暫停與強化選擇時，時間與移動都停住。
 test("pause and evolution stop the clock and movement", () => {
   const g = make();
   g.paused = true;
@@ -47,6 +55,7 @@ test("pause and evolution stop the clock and movement", () => {
   g.update(0.02);
   assert.ok(g.time > 0);
 });
+// 收集會給連擊加成、回血、水晶與經驗。
 test("collection applies combo bonus, healing, crystals and XP", () => {
   const g = make();
   g.health = 30;
@@ -55,7 +64,7 @@ test("collection applies combo bonus, healing, crystals and XP", () => {
   g.collect({ x: 0, z: 0, type: "crystal" });
   assert.equal(g.crystals, 1);
   assert.equal(g.xp, 7);
-  // Eating never touches the combo, and food score ignores it.
+  // 吃東西不會影響連擊，食物分數也不看連擊。
   g.combo = 19;
   g.comboTimer = 1;
   const score = g.score;
@@ -67,6 +76,7 @@ test("collection applies combo bonus, healing, crystals and XP", () => {
   fresh.collect({ x: 0, z: 0, type: "fruit" });
   assert.equal(fresh.combo, 0);
 });
+// 衝刺消耗體力，用完會鎖住，放開後恢復。
 test("dash drains, locks at zero and recharges on release", () => {
   const g = make({ mode: "zen" });
   g.food = [];
@@ -81,6 +91,7 @@ test("dash drains, locks at zero and recharges on release", () => {
   assert.equal(g.dashLocked, false);
   assert.ok(g.dash > 0);
 });
+// 四種特殊能力不同，並遵守冷卻。
 test("all four special abilities differ and respect cooldowns", () => {
   for (let i = 0; i < 4; i++) {
     const g = make({ character: i });
@@ -99,6 +110,7 @@ test("all four special abilities differ and respect cooldowns", () => {
     }
   }
 });
+// 受傷後有短暫無敵；禪模式不會受傷。
 test("damage has immunity frames and zen never takes damage", () => {
   const g = make();
   g.invulnerable = 0;
@@ -116,6 +128,7 @@ test("damage has immunity frames and zen never takes damage", () => {
   assert.equal(z.health, z.maxHealth);
   assert.equal(z.over, false);
 });
+// 生存模式 120 秒出現首領，180 秒獲勝。
 test("survival boss appears at 120 seconds and victory at 180", () => {
   const g = make();
   g.time = 119.99;
@@ -127,6 +140,7 @@ test("survival boss appears at 120 seconds and victory at 180", () => {
   assert.equal(g.over, true);
   assert.equal(g.won, true);
 });
+// 快攻模式 120 秒結束，食物較多。
 test("blitz ends at 120 seconds and has denser food", () => {
   const g = make({ mode: "blitz" }),
     s = make();
@@ -140,6 +154,7 @@ test("blitz ends at 120 seconds and has denser food", () => {
   g.update(1 / 60);
   assert.ok(g.won);
 });
+// 凍結時敵人與子彈不動。
 test("frozen enemies and projectiles do not move", () => {
   const g = make({ character: 2 });
   g.food = [];
@@ -154,6 +169,7 @@ test("frozen enemies and projectiles do not move", () => {
   assert.equal(e.z, pos.z);
   assert.equal(g.projectiles[0].x, 20);
 });
+// 首領死亡只給一次獎勵。
 test("boss death awards loot exactly once", () => {
   const g = make();
   g.spawnEnemy(true);
@@ -167,6 +183,7 @@ test("boss death awards loot exactly once", () => {
   assert.equal(g.score, score);
   assert.equal(g.kills, 1);
 });
+// 永久強化只扣一次，並檢查金額與上限。
 test("permanent upgrades charge once and enforce funds and cap", () => {
   const p = S.defaultProfile();
   assert.equal(S.buyUpgrade(p, "vitality"), false);
@@ -176,6 +193,7 @@ test("permanent upgrades charge once and enforce funds and cap", () => {
   assert.equal(p.crystals, 550);
   assert.equal(make({ upgrades: p.upgrades }).maxHealth, 150);
 });
+// 重複結算不會重複計算，紀錄與成就會保存。
 test("settlement is idempotent and persists history and achievements", () => {
   const p = S.defaultProfile(),
     g = make();
@@ -191,6 +209,7 @@ test("settlement is idempotent and persists history and achievements", () => {
   assert.equal(S.settle(p, g), null);
   assert.equal(p.runs, 1);
 });
+// 壞掉的個人資料與文字會被修正。
 test("malformed profile and stored text are sanitized", () => {
   const p = S.sanitizeProfile({
     crystals: -100,
@@ -211,6 +230,7 @@ test("malformed profile and stored text are sanitized", () => {
   assert.deepEqual(p.achievements, ["first"]);
   assert.equal(p.settings.volume, 1);
 });
+// 長時間模擬後，資料數量有上限且數值正常。
 test("long simulated sessions keep collections bounded and state finite", () => {
   const g = make({ mode: "zen" });
   for (let i = 0; i < 60 * 600; i++) {
@@ -231,6 +251,7 @@ test("long simulated sessions keep collections bounded and state finite", () => 
   assert.ok(g.snake.every((p) => Number.isFinite(p.x) && Number.isFinite(p.z)));
 });
 
+// 建立只用來測試碰撞的地圖。
 function collisionGame() {
   const g = make();
   g.invulnerable = 0;
@@ -243,6 +264,7 @@ function collisionGame() {
   g.caches = [];
   return g;
 }
+// 敵人碰到身體不會受傷。
 test("enemy touching player body does not hurt the player", () => {
   const g = collisionGame();
   g.spawnEnemy(false, 0, "chaser");
@@ -252,6 +274,7 @@ test("enemy touching player body does not hurt the player", () => {
   assert.equal(g.health, g.maxHealth);
   assert.equal(g.lastDamage, null);
 });
+// 頭對頭相撞會回報傷害、來源與失去的節數。
 test("head-to-head collision reports damage, source and lost segments", () => {
   const g = collisionGame();
   g.spawnEnemy(false, 0, "chaser");
@@ -269,6 +292,7 @@ test("head-to-head collision reports damage, source and lost segments", () => {
   assert.equal(g.lastDamage.lostSegments, 3);
   assert.equal(g.events.find((e) => e.type === "hurt").amount, 18);
 });
+// 頭可以安全穿過自己的身體與敵人的尾巴。
 test("own body and enemy tail can cross the player head safely", () => {
   const g = collisionGame();
   g.snake[6] = { ...g.snake[0] };
@@ -284,6 +308,7 @@ test("own body and enemy tail can cross the player head safely", () => {
   g.update(0.01);
   assert.equal(g.health, g.maxHealth);
 });
+// 敵人的子彈只會傷到頭。
 test("enemy projectiles only damage the player head", () => {
   const g = collisionGame();
   g.projectiles = [{ x: 0, z: 4, vx: 0, vz: 0, life: 4 }];
@@ -294,6 +319,7 @@ test("enemy projectiles only damage the player head", () => {
   assert.equal(g.health, g.maxHealth - S.DAMAGE.projectile.amount);
   assert.equal(g.lastDamage.cause, "projectile");
 });
+// 戰敗與主動結算會分開。
 test("fatal damage is distinguished from voluntary settlement", () => {
   const g = collisionGame();
   g.health = 5;
@@ -305,6 +331,7 @@ test("fatal damage is distinguished from voluntary settlement", () => {
   assert.equal(quit.endReason, "retired");
   assert.equal(quit.lastDamage, null);
 });
+// 無敵時間不會蓋掉最後一次真正的受傷原因。
 test("immunity never overwrites the last real damage explanation", () => {
   const g = collisionGame();
   g.hurt(17, "projectile");
@@ -313,6 +340,7 @@ test("immunity never overwrites the last real damage explanation", () => {
   assert.equal(g.lastDamage.amount, 17);
   assert.equal(g.events.filter((e) => e.type === "hurt").length, 1);
 });
+// 出現在障礙正中央時會被推出來，不扣血。
 test("obstacle centre collision resolves without trapping the head or costing health", () => {
   const g = collisionGame();
   g.obstacles = [{ x: 0, z: 0, r: 1 }];
@@ -321,6 +349,7 @@ test("obstacle centre collision resolves without trapping the head or costing he
   assert.equal(g.lastDamage, null);
   assert.equal(g.health, g.maxHealth);
 });
+// 教學共八步，要真的做到才會前進，完成沒有獎勵。
 test("eight-step tutorial requires real actions and finishes without rewards", () => {
   const g = make({ training: true, mode: "survival" }),
     t = new S.Tutorial(g);
@@ -339,7 +368,7 @@ test("eight-step tutorial requires real actions and finishes without rewards", (
   assert.equal(t.step, 3);
   t.action("skill");
   assert.equal(t.step, 3);
-  // Step 3 has no attack input at all: approaching is enough because biting is automatic.
+  // 第 3 步沒有攻擊鍵：靠近就好，因為咬擊是自動的。
   for (let i = 0; i < 180 && t.step === 3; i++) tick({ angle: g.angle });
   assert.equal(t.step, 4);
   for (let i = 0; i < 180 && t.step === 4; i++) {
@@ -350,7 +379,7 @@ test("eight-step tutorial requires real actions and finishes without rewards", (
     });
   }
   assert.equal(t.step, 5);
-  // Step 5: orbit the target until the head crosses its own body.
+  // 第 5 步：繞著目標轉，直到蛇頭穿過自己的身體。
   for (let i = 0; i < 900 && t.step === 5; i++) {
     const e = t.target,
       h = g.snake[0],
@@ -373,6 +402,7 @@ test("eight-step tutorial requires real actions and finishes without rewards", (
   assert.equal(profile.runs, 0);
   assert.equal(profile.crystals, 0);
 });
+// 不相關的動作或時間經過，不會跳過教學。
 test("tutorial does not skip tasks due to unrelated actions or elapsed time", () => {
   const g = make({ training: true }),
     t = new S.Tutorial(g);
@@ -387,6 +417,7 @@ test("tutorial does not skip tasks due to unrelated actions or elapsed time", ()
   t.update(1, { angle: 0 });
   assert.equal(t.step, 0);
 });
+// 舊存檔的貨幣、成就與強化會保留。
 test("old saves retain currency, achievements and upgrades with new guide fields", () => {
   const p = S.sanitizeProfile({
     version: 1,

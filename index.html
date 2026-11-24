@@ -2,6 +2,7 @@
 <!-- 網站入口：頁首導覽 → 首頁 → 黑川茜專區 → 小遊戲專區 → 頁尾設定 → 各種彈出視窗。修改畫面文字可先搜尋對應中文。 -->
 <html lang="zh-Hant">
   <head>
+    <!-- 基本資料：編碼、手機寬度、瀏覽器外框顏色與網站說明。 -->
     <meta charset="utf-8" />
     <meta
       name="viewport"
@@ -32,6 +33,7 @@
       rel="image_src"
       href="https://akanechen1314.github.io/AkaneWeb/assets/blue-world-share-r10.jpg"
     />
+    <!-- 分享到社群時顯示的標題、說明與圖片（Open Graph）。 -->
     <meta
       property="og:type"
       content="website"
@@ -84,6 +86,7 @@
       property="og:image:alt"
       content="藍紫星光中的黑川茜與 Blue World 標題"
     />
+    <!-- 分享到 X（Twitter）時的卡片。 -->
     <meta
       name="twitter:card"
       content="summary_large_image"
@@ -104,6 +107,7 @@
       name="twitter:image:alt"
       content="藍紫星光中的黑川茜與 Blue World 標題"
     />
+    <!-- 分頁圖示與字型。 -->
     <link
       rel="icon"
       href="assets/favicon.svg"
@@ -117,6 +121,7 @@
       rel="stylesheet"
       href="shared/japanese.css?v=1.2-blueworld-r11"
     />
+    <!-- 全站樣式。後面載入的會蓋過前面的，順序不要更動。 -->
     <link
       rel="stylesheet"
       href="styles.css?v=20261104-blueworld-r14-source"
@@ -129,14 +134,17 @@
       rel="stylesheet"
       href="archive.css?v=20261104-blueworld-r14-source"
     />
+    <!-- 主程式：專區切換、遊戲卡片與遊戲視窗。 -->
     <script
       src="main.js?v=20261123-blueworld-r15d"
       defer
     ></script>
+    <!-- 星空與滑鼠光暈。 -->
     <script
       src="ambience.js?v=20261104-blueworld-r14-source"
       defer
     ></script>
+    <!-- 季數列的樣式，以及圖庫的資料與程式。 -->
     <link
       rel="stylesheet"
       href="seasons.css?v=1.2-blueworld-r11"
@@ -149,6 +157,7 @@
       src="archive.js?v=20261104-blueworld-r14-source"
       defer
     ></script>
+    <!-- 封面、入口與動態卡的樣式。 -->
     <link
       rel="stylesheet"
       href="polish.css?v=1.2-blueworld-r11"
@@ -157,6 +166,7 @@
       rel="stylesheet"
       href="edition.css?v=1.2-blueworld-r11"
     />
+    <!-- 各專區的背景動態。 -->
     <link
       rel="stylesheet"
       href="zone-effects.css?v=1.2-blueworld-r11"
@@ -165,6 +175,7 @@
       src="zone-effects.js?v=20261104-blueworld-r14-source"
       defer
     ></script>
+    <!-- 閱讀導覽與小茜遊樂室。 -->
     <link
       rel="stylesheet"
       href="explore.css?v=1.2-blueworld-r11"
@@ -173,14 +184,17 @@
       src="explore.js?v=20261104-blueworld-r14-source"
       defer
     ></script>
+    <!-- 網站版本，要和 VERSION.txt 相同，更新時一起改。 -->
     <meta
       name="akane-edition"
-      content="20261123-blueworld-r15d"
+      content="20261124-blueworld-r15e"
     />
+    <!-- 動態播放、設定圖放大與筆記。 -->
     <script
       src="polish.js?v=20261104-blueworld-r14-source"
       defer
     ></script>
+    <!-- 網站光色與首頁構圖；最後是共用外觀與遊戲專區。 -->
     <link
       rel="stylesheet"
       href="world.css?v=20261104-blueworld-r14-source"
@@ -199,11 +213,13 @@
     />
   </head>
   <body class="stage-on">
+    <!-- 鍵盤使用者按 Tab 可以直接跳到內容。 -->
     <a
       class="skip-link"
       href="#main-content"
       >跳到主要內容</a
     >
+    <!-- 背景：極光、軌道、光束、星空與跟著滑鼠的光。 -->
     <div
       class="ambient-scene"
       aria-hidden="true"
@@ -216,6 +232,9 @@
       <div class="stage-beam beam-two"></div>
       <canvas id="star-field"></canvas>
       <div class="pointer-glow"></div>
+
+      <!-- ===== 頁面兩側的動態影片（依目前的專區顯示） ===== -->
+
       <div
         class="edge-film"
         data-edge-zone="home"
@@ -338,6 +357,7 @@
     </div>
     <!-- 遊戲館主介面：進入遊戲時由 main.js 切換這裡與下方 player。 -->
     <div id="lounge">
+      <!-- 頁首：網站名稱、導覽與舞台燈開關。 -->
       <header class="site-header">
         <a
           class="brand"
@@ -378,6 +398,7 @@
           ><span>舞台光效</span>
         </button>
       </header>
+      <!-- 主要內容。一次只顯示一個專區，由 main.js 切換。 -->
       <main
         id="main-content"
         tabindex="-1"
@@ -388,6 +409,7 @@
           data-zone="home"
           id="home"
         >
+          <!-- 首頁封面：標題、介紹與角色圖。 -->
           <div
             class="archive-hero blue-hour-hero"
             aria-labelledby="hero-title"
@@ -430,6 +452,7 @@
               </figure>
             </div>
           </div>
+          <!-- 兩個入口的標題。 -->
           <div class="section-heading home-heading">
             <div>
               <h2>兩個專區，兩種喜歡。</h2>
@@ -437,6 +460,7 @@
             <p>今天想收藏一點星光，<br />還是走進一個新的遊戲世界？</p>
           </div>
           <div class="gateway-grid">
+            <!-- 入口：黑川茜專區。 -->
             <article class="gateway character-gateway">
               <div class="gateway-copy">
                 <h3>跟著茜，<br />收藏每一種藍。</h3>
@@ -457,6 +481,7 @@
                 >進入黑川茜專區 <span aria-hidden="true">↗</span></a
               >
             </article>
+            <!-- 入口：小遊戲專區。 -->
             <article class="gateway game-gateway">
               <div class="gateway-copy">
                 <h3>休息一下，<br />一起去冒險。</h3>
@@ -483,6 +508,7 @@
               >
             </article>
           </div>
+          <!-- 三季收藏的捷徑。 -->
           <div
             class="home-season-strip"
             aria-label="三季收藏導覽"
@@ -507,6 +533,7 @@
               ><b>03</b><span>第三季</span><i aria-hidden="true">↗</i></a
             >
           </div>
+          <!-- 動態欣賞：三張可以播放的動態卡。 -->
           <section
             class="home-editorial blue-hour"
             id="blue-hour"
@@ -514,10 +541,9 @@
           >
             <div class="section-heading blue-hour-heading">
               <div>
-                <h2 id="blue-hour-title">
-                  舞台之外，<br />也有這些小小的她。
-                </h2>
+                <h2 id="blue-hour-title">舞台之外，<br />也有這些小小的她。</h2>
               </div>
+              <!-- 暫停與播放動態的按鈕。 -->
               <div class="motion-tools">
                 <button
                   id="motion-toggle"
@@ -537,6 +563,7 @@
               Blue World有一點生活的溫度。
             </p>
             <div class="moments-grid">
+              <!-- 動態卡：主要的一張。 -->
               <article class="moment-card moment-feature loop-card">
                 <div class="moment-screen">
                   <video
@@ -574,6 +601,7 @@
                   >
                 </div>
               </article>
+              <!-- 動態卡：微笑。 -->
               <article class="moment-card moment-smile loop-card">
                 <div class="moment-screen">
                   <video
@@ -611,6 +639,7 @@
                   >
                 </div>
               </article>
+              <!-- 動態卡：陽光。 -->
               <article class="moment-card moment-sunlight loop-card">
                 <div class="moment-screen">
                   <video
@@ -647,12 +676,14 @@
                 </div>
               </article>
             </div>
+            <!-- 收藏筆記。 -->
             <div class="curator-note">
               <div
                 class="curator-mark"
                 aria-hidden="true"
-                >✧</div
               >
+                ✧
+              </div>
               <div class="curator-note-copy">
                 <h3 id="viewing-title">今天，先看她的眼神。</h3>
                 <p id="viewing-description">
@@ -682,6 +713,7 @@
           aria-labelledby="akane-title"
           hidden
         >
+          <!-- 專區標題。 -->
           <div class="section-heading zone-heading">
             <div>
               <p class="eyebrow">ZONE 01 / AKANE COLLECTION</p>
@@ -690,6 +722,9 @@
               </h2>
             </div>
           </div>
+
+          <!-- ===== 角色資料 ===== -->
+
           <div
             class="profile-grid"
             id="profile"
@@ -768,6 +803,8 @@
             </article>
           </div>
 
+          <!-- ===== 閱讀導覽：快速跳到各段落 ===== -->
+
           <nav
             class="archive-compass"
             id="archive-compass"
@@ -803,6 +840,9 @@
               ><a href="#sources">資料來源 <span>從官方看見她</span></a>
             </div>
           </nav>
+
+          <!-- ===== 設計資料室：設定圖與筆記 ===== -->
+
           <section
             class="design-room"
             id="design-room"
@@ -890,6 +930,9 @@
               </div>
             </div>
           </section>
+
+          <!-- ===== 聲優介紹與小知識 ===== -->
+
           <section
             class="actor-room"
             id="actor-room"
@@ -974,6 +1017,7 @@
                 </div>
               </div>
             </div>
+            <!-- 可以展開的小知識。 -->
             <div
               class="little-facts"
               id="little-facts"
@@ -1031,6 +1075,9 @@
               表情短句為本館觀賞筆記；設定資料依上方官方來源整理。劇照可能包含劇情。
             </p>
           </section>
+
+          <!-- ===== 肖像室：切換直幅肖像 ===== -->
+
           <section
             class="portrait-room"
             id="portrait-room"
@@ -1063,46 +1110,50 @@
                   class="soft-button"
                   data-portrait-choice="puzzle-casual"
                   aria-pressed="true"
-                  >日常星光</button
                 >
+                  日常星光
+                </button>
                 <button
                   class="soft-button"
                   data-portrait-choice="raindrops"
                   aria-pressed="false"
-                  >雨後花語</button
                 >
+                  雨後花語
+                </button>
                 <button
                   class="soft-button"
                   data-portrait-choice="anniversary"
                   aria-pressed="false"
-                  >糖彩慶典</button
                 >
+                  糖彩慶典
+                </button>
               </div>
               <div
                 class="portrait-note"
                 aria-live="polite"
               >
                 <h2 id="portrait-room-title">讓日常，也有一點星光。</h2>
-                <p id="portrait-description"
-                  >輕攏長髮的瞬間，像把喧鬧留在畫面之外。棕色與米白襯著她的藍，簡單的日常，也讓人想多停留一下。</p
-                >
+                <p id="portrait-description">
+                  輕攏長髮的瞬間，像把喧鬧留在畫面之外。棕色與米白襯著她的藍，簡單的日常，也讓人想多停留一下。
+                </p>
               </div>
               <dl class="portrait-details">
-                <div
-                  ><dt>今天的穿搭</dt
-                  ><dd id="portrait-outfit">棕色針織 × 淺色洋裝</dd></div
-                >
-                <div
-                  ><dt>想收藏的細節</dt
-                  ><dd id="portrait-detail">輕揚髮梢與青綠色眼眸</dd></div
-                >
+                <div>
+                  <dt>今天的穿搭</dt>
+                  <dd id="portrait-outfit">棕色針織 × 淺色洋裝</dd>
+                </div>
+                <div>
+                  <dt>想收藏的細節</dt>
+                  <dd id="portrait-detail">輕揚髮梢與青綠色眼眸</dd>
+                </div>
               </dl>
               <div class="portrait-actions">
                 <button
                   class="soft-button"
                   data-portrait-open
-                  >看完整肖像 ↗</button
                 >
+                  看完整肖像 ↗
+                </button>
                 <a
                   id="portrait-source"
                   class="source-link"
@@ -1117,18 +1168,23 @@
                   id="portrait-previous"
                   class="soft-button"
                   aria-label="上一張黑川茜肖像"
-                  >←</button
                 >
+                  ←
+                </button>
                 <span id="portrait-counter">1 / 3 · 日常星光</span>
                 <button
                   id="portrait-next"
                   class="soft-button"
                   aria-label="下一張黑川茜肖像"
-                  >→</button
                 >
+                  →
+                </button>
               </div>
             </div>
           </section>
+
+          <!-- ===== 特色卡片 ===== -->
+
           <div
             class="section-heading feature-heading"
             id="traits"
@@ -1183,6 +1239,9 @@
               >
             </article>
           </div>
+
+          <!-- ===== 劇情筆記（時間軸） ===== -->
+
           <details
             class="story-notes"
             id="story-notes"
@@ -1251,6 +1310,9 @@
               </article>
             </div>
           </details>
+
+          <!-- ===== 三季圖庫 ===== -->
+
           <div
             class="section-heading gallery-heading"
             id="gallery"
@@ -1259,11 +1321,12 @@
               <p class="eyebrow">THREE SEASONS / HER STORY IN FRAMES</p>
               <h2>每一季，都有不同的茜。</h2>
             </div>
-            <p
-              ><span id="gallery-total-count">33</span>
-              張官方劇照與立繪。<br />先選一季，再按話數慢慢收藏。</p
-            >
+            <p>
+              <span id="gallery-total-count">33</span>
+              張官方劇照與立繪。<br />先選一季，再按話數慢慢收藏。
+            </p>
           </div>
+          <!-- 選擇季數。 -->
           <div
             class="season-picker"
             role="group"
@@ -1293,6 +1356,7 @@
               ><small>日常・演出・心緒 <b data-season-count="3">8 張</b></small>
             </button>
           </div>
+          <!-- 季數標題與話數選單。 -->
           <div class="season-heading">
             <div>
               <p
@@ -1323,6 +1387,7 @@
           >
             劇照依官方累計話數、同話原頁圖片順序排列。回憶畫面歸在播出該畫面的話數；此處為精選圖庫，沒有圖片的話數不列入選單。含劇情畫面。
           </p>
+          <!-- 篩選與隨機看圖。 -->
           <div class="gallery-toolbar">
             <div
               class="gallery-filters"
@@ -1364,6 +1429,7 @@
             role="status"
             aria-live="polite"
           ></p>
+          <!-- 圖片由 archive.js 放進這裡。 -->
           <div id="akane-gallery">
             <section
               id="still-section"
@@ -1398,6 +1464,9 @@
               ></div>
             </section>
           </div>
+
+          <!-- ===== 特別插畫 ===== -->
+
           <section
             id="special-room"
             class="special-room"
@@ -1408,9 +1477,9 @@
                 <p class="eyebrow">BEYOND THE EPISODES / SPECIAL COLLECTION</p>
                 <h2 id="special-room-title">換一種造型，也一樣喜歡。</h2>
               </div>
-              <p
-                >和服與魔女，收藏節慶裡的茜。<br />讓每一種色彩，都留在喜歡的畫面裡。</p
-              >
+              <p>
+                和服與魔女，收藏節慶裡的茜。<br />讓每一種色彩，都留在喜歡的畫面裡。
+              </p>
             </div>
             <div class="special-art-grid">
               <article class="special-art-card">
@@ -1471,6 +1540,9 @@
               </article>
             </div>
           </section>
+
+          <!-- ===== 造型收藏 ===== -->
+
           <section
             id="outfit-room"
             class="outfit-room"
@@ -1481,9 +1553,9 @@
                 <p class="eyebrow">AKANE WARDROBE / LITTLE COLLECTIONS</p>
                 <h2 id="outfit-room-title">把喜歡，換成不同的造型。</h2>
               </div>
-              <p
-                >冬日燈光與春日櫻花，只收藏黑川茜。<br />沿著畫面的色彩，欣賞不同時刻的她。</p
-              >
+              <p>
+                冬日燈光與春日櫻花，只收藏黑川茜。<br />沿著畫面的色彩，欣賞不同時刻的她。
+              </p>
             </div>
             <div
               class="special-art-grid extra-outfit-grid"
@@ -1506,14 +1578,15 @@
                 <div class="special-art-copy">
                   <p class="eyebrow">2023.12 / CHRISTMAS</p>
                   <h3>把冬日的光，捧在手心。</h3>
-                  <p
-                    >白色針織、紫色外套與一杯熱飲，在彩色燈飾前遇見回眸的茜。</p
-                  >
+                  <p>
+                    白色針織、紫色外套與一杯熱飲，在彩色燈飾前遇見回眸的茜。
+                  </p>
                   <button
                     data-special-art="christmas"
                     class="text-link"
-                    >放大欣賞 ↗</button
                   >
+                    放大欣賞 ↗
+                  </button>
                 </div>
               </article>
               <article class="special-art-card">
@@ -1533,18 +1606,22 @@
                 <div class="special-art-copy">
                   <p class="eyebrow">SAKURA / KIMONO ILLUSTRATION</p>
                   <h3>把春天，留在花開的這一刻。</h3>
-                  <p
-                    >粉紅和服、和傘與飛舞的櫻花，讓喜歡的藍，也染上一點溫柔的春色。</p
-                  >
+                  <p>
+                    粉紅和服、和傘與飛舞的櫻花，讓喜歡的藍，也染上一點溫柔的春色。
+                  </p>
                   <button
                     data-special-art="sakura-kimono"
                     class="text-link"
-                    >放大欣賞 ↗</button
                   >
+                    放大欣賞 ↗
+                  </button>
                 </div>
               </article>
             </div>
           </section>
+
+          <!-- ===== 小茜遊樂室 ===== -->
+
           <section
             class="chibi-playroom"
             id="chibi-room"
@@ -1563,6 +1640,7 @@
               >
             </div>
             <div class="chibi-postcard">
+              <!-- 小茜的圖與互動區。 -->
               <div class="chibi-stage">
                 <span
                   class="chibi-orbit orbit-a"
@@ -1607,8 +1685,9 @@
                 <p
                   id="chibi-art-caption"
                   aria-live="polite"
-                  >官方角色插畫 · 白襯衫與格紋裙</p
                 >
+                  官方角色插畫 · 白襯衫與格紋裙
+                </p>
                 <a
                   id="chibi-source"
                   class="source-link"
@@ -1628,6 +1707,7 @@
                 >
                   小小的身影，也有很認真的眼神。點點小茜，或選一款喜歡的造型。
                 </p>
+                <!-- 選擇背景光。 -->
                 <div
                   class="chibi-light-picker"
                   role="group"
@@ -1651,6 +1731,7 @@
                     星夜
                   </button>
                 </div>
+                <!-- 選擇玩法；下方對應的區塊才會顯示。 -->
                 <div
                   class="chibi-mode-picker"
                   role="group"
@@ -1675,19 +1756,23 @@
                   <button
                     data-chibi-mode="memory"
                     aria-pressed="false"
-                    >翻牌記憶 ◇</button
                   >
+                    翻牌記憶 ◇
+                  </button>
                   <button
                     data-chibi-mode="fortune"
                     aria-pressed="false"
-                    >心情籤 ☁</button
                   >
+                    心情籤 ☁
+                  </button>
                   <button
                     data-chibi-mode="palette"
                     aria-pressed="false"
-                    >色彩調配 ◉</button
                   >
+                    色彩調配 ◉
+                  </button>
                 </div>
+                <!-- 玩法：送星星。 -->
                 <div
                   class="chibi-activity"
                   data-chibi-panel="gift"
@@ -1712,6 +1797,7 @@
                     記在這台瀏覽器
                   </p>
                 </div>
+                <!-- 玩法：星光連線。 -->
                 <div
                   class="chibi-activity"
                   data-chibi-panel="constellation"
@@ -1779,14 +1865,15 @@
                     </button>
                   </div>
                 </div>
+                <!-- 玩法：翻牌記憶。 -->
                 <div
                   class="chibi-activity"
                   data-chibi-panel="memory"
                   hidden
                 >
-                  <p
-                    >翻開兩張卡，找到四組相同的小圖案。沒有倒數，慢慢記住就好。</p
-                  >
+                  <p>
+                    翻開兩張卡，找到四組相同的小圖案。沒有倒數，慢慢記住就好。
+                  </p>
                   <div
                     id="chibi-memory-board"
                     class="chibi-memory-board"
@@ -1796,15 +1883,18 @@
                     <p
                       id="chibi-memory-status"
                       role="status"
-                      >找到 0 / 4 組 · 翻牌 0 次</p
                     >
+                      找到 0 / 4 組 · 翻牌 0 次
+                    </p>
                     <button
                       id="chibi-memory-reset"
                       class="soft-button"
-                      >重新洗牌 ↻</button
                     >
+                      重新洗牌 ↻
+                    </button>
                   </div>
                 </div>
+                <!-- 玩法：心情籤。 -->
                 <div
                   class="chibi-activity"
                   data-chibi-panel="fortune"
@@ -1820,57 +1910,63 @@
                       class="soft-button"
                       data-chibi-mood="rest"
                       aria-pressed="true"
-                      >想放鬆</button
                     >
+                      想放鬆
+                    </button>
                     <button
                       class="soft-button"
                       data-chibi-mood="courage"
                       aria-pressed="false"
-                      >想打氣</button
                     >
+                      想打氣
+                    </button>
                     <button
                       class="soft-button"
                       data-chibi-mood="focus"
                       aria-pressed="false"
-                      >想專注</button
                     >
+                      想專注
+                    </button>
                   </div>
                   <blockquote
                     id="chibi-fortune-note"
                     class="chibi-fortune-note"
                     role="status"
-                    >留一點時間，聽聽今天的自己。</blockquote
                   >
+                    留一點時間，聽聽今天的自己。
+                  </blockquote>
                   <button
                     id="chibi-fortune-draw"
                     class="soft-button"
-                    >抽一張心情籤 ✧</button
                   >
+                    抽一張心情籤 ✧
+                  </button>
                   <p class="chibi-pocket">原創觀賞短句，並非角色台詞。</p>
                 </div>
+                <!-- 玩法：色彩調配。 -->
                 <div
                   class="chibi-activity"
                   data-chibi-panel="palette"
                   hidden
                 >
-                  <p
-                    >調整三道色光，試著配出左邊的顏色。這是本館的茜色靈感小遊戲。</p
-                  >
+                  <p>
+                    調整三道色光，試著配出左邊的顏色。這是本館的茜色靈感小遊戲。
+                  </p>
                   <div class="chibi-color-tiles">
-                    <div
-                      ><span
+                    <div>
+                      <span
                         id="chibi-color-target"
                         class="chibi-color-tile"
                       ></span
-                      ><span id="chibi-color-name">深海藍</span></div
-                    >
-                    <div
-                      ><span
+                      ><span id="chibi-color-name">深海藍</span>
+                    </div>
+                    <div>
+                      <span
                         id="chibi-color-mix"
                         class="chibi-color-tile"
                       ></span
-                      ><span>你的配色</span></div
-                    >
+                      ><span>你的配色</span>
+                    </div>
                   </div>
                   <div class="chibi-color-sliders">
                     <label for="chibi-color-r"
@@ -1907,30 +2003,35 @@
                   <p
                     id="chibi-color-status"
                     role="status"
-                    >試著靠近左邊的顏色。</p
                   >
+                    試著靠近左邊的顏色。
+                  </p>
                   <div class="activity-footer color-actions">
                     <button
                       id="chibi-color-check"
                       class="soft-button"
-                      >看看相似度</button
                     >
+                      看看相似度
+                    </button>
                     <button
                       id="chibi-color-hint"
                       class="text-link"
-                      >看調色提示</button
                     >
+                      看調色提示
+                    </button>
                     <button
                       id="chibi-color-next"
                       class="soft-button"
-                      >換一種顏色 ↻</button
                     >
+                      換一種顏色 ↻
+                    </button>
                   </div>
                   <p
                     id="chibi-color-tip"
                     hidden
                   ></p>
                 </div>
+                <!-- 玩法：小測驗。 -->
                 <div
                   class="chibi-activity"
                   data-chibi-panel="quiz"
@@ -1972,6 +2073,7 @@
                 </div>
               </div>
             </div>
+            <!-- 段落書籤（往下捲動後才出現）。 -->
             <details
               class="archive-bookmark"
               id="archive-bookmark"
@@ -2002,6 +2104,9 @@
           <p class="actor-room-footnote">
             節慶插畫不歸入動畫話數；日常近景保留圖片出處。Q版選用同一組官方小茜插畫，短句為本館創作。
           </p>
+
+          <!-- ===== 資料來源 ===== -->
+
           <section
             class="archive-sources"
             id="sources"
@@ -2129,11 +2234,13 @@
             小提醒：這十款遊戲皆為獨立自製作品，遊戲內容與黑川茜及《我推的孩子》無關。
           </p>
 
+          <!-- 心情篩選與隨機推薦。 -->
           <div class="hall-toolbar">
             <div class="hall-toolbar-title">
               <span aria-hidden="true">✧</span>
               <div>
-                <strong>今天想玩什麼？</strong><small>選一種心情，幫你挑出合適的遊戲</small>
+                <strong>今天想玩什麼？</strong
+                ><small>選一種心情，幫你挑出合適的遊戲</small>
               </div>
             </div>
             <div
@@ -2187,7 +2294,12 @@
             選一種心情篩選遊戲，或交給命運隨機挑一款；查看玩法後再開始。
           </p>
 
+          <!--
+            十款遊戲的卡片。data-game 是遊戲代號，要和 main.js 的 games
+            相同；data-genre 是心情分類。
+          -->
           <div class="hall-grid">
+            <!-- 1. NEON STRIKE II：極光戰線 -->
             <article
               class="game-card hall-card aurora-card is-new"
               data-game="aurora"
@@ -2211,7 +2323,8 @@
                   class="cover-caption"
                   aria-hidden="true"
                 >
-                  <span>AURORA FRONTLINE</span><small>霓虹天際，下一場交火</small>
+                  <span>AURORA FRONTLINE</span
+                  ><small>霓虹天際，下一場交火</small>
                 </div>
               </div>
               <div class="card-body">
@@ -2223,7 +2336,8 @@
                   五名幹員、八把槍與專屬技能。在霓虹城市、末日廢墟、軌道環站與海底研究站，挑戰團隊死鬥、據點爭奪、生存波次與首領討伐。
                 </p>
                 <p class="recommendation">
-                  <span>適合你，如果</span>你喜歡快節奏槍戰、和電腦隊友並肩作戰，或想單挑首領。
+                  <span>適合你，如果</span
+                  >你喜歡快節奏槍戰、和電腦隊友並肩作戰，或想單挑首領。
                 </p>
                 <div class="hall-card-foot">
                   <span
@@ -2240,6 +2354,7 @@
                 </div>
               </div>
             </article>
+            <!-- 2. 鋼鐵廢墟：機甲戰線 -->
             <article
               class="game-card hall-card mech-card is-new"
               data-game="mech"
@@ -2263,7 +2378,8 @@
                   class="cover-caption"
                   aria-hidden="true"
                 >
-                  <span>STEEL WASTELAND</span><small>整備機體，迎戰巨型兵器</small>
+                  <span>STEEL WASTELAND</span
+                  ><small>整備機體，迎戰巨型兵器</small>
                 </div>
               </div>
               <div class="card-body">
@@ -2272,10 +2388,12 @@
                 </div>
                 <h3>鋼鐵廢墟：機甲戰線</h3>
                 <p class="card-description">
-                  從五台機體、八種塗裝組出你的機甲，搭配主副武器、技能與小兵出擊。每波三選一強化，迎戰十隻巨型 Boss。
+                  從五台機體、八種塗裝組出你的機甲，搭配主副武器、技能與小兵出擊。每波三選一強化，迎戰十隻巨型
+                  Boss。
                 </p>
                 <p class="recommendation">
-                  <span>適合你，如果</span>你喜歡機甲組裝、火力全開與大型 Boss 戰。
+                  <span>適合你，如果</span>你喜歡機甲組裝、火力全開與大型 Boss
+                  戰。
                 </p>
                 <div class="hall-card-foot">
                   <span
@@ -2292,6 +2410,7 @@
                 </div>
               </div>
             </article>
+            <!-- 3. 運氣戰鬥：FORTUNE SIEGE -->
             <article
               class="game-card hall-card fortune-card is-new"
               data-game="fortune"
@@ -2319,13 +2438,16 @@
                 </div>
               </div>
               <div class="card-body">
-                <div class="tags"><span>塔防</span><span>賭場 Roguelike</span></div>
+                <div class="tags">
+                  <span>塔防</span><span>賭場 Roguelike</span>
+                </div>
                 <h3>運氣戰鬥：FORTUNE SIEGE</h3>
                 <p class="card-description">
                   在賭場贏金幣與限定塔，到商店升星、融合元素，再布陣守住 30 波。
                 </p>
                 <p class="recommendation">
-                  <span>適合你，如果</span>你喜歡塔防布陣、抽獎的刺激與越滾越強。
+                  <span>適合你，如果</span
+                  >你喜歡塔防布陣、抽獎的刺激與越滾越強。
                 </p>
                 <div class="hall-card-foot">
                   <span class="device-chip">滑鼠・觸控</span>
@@ -2338,6 +2460,7 @@
                 </div>
               </div>
             </article>
+            <!-- 4. NEON STRIKE：霓光突擊 -->
             <article
               class="game-card hall-card neonstrike-card"
               data-game="neonstrike"
@@ -2360,17 +2483,21 @@
                   class="cover-caption"
                   aria-hidden="true"
                 >
-                  <span>NIGHTFALL OPERATIONS</span><small>選擇戰場，迎戰指揮官</small>
+                  <span>NIGHTFALL OPERATIONS</span
+                  ><small>選擇戰場，迎戰指揮官</small>
                 </div>
               </div>
               <div class="card-body">
-                <div class="tags"><span>3D 戰術 FPS</span><span>四種任務</span></div>
+                <div class="tags">
+                  <span>3D 戰術 FPS</span><span>四種任務</span>
+                </div>
                 <h3>NEON STRIKE：霓光突擊</h3>
                 <p class="card-description">
                   暗夜港區、熔火工廠兩張戰場。選擇幹員與裝備，運用掩體、技能和手榴彈，挑戰任務與首領戰。
                 </p>
                 <p class="recommendation">
-                  <span>適合你，如果</span>你喜歡第一人稱射擊、戰術走位與自訂戰局。
+                  <span>適合你，如果</span
+                  >你喜歡第一人稱射擊、戰術走位與自訂戰局。
                 </p>
                 <div class="hall-card-foot">
                   <span class="device-chip">鍵盤滑鼠・手機觸控</span>
@@ -2383,6 +2510,7 @@
                 </div>
               </div>
             </article>
+            <!-- 5. 星夜突圍：STARBREAK -->
             <article
               class="game-card hall-card starbreak-card"
               data-game="starbreak"
@@ -2405,14 +2533,18 @@
                   class="cover-caption"
                   aria-hidden="true"
                 >
-                  <span>BREAK THROUGH THE NIGHT</span><small>向星海深處，突圍而去</small>
+                  <span>BREAK THROUGH THE NIGHT</span
+                  ><small>向星海深處，突圍而去</small>
                 </div>
               </div>
               <div class="card-body">
-                <div class="tags"><span>即時射擊</span><span>星艦生存</span></div>
+                <div class="tags">
+                  <span>即時射擊</span><span>星艦生存</span>
+                </div>
                 <h3>星夜突圍：STARBREAK</h3>
                 <p class="card-description">
-                  武器自動開火，你負責閃避與突圍。搭配星艦、進化武器與遺物，迎戰星域 Boss。
+                  武器自動開火，你負責閃避與突圍。搭配星艦、進化武器與遺物，迎戰星域
+                  Boss。
                 </p>
                 <p class="recommendation">
                   <span>適合你，如果</span>你喜歡即時走位、火力搭配與華麗戰鬥。
@@ -2428,6 +2560,7 @@
                 </div>
               </div>
             </article>
+            <!-- 6. 午夜擂台：MIDNIGHT CIRCUIT -->
             <article
               class="game-card hall-card midnight-card"
               data-game="midnight"
@@ -2450,11 +2583,14 @@
                   class="cover-caption"
                   aria-hidden="true"
                 >
-                  <span>MIDNIGHT CIRCUIT</span><small>雨夜天台，下一回合見</small>
+                  <span>MIDNIGHT CIRCUIT</span
+                  ><small>雨夜天台，下一回合見</small>
                 </div>
               </div>
               <div class="card-body">
-                <div class="tags"><span>即時格鬥</span><span>本機雙人</span></div>
+                <div class="tags">
+                  <span>即時格鬥</span><span>本機雙人</span>
+                </div>
                 <h3>午夜擂台：MIDNIGHT CIRCUIT</h3>
                 <p class="card-description">
                   四名原創鬥士，組合連擊、技能與大招。單挑電腦、挑戰街機，或和朋友在同一台裝置較量。
@@ -2473,6 +2609,7 @@
                 </div>
               </div>
             </article>
+            <!-- 7. 霓境蛇行：NEON SERPENT -->
             <article
               class="game-card hall-card serpent-card"
               data-game="serpent"
@@ -2495,7 +2632,8 @@
                   class="cover-caption"
                   aria-hidden="true"
                 >
-                  <span>NEON SERPENT</span><small>收集微光，長成自己的冒險</small>
+                  <span>NEON SERPENT</span
+                  ><small>收集微光，長成自己的冒險</small>
                 </div>
               </div>
               <div class="card-body">
@@ -2518,6 +2656,7 @@
                 </div>
               </div>
             </article>
+            <!-- 8. 深境冒險 -->
             <article
               class="game-card hall-card abyss-card"
               data-game="abyss"
@@ -2544,10 +2683,13 @@
                 </div>
               </div>
               <div class="card-body">
-                <div class="tags"><span>回合冒險</span><span>養成 RPG</span></div>
+                <div class="tags">
+                  <span>回合冒險</span><span>養成 RPG</span>
+                </div>
                 <h3>深境冒險</h3>
                 <p class="card-description">
-                  選擇職業，收集裝備、強化技能。從第一層出發，挑戰深處的魔物與 Boss。
+                  選擇職業，收集裝備、強化技能。從第一層出發，挑戰深處的魔物與
+                  Boss。
                 </p>
                 <p class="recommendation">
                   <span>適合你，如果</span>你喜歡角色養成、刷裝備和闖關。
@@ -2563,6 +2705,7 @@
                 </div>
               </div>
             </article>
+            <!-- 9. 蒼穹決戰：星界牌陣 -->
             <article
               class="game-card hall-card arcane-card"
               data-game="arcane"
@@ -2585,11 +2728,14 @@
                   class="cover-caption"
                   aria-hidden="true"
                 >
-                  <span>WRITTEN IN THE STARS</span><small>以星光，寫下你的戰術</small>
+                  <span>WRITTEN IN THE STARS</span
+                  ><small>以星光，寫下你的戰術</small>
                 </div>
               </div>
               <div class="card-body">
-                <div class="tags"><span>策略卡牌</span><span>魔法對決</span></div>
+                <div class="tags">
+                  <span>策略卡牌</span><span>魔法對決</span>
+                </div>
                 <h3>蒼穹決戰：星界牌陣</h3>
                 <p class="card-description">
                   挑選契約者與支援術式，讀懂敵方意圖，在行動力與星能之間打出你的戰術。
@@ -2608,6 +2754,7 @@
                 </div>
               </div>
             </article>
+            <!-- 10. 百億炒股人生 -->
             <article
               class="game-card hall-card trader-card"
               data-game="trader"
@@ -2630,11 +2777,14 @@
                   class="cover-caption"
                   aria-hidden="true"
                 >
-                  <span>A BILLION POSSIBILITIES</span><small>財富之外，人生還有什麼？</small>
+                  <span>A BILLION POSSIBILITIES</span
+                  ><small>財富之外，人生還有什麼？</small>
                 </div>
               </div>
               <div class="card-body">
-                <div class="tags"><span>人生模擬</span><span>黑色幽默</span></div>
+                <div class="tags">
+                  <span>人生模擬</span><span>黑色幽默</span>
+                </div>
                 <h3>百億炒股人生</h3>
                 <p class="card-description">
                   帶著一百億走進虛構市場。買賣、借款、打工與休息，每個選擇都改變你的人生。
@@ -2661,6 +2811,7 @@
             這個心情暫時沒有對應的遊戲，換一個試試看。
           </p>
 
+          <!-- 遊戲專區的小提醒。 -->
           <aside class="welcome-note">
             <span aria-hidden="true">✧</span>
             <div>
@@ -2671,7 +2822,8 @@
             </div>
           </aside>
           <p class="section-footnote">
-            遊戲封面為情境插畫；三款新作的封面以遊戲本身的 3D／2D 畫面構圖後調色而成，實際玩法以介紹與遊戲畫面為準。
+            遊戲封面為情境插畫；三款新作的封面以遊戲本身的 3D／2D
+            畫面構圖後調色而成，實際玩法以介紹與遊戲畫面為準。
           </p>
         </section>
       </main>
@@ -2689,24 +2841,28 @@
               <button
                 data-world-tone="ocean"
                 aria-pressed="true"
-                ><i></i>深海藍</button
               >
+                <i></i>深海藍
+              </button>
               <button
                 data-world-tone="twilight"
                 aria-pressed="false"
-                ><i></i>暮光紫</button
               >
+                <i></i>暮光紫
+              </button>
               <button
                 data-world-tone="petal"
                 aria-pressed="false"
-                ><i></i>櫻光藍</button
               >
+                <i></i>櫻光藍
+              </button>
             </div>
             <p
               id="world-tone-note"
               role="status"
-              >讓星光慢慢流過，留一點時間給喜歡。</p
             >
+              讓星光慢慢流過，留一點時間給喜歡。
+            </p>
           </div>
         </details>
         <span>✦ BLUE WORLD</span>
@@ -2715,6 +2871,9 @@
         ><small>Blue World · 十款獨立遊戲 · 2026.11.21 r15</small>
       </footer>
     </div>
+
+    <!-- ===== 視窗（平常隱藏，由程式打開） ===== -->
+
     <dialog
       id="game-details"
       class="details-dialog"
@@ -2749,6 +2908,7 @@
         </button>
       </div>
     </dialog>
+    <!-- 圖片檢視器：圖庫與肖像共用。 -->
     <dialog
       class="image-viewer"
       id="image-viewer"
@@ -2776,16 +2936,19 @@
           <button
             id="previous-image"
             aria-label="上一張圖片"
-            >←</button
+          >
+            ←</button
           ><span id="viewer-counter"></span
           ><button
             id="next-image"
             aria-label="下一張圖片"
-            >→</button
+          >
+            →</button
           ><button
             id="viewer-favorite"
             aria-pressed="false"
-            >收藏這張</button
+          >
+            收藏這張</button
           ><a
             id="viewer-source"
             target="_blank"
@@ -2795,6 +2958,7 @@
         </div>
       </div>
     </dialog>
+    <!-- 設計資料圖的檢視器。 -->
     <dialog
       id="reference-viewer"
       class="reference-viewer"
@@ -2829,6 +2993,7 @@
         />
       </div>
     </dialog>
+    <!-- 特別插畫的檢視器。 -->
     <dialog
       id="special-viewer"
       class="special-viewer"
@@ -2854,8 +3019,9 @@
         <p
           class="eyebrow"
           id="special-viewer-date"
-          >2025.01 / NEW YEAR</p
         >
+          2025.01 / NEW YEAR
+        </p>
         <h2 id="special-viewer-title">新年和服的茜</h2>
         <div class="special-viewer-actions">
           <button
@@ -2882,6 +3048,7 @@
         </div>
       </div>
     </dialog>
+    <!-- 背景動態的總開關。 -->
     <button
       id="ambient-motion-toggle"
       class="ambient-motion-toggle"
@@ -2890,6 +3057,7 @@
     >
       動態 <span>開</span>
     </button>
+    <!-- 遊戲視窗：遊戲用 iframe 開在 #frames 裡。 -->
     <section
       id="player"
       class="player"

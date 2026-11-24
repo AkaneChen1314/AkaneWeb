@@ -6,6 +6,7 @@
  * episode 是官方累計話數；group 表示合照或小劇場。
  */
 "use strict";
+// 全部收藏圖片，由 archive.js 讀取並顯示。
 window.AkaneGalleryItems = [
   {
     id: "s1-official-dress",

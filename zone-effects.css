@@ -42,6 +42,9 @@ body[data-zone-view] .edge-film[data-edge-zone] {
   -webkit-mask-image: radial-gradient(ellipse, #000 15%, transparent 70%);
   mask-image: radial-gradient(ellipse, #000 15%, transparent 70%);
 }
+
+/* ---------- 背景動態開關 ---------- */
+
 .ambient-motion-toggle {
   position: fixed;
   z-index: 8;
@@ -65,9 +68,13 @@ body[data-zone-view] .edge-film[data-edge-zone] {
 .ambient-motion-toggle:hover {
   background: #204462;
 }
+/* 播放遊戲時不顯示開關。 */
 body.playing .ambient-motion-toggle {
   display: none;
 }
+
+/* ---------- 聲優介紹 ---------- */
+
 .actor-room {
   margin: 70px 0 60px;
   scroll-margin-top: 24px;
@@ -158,6 +165,9 @@ body.playing .ambient-motion-toggle {
   gap: 14px;
   margin-top: 15px;
 }
+
+/* ---------- 小知識 ---------- */
+
 .little-facts {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -210,6 +220,9 @@ body.playing .ambient-motion-toggle {
   color: #86a2b9;
   font-size: 11px;
 }
+
+/* ---------- 平板 ---------- */
+
 @media (max-width: 900px) {
   .actor-room-layout {
     grid-template-columns: 1fr;
@@ -228,6 +241,9 @@ body.playing .ambient-motion-toggle {
     gap: 10px;
   }
 }
+
+/* ---------- 手機 ---------- */
+
 @media (max-width: 680px) {
   .edge-film[data-edge-zone] {
     top: 27vh;
@@ -269,6 +285,9 @@ body.playing .ambient-motion-toggle {
     padding: 8px 12px;
   }
 }
+
+/* ---------- 減少動態效果 ---------- */
+
 @media (prefers-reduced-motion: reduce) {
   .little-facts summary b {
     transition: none;
@@ -284,6 +303,9 @@ body.playing .ambient-motion-toggle {
   height: 520px;
   opacity: 0.22;
 }
+
+/* ---------- 特別圖片 ---------- */
+
 .special-room {
   margin: 60px 0;
   scroll-margin-top: 24px;
@@ -335,6 +357,7 @@ body.playing .ambient-motion-toggle {
   line-height: 1.9;
   color: #b5cadc;
 }
+/* 沒有框線的文字按鈕。 */
 button.text-link {
   min-height: 44px;
   padding: 6px 0;
@@ -342,6 +365,9 @@ button.text-link {
   background: transparent;
   cursor: pointer;
 }
+
+/* ---------- 小茜明信片 ---------- */
+
 .chibi-postcard {
   position: relative;
   display: grid;
@@ -407,6 +433,7 @@ button.text-link {
   font-size: 25px;
   animation: chibi-spark-rise 1.1s ease-out forwards;
 }
+/* 星星上升的動畫。 */
 @keyframes chibi-spark-rise {
   from {
     opacity: 0.8;
@@ -417,6 +444,9 @@ button.text-link {
     transform: translateY(-100px) rotate(20deg);
   }
 }
+
+/* ---------- 特別圖片檢視器 ---------- */
+
 .special-viewer {
   width: min(1020px, calc(100vw - 30px));
   max-height: 92dvh;
@@ -452,10 +482,12 @@ button.text-link {
 .special-viewer-actions .soft-button {
   min-width: 44px;
 }
+/* 圖庫工具列。 */
 .gallery-toolbar {
   flex-wrap: wrap;
   gap: 12px;
 }
+/* 隨機圖片按鈕。 */
 #random-gallery-image {
   min-height: 44px;
 }
@@ -463,6 +495,9 @@ button.text-link {
   opacity: 0.4;
   cursor: default;
 }
+
+/* ---------- 手機 ---------- */
+
 @media (max-width: 680px) {
   .edge-film.edge-left {
     left: -112px;
@@ -495,6 +530,9 @@ button.text-link {
     gap: 12px;
   }
 }
+
+/* ---------- 減少動態效果 ---------- */
+
 @media (prefers-reduced-motion: reduce) {
   .special-art-image img {
     transition: none;

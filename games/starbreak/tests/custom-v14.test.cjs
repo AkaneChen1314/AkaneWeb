@@ -1,3 +1,6 @@
+/*
+ * 測試：v1.4 的首領護盾、彈幕、增援與存檔檢查。
+ */
 const assert = require("node:assert/strict");
 const {
   Engine,
@@ -8,11 +11,13 @@ const {
   normalizeConfig,
 } = require("../game.js");
 let checks = 0;
+// 執行一項測試。
 function test(name, fn) {
   fn();
   checks++;
   console.log("PASS", name);
 }
+// 開始一場遠征。
 function run(difficulty = 0, config = {}) {
   const e = new Engine(defaultProfile());
   e.newRun("scout", "campaign", difficulty, 72137, {
@@ -22,7 +27,9 @@ function run(difficulty = 0, config = {}) {
   });
   return e;
 }
+// 複製一份資料。
 const copy = (o) => JSON.parse(JSON.stringify(o));
+// 護盾會完整吸收一次攻擊；要破盾才能傷到本體。
 test("shield absorbs full hit without overflow; body damage and controls require a break", () => {
   const e = run(0, { bossShield: "heavy", shieldRecovery: "none" }),
     b = e.spawnEnemy("boss"),
@@ -46,6 +53,7 @@ test("shield absorbs full hit without overflow; body damage and controls require
   f.hitEnemy(c, 10);
   assert(c.hp < c.maxHp);
 });
+// 護盾種類、本體耐久、頻率、密度與護衛分開計算。
 test("shield variants, body durability, rate, density and guard pressure scale independently", () => {
   let previous = null;
   for (const d of DIFFICULTIES) {
@@ -73,6 +81,7 @@ test("shield variants, body durability, rate, density and guard pressure scale i
   assert.equal(bossLayers(a.r, 1), 3);
   assert.equal(bossLayers(b.r, 2), 4);
 });
+// 換階段回盾可以關閉，也不會每格都回滿。
 test("phase recovery is optional and does not refill every frame", () => {
   for (const recovery of ["none", "phase"]) {
     const e = run(4, { shieldRecovery: recovery, bossThirdPhase: true }),
@@ -101,6 +110,7 @@ test("phase recovery is optional and does not refill every frame", () => {
   assert.equal(b.phaseLevel, 1);
   assert.equal(b.shieldHp, 0);
 });
+// 定時回盾有延遲與次數限制，不會無限回復。
 test("timed recharge is delayed, limited and saved; no endless shield regeneration", () => {
   const e = run(0, { shieldRecovery: "recharge", bossSecondPhase: false }),
     b = e.spawnEnemy("boss");
@@ -124,6 +134,7 @@ test("timed recharge is delayed, limited and saved; no endless shield regenerati
   assert(f.loadRun(copy(e.r)));
   assert.equal(f.r.enemies.find((x) => x.type === "boss").shieldRecharges, 2);
 });
+// 最高難度的四個首領會同時使用子彈、地面攻擊與護衛。
 test("all four Bosses overlap bullets, hazards and guards on catastrophe", () => {
   for (const roster of ["rift", "tyrant", "queen", "core"]) {
     const e = run(4, { bossRoster: roster, bossDensity: "dense" });
@@ -147,6 +158,7 @@ test("all four Bosses overlap bullets, hazards and guards on catastrophe", () =>
     assert.equal(names.size, 5);
   }
 });
+// 持續彈幕在存檔、暫停與繼續後進度不變。
 test("sustained barrages survive save, pause and resume with exact progress", () => {
   const e = run(3),
     b = e.spawnEnemy("boss");
@@ -166,6 +178,7 @@ test("sustained barrages survive save, pause and resume with exact progress", ()
   assert.deepEqual(f.r.enemyBullets, e.r.enemyBullets);
   assert.deepEqual(f.r.hazards, e.r.hazards);
 });
+// 達到擊破數後，首領還在就會恢復增援。
 test("live Boss restores reinforcement pressure after the kill target is reached", () => {
   const e = run(4);
   e.r.waveKills = e.r.killTarget;
@@ -180,6 +193,7 @@ test("live Boss restores reinforcement pressure after the kill target is reached
   assert(e.r.spawnTimer < waiting / 4);
   assert.equal(e.r.phase, "play");
 });
+// 密集子彈有上限，仍能存檔。
 test("dense fire cap supports overlapping attacks and still accepts valid saves", () => {
   const e = run(4, { bossDensity: "extreme", bossFrequency: "relentless" }),
     b = e.spawnEnemy("boss");
@@ -198,6 +212,7 @@ test("dense fire cap supports overlapping attacks and still accepts valid saves"
   assert.equal(e.r.enemyBullets.length, 0);
   assert(!e.r.hazards.some((h) => h.bossOwner === b.id));
 });
+// 舊首領的血量比例不變，受損的護盾不會因重新載入回滿。
 test("legacy Bosses retain health proportion; damaged new shields never refill on reload", () => {
   const e = run(),
     b = e.spawnEnemy("boss");
@@ -229,6 +244,7 @@ test("legacy Bosses retain health proportion; damaged new shields never refill o
   assert(g.loadRun(copy(f.r)));
   assert.equal(g.r.enemies.find((x) => x.type === "boss").shieldHp, 27);
 });
+// 壞掉的護盾與彈幕資料會被拒絕。
 test("corrupt shield and barrage state is rejected, invalid new options normalize", () => {
   const e = run();
   e.spawnEnemy("boss");
@@ -252,6 +268,7 @@ test("corrupt shield and barrage state is rejected, invalid new options normaliz
   }
   assert.equal(normalizeConfig({ bossShield: "bad" }).bossShield, "auto");
 });
+// 高難度的受傷無敵較短，但衝刺無敵不變。
 test("higher difficulty shortens hit protection without changing dash invulnerability", () => {
   let prior = 1;
   for (const d of DIFFICULTIES) {

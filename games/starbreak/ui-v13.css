@@ -1,4 +1,4 @@
-/* v1.3 — clear rule dependencies, loadout tradeoffs and difficulty profiles. */
+/* v1.3：清楚顯示規則之間的關聯、裝備取捨與難度設定。 */
 [hidden] {
   display: none !important;
 }
@@ -26,6 +26,7 @@
 .ship-card .glyph {
   margin-bottom: 3px;
 }
+/* 武裝選擇。 */
 .loadout-config {
   margin-top: 12px;
   border: 1px solid #36516a;
@@ -66,6 +67,7 @@
   width: 100%;
   font-size: 15px;
 }
+/* 出擊前的數值。 */
 .launch-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -85,6 +87,7 @@
   color: #d9fcf1;
   font-variant-numeric: tabular-nums;
 }
+/* 優點與代價。 */
 .loadout-advantage,
 .loadout-cost {
   font-size: 14px;
@@ -103,6 +106,7 @@
   line-height: 1.8;
   color: #b2c1db;
 }
+/* 難度說明。 */
 .difficulty-info {
   border: 1px solid color-mix(in srgb, var(--difficulty-color) 35%, #2a3a52);
   border-left: 3px solid var(--difficulty-color);
@@ -149,12 +153,16 @@
   color: #b9cde5;
   background: #0c162855;
 }
+/* 武器的優點與缺點。 */
 .weapon-pro {
   color: #aaddc9 !important;
 }
 .weapon-con {
   color: #f4c398 !important;
 }
+
+/* ---------- 玩法手冊 ---------- */
+
 .handbook-section {
   border: 1px solid #34465f;
   border-radius: 9px;
@@ -234,6 +242,9 @@
 .handbook-table tbody tr:nth-child(even) {
   background: #121f34;
 }
+
+/* ---------- 手機 ---------- */
+
 @media (max-width: 760px) {
   .ship-card {
     min-height: 185px;
@@ -312,6 +323,9 @@
     padding: 13px;
   }
 }
+
+/* ---------- 小手機 ---------- */
+
 @media (max-width: 400px) {
   .ship-card {
     min-height: 200px;

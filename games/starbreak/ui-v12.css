@@ -1,4 +1,4 @@
-/* v1.2 — focused setup and controls that remain within reach. */
+/* v1.2：聚焦的出擊設定，以及隨時按得到的控制項。 */
 .setup-caption {
   display: flex;
   align-items: baseline;
@@ -12,6 +12,7 @@
 .setup-caption small {
   font-size: 12px;
 }
+/* 預設組合。 */
 .preset-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -44,10 +45,12 @@
 .preset-row button.active small {
   color: #b5e3d9;
 }
+/* 主要設定。 */
 .primary-config {
   grid-template-columns: 1.2fr 0.7fr 1fr;
   padding-bottom: 6px;
 }
+/* 進階設定。 */
 .advanced-caption {
   margin-top: 26px;
   margin-bottom: 10px;
@@ -123,6 +126,9 @@
   min-height: 44px;
   font-size: 13px;
 }
+
+/* ---------- 首領登場 ---------- */
+
 .boss-arrival {
   position: absolute;
   top: 78px;
@@ -167,6 +173,9 @@
 .boss-arrival.imminent b {
   color: #ffafcc;
 }
+
+/* ---------- 戰鬥資訊 ---------- */
+
 .arena-top {
   gap: 20px;
 }
@@ -188,6 +197,7 @@
   margin: 0;
   gap: 10px;
 }
+/* 技能按鈕。 */
 .ability {
   min-width: 124px;
   padding: 9px 16px;
@@ -223,6 +233,7 @@
 .ability:disabled b {
   color: #a4b8c4;
 }
+/* 觸控移動區。 */
 .touch-move-zone {
   display: none;
   position: absolute;
@@ -258,6 +269,7 @@
 .joystick {
   z-index: 2;
 }
+/* 目前目標。 */
 .objective-hud {
   bottom: 18px;
   right: 14px;
@@ -268,6 +280,7 @@
   bottom: 120px;
   font-size: 12px;
 }
+/* 連擊。 */
 .combo-hud {
   bottom: 94px;
 }
@@ -283,12 +296,16 @@
 .game-overlay {
   touch-action: pan-y;
 }
+/* 覆蓋畫面。 */
 .overlay {
   overscroll-behavior: contain;
 }
 .overlay-inner {
   padding-bottom: 4px;
 }
+
+/* ---------- 平板 ---------- */
+
 @media (max-width: 1050px) {
   .preset-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -297,6 +314,9 @@
     width: 165px;
   }
 }
+
+/* ---------- 手機 ---------- */
+
 @media (max-width: 760px) {
   .topbar {
     padding: 10px 12px;
@@ -629,6 +649,9 @@
     font-size: 12px;
   }
 }
+
+/* ---------- 平板的觸控 ---------- */
+
 @media (pointer: coarse) and (min-width: 761px) {
   .touch-move-zone {
     display: block;
@@ -650,6 +673,9 @@
     bottom: 97px;
   }
 }
+
+/* ---------- 小手機 ---------- */
+
 @media (max-width: 400px) {
   .setup-caption {
     gap: 7px;
@@ -711,6 +737,9 @@
     height: 125px;
   }
 }
+
+/* ---------- 橫拿手機 ---------- */
+
 @media (max-height: 500px) and (orientation: landscape) {
   .game-layout {
     grid-template-columns: 1fr;

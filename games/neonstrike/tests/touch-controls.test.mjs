@@ -1,7 +1,11 @@
+/*
+ * 測試：觸控操作（多點觸控、取消、切換、縮放與暫停）。
+ */
 import assert from "node:assert/strict";
 import { createTouchControls, supportsTouch } from "../touch-controls.js";
 import { createHarness } from "./test-harness.mjs";
 
+// 假的網頁元素；emit 可以觸發事件。
 function node(action) {
   const listeners = new Map(),
     attrs = new Map(),
@@ -47,6 +51,7 @@ const root = node(),
   pad = node(),
   knob = node(),
   env = node();
+// 每個觸控按鈕的動作。
 const actions = [
   "fire",
   "aim",
@@ -71,6 +76,7 @@ env.document = node();
 env.document.body = node();
 assert(supportsTouch(env), "desktop UA must not disable a real touch screen");
 assert.equal(supportsTouch({}), false);
+// 建立觸控操作，並記下觸發的動作與轉動。
 const controls = createTouchControls({
   root,
   canvas,
@@ -78,6 +84,7 @@ const controls = createTouchControls({
   onAction: (...args) => calls.push(args),
   onLook: (...args) => turns.push(args),
 });
+// 移動、轉動視角與開火可以同時進行。
 controls.setPlaying(true);
 pad.emit("pointerdown", { pointerId: 1, clientY: 16 });
 assert.equal(controls.moveY, -1);
@@ -95,22 +102,26 @@ assert.deepEqual(turns, [
   [40, 0],
 ]);
 assert(calls.some(([action, down]) => action === "fire" && down));
+// 取消觸控時停止開火。
 env.emit("pointercancel", { pointerId: 3 });
 assert.deepEqual(calls.at(-1), ["fire", false]);
 env.emit("pointerup", { pointerId: 1 });
 assert.equal(controls.moveY, 0);
+// 手榴彈：取消不會丟，放開才丟。
 buttons[6].emit("pointerdown", { pointerId: 4 });
 env.emit("pointercancel", { pointerId: 4 });
 assert.deepEqual(calls.at(-1), ["grenade-cancel"]);
 buttons[6].emit("pointerdown", { pointerId: 5 });
 env.emit("pointerup", { pointerId: 5 });
 assert.deepEqual(calls.at(-1), ["grenade-throw"]);
+// 開鏡與衝刺是切換式。
 buttons[1].emit("pointerdown", { pointerId: 6 });
 env.emit("pointerup", { pointerId: 6 });
 assert.equal(buttons[1].getAttribute("aria-pressed"), "true");
 buttons[2].emit("pointerdown", { pointerId: 7 });
 env.emit("pointerup", { pointerId: 7 });
 assert.equal(controls.sprint, true);
+// 離開戰鬥時全部重設。
 controls.setPlaying(false);
 assert.equal(root.hidden, true);
 assert.equal(controls.sprint, false);
@@ -118,6 +129,7 @@ assert.equal(buttons[1].getAttribute("aria-pressed"), "false");
 const count = calls.length;
 buttons[0].emit("pointerdown", { pointerId: 8 });
 assert.equal(calls.length, count, "hidden controls cannot fire");
+// 頁面被縮放時，轉動的量要換算。
 env.innerWidth = 980;
 env.innerHeight = 1850;
 env.screen = { width: 390, height: 844 };
@@ -130,14 +142,30 @@ assert(
   Math.abs(turns.at(-1)[0] - 20) < 1e-9,
   "desktop-mode aiming must compensate for page scale",
 );
+// 旋轉螢幕時會暫停並重設移動。
 env.emit("orientationchange");
 assert.equal(controls.moveX, 0);
 assert.deepEqual(calls.at(-1), ["pause"]);
 
-// Check analog input and camera changes against the actual gameplay functions.
+// 用實際的遊戲函式檢查類比移動與鏡頭轉動。
 const h = createHarness();
 h.run(
-  "pitch=new THREE.Group();touchControls={enabled:true,moveX:.4,moveY:-.3,sprint:false,reset(){},setPlaying(){},setGrenadePreview(){}};gameState='playing';updateWeaponPose=()=>{};playTone=()=>{};updateHUD=()=>{};",
+  `
+    pitch = new THREE.Group();
+    touchControls = {
+      enabled: true,
+      moveX: 0.4,
+      moveY: -0.3,
+      sprint: false,
+      reset() {},
+      setPlaying() {},
+      setGrenadePreview() {},
+    };
+    gameState = "playing";
+    updateWeaponPose = () => {};
+    playTone = () => {};
+    updateHUD = () => {};
+  `,
 );
 h.run("onTouchLook(50,-30);");
 assert.equal(h.run("yaw.rotation.y"), -0.2);
@@ -152,7 +180,15 @@ h.run("onTouchAction('jump');");
 assert(h.run("verticalVelocity") > 0);
 h.run("onTouchAction('ability');");
 assert.equal(h.run("abilityCooldown"), 28);
-h.run("freeLook=false;clock={getDelta(){return 0}};requestLock();");
+h.run(`
+  freeLook = false;
+  clock = {
+    getDelta() {
+      return 0;
+    },
+  };
+  requestLock();
+`);
 assert.equal(h.run("freeLook"), true);
 console.log(
   "PASS multi-touch move/look/fire, pointer cancellation, grenade release, pause reset, analog movement, camera, jump, ability and touch startup",

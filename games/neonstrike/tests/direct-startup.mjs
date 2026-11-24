@@ -1,17 +1,23 @@
+/*
+ * 測試：直接開啟 index.html 也能玩（打包檔完整、音效已內嵌、Esc 會暫停）。
+ */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import { createHarness } from "./test-harness.mjs";
 
+// 網頁與打包好的程式。
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const bundle = readFileSync(new URL("../browser.js", import.meta.url), "utf8");
 // 屬性可以分行排版，但仍須以 defer 載入同一份傳統瀏覽器打包檔。
 assert.match(html, /<script\s+defer\s+src="\.\/browser\.js\?/);
 assert.doesNotMatch(html, /localhost|fileNotice|import\(/);
+// 打包檔要能當成一般程式執行。
 assert.doesNotThrow(
   () => new vm.Script(bundle),
   "shipped game must parse as a classic script",
 );
+// 音效都要內嵌在打包檔裡。
 for (const file of [
   "rifle-0.wav",
   "rifle-1.wav",
@@ -30,9 +36,22 @@ for (const file of [
     `${file} must be embedded for file-mode audio`,
   );
 }
+// 按 Esc 會暫停，並放開所有按鍵與滑鼠。
 const h = createHarness();
 h.run(
-  "renderer={domElement:{}};document.pointerLockElement=renderer.domElement;let unlocks=0;document.exitPointerLock=()=>{unlocks++;};setupEvents();ui.helpModal.classList.add('hidden');gameState='playing';keys.KeyW=true;mouseDown=true;",
+  `
+    renderer = { domElement: {} };
+    document.pointerLockElement = renderer.domElement;
+    let unlocks = 0;
+    document.exitPointerLock = () => {
+      unlocks++;
+    };
+    setupEvents();
+    ui.helpModal.classList.add("hidden");
+    gameState = "playing";
+    keys.KeyW = true;
+    mouseDown = true;
+  `,
 );
 h.dispatchGlobal("keydown", { code: "Escape" });
 assert.equal(h.run("gameState"), "paused");

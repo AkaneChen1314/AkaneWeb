@@ -1,8 +1,15 @@
+/*
+ * 測試：貼得太近的表面不會互相閃爍。
+ */
 import assert from "node:assert/strict";
 import { createHarness, THREE } from "./test-harness.mjs";
 
+// 鐵路區的護欄條紋要略高於護欄，但不能浮空。
 const harbor = createHarness();
-harbor.run("buildSelectedArena(0);scene.updateMatrixWorld(true);");
+harbor.run(`
+  buildSelectedArena(0);
+  scene.updateMatrixWorld(true);
+`);
 const barriers = harbor.run(
   "scene.children.filter(object=>object.name==='rail-yard-barrier')",
 );
@@ -27,6 +34,7 @@ for (const barrier of barriers) {
   );
 }
 
+// 每個木箱只有一條綁帶，不會重疊。
 for (const map of [0, 1]) {
   const h = createHarness();
   h.run(`buildSelectedArena(${map});`);

@@ -11,6 +11,7 @@
     Renderer,
     ArcadeAudio,
   } = globalThis.Midnight;
+  // 各模式的名稱。
   const MODE_LABEL = {
     solo: "單人對電腦",
     versus: "本機雙人",
@@ -36,16 +37,16 @@
     ["前進重攻", "按住前＋重攻 K", "往前跨一大步，打得最遠"],
     ["自動防禦", "按住後退", "對手打過來時自動擋住；蹲下＋後退是蹲防"],
     ["掃腿", "蹲下＋重攻 K", "下段攻擊，只能蹲著防禦，命中會掃倒對手"],
-    [
-      "投技",
-      "U（或輕攻＋重攻同時按）",
-      "無視防禦；被抓瞬間按投技可以拆投",
-    ],
+    ["投技", "U（或輕攻＋重攻同時按）", "無視防禦；被抓瞬間按投技可以拆投"],
     ["上下段防禦", "防禦／蹲下＋防禦", "站防擋跳躍攻擊，蹲防擋掃腿與蹲踢"],
     ["短跳", "輕點跳躍", "按住跳得高，輕點跳得低"],
     ["爆氣", "被連段時按閃避", "消耗 50% 大招能量，強制脫離並震開對手"],
     ["精準防禦", "攻擊到來的前一刻按防禦", "不削血、彈開對手並獲得能量"],
   ];
+
+  // ---------- 選角畫面 ----------
+
+  // 用 id 找元素的縮寫。
   const get = (id) => document.getElementById(id);
   const selectScreen = get("select-screen");
   const battleScreen = get("battle-screen");
@@ -79,8 +80,9 @@
     const saved = localStorage.getItem("midnight-circuit-difficulty");
     if (saved in DIFFICULTY) difficulty = saved;
   } catch {
-    /* Storage can be disabled. */
+    // 瀏覽器可能不能儲存。
   }
+  // 四位鬥士的選擇按鈕。
   const choiceButtons = FIGHTERS.map((fighter) => {
     const button = document.createElement("button");
     button.type = "button";
@@ -95,6 +97,7 @@
         <span class="choice-role">${fighter.role}</span>
       </span>
       <span class="choice-seats" aria-hidden="true"></span>`;
+    // 選擇一位鬥士。
     button.addEventListener("click", () => {
       selection[seat] = fighter;
       selectionSound();
@@ -124,16 +127,19 @@
     return CONTROLS.find((entry) => entry.action === action).labels[index];
   }
 
+  // 選擇的音效。
   function selectionSound() {
     audio.activate();
     audio.cue({ type: "select" });
   }
 
+  // 文字有變才寫入，減少重排。
   function text(element, value) {
     const next = String(value);
     if (element.textContent !== next) element.textContent = next;
   }
 
+  // 依目前選擇更新整個選角畫面。
   function renderSelection() {
     const fighter = selection[seat];
     if (mode === "arcade") seat = 0;
@@ -207,6 +213,7 @@
     }
   }
 
+  // 產生操作說明表。
   function buildHelp() {
     const padLabel = (action) =>
       PAD_LABELS[action] ?? { left: "←", right: "→", crouch: "↓" }[action];
@@ -231,13 +238,14 @@
       )}</tbody>`;
   }
 
+  // ---------- 對戰介面 ----------
+
+  // 依模式產生鍵盤提示與觸控按鈕。
   function buildBattleControls() {
     const desktop = get("battle-keys");
     const hint = (labels, name) =>
       `<span>${labels.map((key) => `<kbd>${key}</kbd>`).join("")}${name}</span>`;
-    const pad = padCount
-      ? '<span class="pad-note">🎮 手把已連線</span>'
-      : "";
+    const pad = padCount ? '<span class="pad-note">🎮 手把已連線</span>' : "";
     const help = (label) =>
       '<button type="button" class="utility" id="battle-help">' +
       `${label}</button>`;
@@ -265,6 +273,7 @@
     const players = mode === "versus" ? [0, 1] : [0];
     touchControls.innerHTML = players
       .map((index) => {
+        // 一顆觸控按鈕。
         const button = ({ action, name }) =>
           '<button type="button" class="utility touch-button" ' +
           `data-action="${action}" aria-label="${name}">` +
@@ -292,6 +301,7 @@
     }
   }
 
+  // 音效與音樂按鈕的狀態。
   function renderSound() {
     get("sound-button").setAttribute("aria-pressed", audio.enabled);
     text(get("sound-label"), audio.enabled ? "音效開啟" : "音效關閉");
@@ -299,6 +309,7 @@
     text(get("music-button"), audio.musicEnabled ? "配樂開啟" : "配樂關閉");
   }
 
+  // 收集一位玩家的介面元素。
   function collectHud(id, powerId) {
     const hud = get(id);
     const power = get(powerId);
@@ -363,6 +374,7 @@
     collectHud("right-hud", "right-power"),
   ];
 
+  // 更新一條長條，也更新給螢幕閱讀器的值。
   function setGauge(element, fill, value) {
     const displayed = String(Math.floor(value));
     if (element.getAttribute("aria-valuenow") !== displayed)
@@ -370,6 +382,7 @@
     fill.style.setProperty("--amount", value / 100);
   }
 
+  // 技能冷卻的小圖示。
   function setChip({ root, time }, remaining, total) {
     root.style.setProperty("--amount", 1 - remaining / total);
     const ready = String(remaining <= 0);
@@ -377,6 +390,7 @@
     text(time, remaining > 0 ? remaining.toFixed(1) : "");
   }
 
+  // 每一幀更新時間、血條、能量、連段與冷卻。
   function renderHud(dt) {
     const seconds = Math.ceil(match.remaining);
     const shown = match.training ? "∞" : String(seconds);
@@ -429,9 +443,7 @@
       if (panel.touchSkill) {
         text(
           panel.touchSkill,
-          skillReady
-            ? "技一"
-            : `技一 ${fighter.specialCooldown.toFixed(1)}`,
+          skillReady ? "技一" : `技一 ${fighter.specialCooldown.toFixed(1)}`,
         );
         text(
           panel.touchSkill2,
@@ -462,6 +474,7 @@
     }
   }
 
+  // 玩家的稱呼，依模式不同。
   function playerLabel(index) {
     if (match.demo) return index === 0 ? "電腦 1" : "電腦 2";
     return index === 0
@@ -473,6 +486,7 @@
           : "玩家 2";
   }
 
+  // 畫面中央的公告。
   function showAnnouncement(heading, subtitle, tone) {
     if (!heading) {
       announcement.hidden = true;
@@ -484,6 +498,7 @@
     announcement.hidden = false;
   }
 
+  // 依比賽階段顯示公告。
   function renderAnnouncement() {
     if (match.phase === "intro") {
       if (match.training)
@@ -518,6 +533,7 @@
     }
   }
 
+  // 結算畫面與統計。
   function showResult() {
     audio.setBattle(false);
     const { winner } = match.result;
@@ -545,6 +561,7 @@
     );
     // 整場的戰績：左右兩欄是雙方，中間是項目名稱
     const [a, b] = match.stats;
+    // 統計表的每一列。
     const rows = [
       ["造成傷害", a.damage, b.damage],
       ["命中次數", a.hits, b.hits],
@@ -555,7 +572,8 @@
     const names = match.profiles.map(
       ({ name }) => `<th scope="col">${name}</th>`,
     );
-    const cell = (mine, other) => `<td data-best="${mine > other}">${mine}</td>`;
+    const cell = (mine, other) =>
+      `<td data-best="${mine > other}">${mine}</td>`;
     get("result-stats").innerHTML =
       `<thead><tr>${names.join("<td></td>")}</tr></thead>` +
       `<tbody>${rows
@@ -571,6 +589,9 @@
     clearInputs();
   }
 
+  // ---------- 比賽流程 ----------
+
+  // 關閉所有視窗。
   function closeDialogs() {
     if (pauseDialog.open) pauseDialog.close();
     if (helpDialog.open) helpDialog.close();
@@ -591,11 +612,13 @@
     };
   }
 
+  // 重新開始（街機從第一關）。
   function newRun() {
     arcade = null;
     startMatch();
   }
 
+  // 再打一場；街機贏了就前往下一關。
   function rematch() {
     if (arcade?.won) {
       if (arcade.stage < arcade.order.length - 1) arcade.stage += 1;
@@ -604,6 +627,7 @@
     startMatch();
   }
 
+  // 建立一場比賽並切換到對戰畫面。
   function startMatch() {
     closeDialogs();
     clearInputs();
@@ -668,6 +692,7 @@
     renderer.draw(match, 0);
   }
 
+  // 回到選角。
   function backToSelection() {
     audio.setBattle(false);
     match = null;
@@ -679,12 +704,14 @@
     window.scrollTo(0, 0);
   }
 
+  // 打開操作說明。
   function openHelp() {
     audio.setBattle(false);
     clearInputs();
     if (!helpDialog.open) helpDialog.showModal();
   }
 
+  // 打開暫停選單。
   function openPause() {
     audio.setBattle(false);
     if (!match || match.phase === "over" || pauseDialog.open || helpDialog.open)
@@ -732,6 +759,7 @@
     }
   }
 
+  // 手把的開始鍵，依目前畫面做不同的事。
   function handleStart() {
     if (!selectScreen.hidden && !startButton.disabled) newRun();
     else if (pauseDialog.open) pauseDialog.close();
@@ -739,6 +767,9 @@
     else if (match) openPause();
   }
 
+  // ---------- 輸入 ----------
+
+  // 清空所有輸入。
   function clearInputs() {
     for (const held of keyboard) held.clear();
     for (const actions of queued) actions.length = 0;
@@ -747,15 +778,18 @@
     pointers.clear();
   }
 
+  // 現在能不能操作角色。
   function acceptsInput() {
     return (
       match && match.phase !== "over" && !pauseDialog.open && !helpDialog.open
     );
   }
 
+  // 合併鍵盤、手把與觸控，產生規則引擎要的輸入。
   function pullInputs() {
     return keyboard.map((held, index) => {
       const pad = pads[index].held;
+      // 這個動作有沒有被按住。
       const active = (action) =>
         held.has(action) ||
         pad.has(action) ||
@@ -773,6 +807,9 @@
     });
   }
 
+  // ---------- 主迴圈 ----------
+
+  // 處理比賽事件，轉給特效、音效與介面。
   function handleEvents() {
     for (const event of match.drainEvents()) {
       if (event.type === "super-flash") {
@@ -804,6 +841,7 @@
   // 畫面順不順：累計最近的幀間隔，太慢就先把畫布調回 1 倍解析度，再關掉泛光
   const pace = { sum: 0, frames: 0 };
 
+  // 累計畫面速度，太慢就降低解析度或特效。
   function watchPace(dt) {
     if (renderer.lite || dt <= 0) return;
     pace.sum += dt;
@@ -816,6 +854,7 @@
     pace.sum = pace.frames = 0;
   }
 
+  // 每一幀：固定步長推進比賽，再繪圖。
   function frame(now) {
     const dt = Math.max(0, Math.min(0.065, (now - lastTime) / 1000));
     lastTime = now;
@@ -849,29 +888,35 @@
   }
 
   for (const button of modeButtons)
+    // ---------- 按鈕與鍵盤事件 ----------
+
+    // 切換模式。
     button.addEventListener("click", () => {
       mode = button.dataset.mode;
       selectionSound();
       renderSelection();
     });
   for (const button of difficultyButtons)
+    // 切換難度並記住。
     button.addEventListener("click", () => {
       difficulty = button.dataset.difficulty;
       try {
         localStorage.setItem("midnight-circuit-difficulty", difficulty);
       } catch {
-        /* Storage can be disabled. */
+        // 瀏覽器可能不能儲存。
       }
       selectionSound();
       renderSelection();
     });
   for (const button of seatButtons)
+    // 切換要幫哪一位玩家選角。
     button.addEventListener("click", () => {
       seat = Number(button.dataset.seat);
       selectionSound();
       renderSelection();
     });
 
+  // 選角用方向鍵移動。
   roster.addEventListener("keydown", (event) => {
     const index = choiceButtons.indexOf(event.target);
     if (
@@ -898,6 +943,7 @@
     return { index: 0, action, hold };
   }
 
+  // 按下按鍵。
   document.addEventListener("keydown", (event) => {
     if (!acceptsInput() || event.ctrlKey || event.metaKey || event.altKey)
       return;
@@ -917,11 +963,13 @@
     keyboard[binding.index].add(binding.action);
   });
 
+  // 放開按鍵。
   document.addEventListener("keyup", (event) => {
     const binding = bindingFor(event.code);
     if (binding) keyboard[binding.index].delete(binding.action);
   });
 
+  // 觸控按下。
   touchControls.addEventListener("pointerdown", (event) => {
     const button = event.target.closest("[data-action]");
     if (!button || !acceptsInput() || event.button !== 0) return;
@@ -954,6 +1002,7 @@
       queued[held.index].push(held.action);
   });
 
+  // 觸控放開。
   function releasePointer(event) {
     const held = pointers.get(event.pointerId);
     if (!held) return;
@@ -987,10 +1036,12 @@
     }
   });
   window.addEventListener("blur", clearInputs);
+  // 切到背景就暫停。
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) openPause();
   });
   get("help-button").addEventListener("click", openHelp);
+  // 音樂與音效開關。
   get("music-button").addEventListener("click", () => {
     audio.setMusicEnabled(!audio.musicEnabled);
     renderSound();
@@ -1013,6 +1064,7 @@
   get("restart-button").addEventListener("click", startMatch);
   get("result-back").addEventListener("click", backToSelection);
   get("rematch-button").addEventListener("click", rematch);
+  // 手把接上或拔掉。
   window.addEventListener("gamepadconnected", () => pollPads());
   window.addEventListener("gamepaddisconnected", () => pollPads());
 

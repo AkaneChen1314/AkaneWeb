@@ -1,31 +1,51 @@
+/*
+ * 測試：槍口與掩體（貼牆開火、開鏡、收槍與彈孔）。
+ */
 import assert from "node:assert/strict";
 import { createHarness } from "./test-harness.mjs";
 
+// 建立拿著步槍的玩家，並記下每發子彈的路徑與命中位置。
 function weaponHarness() {
   const h = createHarness();
   h.run(`
-    scene.add(camera);camera.position.set(0,1.68,0);camera.lookAt(0,1.68,-10);
-    pitch=new THREE.Group();gameState='playing';createWeapon();Math.random=()=>.5;
-    const shotPaths=[],shotImpacts=[];let shotSoundCount=0;
-    createTracer=(start,end)=>shotPaths.push({start:start.clone(),end:end.clone()});
-    createImpact=point=>{if(point)shotImpacts.push(point.clone());};
-    playGunshot=()=>{shotSoundCount++;};
+    scene.add(camera);
+    camera.position.set(0, 1.68, 0);
+    camera.lookAt(0, 1.68, -10);
+    pitch = new THREE.Group();
+    gameState = "playing";
+    createWeapon();
+    Math.random = () => 0.5;
+    const shotPaths = [],
+      shotImpacts = [];
+    let shotSoundCount = 0;
+    createTracer = (start, end) =>
+      shotPaths.push({ start: start.clone(), end: end.clone() });
+    createImpact = (point) => {
+      if (point) shotImpacts.push(point.clone());
+    };
+    playGunshot = () => {
+      shotSoundCount++;
+    };
   `);
   return h;
 }
 
 const checks = [];
+// 登記一項測試。
 function test(name, execute) {
   checks.push({ name, execute });
 }
 
+// 貼著正面掩體仍可連續開火，每發都打在牆上。
 test("near frontal cover never disables continuous fire and each bullet strikes the wall", () => {
   const h = weaponHarness();
   h.run(`
-    addBox(0,2,-1.05,4,4,.1,0x666666);aiming=true;
-    for(let i=0;i<40;i++)updateWeaponPose(1/60,i*16);
-    scene.updateMatrixWorld(true);mouseDown=true;
-    for(let i=0;i<10;i++)shoot(1000+i*100);
+    addBox(0, 2, -1.05, 4, 4, 0.1, 0x666666);
+    aiming = true;
+    for (let i = 0; i < 40; i++) updateWeaponPose(1 / 60, i * 16);
+    scene.updateMatrixWorld(true);
+    mouseDown = true;
+    for (let i = 0; i < 10; i++) shoot(1000 + i * 100);
   `);
   assert.equal(h.run("ammo"), 20);
   assert.equal(h.run("shots"), 10);
@@ -41,30 +61,41 @@ test("near frontal cover never disables continuous fire and each bullet strikes 
   );
 });
 
+// 對牆連射到打空會自動換彈，並接著射擊。
 test("a wall burst empties the magazine, reloads automatically and resumes a held trigger", () => {
   const h = weaponHarness();
   h.run(`
-    addBox(0,2,-1.05,4,4,.1,0x666666);scene.updateMatrixWorld(true);
-    mouseDown=true;for(let i=0;i<30;i++)shoot(1000+i*100);
+    addBox(0, 2, -1.05, 4, 4, 0.1, 0x666666);
+    scene.updateMatrixWorld(true);
+    mouseDown = true;
+    for (let i = 0; i < 30; i++) shoot(1000 + i * 100);
   `);
   assert.equal(h.run("ammo"), 0);
   assert.equal(h.run("reloading"), true);
   assert.equal(h.run("mouseDown"), true);
   assert.equal(h.run("shots"), 30);
-  h.run("updateCombatTimers(2,6000);updatePlayer(1/60,6100);");
+  h.run(`
+    updateCombatTimers(2, 6000);
+    updatePlayer(1 / 60, 6100);
+  `);
   assert.equal(h.run("ammo"), 29);
   assert.equal(h.run("reserve"), 90);
   assert.equal(h.run("shots"), 31);
   assert.equal(h.run("shotSoundCount"), 31);
 });
 
+// 旁邊的掩體不會影響開鏡與射擊。
 test("side cover does not cancel a clear ADS sightline or suppress its shot", () => {
   const h = weaponHarness();
   h.run(`
-    camera.position.y=1.28;camera.lookAt(0,1.28,-10);
-    addBox(.65,1.5,-1.15,.65,3,.65,0x666666);createEnemy(0,-8,0x555555,0);
-    aiming=true;for(let i=0;i<90;i++)updateWeaponPose(1/60,i*16);
-    scene.updateMatrixWorld(true);shoot(2000);
+    camera.position.y = 1.28;
+    camera.lookAt(0, 1.28, -10);
+    addBox(0.65, 1.5, -1.15, 0.65, 3, 0.65, 0x666666);
+    createEnemy(0, -8, 0x555555, 0);
+    aiming = true;
+    for (let i = 0; i < 90; i++) updateWeaponPose(1 / 60, i * 16);
+    scene.updateMatrixWorld(true);
+    shoot(2000);
   `);
   assert.ok(
     h.run("adsAmount") > 0.995,
@@ -85,13 +116,17 @@ test("side cover does not cancel a clear ADS sightline or suppress its shot", ()
   );
 });
 
+// 槍口穿出薄牆時，不能打到牆後的敵人。
 test("an unrefreshed muzzle beyond a thin wall cannot shoot enemies behind it", () => {
   const h = weaponHarness();
   h.run(`
-    camera.position.y=1.28;camera.lookAt(0,1.28,-10);
-    addBox(0,1.5,-.65,4,3,.04,0x666666);createEnemy(0,-5,0x555555,0);
+    camera.position.y = 1.28;
+    camera.lookAt(0, 1.28, -10);
+    addBox(0, 1.5, -0.65, 4, 3, 0.04, 0x666666);
+    createEnemy(0, -5, 0x555555, 0);
     scene.updateMatrixWorld(true);
-    const originalMuzzle=muzzleAnchor.getWorldPosition(new THREE.Vector3());shoot(1000);
+    const originalMuzzle = muzzleAnchor.getWorldPosition(new THREE.Vector3());
+    shoot(1000);
   `);
   assert.ok(
     h.run("originalMuzzle.z") < -0.67,
@@ -113,12 +148,16 @@ test("an unrefreshed muzzle beyond a thin wall cannot shoot enemies behind it", 
   );
 });
 
+// 轉角處沒開鏡會打到掩體，開鏡後槍管露出才打得到。
 test("corner cover intercepts a hip muzzle until ADS exposes the barrel", () => {
   const h = weaponHarness();
   h.run(`
-    camera.position.y=1.28;camera.lookAt(0,1.28,-10);
-    addBox(1.05,1.5,-.65,1.9,3,.05,0x666666);createEnemy(0,-8,0x555555,0);
-    scene.updateMatrixWorld(true);shoot(1000);
+    camera.position.y = 1.28;
+    camera.lookAt(0, 1.28, -10);
+    addBox(1.05, 1.5, -0.65, 1.9, 3, 0.05, 0x666666);
+    createEnemy(0, -8, 0x555555, 0);
+    scene.updateMatrixWorld(true);
+    shoot(1000);
   `);
   assert.equal(h.run("ammo"), 29);
   assert.equal(
@@ -127,7 +166,12 @@ test("corner cover intercepts a hip muzzle until ADS exposes the barrel", () => 
     "a blocked off-center barrel cannot exploit a clear camera ray",
   );
   h.run(
-    "aiming=true;for(let i=0;i<100;i++)updateWeaponPose(1/60,1100+i*16);scene.updateMatrixWorld(true);shoot(4000);",
+    `
+      aiming = true;
+      for (let i = 0; i < 100; i++) updateWeaponPose(1 / 60, 1100 + i * 16);
+      scene.updateMatrixWorld(true);
+      shoot(4000);
+    `,
   );
   assert.ok(h.run("adsAmount") > 0.995);
   assert.ok(
@@ -137,15 +181,28 @@ test("corner cover intercepts a hip muzzle until ADS exposes the barrel", () => 
   assert.equal(h.run("ammo"), 28);
 });
 
+// 只擋移動的圍欄不擋子彈。
 test("a movement-only fence collider preserves its intended bullet transparency", () => {
   const h = weaponHarness();
   h.run(`
-    camera.position.y=1.28;camera.lookAt(0,1.28,-10);
-    collisionBoxes.push(new THREE.Box3(new THREE.Vector3(-2,0,-1.05),new THREE.Vector3(2,3,-1)));
-    const fence=new THREE.Mesh(new THREE.PlaneGeometry(4,3),new THREE.MeshBasicMaterial({transparent:true,opacity:.3}));
-    fence.position.set(0,1.5,-1);scene.add(fence);createEnemy(0,-6,0x555555,0);
-    for(let i=0;i<40;i++)updateWeaponPose(1/60,i*16);
-    scene.updateMatrixWorld(true);shoot(1000);
+    camera.position.y = 1.28;
+    camera.lookAt(0, 1.28, -10);
+    collisionBoxes.push(
+      new THREE.Box3(
+        new THREE.Vector3(-2, 0, -1.05),
+        new THREE.Vector3(2, 3, -1),
+      ),
+    );
+    const fence = new THREE.Mesh(
+      new THREE.PlaneGeometry(4, 3),
+      new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.3 }),
+    );
+    fence.position.set(0, 1.5, -1);
+    scene.add(fence);
+    createEnemy(0, -6, 0x555555, 0);
+    for (let i = 0; i < 40; i++) updateWeaponPose(1 / 60, i * 16);
+    scene.updateMatrixWorld(true);
+    shoot(1000);
   `);
   assert.equal(h.run("ammo"), 29);
   assert.ok(
@@ -154,12 +211,16 @@ test("a movement-only fence collider preserves its intended bullet transparency"
   );
 });
 
+// 斜掩體的外框不會變成看不見的擋彈牆。
 test("rotated cover cannot turn its oversized movement AABB into an invisible bullet blocker", () => {
   const h = weaponHarness();
   h.run(`
-    camera.position.y=1.28;camera.lookAt(0,1.28,-10);
-    addBox(1.2,1.5,-.8,4,3,.1,0x666666,{rotation:Math.PI/4});createEnemy(0,-6,0x555555,0);
-    scene.updateMatrixWorld(true);shoot(1000);
+    camera.position.y = 1.28;
+    camera.lookAt(0, 1.28, -10);
+    addBox(1.2, 1.5, -0.8, 4, 3, 0.1, 0x666666, { rotation: Math.PI / 4 });
+    createEnemy(0, -6, 0x555555, 0);
+    scene.updateMatrixWorld(true);
+    shoot(1000);
   `);
   assert.equal(
     h.run("collisionBoxes[0].containsPoint(camera.position)"),
@@ -170,12 +231,16 @@ test("rotated cover cannot turn its oversized movement AABB into an invisible bu
   assert.ok(h.run("enemies[0].userData.state.health") < 100);
 });
 
+// 從實心物件裡開槍仍會打中出口那一面。
 test("starting inside a solid surface still hits its exit face and restores material sidedness", () => {
   const h = weaponHarness();
   h.run(`
-    camera.position.y=1.28;camera.lookAt(0,1.28,-10);
-    const enclosingWall=addBox(0,1.5,0,2,3,2,0x666666);createEnemy(0,-6,0x555555,0);
-    scene.updateMatrixWorld(true);shoot(1000);
+    camera.position.y = 1.28;
+    camera.lookAt(0, 1.28, -10);
+    const enclosingWall = addBox(0, 1.5, 0, 2, 3, 2, 0x666666);
+    createEnemy(0, -6, 0x555555, 0);
+    scene.updateMatrixWorld(true);
+    shoot(1000);
   `);
   assert.equal(h.run("ammo"), 29);
   assert.equal(h.run("enemies[0].userData.state.health"), 100);
@@ -190,22 +255,30 @@ test("starting inside a solid surface still hits its exit face and restores mate
   );
 });
 
+// 名牌與血條不會擋子彈。
 test("floating nameplates and health bars never become ballistic targets", () => {
   const h = weaponHarness();
   h.run(`
-    camera.position.set(0,2.52,0);camera.lookAt(0,2.52,-10);createEnemy(0,-6,0x555555,0);
-    scene.updateMatrixWorld(true);shoot(1000);
+    camera.position.set(0, 2.52, 0);
+    camera.lookAt(0, 2.52, -10);
+    createEnemy(0, -6, 0x555555, 0);
+    scene.updateMatrixWorld(true);
+    shoot(1000);
   `);
   assert.equal(h.run("ammo"), 29);
   assert.equal(h.run("enemies[0].userData.state.health"), 100);
   assert.equal(h.run("hits"), 0);
 });
 
+// 往下射擊會打中地板。
 test("downward fire hits the real arena floor instead of disappearing below it", () => {
   const h = weaponHarness();
   h.run(`
-    createArena();camera.position.set(0,1.68,64);camera.lookAt(0,0,62);
-    scene.updateMatrixWorld(true);shoot(1000);
+    createArena();
+    camera.position.set(0, 1.68, 64);
+    camera.lookAt(0, 0, 62);
+    scene.updateMatrixWorld(true);
+    shoot(1000);
   `);
   assert.equal(h.run("ammo"), 29);
   assert.equal(h.run("shotImpacts.length"), 1);
@@ -215,22 +288,31 @@ test("downward fire hits the real arena floor instead of disappearing below it",
   );
 });
 
+// 靠近掩體時整支步槍會收起，離開後平順地放下。
 test("the complete rigid rifle retracts on first close-cover update and returns smoothly after leaving", () => {
   const h = weaponHarness();
   h.run(`
-    addBox(0,2,-.53,6,4,.1,0x666666);updateWeaponPose(1/60,1000);scene.updateMatrixWorld(true);
-    function rigidRifleFront(){
-      const point=new THREE.Vector3();let front=0;
-      weapon.traverse(object=>{
-        if(!object.isMesh||object.name==='flash'||object.userData.arm)return;
-        const positions=object.geometry.attributes.position;
-        for(let i=0;i<positions.count;i++){
-          point.fromBufferAttribute(positions,i);object.localToWorld(point);camera.worldToLocal(point);front=Math.min(front,point.z);
+    addBox(0, 2, -0.53, 6, 4, 0.1, 0x666666);
+    updateWeaponPose(1 / 60, 1000);
+    scene.updateMatrixWorld(true);
+    function rigidRifleFront() {
+      const point = new THREE.Vector3();
+      let front = 0;
+      weapon.traverse((object) => {
+        if (!object.isMesh || object.name === "flash" || object.userData.arm)
+          return;
+        const positions = object.geometry.attributes.position;
+        for (let i = 0; i < positions.count; i++) {
+          point.fromBufferAttribute(positions, i);
+          object.localToWorld(point);
+          camera.worldToLocal(point);
+          front = Math.min(front, point.z);
         }
       });
       return front;
     }
-    const firstRetraction=weaponRetraction,firstFront=rigidRifleFront();
+    const firstRetraction = weaponRetraction,
+      firstFront = rigidRifleFront();
   `);
   assert.ok(
     h.run("firstRetraction") > 0.4,
@@ -241,33 +323,59 @@ test("the complete rigid rifle retracts on first close-cover update and returns 
     "the real rigid vertices remain on the camera side of the wall at .48m",
   );
   h.run(
-    "camera.position.z=3.1;camera.lookAt(0,1.68,0);updateWeaponPose(1/60,1100);const firstReturn=weaponRetraction;",
+    `
+      camera.position.z = 3.1;
+      camera.lookAt(0, 1.68, 0);
+      updateWeaponPose(1 / 60, 1100);
+      const firstReturn = weaponRetraction;
+    `,
   );
   assert.ok(
     h.run("firstReturn") > 0 && h.run("firstReturn") < h.run("firstRetraction"),
     "leaving cover eases the rifle outward",
   );
-  h.run("for(let i=0;i<90;i++)updateWeaponPose(1/60,1200+i*16);");
+  h.run(`
+    for (let i = 0; i < 90; i++) updateWeaponPose(1 / 60, 1200 + i * 16);
+  `);
   assert.ok(h.run("weaponRetraction") < 0.001);
   assert.ok(Math.abs(h.run("weapon.position.z") + 0.6) < 0.003);
 });
 
+// 在掩體前開鏡不會反覆切換，瞄具也不會跑到鏡頭後面。
 test("front-cover ADS hysteresis prevents toggling and keeps the retained optic in front of the camera", () => {
   const h = weaponHarness();
   h.run(`
-    const movingWall=new THREE.Mesh(new THREE.BoxGeometry(6,4,.1),new THREE.MeshBasicMaterial());scene.add(movingWall);worldMeshes.push(movingWall);collisionBoxes.push(new THREE.Box3());
-    function setCenterClearance(value){movingWall.position.set(0,2,-value-.105);scene.updateMatrixWorld(true);collisionBoxes[0].setFromObject(movingWall);}
-    aiming=true;setCenterClearance(1.45);for(let i=0;i<90;i++)updateWeaponPose(1/60,i*16);
+    const movingWall = new THREE.Mesh(
+      new THREE.BoxGeometry(6, 4, 0.1),
+      new THREE.MeshBasicMaterial(),
+    );
+    scene.add(movingWall);
+    worldMeshes.push(movingWall);
+    collisionBoxes.push(new THREE.Box3());
+    function setCenterClearance(value) {
+      movingWall.position.set(0, 2, -value - 0.105);
+      scene.updateMatrixWorld(true);
+      collisionBoxes[0].setFromObject(movingWall);
+    }
+    aiming = true;
+    setCenterClearance(1.45);
+    for (let i = 0; i < 90; i++) updateWeaponPose(1 / 60, i * 16);
   `);
   assert.equal(h.run("adsWallSuppressed"), false);
   assert.ok(h.run("adsAmount") > 0.995);
   h.run(
-    "setCenterClearance(1);for(let i=0;i<60;i++)updateWeaponPose(1/60,2000+i*16);",
+    `
+      setCenterClearance(1);
+      for (let i = 0; i < 60; i++) updateWeaponPose(1 / 60, 2000 + i * 16);
+    `,
   );
   assert.equal(h.run("adsWallSuppressed"), true);
   assert.ok(h.run("adsAmount") < 0.005);
   for (const clearance of [1.18, 1.22, 1.28, 1.2, 1.25]) {
-    h.run(`setCenterClearance(${clearance});updateWeaponPose(1/60,3200);`);
+    h.run(`
+      setCenterClearance(${clearance});
+      updateWeaponPose(1 / 60, 3200);
+    `);
     assert.equal(
       h.run("adsWallSuppressed"),
       true,
@@ -275,13 +383,20 @@ test("front-cover ADS hysteresis prevents toggling and keeps the retained optic 
     );
   }
   h.run(
-    "setCenterClearance(1.45);for(let i=0;i<90;i++)updateWeaponPose(1/60,4000+i*16);",
+    `
+      setCenterClearance(1.45);
+      for (let i = 0; i < 90; i++) updateWeaponPose(1 / 60, 4000 + i * 16);
+    `,
   );
   assert.equal(h.run("adsWallSuppressed"), false);
   assert.ok(h.run("adsAmount") > 0.995);
   for (const clearance of [1.28, 1.2, 1.18, 1.25]) {
     h.run(
-      `setCenterClearance(${clearance});for(let i=0;i<12;i++)updateWeaponPose(1/60,5600+i*16);scene.updateMatrixWorld(true);`,
+      `
+        setCenterClearance(${clearance});
+        for (let i = 0; i < 12; i++) updateWeaponPose(1 / 60, 5600 + i * 16);
+        scene.updateMatrixWorld(true);
+      `,
     );
     assert.equal(
       h.run("adsWallSuppressed"),
@@ -298,14 +413,29 @@ test("front-cover ADS hysteresis prevents toggling and keeps the retained optic 
   }
 });
 
+// 貼牆收槍時，畫面上仍看得到槍身。
 test("point-blank high-ready keeps visible rigid gun detail in the viewport", () => {
   const h = weaponHarness();
   h.run(`
-    addBox(0,2,-.53,4,4,.1,0x666666);
-    for(let i=0;i<80;i++)updateWeaponPose(1/60,i*16);
-    scene.updateMatrixWorld(true);let visibleWeaponPoints=0;
-    const points=weapon.userData.clearancePoints;
-    for(let i=0;i<points.length;i+=3){const point=weapon.localToWorld(new THREE.Vector3(points[i],points[i+1],points[i+2])).project(camera);if(Math.abs(point.x)<1&&Math.abs(point.y)<1&&point.z>-1&&point.z<1)visibleWeaponPoints++;}
+    addBox(0, 2, -0.53, 4, 4, 0.1, 0x666666);
+    for (let i = 0; i < 80; i++) updateWeaponPose(1 / 60, i * 16);
+    scene.updateMatrixWorld(true);
+    let visibleWeaponPoints = 0;
+    const points = weapon.userData.clearancePoints;
+    for (let i = 0; i < points.length; i += 3) {
+      const point = weapon
+        .localToWorld(
+          new THREE.Vector3(points[i], points[i + 1], points[i + 2]),
+        )
+        .project(camera);
+      if (
+        Math.abs(point.x) < 1 &&
+        Math.abs(point.y) < 1 &&
+        point.z > -1 &&
+        point.z < 1
+      )
+        visibleWeaponPoints++;
+    }
   `);
   assert.ok(h.run("highReadyAmount") > 0.99);
   assert.ok(
@@ -313,7 +443,18 @@ test("point-blank high-ready keeps visible rigid gun detail in the viewport", ()
     "close cover should stow the gun visibly rather than hiding it behind the camera",
   );
   h.run(
-    'const barrel=weapon.getObjectByName("barrel"),barrelVertices=barrel.geometry.attributes.position;let barrelNearest=Infinity;for(let i=0;i<barrelVertices.count;i++){const p=barrel.localToWorld(new THREE.Vector3().fromBufferAttribute(barrelVertices,i));camera.worldToLocal(p);barrelNearest=Math.min(barrelNearest,-p.z);}',
+    `
+      const barrel = weapon.getObjectByName("barrel"),
+        barrelVertices = barrel.geometry.attributes.position;
+      let barrelNearest = Infinity;
+      for (let i = 0; i < barrelVertices.count; i++) {
+        const p = barrel.localToWorld(
+          new THREE.Vector3().fromBufferAttribute(barrelVertices, i),
+        );
+        camera.worldToLocal(p);
+        barrelNearest = Math.min(barrelNearest, -p.z);
+      }
+    `,
   );
   assert.ok(
     h.run("barrelNearest") > 0.12,
@@ -325,7 +466,11 @@ test("point-blank high-ready keeps visible rigid gun detail in the viewport", ()
     "upright stow cannot rotate an arm through the eye",
   );
   h.run(
-    "collisionBoxes.length=0;worldMeshes.length=0;for(let i=0;i<90;i++)updateWeaponPose(1/60,2000+i*16);",
+    `
+      collisionBoxes.length = 0;
+      worldMeshes.length = 0;
+      for (let i = 0; i < 90; i++) updateWeaponPose(1 / 60, 2000 + i * 16);
+    `,
   );
   assert.equal(
     h.run("weapon.userData.arms.every(arm=>arm.visible)"),
@@ -334,10 +479,18 @@ test("point-blank high-ready keeps visible rigid gun detail in the viewport", ()
   );
 });
 
+// 彈孔要平貼在牆面上。
 test("close-wall bullet marks lie flat on their actual surface instead of floating blobs", () => {
   const h = createHarness();
   h.run(
-    "const normal=new THREE.Vector3(1,0,0);createImpact(new THREE.Vector3(.5,1,0),normal);const decal=bulletDecals[0],decalNormal=new THREE.Vector3(0,0,1).applyQuaternion(decal.quaternion);",
+    `
+      const normal = new THREE.Vector3(1, 0, 0);
+      createImpact(new THREE.Vector3(0.5, 1, 0), normal);
+      const decal = bulletDecals[0],
+        decalNormal = new THREE.Vector3(0, 0, 1).applyQuaternion(
+          decal.quaternion,
+        );
+    `,
   );
   assert.ok(h.run("decalNormal.dot(normal)") > 0.9999);
   assert.equal(h.run("decal.geometry.type"), "CircleGeometry");
@@ -346,6 +499,7 @@ test("close-wall bullet marks lie flat on their actual surface instead of floati
   assert.ok(Math.abs(h.run("decal.position.x") - 0.5015) < 1e-7);
 });
 
+// 執行所有測試。
 let failed = 0;
 for (const { name, execute } of checks) {
   try {

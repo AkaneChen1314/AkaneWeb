@@ -1,7 +1,7 @@
 /*
  * 檔案導讀：手榴彈共用運動計算：預覽路徑與實際投擲共用規則，保持兩者一致。
  */
-// Shared fixed-step grenade physics. Preview and live grenades use the same integrator.
+// 手榴彈的固定步長物理；預覽與真正的手榴彈用同一套計算。
 import { sweepSphereCollider, sphereSupportedBy } from "./spatial-collision.js";
 export const GRENADE_FUSE = 1.75;
 export const GRENADE_BLAST_RADIUS = 7.5;
@@ -10,6 +10,7 @@ const RADIUS = 0.12;
 const FLOOR = 0.13;
 const REST_SPEED = 0.55;
 
+// 這一步最先碰到的東西。
 function firstCollision(position, delta, boxes) {
   let hit = null;
   if (delta.y < 0 && position.y + delta.y < FLOOR) {
@@ -25,9 +26,9 @@ function firstCollision(position, delta, boxes) {
   return hit;
 }
 
+// 建立手榴彈的初始狀態：起點、速度與引信。
 export function createGrenadeMotion(origin, direction, boxes = []) {
-  // Recover safely from a spawn point slightly inside scenery instead of letting
-  // a grenade escape through the far face (or bounce forever at time zero).
+  // 起點稍微卡進場景時安全地移出來，不會穿到另一面，也不會在原地一直彈。
   origin = { ...origin };
   for (let pass = 0; pass < 6; pass++) {
     let corrected = false;
@@ -49,9 +50,8 @@ export function createGrenadeMotion(origin, direction, boxes = []) {
   const horizontal = Math.hypot(direction.x, direction.z),
     rightX = horizontal > 1e-6 ? -direction.z / horizontal : 1,
     rightZ = horizontal > 1e-6 ? direction.x / horizontal : 0;
-  // Release from the right hand, not exactly along the optical center: a
-  // center-origin arc projects onto itself and looks like overlapping lines.
-  // Sweep the complete hand offset so it can never spawn through close cover.
+  // 從右手丟出，不是正中央：從正中央丟的拋物線在畫面上會疊成一條線。整段手的位
+  // 移都要檢查，不會從近的掩體後面冒出來。
   const offset = {
     x: direction.x * 0.6 + rightX * 0.24,
     y: direction.y * 0.6 - 0.18,
@@ -82,6 +82,7 @@ export function createGrenadeMotion(origin, direction, boxes = []) {
   };
 }
 
+// 推進物理：重力、反彈、摩擦與停住。
 export function advanceGrenadeMotion(state, dt, boxes = []) {
   state.accumulator += Number.isFinite(dt) ? Math.max(0, dt) : 0;
   while (state.accumulator + 1e-9 >= STEP && state.life > 1e-9) {
@@ -97,6 +98,7 @@ export function advanceGrenadeMotion(state, dt, boxes = []) {
         state.supportBox = null;
       }
     }
+    // 已經停在地面。
     if (state.grounded) {
       state.position.y = state.supportHeight;
       state.velocity.y = 0;
@@ -109,6 +111,7 @@ export function advanceGrenadeMotion(state, dt, boxes = []) {
       }
     } else state.velocity.y -= 12 * step;
     let remaining = step;
+    // 同一步最多處理六次碰撞。
     for (let collision = 0; collision < 6 && remaining > 1e-6; collision++) {
       const delta = {
         x: state.velocity.x * remaining,
@@ -169,9 +172,9 @@ export function advanceGrenadeMotion(state, dt, boxes = []) {
   return state;
 }
 
+// 預測整條路徑，給預覽用。
 export function predictGrenadePath(origin, direction, boxes = []) {
-  // No throw can travel horizontally beyond 24 m before its fuse expires. Cull
-  // distant map structures once, rather than testing the entire harbor 210 times.
+  // 引信燒完前，水平最多飛 24 公尺。先排除遠處的東西，不必把整個港區檢查 210 次。
   boxes = boxes.filter(
     (box) =>
       box.min.x <= origin.x + 24 &&

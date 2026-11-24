@@ -22,6 +22,7 @@
   document.querySelectorAll("[data-season-count]").forEach((count) => {
     count.textContent = `${galleryItems.filter((item) => item.season === Number(count.dataset.seasonCount)).length} 張`;
   });
+  // 每一季的集數範圍、標題與介紹。
   const seasonInfo = {
     1: {
       range: "1–11",
@@ -39,6 +40,7 @@
       description: "第三季的日常、演出與細微心緒，留下長髮漸層藍的不同瞬間。",
     },
   };
+  // 圖片的集數標示文字，例如「第二季・第 3 話／總第 14 話」。
   function episodeLabel(item) {
     if (item.type === "visual")
       return `${seasonNames[item.season]} · 官方立繪／不指定話數`;
@@ -109,6 +111,7 @@
     document.getElementById(`${item.type}-gallery`).append(card);
   });
 
+  // 依目前的季別、集數、分類與收藏條件，篩選要顯示的圖片。
   function filteredImages() {
     return galleryItems.filter(
       (item) =>
@@ -121,6 +124,7 @@
     );
   }
 
+  // 切換季別：更新按鈕、介紹文字、集數選單，再重新篩選圖片。
   function chooseSeason(season) {
     currentSeason = Number(season);
     currentEpisode = "all";
@@ -141,6 +145,7 @@
       info.description;
     const select = document.getElementById("episode-select");
     select.replaceChildren(new Option("這一季的所有圖片", "all"));
+    // 這一季有哪些集數（去除重複）。
     const episodes = [
       ...new Set(
         galleryItems
@@ -160,6 +165,7 @@
     );
     updateGallery();
   }
+  // 依篩選結果顯示或隱藏卡片，並更新收藏按鈕與說明文字。
   function updateGallery(message = "") {
     const shown = filteredImages();
     document.getElementById("random-gallery-image").disabled =
@@ -195,6 +201,7 @@
           : "這個篩選條件沒有圖片。試試其他話數，或切回「本季全部」。");
   }
 
+  // 加入或移出收藏，並存到瀏覽器。
   function toggleFavorite(id) {
     if (favorites.has(id)) favorites.delete(id);
     else favorites.add(id);
@@ -208,6 +215,7 @@
     updateViewerFavorite();
   }
 
+  // 讓放大視窗裡的收藏按鈕與目前的圖片一致。
   function updateViewerFavorite() {
     const item = viewerSequence[currentImage];
     if (!item) return;
@@ -217,6 +225,7 @@
     button.textContent = saved ? "♥ 已收藏" : "♡ 收藏這張";
   }
 
+  // 在放大視窗顯示目前這張圖片與編號。
   function showViewerImage() {
     const item = viewerSequence[currentImage];
     document.getElementById("viewer-art").style.backgroundImage =
@@ -235,6 +244,7 @@
     updateViewerFavorite();
   }
 
+  // 放大視窗的上一張／下一張，頭尾會循環。
   function stepViewer(direction) {
     currentImage =
       (currentImage + direction + viewerSequence.length) %
@@ -242,6 +252,7 @@
     showViewerImage();
   }
 
+  // 圖庫的點擊：點愛心是收藏，點圖片是放大。
   gallery.addEventListener("click", (event) => {
     const favorite = event.target.closest("[data-favorite]");
     if (favorite) return toggleFavorite(favorite.dataset.favorite);
@@ -256,6 +267,7 @@
     viewer.showModal();
   });
   document.querySelectorAll("[data-gallery-filter]").forEach((button) => {
+    // 圖片分類按鈕。
     button.addEventListener("click", () => {
       currentFilter = button.dataset.galleryFilter;
       document
@@ -266,20 +278,25 @@
       updateGallery();
     });
   });
+  // 放大視窗：上一張。
   document
     .getElementById("previous-image")
     .addEventListener("click", () => stepViewer(-1));
+  // 放大視窗：下一張。
   document
     .getElementById("next-image")
     .addEventListener("click", () => stepViewer(1));
+  // 放大視窗：收藏目前這張。
   document
     .getElementById("viewer-favorite")
     .addEventListener("click", () =>
       toggleFavorite(viewerSequence[currentImage].id),
     );
+  // 放大視窗：關閉。
   document
     .getElementById("close-viewer")
     .addEventListener("click", () => viewer.close());
+  // 放大視窗支援鍵盤左右鍵換圖。
   viewer.addEventListener("keydown", (event) => {
     if (event.key === "ArrowLeft") {
       event.preventDefault();
@@ -290,6 +307,7 @@
       stepViewer(1);
     }
   });
+  // 點到放大視窗外面就關閉。
   viewer.addEventListener("click", (event) => {
     if (event.target !== viewer) return;
     const bounds = viewer.getBoundingClientRect();
@@ -301,10 +319,12 @@
     )
       viewer.close();
   });
+  // 關閉後把焦點還給剛才點的圖片，鍵盤使用者不會迷路。
   viewer.addEventListener("close", () => {
     if (lastImageTrigger?.isConnected && !lastImageTrigger.closest("[hidden]"))
       lastImageTrigger.focus({ preventScroll: true });
   });
+  // 切換「舞台光」效果。
   document.getElementById("stage-toggle").addEventListener("click", (event) => {
     const enabled = document.body.classList.toggle("stage-on");
     event.currentTarget.setAttribute("aria-pressed", String(enabled));
@@ -331,6 +351,7 @@
       chooseSeason(link.dataset.jumpSeason);
     }),
   );
+  // 集數選單。
   document
     .getElementById("episode-select")
     .addEventListener("change", (event) => {
@@ -339,6 +360,7 @@
     });
   // 隨機只從目前季數、話數與篩選的可見圖片中挑選，避免連續重複。
   let lastDrawnId = null;
+  // 「隨機看一張」：盡量避開上次抽到的那張。
   document
     .getElementById("random-gallery-image")
     .addEventListener("click", () => {

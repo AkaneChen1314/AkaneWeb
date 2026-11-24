@@ -28,6 +28,7 @@
     // 無法儲存時，這次開啟仍可切換動態。
   }
 
+  // 真的要播放時才載入影片檔，減少一開始的流量。
   function loadClip(video) {
     if (video.dataset.loaded === "true") return;
     video.dataset.loaded = "true";
@@ -47,6 +48,7 @@
     video.load();
   }
 
+  // 判斷這支影片現在能不能播：專區正確、在畫面內、分頁沒有隱藏、沒有開著遊戲。
   function canPlayHere(video) {
     const panel = video.closest("[data-zone]");
     const correctZone = panel
@@ -62,6 +64,7 @@
     );
   }
 
+  // 被瀏覽器擋下自動播放時，顯示手動播放按鈕。
   function showRetry(video, blocked) {
     const button = video
       .closest(".loop-card")
@@ -69,6 +72,7 @@
     if (button) button.hidden = !blocked;
   }
 
+  // 依目前狀況播放或暫停一支影片。
   function updateClip(video) {
     if (!canPlayHere(video)) {
       video.pause();
@@ -88,6 +92,7 @@
       });
   }
 
+  // 動態效果開關改變後，更新邊緣裝飾、所有影片與按鈕。
   function updateMotion() {
     const zone = document.body.dataset.zoneView || "home";
     document.querySelectorAll("[data-edge-zone]").forEach((layer) => {
@@ -109,6 +114,7 @@
       : "動態已暫停 · 靜靜欣賞畫面";
   }
 
+  // 使用者手動開關動態效果，並記住選擇。
   function chooseMotion(enabled) {
     motionEnabled = enabled;
     userChoseMotion = true;
@@ -120,6 +126,7 @@
     updateMotion();
   }
 
+  // 監看影片有沒有捲進畫面。
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach(({ target, isIntersecting }) => {
@@ -134,10 +141,12 @@
     // 靜態預覽同時作為底圖，手機暫停影片的繪圖層時也不會空白。
     video.style.backgroundImage = `url("${video.getAttribute("poster")}")`;
     video.muted = true;
+    // 開始播放了，收起重試按鈕。
     video.addEventListener("playing", () => {
       video.dataset.playback = "playing";
       showRetry(video, false);
     });
+    // 影片載入失敗，顯示重試按鈕。
     video.addEventListener("error", () => {
       video.dataset.playback = "unavailable";
       showRetry(video, true);
@@ -145,13 +154,16 @@
     });
     observer.observe(video);
   });
+  // 頁首的動態開關。
   motionButton.addEventListener("click", () => chooseMotion(!motionEnabled));
+  // 頁尾的動態開關。
   document
     .getElementById("ambient-motion-toggle")
     .addEventListener("click", () => {
       chooseMotion(!motionEnabled);
     });
   document.querySelectorAll("[data-play-clip]").forEach((button) => {
+    // 手動播放按鈕：一併打開動態效果。
     button.addEventListener("click", () => {
       chooseMotion(true);
       updateClip(button.closest(".loop-card").querySelector("video"));
@@ -160,6 +172,7 @@
   document.addEventListener("visibilitychange", updateMotion);
   document.addEventListener("lounge-visibility", updateMotion);
   document.addEventListener("zone-change", updateMotion);
+  // 系統的「減少動態」設定改變時，若使用者沒自己選過就跟著改。
   reducedMotion.addEventListener("change", () => {
     if (!userChoseMotion) motionEnabled = !reducedMotion.matches;
     updateMotion();
@@ -178,6 +191,7 @@
   const referenceImage = document.getElementById("reference-image");
   const sizeButton = document.getElementById("reference-size");
   const openReference = document.getElementById("open-reference");
+  // 打開造型參考圖的放大視窗。
   openReference.addEventListener("click", () => {
     referenceImage.classList.remove("original-size");
     sizeButton.setAttribute("aria-pressed", "false");
@@ -185,17 +199,21 @@
     reference.showModal();
     document.querySelector(".reference-scroll").scrollTo(0, 0);
   });
+  // 關閉參考圖視窗。
   document
     .getElementById("close-reference")
     .addEventListener("click", () => reference.close());
+  // 切換原始尺寸與符合視窗。
   sizeButton.addEventListener("click", () => {
     const original = referenceImage.classList.toggle("original-size");
     sizeButton.setAttribute("aria-pressed", String(original));
     sizeButton.textContent = original ? "縮回畫面 ↙" : "看原始尺寸 ↗";
   });
+  // 關閉後把焦點還給原本的按鈕。
   reference.addEventListener("close", () =>
     openReference.focus({ preventScroll: true }),
   );
+  // 點到視窗外面就關閉。
   reference.addEventListener("click", (event) => {
     if (event.target !== reference) return;
     const bounds = reference.getBoundingClientRect();
@@ -230,6 +248,7 @@
     },
   };
   document.querySelectorAll("[data-design-note]").forEach((button) => {
+    // 造型筆記：點不同部位顯示對應的說明。
     button.addEventListener("click", () => {
       const note = designNotes[button.dataset.designNote];
       document
@@ -246,6 +265,7 @@
     });
   });
 
+  // 首頁輪流顯示的觀賞提示（標題、說明）。
   const viewingNotes = [
     [
       "今天，先看她的眼神。",
@@ -269,6 +289,7 @@
     ],
   ];
   let viewingIndex = 0;
+  // 換下一則觀賞提示。
   document.getElementById("next-viewing-note").addEventListener("click", () => {
     viewingIndex = (viewingIndex + 1) % viewingNotes.length;
     document.getElementById("viewing-title").textContent =

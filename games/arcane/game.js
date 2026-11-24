@@ -4,11 +4,15 @@
  */
 "use strict";
 
+// ---------- 共用小工具 ----------
+
+// $ 找一個元素、$$ 找全部、clone 複製資料、clamp 限制範圍、pick 隨機挑一個。
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const pick = (items) => items[Math.floor(Math.random() * items.length)];
+// 建立一張卡牌：代號、名稱、類型、行動點，其他效果放在 data。
 const card = (id, name, type, ap, data = {}) => ({
   id,
   name,
@@ -34,6 +38,7 @@ function syncViewportHeight() {
   );
 }
 
+// 視窗大小改變時，一幀最多更新一次高度。
 function scheduleViewportUpdate() {
   if (viewportFrame) return;
   viewportFrame = requestAnimationFrame(() => {
@@ -51,6 +56,9 @@ window.visualViewport?.addEventListener("resize", scheduleViewportUpdate, {
   passive: true,
 });
 
+// ---------- 遊戲資料：卡牌、角色、援護、反派、場地、獎勵 ----------
+
+// 多位角色共用的基本卡牌。
 const shared = {
   strike: () =>
     card("star-slash", "星紋斬", "攻擊", 1, {
@@ -77,6 +85,8 @@ const shared = {
     }),
 };
 
+// 角色資料：hp 生命、power 攻擊%、guard 防禦%、ap 行動點、handSize 手牌、
+// cardLimit 每回合出牌上限、supportSlots 援護數、cards 牌組。
 const fighters = [
   {
     id: "azure",
@@ -601,6 +611,7 @@ const fighters = [
   },
 ];
 
+// 援護技能：組隊時選幾張加進牌組；recommend 是推薦的角色。
 const supportSkills = [
   card("support-sword", "劍心共鳴", "持續", 1, {
     strength: 14,
@@ -732,6 +743,7 @@ const supportSkills = [
   }),
 ].map((item) => ({ ...item, source: "support" }));
 
+// 反派資料：生命、場景圖、moves 是會輪流使用的招式。
 const villains = [
   {
     id: "prison",
@@ -965,6 +977,7 @@ let selectedReward = null;
 let detailIndex = null;
 let battleGeneration = 0;
 
+// 星域試煉會遇到的場地效果。
 const fields = [
   { id: "spring", name: "靈泉守陣", desc: "開戰獲得 70 護盾。", icon: "泉" },
   {
@@ -988,6 +1001,7 @@ const fields = [
   },
 ];
 
+// 試煉過關後可以挑的獎勵。
 const rewardCatalog = [
   {
     id: "heal",
@@ -1078,6 +1092,9 @@ const rewardCatalog = [
   },
 ];
 
+// ---------- 流程控制與組隊畫面 ----------
+
+// 延後執行戰鬥動作；如果這場戰鬥已經結束就不執行。
 function scheduleBattle(action, delay) {
   const generation = battleGeneration;
   setTimeout(() => {
@@ -1085,6 +1102,7 @@ function scheduleBattle(action, delay) {
   }, delay);
 }
 
+// 中止目前的戰鬥並清掉特效。
 function abortBattle() {
   Spectacle.reset();
   battleGeneration++;
@@ -1096,6 +1114,7 @@ function abortBattle() {
   closeCardDetail();
 }
 
+// 洗牌（Fisher–Yates）。
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -1104,6 +1123,7 @@ function shuffle(array) {
   return array;
 }
 
+// 切換畫面（開始、選角、援護、挑戰、戰鬥、結果）。
 function showScreen(id) {
   if (id !== "battleScreen") Spectacle.reset();
   $$(".screen").forEach((screen) => screen.classList.remove("active"));
@@ -1122,28 +1142,67 @@ function showScreen(id) {
   window.scrollTo(0, 0);
 }
 
+// 畫出角色卡片，點選後更新說明。
 function renderFighters() {
   $("#fighterGrid").innerHTML = fighters
     .map(
-      (fighter) => `
-    <article class="fighter-card ${selectedFighter?.id === fighter.id ? "selected" : ""}" data-id="${fighter.id}" role="button" tabindex="0" aria-pressed="${selectedFighter?.id === fighter.id}" aria-label="選擇${fighter.name}，${fighter.className}" style="--accent:${fighter.color}">
-      <img src="${fighter.image}" alt="${fighter.name}">
-      <span class="class-pill">${fighter.className}</span>
-      <div class="fighter-copy">
-        <small>${fighter.title}</small><h3>${fighter.name}</h3><p>${fighter.desc}</p>
-        <div class="stats">
-          <span><b>${fighter.hp}</b>生命</span><span><b>${fighter.power}</b>攻擊</span><span><b>${fighter.guard}</b>防禦</span><span><b>${fighter.initialEnergy}</b>初始星能</span>
-        </div>
-        <div class="turn-profile">
-          <span tabindex="0" title="每回合可花費的行動點"><i>每回合行動力</i><b>${fighter.ap} 點</b><small>支付卡牌費用</small></span>
-          <span tabindex="0" title="新回合會補牌到這個數量"><i>每回合手牌</i><b>${fighter.handSize} 張</b><small>回合開始補牌</small></span>
-          <span tabindex="0" title="每回合最多能使用的卡牌張數"><i>出牌上限</i><b>${fighter.cardLimit} 張</b><small>0 費牌也計算</small></span>
-          <span tabindex="0" title="開戰時直接擁有的星能"><i>初始星能</i><b>${fighter.initialEnergy} EN</b><small>終結牌的資源</small></span>
-          <span tabindex="0" title="必須自行選滿的支援牌數量"><i>支援容量</i><b>${fighter.supportSlots} 張</b><small>額外加入牌組</small></span>
-        </div>
-        <div class="trait-list">${fighter.traits.map((trait) => `<span title="${trait.desc}"><i>${trait.icon}</i><b>${trait.name}</b><em>${trait.desc}</em></span>`).join("")}</div>
-      </div>
-    </article>`,
+      (fighter) => /* HTML */ ` <article
+          class="fighter-card ${
+            selectedFighter?.id === fighter.id ? "selected" : ""
+          }"
+          data-id="${fighter.id}"
+          role="button"
+          tabindex="0"
+          aria-pressed="${selectedFighter?.id === fighter.id}"
+          aria-label="選擇${fighter.name}，${fighter.className}"
+          style="--accent:${fighter.color}"
+        >
+          <img src="${fighter.image}" alt="${fighter.name}" />
+          <span class="class-pill">${fighter.className}</span>
+          <div class="fighter-copy">
+            <small>${fighter.title}</small>
+            <h3>${fighter.name}</h3>
+            <p>${fighter.desc}</p>
+            <div class="stats">
+              <span><b>${fighter.hp}</b>生命</span
+              ><span><b>${fighter.power}</b>攻擊</span
+              ><span><b>${fighter.guard}</b>防禦</span
+              ><span><b>${fighter.initialEnergy}</b>初始星能</span>
+            </div>
+            <div class="turn-profile">
+              <span tabindex="0" title="每回合可花費的行動點"
+                ><i>每回合行動力</i><b>${fighter.ap} 點</b
+                ><small>支付卡牌費用</small></span
+              >
+              <span tabindex="0" title="新回合會補牌到這個數量"
+                ><i>每回合手牌</i><b>${fighter.handSize} 張</b
+                ><small>回合開始補牌</small></span
+              >
+              <span tabindex="0" title="每回合最多能使用的卡牌張數"
+                ><i>出牌上限</i><b>${fighter.cardLimit} 張</b
+                ><small>0 費牌也計算</small></span
+              >
+              <span tabindex="0" title="開戰時直接擁有的星能"
+                ><i>初始星能</i><b>${fighter.initialEnergy} EN</b
+                ><small>終結牌的資源</small></span
+              >
+              <span tabindex="0" title="必須自行選滿的支援牌數量"
+                ><i>支援容量</i><b>${fighter.supportSlots} 張</b
+                ><small>額外加入牌組</small></span
+              >
+            </div>
+            <div class="trait-list">
+              ${fighter.traits
+                .map(
+                  (trait) => /* HTML */ `<span title="${trait.desc}"
+                      ><i>${trait.icon}</i><b>${trait.name}</b
+                      ><em>${trait.desc}</em></span
+                    >`,
+                )
+                .join("")}
+            </div>
+          </div>
+        </article>`,
     )
     .join("");
   $$(".fighter-card").forEach(
@@ -1165,9 +1224,11 @@ function renderFighters() {
   );
 }
 
+// 畫出援護技能，處理選取、取消與名額。
 function renderSupports() {
   if (!selectedFighter) return;
   const slots = selectedFighter.supportSlots;
+  // 依篩選條件留下要顯示的援護。
   const visibleSkills = supportSkills.filter((skill) =>
     supportFilter === "recommended"
       ? skill.recommend.includes(selectedFighter.id)
@@ -1175,6 +1236,7 @@ function renderSupports() {
         ? selectedSupports.includes(skill.id)
         : true,
   );
+  // 每一張援護卡片。
   $("#supportGrid").innerHTML =
     visibleSkills
       .map((skill) => {
@@ -1185,20 +1247,48 @@ function renderSupports() {
           .map((id) => fighters.find((fighter) => fighter.id === id)?.className)
           .filter(Boolean)
           .join("、");
-        return `<article class="support-card glass ${chosen ? "selected" : ""} ${recommended ? "recommended" : ""} ${disabled ? "disabled" : ""}" data-id="${skill.id}" role="button" tabindex="0" aria-pressed="${chosen}" aria-label="${chosen ? "卸下" : "裝備"}${skill.name}" style="--accent:${skill.color}">
-      <div class="sigil">${skill.icon}</div><div class="support-copy"><small>${recommended ? `★ 很適合目前的${selectedFighter.className}` : skill.type}</small><h3>${skill.name}</h3><p>${skill.desc}</p><div class="skill-effects">${cardEffectBadges(
-        skill,
-      )
-        .slice(0, 3)
-        .map((effect) => `<span>${effect.label} <b>${effect.value}</b></span>`)
-        .join(
-          "",
-        )}</div><footer><b>${skill.ap} AP</b><span>推薦職業：${recommendedNames}</span></footer></div>
-      <span class="select-state">${chosen ? "✓ 已裝備" : "＋ 裝備"}</span>
-    </article>`;
+        return /* HTML */ `<article
+          class="support-card glass ${chosen ? "selected" : ""} ${
+            recommended ? "recommended" : ""
+          } ${disabled ? "disabled" : ""}"
+          data-id="${skill.id}"
+          role="button"
+          tabindex="0"
+          aria-pressed="${chosen}"
+          aria-label="${chosen ? "卸下" : "裝備"}${skill.name}"
+          style="--accent:${skill.color}"
+        >
+          <div class="sigil">${skill.icon}</div>
+          <div class="support-copy">
+            <small
+              >${
+                recommended
+                  ? `★ 很適合目前的${selectedFighter.className}`
+                  : skill.type
+              }</small
+            >
+            <h3>${skill.name}</h3>
+            <p>${skill.desc}</p>
+            <div class="skill-effects">
+              ${cardEffectBadges(skill)
+                .slice(0, 3)
+                .map(
+                  (effect) => /* HTML */ `<span
+                      >${effect.label} <b>${effect.value}</b></span
+                    >`,
+                )
+                .join("")}
+            </div>
+            <footer>
+              <b>${skill.ap} AP</b><span>推薦職業：${recommendedNames}</span>
+            </footer>
+          </div>
+          <span class="select-state">${chosen ? "✓ 已裝備" : "＋ 裝備"}</span>
+        </article>`;
       })
       .join("") ||
     '<p class="empty-list">還沒有裝備技能。切換「全部技能」或「職業推薦」來挑選。</p>';
+  // 點卡片：選取或取消。
   $$(".support-card").forEach(
     (node) =>
       (node.onclick = () => {
@@ -1217,7 +1307,13 @@ function renderSupports() {
     ? selectedSupports
         .map((id, index) => {
           const skill = supportSkills.find((item) => item.id === id);
-          return `<button type="button" data-remove-support="${id}" aria-label="卸下${skill.name}">${skill.name}<b>×</b></button>`;
+          return /* HTML */ `<button
+            type="button"
+            data-remove-support="${id}"
+            aria-label="卸下${skill.name}"
+          >
+            ${skill.name}<b>×</b>
+          </button>`;
         })
         .join("")
     : `<small>尚未選擇；請從上方 ${supportSkills.length} 張牌自行搭配</small>`;
@@ -1229,6 +1325,7 @@ function renderSupports() {
     selectedSupports.length === slots
       ? "確認技能 →"
       : `再選 ${slots - selectedSupports.length} 張`;
+  // 已選清單上的移除按鈕。
   $$("[data-remove-support]").forEach(
     (button) =>
       (button.onclick = () => {
@@ -1241,13 +1338,32 @@ function renderSupports() {
   );
 }
 
+// 畫出反派卡片。
 function renderVillains() {
   $("#villainGrid").innerHTML = villains
     .map(
-      (villain) => `
-    <article class="villain-card ${selectedVillain?.id === villain.id ? "selected" : ""}" data-id="${villain.id}" role="button" tabindex="0" aria-pressed="${selectedVillain?.id === villain.id}" aria-label="選擇${villain.name}" style="--boss:${villain.color}">
-      <img src="${villain.image}" alt="${villain.name}"><div><small>${villain.title}</small><h3>${villain.name}</h3><p>${villain.trait}</p><span class="boss-stats"><em>♥ 生命 <b>${villain.hp}</b></em><em>◆ 護甲 <b>${Math.round(villain.armor * 100)}%</b></em></span></div>
-    </article>`,
+      (villain) => /* HTML */ ` <article
+          class="villain-card ${
+            selectedVillain?.id === villain.id ? "selected" : ""
+          }"
+          data-id="${villain.id}"
+          role="button"
+          tabindex="0"
+          aria-pressed="${selectedVillain?.id === villain.id}"
+          aria-label="選擇${villain.name}"
+          style="--boss:${villain.color}"
+        >
+          <img src="${villain.image}" alt="${villain.name}" />
+          <div>
+            <small>${villain.title}</small>
+            <h3>${villain.name}</h3>
+            <p>${villain.trait}</p>
+            <span class="boss-stats"
+              ><em>♥ 生命 <b>${villain.hp}</b></em
+              ><em>◆ 護甲 <b>${Math.round(villain.armor * 100)}%</b></em></span
+            >
+          </div>
+        </article>`,
     )
     .join("");
   $$(".villain-card").forEach(
@@ -1262,6 +1378,7 @@ function renderVillains() {
   );
 }
 
+// 更新難度卡片的選取狀態。
 function renderDifficulty() {
   $$(".difficulty-card").forEach((node) => {
     node.classList.toggle(
@@ -1275,6 +1392,7 @@ function renderDifficulty() {
   });
 }
 
+// 更新挑戰設定的摘要與開始按鈕。
 function updateSetupState() {
   const slots = selectedFighter?.supportSlots || 0;
   $("#selectedBossName").textContent = selectedVillain
@@ -1286,6 +1404,7 @@ function updateSetupState() {
     selectedMode === "trial" ? "開始試煉 →" : "開始討伐 →";
 }
 
+// 依難度放大敵人招式的傷害與護盾，並寫成說明文字。
 function scaleIntent(move) {
   const difficulty = difficulties[selectedDifficulty];
   const scaled = clone(move);
@@ -1314,6 +1433,7 @@ function scaleIntent(move) {
   return scaled;
 }
 
+// 決定敵人下一招：每 5 回合用大招、每 3 回合用強招。
 function chooseIntent() {
   const moves = selectedVillain.moves;
   if (round % 5 === 0) return scaleIntent(moves[moves.length - 1]);
@@ -1322,6 +1442,9 @@ function chooseIntent() {
 }
 
 // 依目前隊伍與難度建立戰鬥；試煉接續和一般新局共用這個入口。
+
+// ---------- 戰鬥開始、抽牌與洗牌 ----------
+
 function startBattle(continuingTrial = false) {
   if (
     !selectedFighter ||
@@ -1330,6 +1453,7 @@ function startBattle(continuingTrial = false) {
   )
     return;
   battleGeneration++;
+  // 第一次進入試煉：排出三關的對手與場地。
   if (!continuingTrial) {
     trial =
       selectedMode === "trial"
@@ -1360,6 +1484,7 @@ function startBattle(continuingTrial = false) {
   if (trial) selectedVillain = trial.route[trial.stage];
   currentField = trial ? trial.fields[trial.stage] : null;
   const maxHp = selectedFighter.hp + (trial?.maxHpBonus || 0);
+  // 玩家戰鬥資料：角色能力加上試煉獎勵。
   player = {
     ...clone(selectedFighter),
     maxHp,
@@ -1385,6 +1510,7 @@ function startBattle(continuingTrial = false) {
     played: 0,
   };
   const difficulty = difficulties[selectedDifficulty];
+  // 敵人戰鬥資料：依難度調整生命與攻擊。
   enemy = {
     ...clone(selectedVillain),
     maxHp: Math.round(selectedVillain.hp * difficulty.hp),
@@ -1402,6 +1528,7 @@ function startBattle(continuingTrial = false) {
   const supportCards = selectedSupports.map((id) =>
     clone(supportSkills.find((skill) => skill.id === id)),
   );
+  // 牌庫＝角色牌組＋選到的援護。
   drawPile = shuffle([
     ...clone(selectedFighter.cards),
     ...supportCards,
@@ -1412,6 +1539,7 @@ function startBattle(continuingTrial = false) {
   round = 1;
   ap = player.ap + (trial?.openingAp || 0);
   if (player.id === "jade") player.block += 24;
+  // 場地效果在開戰時生效。
   if (currentField?.id === "spring") player.block += 70;
   if (currentField?.id === "fire") {
     player.strength += 12;
@@ -1423,6 +1551,7 @@ function startBattle(continuingTrial = false) {
     enemy.block = 90;
     player.guard += 20;
   }
+  // 重設這一場的統計與一次性狀態。
   battleOver = false;
   busy = false;
   cardsPlayed = 0;
@@ -1432,6 +1561,7 @@ function startBattle(continuingTrial = false) {
   firstDefenseUsed = false;
   firstSpellUsed = false;
   phaseTriggered = false;
+  // 更新戰鬥畫面上的文字與圖片。
   $("#battleLog").innerHTML = "";
   $("#logPanel").classList.remove("open");
   $("#logToggle").setAttribute("aria-expanded", "false");
@@ -1463,12 +1593,14 @@ function startBattle(continuingTrial = false) {
     addLog(`場地「${currentField.name}」：${currentField.desc}`, "system");
   if (trial?.rewards.length)
     addLog(`攜帶秘寶與獎勵：${trial.rewards.join("、")}`, "system");
+  // 抽起始手牌並顯示畫面。
   drawTo(player.handSize);
   renderBattle();
   showScreen("battleScreen");
   Spectacle.start();
 }
 
+// 抽一張牌；牌庫空了就把棄牌洗回去。
 function drawOne() {
   if (!drawPile.length) {
     if (!discardPile.length) return;
@@ -1478,10 +1610,12 @@ function drawOne() {
   if (hand.length < 9) hand.push(drawPile.pop());
 }
 
+// 抽指定張數。
 function drawCards(amount) {
   for (let i = 0; i < amount; i++) drawOne();
 }
 
+// 抽到指定的手牌數為止。
 function drawTo(amount) {
   while (hand.length < amount && (drawPile.length || discardPile.length))
     drawOne();
@@ -1526,12 +1660,16 @@ function renderBattle() {
           : "敵意";
   $("#playerBuffs").innerHTML = buffMarkup(player);
   $("#enemyBuffs").innerHTML = buffMarkup(enemy);
-  $("#supportMini").innerHTML =
-    `支援牌：${selectedSupports.map((id) => supportSkills.find((skill) => skill.id === id).icon).join(" ")} <b>${selectedSupports.length}</b>`;
+  $("#supportMini").innerHTML = /* HTML */ `支援牌：${selectedSupports
+    .map((id) => supportSkills.find((skill) => skill.id === id).icon)
+    .join(" ")} <b>${selectedSupports.length}</b>`;
   $("#endTurnBtn").disabled = busy || battleOver;
   renderHand();
 }
 
+// ---------- 戰鬥畫面更新 ----------
+
+// 把單位身上的增益與異常做成標籤。
 function buffMarkup(unit) {
   const buffs = [];
   if (unit.block)
@@ -1624,12 +1762,14 @@ function buffMarkup(unit) {
     });
   return buffs
     .map(
-      (buff) =>
-        `<span class="buff ${buff.type}" title="${buff.tip}"><i>${buff.icon}</i><b>${buff.name}</b><em>${buff.value}</em></span>`,
+      (buff) => /* HTML */ `<span class="buff ${buff.type}" title="${buff.tip}"
+          ><i>${buff.icon}</i><b>${buff.name}</b><em>${buff.value}</em></span
+        >`,
     )
     .join("");
 }
 
+// 各種卡牌類型的樣式代號與圖示。
 const cardTypeMeta = {
   攻擊: { slug: "attack", icon: "⚔" },
   盾擊: { slug: "shield-strike", icon: "盾" },
@@ -1645,6 +1785,7 @@ const cardTypeMeta = {
   終結: { slug: "ultimate", icon: "☄" },
 };
 
+// 卡牌上的效果標籤，最多四個。
 function cardEffectBadges(item) {
   const effects = [];
   if (item.damage)
@@ -1714,6 +1855,7 @@ function cardEffectBadges(item) {
   return effects.slice(0, 4);
 }
 
+// 畫出手牌，不能出的牌會變暗並說明原因。
 function renderHand() {
   const limit = Math.max(1, player.cardLimit - player.limitPenalty);
   $("#hand").innerHTML = hand
@@ -1744,14 +1886,62 @@ function renderHand() {
             : "立即生效";
       const meta = cardTypeMeta[item.type] || { slug: "tactic", icon: "✦" };
       const effects = cardEffectBadges(item);
-      return `<article class="battle-card card-kind-${meta.slug} ${item.ultimate ? "ultimate" : ""} ${item.source === "support" ? "support-card-in-hand" : ""} ${disabled ? "disabled" : ""} ${resolving ? "resolving" : ""}" data-index="${index}" data-type="${item.type}" role="button" tabindex="0" aria-label="使用${item.name}，${item.ap} AP${reason ? `，${reason}` : ""}" style="--card:${item.color}">
-      <header class="card-head"><span class="card-type"><i>${meta.icon}</i>${item.type}</span><b class="card-cost" title="行動力消耗"><span>${item.ap}</span><small>AP</small></b></header>
-      <div class="card-visual"><span class="card-rune">${item.icon}</span><i></i><i></i></div>
-      <div class="card-name"><h4>${item.name}</h4>${item.source === "support" ? "<em>支援</em>" : ""}</div>
-      <div class="card-effect-grid">${effects.map((effect) => `<span title="${effect.label}"><i>${effect.icon}</i><b>${effect.value}</b><small>${effect.label}</small></span>`).join("")}</div>
-      <p>${item.desc}</p><footer>${footer}<button class="card-info-btn" data-card-info="${index}" aria-label="查看${item.name}說明">ⓘ</button></footer>
-      ${reason ? `<div class="card-lock"><b>暫時無法使用</b><small>${reason}</small></div>` : ""}
-    </article>`;
+      return /* HTML */ `<article
+        class="battle-card card-kind-${meta.slug} ${
+          item.ultimate ? "ultimate" : ""
+        } ${
+          item.source === "support" ? "support-card-in-hand" : ""
+        } ${disabled ? "disabled" : ""} ${resolving ? "resolving" : ""}"
+        data-index="${index}"
+        data-type="${item.type}"
+        role="button"
+        tabindex="0"
+        aria-label="使用${item.name}，${item.ap} AP${
+          reason ? `，${reason}` : ""
+        }"
+        style="--card:${item.color}"
+      >
+        <header class="card-head">
+          <span class="card-type"><i>${meta.icon}</i>${item.type}</span
+          ><b class="card-cost" title="行動力消耗"
+            ><span>${item.ap}</span><small>AP</small></b
+          >
+        </header>
+        <div class="card-visual">
+          <span class="card-rune">${item.icon}</span><i></i><i></i>
+        </div>
+        <div class="card-name">
+          <h4>${item.name}</h4>
+          ${item.source === "support" ? "<em>支援</em>" : ""}
+        </div>
+        <div class="card-effect-grid">
+          ${effects
+            .map(
+              (effect) => /* HTML */ `<span title="${effect.label}"
+                  ><i>${effect.icon}</i><b>${effect.value}</b
+                  ><small>${effect.label}</small></span
+                >`,
+            )
+            .join("")}
+        </div>
+        <p>${item.desc}</p>
+        <footer>
+          ${footer}<button
+            class="card-info-btn"
+            data-card-info="${index}"
+            aria-label="查看${item.name}說明"
+          >
+            ⓘ
+          </button>
+        </footer>
+        ${
+          reason
+            ? /* HTML */ `<div class="card-lock">
+              <b>暫時無法使用</b><small>${reason}</small>
+            </div>`
+            : ""
+        }
+      </article>`;
     })
     .join("");
   $$(".battle-card").forEach(
@@ -1766,6 +1956,7 @@ function renderHand() {
   );
 }
 
+// 打開卡牌詳細說明。
 function openCardDetail(index) {
   const item = hand[index];
   if (!item) return;
@@ -1773,8 +1964,20 @@ function openCardDetail(index) {
   $("#playDetailCard").hidden = false;
   $("#cardDetailName").textContent = item.name;
   const badges = cardEffectBadges(item);
-  $("#cardDetailBody").innerHTML =
-    `<p class="detail-type">${item.type} · ${item.ap} AP${item.energyCost ? ` · ${item.energyCost} 星能` : ""}</p><p>${item.desc}</p><div class="detail-effects">${badges.map((e) => `<span>${e.icon} ${e.label} <b>${e.value}</b></span>`).join("")}</div><small>傷害與護盾的實際數值，會受角色數值、敵方護甲及狀態影響。</small>`;
+  $("#cardDetailBody").innerHTML = /* HTML */ `<p class="detail-type">
+      ${item.type} · ${item.ap}
+      AP${item.energyCost ? ` · ${item.energyCost} 星能` : ""}
+    </p>
+    <p>${item.desc}</p>
+    <div class="detail-effects">
+      ${badges
+        .map(
+          (e) =>
+            /* HTML */ `<span>${e.icon} ${e.label} <b>${e.value}</b></span>`,
+        )
+        .join("")}
+    </div>
+    <small>傷害與護盾的實際數值，會受角色數值、敵方護甲及狀態影響。</small>`;
   $("#playDetailCard").disabled =
     busy ||
     battleOver ||
@@ -1786,6 +1989,7 @@ function openCardDetail(index) {
   $("#closeCardDetail").focus();
 }
 
+// 關閉卡牌詳細說明，焦點回到那張牌。
 function closeCardDetail() {
   $("#cardDetailModal").classList.remove("open");
   $("#cardDetailModal").setAttribute("aria-hidden", "true");
@@ -1794,8 +1998,12 @@ function closeCardDetail() {
   if (index !== null) $(`#hand [data-index="${index}"]`)?.focus();
 }
 
+// ---------- 出牌與敵人行動 ----------
+
+// 造成傷害：攻擊力、破綻、弱化、護盾、逆命與反擊都在這裡計算。
 function dealDamage(target, amount, source, options = {}) {
   let damage = amount;
+  // 套用攻擊方與防守方的加成。
   if (source === player) {
     damage = Math.round((damage * player.power) / 100);
     damage += player.strength;
@@ -1815,9 +2023,11 @@ function dealDamage(target, amount, source, options = {}) {
     if (options.bonusUnblocked && player.block <= 0)
       damage += options.bonusUnblocked;
   }
+  // 先由護盾吸收，剩下的才扣生命。
   const absorbed = Math.min(target.block, damage);
   target.block -= absorbed;
   let actual = damage - absorbed;
+  // 逆命：擋下一次致命傷害。
   if (target === player && actual >= player.hp && player.ward) {
     actual = Math.max(0, player.hp - 1);
     player.ward--;
@@ -1826,6 +2036,7 @@ function dealDamage(target, amount, source, options = {}) {
   target.hp = clamp(target.hp - actual, 0, target.maxHp);
   if (absorbed)
     Spectacle.absorb(target === enemy ? "enemy" : "player", absorbed);
+  // 反擊：被打時對敵人造成傷害。
   if (target === player && damage > 0 && player.counter) {
     const counter = player.counter;
     player.counter = 0;
@@ -1842,6 +2053,7 @@ function dealDamage(target, amount, source, options = {}) {
   return { actual, absorbed };
 }
 
+// 打出一張牌：檢查條件 → 付出代價 → 套用效果 → 角色特性 → 檢查勝負。
 function playCard(index) {
   if (busy || battleOver) return;
   const item = hand[index];
@@ -1867,16 +2079,19 @@ function playCard(index) {
   const shieldDamage = item.shieldDamage
     ? Math.ceil(player.block * item.shieldDamage)
     : 0;
+  // 盾擊：消耗護盾換傷害。
   if (shieldDamage) {
     player.block -= shieldDamage;
     addLog(`玄甲震擊：消耗 ${shieldDamage} 護盾，轉為額外基礎傷害。`, "player");
   }
+  // 一般攻擊，可能有多段。
   if (item.damage) {
     for (let i = 0; i < hits; i++)
       dealt += dealDamage(enemy, item.damage + shieldDamage, player, {
         magic: item.magic,
       }).actual;
   }
+  // 護盾，受防禦影響。
   if (item.block) {
     let block = Math.round((item.block * player.guard) / 100);
     if (player.id === "azure" && !firstDefenseUsed) {
@@ -1892,6 +2107,7 @@ function playCard(index) {
       0,
       player.maxHp,
     );
+  // 自傷牌不會把自己打死。
   if (item.selfDamage)
     player.hp = clamp(player.hp - item.selfDamage, 1, player.maxHp);
   if (item.strength) player.strength += item.strength;
@@ -1899,6 +2115,7 @@ function playCard(index) {
   if (item.regen) player.regen = Math.max(player.regen, item.regen);
   if (item.ward) player.ward += item.ward;
   if (item.summon) player.summon = clone(item.summon);
+  // 淨化：清掉自己身上的異常。
   if (item.cleanse) {
     player.burn =
       player.poison =
@@ -1913,6 +2130,7 @@ function playCard(index) {
   if (item.vuln) enemy.vulnerable += item.vuln;
   if (item.weak) enemy.weak += item.weak;
   if (item.stun) enemy.stunned += item.stun;
+  // 奪取敵人一部分護盾。
   if (item.stealBlock && enemy.block) {
     const stolen = Math.ceil(enemy.block * 0.5);
     enemy.block -= stolen;
@@ -1921,6 +2139,7 @@ function playCard(index) {
   if (item.apGain) ap += item.apGain;
   if (item.draw) drawCards(item.draw);
 
+  // 以下是各角色的被動特性。
   if (player.id === "azure" && isAttack && attacksThisTurn === 0)
     player.energy = clamp(player.energy + 8, 0, 100);
   if (player.id === "frost" && isAttack && attacksThisTurn === 0)
@@ -1937,11 +2156,13 @@ function playCard(index) {
     addLog("法力折返：返還 1 點行動力。", "system");
   }
 
+  // 打出的牌進棄牌堆；消耗牌不回收。
   const played = hand.splice(index, 1)[0];
   if (!played.exhaust) discardPile.push(played);
   cardsPlayed++;
   cardsThisTurn++;
   player.played++;
+  // 流血：每出一張牌受到傷害。
   if (player.bleed) {
     const bleedDamage = player.bleed * 10;
     player.hp = clamp(player.hp - bleedDamage, 0, player.maxHp);
@@ -1962,6 +2183,7 @@ function playCard(index) {
   );
   totalDamage += dealt;
   Spectacle.outcome(visualBefore, player, "player", item, dealt);
+  // 等特效播完再開放下一次操作。
   busy = true;
   renderBattle();
   if (!checkEnd())
@@ -1974,6 +2196,7 @@ function playCard(index) {
     );
 }
 
+// 結束玩家回合，弱化與破綻減一回合。
 function endPlayerTurn() {
   if (busy || battleOver) return;
   busy = true;
@@ -1988,8 +2211,10 @@ function endPlayerTurn() {
   scheduleBattle(enemyTurn, 500);
 }
 
+// 敵人回合：行動、特殊機制、持續傷害，再進入下一回合。
 function enemyTurn() {
   if (battleOver) return;
+  // 被封鎖就不能行動。
   if (enemy.stunned) {
     enemy.stunned--;
     addLog(`${enemy.name} 被封鎖，本回合無法行動。`, "enemy");
@@ -2043,7 +2268,9 @@ function enemyTurn() {
       addLog(`流血使 ${enemy.name} 在行動後受到 ${amount} 傷害。`, "player");
     }
   }
+  // 獄骸每三回合變強。
   if (selectedVillain.id === "prison" && round % 3 === 0) enemy.strength += 7;
+  // 血月在半血以下會進入第二階段。
   if (
     selectedVillain.id === "bloodmoon" &&
     enemy.hp / enemy.maxHp < 0.5 &&
@@ -2067,6 +2294,7 @@ function enemyTurn() {
   scheduleBattle(nextRound, 540);
 }
 
+// 灼燒與中毒的持續傷害。
 function applyDots(unit, side) {
   let damage = 0;
   if (unit.burn) {
@@ -2095,6 +2323,7 @@ function applyDots(unit, side) {
   }
 }
 
+// 下一回合：重設行動點、回復星能、觸發再生與召喚、補手牌。
 function nextRound() {
   if (battleOver) return;
   if (player.id === "jade") player.block = Math.round(player.block * 0.35);
@@ -2115,6 +2344,7 @@ function nextRound() {
     100,
   );
   if (player.id === "jade") player.block += 24;
+  // 再生。
   if (player.regen) {
     const amount = Math.round(player.maxHp * 0.06);
     player.hp = clamp(player.hp + amount, 0, player.maxHp);
@@ -2123,6 +2353,7 @@ function nextRound() {
     Spectacle.queue("heal", "player", "#91e6b5");
     addLog(`再生恢復 ${amount} 生命。`, "system");
   }
+  // 召喚物攻擊。
   if (player.summon) {
     Spectacle.queue("spell", "enemy", "#8de9c1");
     const damage = dealDamage(enemy, player.summon.damage, player, {
@@ -2149,6 +2380,7 @@ function nextRound() {
   renderBattle();
 }
 
+// 播放角色受擊、施放或治療的動畫。
 function animateUnit(selector, type, value) {
   const art = $(selector);
   art.classList.remove("hit", "cast", "heal");
@@ -2161,6 +2393,7 @@ function animateUnit(selector, type, value) {
   }, 720);
 }
 
+// 新增一則戰鬥紀錄。
 function addLog(text, type = "system") {
   const row = document.createElement("div");
   row.className = `log-entry ${type}`;
@@ -2175,6 +2408,7 @@ function addLog(text, type = "system") {
     $("#battleLog").lastElementChild.remove();
 }
 
+// 畫面上的短訊息。
 function toast(text) {
   $("#toast").textContent = text;
   $("#toast").classList.add("show");
@@ -2182,6 +2416,7 @@ function toast(text) {
   toast.timer = setTimeout(() => $("#toast").classList.remove("show"), 1500);
 }
 
+// 檢查有沒有分出勝負。
 function checkEnd() {
   if (battleOver) return true;
   if (player.hp > 0 && enemy.hp > 0) return false;
@@ -2195,6 +2430,9 @@ function checkEnd() {
   return true;
 }
 
+// ---------- 結算與試煉 ----------
+
+// 戰鬥結束：試煉還沒打完就挑獎勵，否則顯示評價與統計。
 function finishBattle(win) {
   closeCardDetail();
   if (trial) {
@@ -2218,11 +2456,18 @@ function finishBattle(win) {
     : win
       ? `${player.name} 以 ${player.className} 的牌組淨化了「${enemy.realm}」。你可以更換術式、難度或反派再次挑戰。`
       : `${enemy.name} 擊破了牌陣。重新調整支援術式與出牌順序，再次挑戰。`;
-  $("#resultStats").innerHTML =
-    `<div><b>${difficulties[selectedDifficulty].label}</b><span>挑戰難度</span></div><div><b>${trial ? trial.rounds : round}</b><span>戰鬥回合</span></div><div><b>${trial ? trial.damage : totalDamage}</b><span>總傷害</span></div><div><b>${trial ? trial.played : cardsPlayed}</b><span>使用卡牌</span></div>`;
+  $("#resultStats").innerHTML = /* HTML */ `<div>
+      <b>${difficulties[selectedDifficulty].label}</b><span>挑戰難度</span>
+    </div>
+    <div><b>${trial ? trial.rounds : round}</b><span>戰鬥回合</span></div>
+    <div><b>${trial ? trial.damage : totalDamage}</b><span>總傷害</span></div>
+    <div>
+      <b>${trial ? trial.played : cardsPlayed}</b><span>使用卡牌</span>
+    </div>`;
   showScreen("resultScreen");
 }
 
+// 顯示三個試煉獎勵，第一個固定是補給。
 function showTrialRewards() {
   selectedReward = null;
   rewardOptions = [
@@ -2232,12 +2477,37 @@ function showTrialRewards() {
     ).slice(0, 2),
   ];
   $("#rewardTitle").textContent = `第 ${trial.stage + 1} 關突破 · 選擇獎勵`;
-  $("#trialProgress").innerHTML =
-    `<div><b>生命 ${Math.ceil(player.hp)} / ${player.maxHp}</b><span>星能 ${Math.floor(player.energy)} / 100</span></div><p>${trial.route.map((v, i) => `<span class="${i <= trial.stage ? "cleared" : ""}">${i + 1}. ${v.name}${i <= trial.stage ? " ✓" : ""}</span>`).join(" ")}</p><small>下一關：${trial.fields[trial.stage + 1].name} · ${trial.fields[trial.stage + 1].desc}</small>`;
+  $("#trialProgress").innerHTML = /* HTML */ `<div>
+      <b>生命 ${Math.ceil(player.hp)} / ${player.maxHp}</b
+      ><span>星能 ${Math.floor(player.energy)} / 100</span>
+    </div>
+    <p>
+      ${trial.route
+        .map(
+          (
+            v,
+            i,
+          ) => /* HTML */ `<span class="${i <= trial.stage ? "cleared" : ""}"
+              >${i + 1}. ${v.name}${i <= trial.stage ? " ✓" : ""}</span
+            >`,
+        )
+        .join(" ")}
+    </p>
+    <small
+      >下一關：${trial.fields[trial.stage + 1].name} ·
+      ${trial.fields[trial.stage + 1].desc}</small
+    >`;
   $("#rewardGrid").innerHTML = rewardOptions
     .map(
-      (r) =>
-        `<button class="reward-card glass" data-reward="${r.id}" aria-pressed="false"><span class="reward-icon">${r.icon}</span><small>${r.kind}</small><h3>${r.name}</h3><p>${r.desc}</p></button>`,
+      (r) => /* HTML */ `<button
+          class="reward-card glass"
+          data-reward="${r.id}"
+          aria-pressed="false"
+        >
+          <span class="reward-icon">${r.icon}</span><small>${r.kind}</small>
+          <h3>${r.name}</h3>
+          <p>${r.desc}</p>
+        </button>`,
     )
     .join("");
   $("#rewardSummary").textContent = "請選擇一項獎勵";
@@ -2259,6 +2529,7 @@ function showTrialRewards() {
   showScreen("rewardScreen");
 }
 
+// 套用選到的獎勵，進入下一關。
 function continueTrial() {
   if (!trial || !selectedReward || trial.stage >= 2) return;
   const r = selectedReward;
@@ -2280,10 +2551,13 @@ function continueTrial() {
   startBattle(true);
 }
 
+// ---------- 按鈕事件 ----------
+
 $("#startBtn").onclick = () => {
   renderFighters();
   showScreen("selectScreen");
 };
+// 關閉規則視窗。
 function closeRules() {
   $("#rulesModal").classList.remove("open");
   $("#rulesModal").setAttribute("aria-hidden", "true");
@@ -2303,12 +2577,14 @@ $("#rulesModal").onclick = (event) => {
 $$("[data-back]").forEach(
   (button) => (button.onclick = () => showScreen(button.dataset.back)),
 );
+// 進入援護畫面，篩選回到全部。
 $("#toSupportBtn").onclick = () => {
   supportFilter = "all";
   updateSupportFilters();
   renderSupports();
   showScreen("supportScreen");
 };
+// 援護選滿才能進入挑戰設定。
 $("#toChallengeBtn").onclick = () => {
   if (
     !selectedFighter ||
@@ -2320,6 +2596,7 @@ $("#toChallengeBtn").onclick = () => {
   updateSetupState();
   showScreen("challengeScreen");
 };
+// 隨機選一個反派。
 $("#randomBossBtn").onclick = () => {
   selectedVillain = pick(villains);
   renderVillains();
@@ -2327,6 +2604,7 @@ $("#randomBossBtn").onclick = () => {
 };
 $("#battleBtn").onclick = () => startBattle();
 $("#endTurnBtn").onclick = endPlayerTurn;
+// 放棄戰鬥，回到開始畫面。
 $("#quitBtn").onclick = () => {
   abortBattle();
   showScreen("startScreen");
@@ -2341,6 +2619,7 @@ $("#homeBtn").onclick = () => {
   abortBattle();
   showScreen("startScreen");
 };
+// 打開或收起戰鬥紀錄。
 function setLogOpen(open) {
   $("#logPanel").classList.toggle("open", open);
   $("#logToggle").setAttribute("aria-expanded", String(open));
@@ -2355,24 +2634,31 @@ $("#closeLog").onclick = () => {
   setLogOpen(false);
   $("#logToggle").focus();
 };
+// 按 Esc 收起戰鬥紀錄。
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && $("#logPanel").classList.contains("open")) {
     setLogOpen(false);
     $("#logToggle").focus();
   }
 });
+// 查看目前的場地效果。
 $("#encounterInfo").onclick = () => {
   if (!trial || !currentField) return;
   detailIndex = null;
   $("#cardDetailName").textContent = currentField.name;
-  $("#cardDetailBody").innerHTML =
-    `<p>${currentField.desc}</p><p>本次路線：${trial.route.map((v) => v.name).join(" → ")}</p><p>已取得：${trial.rewards.join("、") || "尚未取得獎勵"}</p><small>生命與星能會延續到下一關；新戰鬥會清除異常、劍勢、護盾及召喚狀態。秘寶則持續整場試煉。</small>`;
+  $("#cardDetailBody").innerHTML = /* HTML */ `<p>${currentField.desc}</p>
+    <p>本次路線：${trial.route.map((v) => v.name).join(" → ")}</p>
+    <p>已取得：${trial.rewards.join("、") || "尚未取得獎勵"}</p>
+    <small
+      >生命與星能會延續到下一關；新戰鬥會清除異常、劍勢、護盾及召喚狀態。秘寶則持續整場試煉。</small
+    >`;
   $("#playDetailCard").hidden = true;
   $("#cardDetailModal").classList.add("open");
   $("#cardDetailModal").setAttribute("aria-hidden", "false");
   $("#closeCardDetail").focus();
 };
 
+// 更新援護篩選按鈕。
 function updateSupportFilters() {
   $$("[data-support-filter]").forEach((button) => {
     const active = button.dataset.supportFilter === supportFilter;
@@ -2390,6 +2676,7 @@ $$("[data-support-filter]").forEach(
       $("#supportGrid").scrollTop = 0;
     }),
 );
+// 清空已選的援護。
 $("#clearSupportsBtn").onclick = () => {
   selectedSupports = [];
   renderSupports();
@@ -2411,11 +2698,13 @@ $("#closeCardDetail").onclick = closeCardDetail;
 $("#cardDetailModal").onclick = (event) => {
   if (event.target.id === "cardDetailModal") closeCardDetail();
 };
+// 從詳細視窗直接出牌。
 $("#playDetailCard").onclick = () => {
   const index = detailIndex;
   closeCardDetail();
   if (index !== null) playCard(index);
 };
+// 鍵盤操作：Esc 關視窗、Tab 留在視窗內、數字鍵出牌。
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     closeCardDetail();

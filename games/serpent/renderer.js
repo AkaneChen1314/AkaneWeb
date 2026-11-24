@@ -1,9 +1,10 @@
 /* 檔案導讀：3D 與相容繪圖；角色及場景由程式建立，不需要外部模型。 */
-/* Original procedural meshes and an instanced WebGL renderer. No network assets. */
+// 程式產生的模型與實例化 WebGL 繪圖器，不需要下載任何檔案。
 (function () {
   "use strict";
   const TAU = Math.PI * 2,
     colors = new Map();
+  // 每種蟲的顏色：[深色外殼與腳, 發光重點]；身體主色由規則引擎決定。
   // [dark shell / legs, glow accent] per bug kind; the main body colour comes from the engine.
   const BUG_PALETTE = {
     chaser: ["#5a2430", "#ffd6a0"],
@@ -18,6 +19,10 @@
     healer: ["#2f5a45", "#7dffb0"],
     sniper: ["#3b2457", "#ff3b6b"],
   };
+
+  // ---------- 數學工具 ----------
+
+  // 把 #rrggbb 轉成 0～1 的數值並記住。
   function color(hex) {
     if (!colors.has(hex)) {
       const n = parseInt(hex.replace("#", ""), 16);
@@ -29,6 +34,7 @@
     }
     return colors.get(hex);
   }
+  // 兩個 4×4 矩陣相乘。
   function multiply(a, b) {
     const out = new Float32Array(16);
     for (let c = 0; c < 4; c++)
@@ -37,10 +43,12 @@
           out[c * 4 + r] += a[k * 4 + r] * b[c * 4 + k];
     return out;
   }
+  // 向量長度變成 1。
   function normalize(v) {
     const n = Math.hypot(...v) || 1;
     return v.map((x) => x / n);
   }
+  // 兩個向量的外積。
   function cross(a, b) {
     return [
       a[1] * b[2] - a[2] * b[1],
@@ -48,6 +56,7 @@
       a[0] * b[1] - a[1] * b[0],
     ];
   }
+  // 鏡頭矩陣：從 eye 看向 target。
   function lookAt(eye, target) {
     const z = normalize(eye.map((v, i) => v - target[i])),
       x = normalize(cross([0, 1, 0], z)),
@@ -72,6 +81,7 @@
       1,
     ]);
   }
+  // 正交投影矩陣（沒有近大遠小）。
   function ortho(w, h) {
     return new Float32Array([
       2 / w,
@@ -92,6 +102,10 @@
       1,
     ]);
   }
+
+  // ---------- 基本形狀 ----------
+
+  // 產生共用的基本形狀：球、寶石、方塊、圓錐與圓環。
   function makeMeshes() {
     const meshes = {};
     const sphere = [],
@@ -99,6 +113,7 @@
       si = [],
       rings = 10,
       sides = 16;
+    // 球的頂點。
     for (let j = 0; j <= rings; j++) {
       const p = (Math.PI * j) / rings;
       for (let i = 0; i <= sides; i++) {
@@ -112,6 +127,7 @@
         sn.push(...v);
       }
     }
+    // 球的三角形索引。
     for (let j = 0; j < rings; j++)
       for (let i = 0; i < sides; i++) {
         const a = j * (sides + 1) + i,
@@ -119,6 +135,7 @@
         si.push(a, b, a + 1, a + 1, b, b + 1);
       }
     meshes.sphere = { vertices: sphere, normals: sn, indices: si };
+    // 由三角形清單做成平面著色的形狀。
     const flat = (triangles) => {
       const v = [],
         n = [],
@@ -149,6 +166,7 @@
     }
     meshes.gem = flat(t);
     const box = [],
+      // 方塊的六個面。
       faces = [
         [
           [-1, -1, 1],
@@ -190,6 +208,7 @@
     for (const f of faces) box.push([f[0], f[1], f[2]], [f[0], f[2], f[3]]);
     meshes.box = flat(box);
     const cone = [];
+    // 圓錐。
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * TAU,
         b = ((i + 1) / 8) * TAU,
@@ -203,6 +222,7 @@
       ti = [],
       segments = 64,
       tube = 6;
+    // 圓環。
     for (let i = 0; i <= segments; i++)
       for (let j = 0; j <= tube; j++) {
         const a = (TAU * i) / segments,
@@ -242,7 +262,12 @@
       float spec=pow(max(dot(N,normalize(L+V)),0.0),48.0);
       vec3 col=vColor*(0.38+diffuse*0.65)+vec3(0.63,0.89,0.84)*spec*0.44+vColor*rim*0.35;
       col=mix(col,vColor*1.18,clamp(vEmission,0.0,1.0));gl_FragColor=vec4(col,1.0);}`;
+
+  // ---------- 繪圖器 ----------
+
+  // 用 WebGL 實例繪圖畫整個場景；不支援時改用 2D 畫布。
   class Renderer {
+    // 建立繪圖環境、著色器與各形狀的緩衝區。
     constructor(canvas, options = {}) {
       this.canvas = canvas;
       this.quality = options.quality || "high";
@@ -260,6 +285,7 @@
       this.fallback = !this.gl;
       this.vp = new Float32Array(16);
       this.eye = [0, 45, 25];
+      // 沒有 WebGL，改用 2D 畫布。
       if (!this.gl) {
         this.ctx = canvas.getContext("2d");
         if (!this.ctx) throw new Error("無法建立遊戲畫布");
@@ -267,6 +293,7 @@
         return;
       }
       const gl = this.gl;
+      // 編譯一段著色器。
       const compile = (type, source) => {
         const s = gl.createShader(type);
         gl.shaderSource(s, source);
@@ -299,6 +326,7 @@
       this.uVP = gl.getUniformLocation(p, "uVP");
       this.uEye = gl.getUniformLocation(p, "uEye");
       this.instancing = gl.getExtension("ANGLE_instanced_arrays");
+      // 每種形狀準備頂點、索引與實例緩衝區。
       for (const [key, mesh] of Object.entries(makeMeshes())) {
         const interleaved = [];
         for (let i = 0; i < mesh.vertices.length; i += 3)
@@ -332,6 +360,7 @@
       }
       gl.enable(gl.DEPTH_TEST);
       gl.depthFunc(gl.LEQUAL);
+      // 繪圖連線中斷時通知畫面。
       canvas.addEventListener("webglcontextlost", (e) => {
         e.preventDefault();
         this.lost = true;
@@ -341,6 +370,7 @@
         location.reload();
       });
     }
+    // 依畫面大小與畫質調整解析度。
     resize() {
       const ratio = Math.min(
           window.devicePixelRatio || 1,
@@ -358,6 +388,7 @@
         this.canvas.height = ph;
       }
     }
+    // 開始畫一幀：設定鏡頭並清空上一幀的資料。
     begin(eye, target, viewHeight, background = "#0b171c") {
       this.resize();
       this.eye = eye;
@@ -385,6 +416,7 @@
       gl.uniform3fv(this.uEye, eye);
       for (const m of Object.values(this.meshes)) m.used = 0;
     }
+    // 登記要畫的一個形狀，等 end() 時一次送出。
     draw(mesh, pos, scale, hex, yaw = 0, emission = 0) {
       if (this.fallback) {
         this.fallbackItems.push({ mesh, pos, scale, hex, yaw, emission });
@@ -396,7 +428,7 @@
         larger.set(m.data);
         m.data = larger;
       }
-      // Write fields directly: thousands of draws per frame, so avoid building temporary arrays.
+      // 直接寫入欄位：每幀上千次繪圖，避免建立暫時陣列。
       const d = m.data,
         i = m.used,
         rgb = color(hex);
@@ -413,6 +445,7 @@
       d[i + 10] = emission;
       m.used += 11;
     }
+    // 把這一幀登記的形狀全部畫出來。
     end() {
       if (this.fallback) return this.endFallback();
       if (this.lost) return;
@@ -427,6 +460,7 @@
         gl.enableVertexAttribArray(l.aNormal);
         gl.vertexAttribPointer(l.aNormal, 3, gl.FLOAT, false, 24, 12);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.ibo);
+        // 支援實例繪圖：同一種形狀一次畫完。
         if (ins) {
           gl.bindBuffer(gl.ARRAY_BUFFER, m.instances);
           gl.bufferData(
@@ -458,6 +492,7 @@
         } else {
           for (const key of ["aOffset", "aScale", "aColor", "aMaterial"])
             gl.disableVertexAttribArray(l[key]);
+          // 不支援時一個一個畫。
           for (let i = 0; i < m.used; i += 11) {
             gl.vertexAttrib3fv(l.aOffset, m.data.subarray(i, i + 3));
             gl.vertexAttrib3fv(l.aScale, m.data.subarray(i + 3, i + 6));
@@ -468,6 +503,7 @@
         }
       }
     }
+    // 場景座標換成畫面座標。
     project(x, y, z) {
       const m = this.vp;
       return {
@@ -476,6 +512,7 @@
         depth: m[2] * x + m[6] * y + m[10] * z + m[14],
       };
     }
+    // 2D 備援畫法：由遠到近逐一畫。
     endFallback() {
       const ctx = this.ctx,
         ratio = this.canvas.width / this.width;
@@ -490,6 +527,7 @@
           size = Math.max(1, Math.hypot(edge.x - x, edge.y - y)),
           sy = Math.max(1, size * ((o.scale[1] / o.scale[0]) * 0.7 + 0.3));
         ctx.fillStyle = o.hex;
+        // 圓環、方塊與其他形狀各有畫法。
         if (o.mesh === "ring") {
           ctx.strokeStyle = o.hex;
           ctx.lineWidth = 1.5;
@@ -505,6 +543,7 @@
           ctx.closePath();
           ctx.fill();
         } else if (o.mesh === "box") {
+          // 方塊頂面的四個角。
           const corners = [
             [-1, -1],
             [1, -1],
@@ -542,12 +581,17 @@
       }
       ctx.restore();
     }
+
+    // ---------- 小蛇 ----------
+
+    // 畫蛇：身體、角色專屬裝飾、頭部與眼睛。
     snake(points, char, angle, time, options = {}) {
       const scale = options.scale || 1,
         base = options.y || 0.6;
       const model = char.id,
         flashing = options.flash,
         active = options.active;
+      // 身體由尾到頭逐節畫。
       for (let i = points.length - 1; i >= 0; i--) {
         const p = points[i],
           y = (p.y ?? base) + Math.sin(time * 3 - i * 0.3) * 0.04,
@@ -578,6 +622,7 @@
           bodyColor,
           yaw,
         );
+        // 角色專屬的背部裝飾。
         if (i > 0 && i % 2 === 0) {
           if (model === "ember")
             this.draw(
@@ -621,11 +666,13 @@
         y = (h.y ?? base) + Math.sin(time * 3) * 0.04,
         c = Math.cos(angle),
         s = Math.sin(angle);
+      // 以蛇頭為準的位置。
       const at = (x, dy, z) => [
         h.x + (x * c - z * s) * scale,
         y + dy * scale,
         h.z + (x * s + z * c) * scale,
       ];
+      // 兩側的眼睛與角色專屬頭飾。
       for (const side of [-1, 1]) {
         this.draw(
           "sphere",
@@ -691,6 +738,7 @@
         char.dark,
         angle,
       );
+      // 新星角色施放技能時的光環。
       if (active && model === "nova") {
         this.draw(
           "ring",
@@ -703,6 +751,7 @@
         this.draw("ring", [h.x, 1.5, h.z], [1, 1, 1], char.accent, -time, 1);
       }
     }
+    // 大廳裡旋轉展示的角色。
     previewScene(char, time, rotation = 0) {
       const angle = 0.25 + rotation,
         eye = [Math.sin(angle) * 17, 12, Math.cos(angle) * 17];
@@ -751,8 +800,7 @@
       }
       this.end();
     }
-    // ---------- Bugs: shared parts ----------
-    // Leg pairs that step in a walking rhythm: a thigh reaching out from the hip, then a shin down to the ground.
+    // 蟲類共用的零件：一對對的腳照步伐擺動，大腿從身體往外伸，小腿往下到地面。
     bugLegs(x, z, a, hip, pairs, span, width, len, color, t, rate, walk) {
       const c = Math.cos(a),
         s = Math.sin(a);
@@ -787,6 +835,7 @@
           );
         }
     }
+    // 蟲的眼睛。
     bugEyes(at, f, sd, y, r, color, glow) {
       for (const side of [-1, 1]) {
         this.draw("sphere", at(f, side * sd, y), [r, r, r], color, 0, glow);
@@ -800,6 +849,7 @@
         );
       }
     }
+    // 蟲的觸角。
     bugAntennae(x, z, a, f, sd, y, len, color, tip, t) {
       const c = Math.cos(a),
         s = Math.sin(a);
@@ -832,6 +882,7 @@
     centipede(e, hex, dark, glow, t, s, walk) {
       const pts = e.body,
         n = pts.length;
+      // 由尾到頭畫每一節身體與腳。
       for (let i = n - 1; i >= 0; i--) {
         const p = pts[i],
           prev = pts[Math.max(0, i - 1)],
@@ -861,6 +912,7 @@
           yaw,
           0.35,
         );
+        // 兩側的腳，依序擺動。
         for (const side of [-1, 1]) {
           const ph = t * 14 - i * 0.9 + (side > 0 ? 0 : Math.PI),
             ly = yaw + side * (Math.PI / 2 + Math.sin(ph) * 0.35 * walk),
@@ -880,6 +932,7 @@
           this.draw("box", [fx, kn / 2, fz], [0.022, kn / 2, 0.022], dark, ly);
         }
       }
+      // 頭部。
       const h = pts[0],
         a = e.angle,
         c = Math.cos(a),
@@ -907,6 +960,7 @@
         glow,
         t,
       );
+      // 尾巴的鉗子。
       const tail = pts[n - 1],
         before = pts[n - 2] || tail,
         ta = Math.atan2(tail.z - before.z, tail.x - before.x);
@@ -923,8 +977,9 @@
           ta + side * 0.35,
         );
     }
-    // Small monsters: each kind is a distinct, animated bug that can be recognised at a glance.
+    // 小怪：每一種都是特徵明顯、會動的蟲，一眼就能分辨。
     enemyModel(e, g, t, still) {
+      // 顏色：冰凍、受傷閃白或原色。
       const frozen = g.frozen > 0,
         hex = frozen
           ? "#91e2f5"
@@ -948,6 +1003,7 @@
         at = (f, sd, y) => [e.x + c * f - sn * sd, y, e.z + sn * f + c * sd];
       const walk = frozen || e.stunned > 0 ? 0 : still,
         breathe = Math.sin(t * 3 + (e.seed || 0)) * 0.025 * still;
+      // 剛出現的光圈。
       if (e.age < 0.8)
         this.draw(
           "ring",
@@ -1707,6 +1763,7 @@
           }
         }
       }
+      // 菁英敵人的光環。
       if (e.elite) {
         this.draw(
           "ring",
@@ -1730,6 +1787,7 @@
           1,
         );
       }
+      // 暈眩時頭上繞圈的星星。
       if (e.stunned > 0)
         for (let i = 0; i < 3; i++) {
           const sa = t * 5 + i * 2.1;
@@ -1743,8 +1801,9 @@
           );
         }
     }
-    // Bosses: layered models that change with each phase.
+    // 首領：分層的模型，會隨階段變化。
     bossModel(e, g, t, still) {
+      // 首領共用：階段、吼叫、腳下光圈。
       const p = e.phase || 1,
         roar = e.roar > 0,
         pulse = roar ? 1 + Math.sin(t * 30) * 0.07 * still : 1,
@@ -1757,6 +1816,7 @@
             : e.angle,
         c = Math.cos(a),
         sn = Math.sin(a);
+      // 以首領為準的位置。
       const at = (f, sd, y) => [
         e.x + c * f - sn * sd,
         y,
@@ -1782,11 +1842,13 @@
           i < p ? 1 : 0,
         );
       }
+      // 第一位：熔岩巨像。
       if (e.variant === 0) {
         const lava = p === 1 ? "#ff7a2e" : p === 2 ? "#ff9a3d" : "#ffd27a",
           glow = 0.6 + p * 0.14,
           rock = tint("#352a25"),
           rock2 = tint("#463830");
+        // 肩膀與手臂。
         for (const side of [-1, 1]) {
           this.draw(
             "box",
@@ -1873,6 +1935,7 @@
             1,
           );
         const rocks = 4 + p * 2;
+        // 環繞的石塊。
         for (let i = 0; i < rocks; i++) {
           const ra = t * 0.8 + (i * TAU) / rocks;
           this.draw(
@@ -1888,6 +1951,7 @@
             i % 2 ? 0 : 0.7,
           );
         }
+        // 第二階段起滴落岩漿。
         if (p >= 2)
           for (let i = 0; i < 5; i++) {
             const da = i * 1.3 + e.x,
@@ -1905,6 +1969,7 @@
               1,
             );
           }
+        // 第三階段多一圈火錐。
         if (p >= 3)
           for (let i = 0; i < 6; i++) {
             const ca = (i * TAU) / 6 + t;
@@ -1921,6 +1986,7 @@
               1,
             );
           }
+        // 第二位。
       } else if (e.variant === 1) {
         this.draw(
           "sphere",
@@ -2031,6 +2097,7 @@
               t * (k % 2 ? -2 : 2),
               1,
             );
+        // 第三位。
       } else {
         const charging = e.windup > 0 || e.charge > 0,
           stunned = e.stunned > 0,
@@ -2101,6 +2168,7 @@
               0.6,
             );
       }
+      // 暈眩時的星星。
       if (e.stunned > 0)
         for (let i = 0; i < 4; i++) {
           const sa = t * 4 + (i * TAU) / 4;
@@ -2114,8 +2182,9 @@
           );
         }
     }
-    // Power-ups: a pedestal and loot beam (visible from afar) plus an object you can name at a glance.
+    // 道具：底座與光柱（遠處就看得到），加上一眼能認出的物件。
     powerModel(f, def, t, still) {
+      // 道具共用：顏色、上下浮動與底座。
       const rainbow = ["#ff8fb1", "#ffd27a", "#9df5a8", "#8fd3ff", "#c7a6ff"],
         col = f.type === "rainbow" ? rainbow[Math.floor(t * 6) % 5] : def.color;
       const y = 1.05 + Math.sin(t * 2.4 + f.phase) * 0.15 * still,
@@ -2416,6 +2485,10 @@
         }
       }
     }
+
+    // ---------- 整個遊戲場景 ----------
+
+    // 畫整個遊戲場景，只畫鏡頭看得到的東西。
     gameScene(g, camera, reducedMotion, zoom = 1) {
       const w = Serpent.WORLDS[g.world],
         FOODS = Serpent.FOODS,
@@ -2424,6 +2497,7 @@
         still = reducedMotion ? 0 : 1;
       const viewHeight = (this.canvas.clientWidth < 650 ? 36 : 43) * zoom;
       this.viewHeight = viewHeight;
+      // 鏡頭位置。
       this.begin(
         [camera.x, 48, camera.z + 30],
         [camera.x, 0, camera.z],
@@ -2437,6 +2511,7 @@
         Math.abs(p.x - camera.x) < halfW + margin &&
         Math.abs(p.z - camera.z) < halfH + margin;
       this.draw("box", [0, -0.28, 0], [bound + 1, 0.25, bound + 1], w.floor);
+      // 地面花紋。
       for (const p of g.patches)
         if (visible(p, p.r))
           this.draw(
@@ -2446,7 +2521,7 @@
             w.patches[p.tint],
             p.rotation,
           );
-      // Grid lines are clipped to the visible window instead of spanning the whole (large) map.
+      // 格線只畫看得到的範圍，不畫滿整張大地圖。
       const gx0 = Math.max(-bound, Math.ceil((camera.x - halfW - 6) / 3) * 3),
         gx1 = Math.min(bound, camera.x + halfW + 6),
         gz0 = Math.max(-bound, Math.ceil((camera.z - halfH - 6) / 3) * 3),
@@ -2475,17 +2550,20 @@
             0,
             0.25,
           );
+      // 左右邊界的牆。
       for (const x of [-bound, bound]) {
         this.draw("box", [x, 0.3, 0], [0.12, 0.3, bound], w.rock);
         this.draw("box", [x, 0.63, 0], [0.07, 0.025, bound], w.crystal, 0, 0.8);
       }
+      // 上下邊界的牆。
       for (const z of [-bound, bound]) {
         this.draw("box", [0, 0.3, z], [bound, 0.3, 0.12], w.rock);
         this.draw("box", [0, 0.63, z], [bound, 0.025, 0.07], w.crystal, 0, 0.8);
       }
-      // Terrain zones: healing springs plus the world-specific slow / slippery / sinking ground.
+      // 地形區域：治癒泉，以及各戰場的減速、滑行或下沉地面。
       for (const z of g.zones) {
         if (!visible(z, z.r)) continue;
+        // 治癒泉：水位會隨使用減少。
         if (z.type === "spring") {
           const fill = z.charge / z.max,
             water = fill > 0.2 ? "#3fc9a3" : "#2a6f60",
@@ -2589,6 +2667,7 @@
             0,
             0.55,
           );
+          // 三個戰場各自的特殊區域外觀。
           if (g.world === 0)
             for (let k = 0; k < 6; k++) {
               const a = k * 2.1 + z.z,
@@ -2653,7 +2732,7 @@
             }
         }
       }
-      // Boost pads: a framed metal plate whose chevrons light up in sequence.
+      // 加速板：有框的金屬板，箭頭依序發亮。
       for (const p of g.pads) {
         if (!visible(p, 2)) continue;
         const c = Math.cos(p.angle),
@@ -2668,6 +2747,7 @@
           "#33402a",
           p.angle,
         );
+        // 兩側的導軌。
         for (const side of [-1, 1]) {
           this.draw(
             "box",
@@ -2702,6 +2782,7 @@
           0,
           hot ? 1 : 0.45,
         );
+        // 依序發亮的箭頭。
         for (let k = 0; k < 3; k++) {
           const lit =
               hot ||
@@ -2732,7 +2813,7 @@
             1,
           );
       }
-      // Paired portals share a colour so you can tell which exits connect.
+      // 成對的傳送門顏色相同，看得出通往哪裡。
       for (const p of g.portals) {
         if (!visible(p, 3)) continue;
         const hue = p.pair ? "#7fd1ff" : "#c49bff",
@@ -2747,6 +2828,7 @@
           t * 2,
           0.7,
         );
+        // 傳送門四周的柱子。
         for (let k = 0; k < 4; k++) {
           const a = (k * TAU) / 4 + 0.4;
           this.draw(
@@ -2769,6 +2851,7 @@
             1,
           );
         }
+        // 往上飄的光點。
         for (let k = 0; k < 12; k++) {
           const ph = ((t * 0.6 + k / 12) % 1) * still + (1 - still) * (k / 12),
             ang = k * 2.4 + t * 2 * still,
@@ -2796,6 +2879,7 @@
           1,
         );
       }
+      // 不影響規則的小裝飾。
       for (const d of g.decorations) {
         if (!visible(d)) continue;
         const sz = d.size,
@@ -2962,6 +3046,7 @@
             );
         }
       }
+      // 障礙物，依戰場有不同外觀。
       for (const o of g.obstacles) {
         if (!visible(o, o.landmark ? 10 : 5)) continue;
         this.draw(
@@ -3162,6 +3247,7 @@
           );
         }
       }
+      // 寶箱：受傷會裂開並搖晃。
       for (const c of g.caches) {
         if (c.dead || !visible(c, 2)) continue;
         const flash = c.flash > 0,
@@ -3170,6 +3256,7 @@
           yaw = c.phase,
           cc = Math.cos(yaw),
           cs = Math.sin(yaw);
+        // 以寶箱為準的位置。
         const at = (f, sd, y) => [
           c.x + cc * (f + shake) - cs * sd,
           y,
@@ -3257,6 +3344,7 @@
           1,
         );
       }
+      // 食物與道具。
       for (const f of g.food) {
         if (!visible(f, 1)) continue;
         const def = FOODS[f.type] || FOODS.energy;
@@ -3313,11 +3401,13 @@
             0.8,
           );
       }
+      // 敵人與首領。
       for (const e of g.enemies) {
         if (!visible(e, e.boss ? 8 : 5)) continue;
         if (e.boss) this.bossModel(e, g, t, still);
         else this.enemyModel(e, g, t, still);
       }
+      // 子彈。
       for (const p of g.projectiles) {
         const col = p.color || "#ffad85",
           r = (p.r || 0.25) * 0.95;
@@ -3354,6 +3444,7 @@
           );
         }
       }
+      // 玩家的小蛇。
       this.snake(g.snake, g.character, g.angle, t, {
         flash:
           g.invulnerable > 0 && !reducedMotion && Math.floor(t * 10) % 2 === 0,
@@ -3367,6 +3458,7 @@
         0,
         0.6,
       );
+      // 狂怒道具的光。
       if (g.powers.fury > 0) {
         this.draw(
           "ring",
@@ -3389,6 +3481,7 @@
           1,
         );
       }
+      // 護盾道具的光。
       if (g.powers.shield > 0) {
         this.draw(
           "ring",
@@ -3425,6 +3518,7 @@
           0.5,
         );
       }
+      // 環繞玩家的光球。
       for (const o of g.orbits()) {
         this.draw(
           "gem",
@@ -3443,6 +3537,7 @@
           0.5,
         );
       }
+      // 擴散的圓環特效。
       for (const r of g.rings) {
         const radius = Math.max(0.1, (r.radius * r.age) / r.life);
         this.draw(
@@ -3463,6 +3558,7 @@
             1,
           );
       }
+      // 粒子與飄浮的小光點。
       if (this.quality !== "low" && !reducedMotion) {
         for (const p of g.particles) {
           const size = p.size * Math.min(1, p.life * 3);
@@ -3475,7 +3571,7 @@
             0.8,
           );
         }
-        // Ambient motes (spores / snow / embers) drift in a window around the camera.
+        // 飄浮的小光點（孢子、雪、火星）在鏡頭附近漂移。
         const span = 60,
           mote = ["#b8ffd9", "#e8fbff", "#ffcf8f"][g.world];
         for (let i = 0; i < 46; i++) {

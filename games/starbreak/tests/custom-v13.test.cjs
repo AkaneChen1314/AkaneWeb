@@ -1,3 +1,6 @@
+/*
+ * 測試：v1.3 的首領預告、起始武器、難度與存檔。
+ */
 "use strict";
 const assert = require("node:assert/strict");
 const {
@@ -14,16 +17,19 @@ const {
   bossCooldown,
 } = require("../game.js");
 let checks = 0;
+// 執行一項測試。
 function test(n, fn) {
   fn();
   checks++;
   console.log("PASS", n);
 }
+// 開始一場遠征。
 function run(difficulty = 0, config = {}) {
   const e = new Engine(defaultProfile());
   e.newRun("scout", "campaign", difficulty, 21222, config);
   return e;
 }
+// 四種規則的首領預告與實際時間一致。
 test("Boss summaries and actual schedules agree in all four rules", () => {
   for (const rule of ["interval", "rush", "final", "none"]) {
     const e = run(0, { bossRule: rule, totalWaves: 8, bossEvery: 4 });
@@ -34,6 +40,7 @@ test("Boss summaries and actual schedules agree in all four rules", () => {
     if (rule === "interval") assert(text.startsWith("每 4 波 Boss"));
   }
 });
+// 六種起始武器的血量取捨都有生效。
 test("all six starting weapons apply actual health tradeoffs", () => {
   for (const ship of SHIPS)
     for (const weapon of Object.keys(WEAPONS)) {
@@ -51,6 +58,7 @@ test("all six starting weapons apply actual health tradeoffs", () => {
   e.applyUpgrade({ kind: "weapon", id: "missile" });
   assert.equal(e.r.p.maxHp, before);
 });
+// 標準船的血量不變，自訂裝備才會改變。
 test("standard ship health is preserved while custom loadouts change it", () => {
   for (const ship of SHIPS) {
     const e = new Engine(defaultProfile());
@@ -58,6 +66,7 @@ test("standard ship health is preserved while custom loadouts change it", () => 
     assert.equal(e.r.p.maxHp, ship.hp);
   }
 });
+// 出擊預覽包含研究、模組與變異。
 test("launch preview includes research, real equipped module and mutator", () => {
   for (const mod of ["medic", "reactor", "vector", "aegis"]) {
     const p = defaultProfile();
@@ -82,6 +91,7 @@ test("launch preview includes research, real equipped module and mutator", () =>
     assert.equal(e.r.stats.armor * 8, preview.armor);
   }
 });
+// 難度會改變敵人、受傷與子彈速度。
 test("difficulty changes actual enemies, incoming damage and projectile speed", () => {
   const hp = [],
     speed = [],
@@ -103,6 +113,7 @@ test("difficulty changes actual enemies, incoming damage and projectile speed", 
   for (const values of [hp, speed, damage, shots])
     assert(values.every((v, i) => i === 0 || v > values[i - 1]));
 });
+// 難度分別影響生成量與預警時間。
 test("difficulty scales spawn pressure and warning windows independently", () => {
   const times = [],
     warnings = [];
@@ -118,6 +129,7 @@ test("difficulty scales spawn pressure and warning windows independently", () =>
   assert(times.every((v, i) => i === 0 || v < times[i - 1]));
   assert(warnings.every((v, i) => i === 0 || v < warnings[i - 1]));
 });
+// 關閉精英後維持關閉，首領間隔與頻率互不影響。
 test("elite off remains off and Boss interval/frequency choices stay independent", () => {
   for (const d of DIFFICULTIES) {
     const e = run(d.id, {
@@ -136,6 +148,7 @@ test("elite off remains off and Boss interval/frequency choices stay independent
     assert.equal(bossCooldown(e.r, 1), 4 / 0.7 / d.bossRate);
   }
 });
+// 難度影響每波回復與獎勵，每次結算只給一次。
 test("difficulty controls wave healing and reward, once per settlement", () => {
   for (const d of DIFFICULTIES) {
     const e = run(d.id, { bossRule: "none" });
@@ -153,6 +166,7 @@ test("difficulty controls wave healing and reward, once per settlement", () => {
     assert.equal(e.profile.credits, credit);
   }
 });
+// 新存檔保留起始選擇，舊遠征維持原本血量。
 test("new saves preserve custom starting choice; old runs keep existing health", () => {
   const e = run(0, { startingWeapon: "missile" }),
     old = JSON.parse(JSON.stringify(e.r));

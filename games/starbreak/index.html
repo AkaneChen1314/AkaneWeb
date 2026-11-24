@@ -16,6 +16,7 @@
       content="星夜突圍：依等級與裝備接戰的 Boss、六檔難度、三種模式與自訂波數。進化武器，挑戰多重連攻，探索星域與商城。"
     />
     <title>星夜突圍 · STARBREAK</title>
+    <!-- 圖示與樣式；後面的會蓋過前面的，順序不要更動。 -->
     <link
       rel="icon"
       href="favicon.svg"
@@ -53,6 +54,7 @@
       rel="stylesheet"
       href="ui-flight.css?v=20261113-blueworld-r14-mobileview"
     />
+    <!-- 網站共用字型與返回遊戲館的程式。 -->
     <link
       rel="stylesheet"
       href="../../shared/fonts.css?v=1.2-r11"
@@ -64,6 +66,7 @@
     <script src="../../shared/portal.js?v=20261104-blueworld-r14-source"></script>
   </head>
   <body>
+    <!-- 上方列：遊戲名稱與主選單。 -->
     <header class="topbar">
       <a
         class="brand"
@@ -78,17 +81,21 @@
         ><button
           id="sound-btn"
           aria-pressed="false"
-          >音效：關</button
         >
+          音效：關
+        </button>
       </nav>
       <span class="version">v1.2</span>
     </header>
+    <!-- 所有畫面都由 game.js 產生後放進這裡。 -->
     <main id="app"></main>
+    <!-- 提示訊息。 -->
     <div
       id="toast"
       role="status"
       aria-live="polite"
     ></div>
+    <!-- 共用視窗。 -->
     <dialog id="dialog">
       <div id="dialog-content"></div>
       <button
@@ -99,6 +106,7 @@
         ×
       </button>
     </dialog>
+    <!-- 遊戲主程式。 -->
     <script src="game.js?v=20261113-blueworld-r14-mobileview"></script>
   </body>
 </html>

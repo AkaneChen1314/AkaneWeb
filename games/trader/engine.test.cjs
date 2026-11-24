@@ -1,7 +1,12 @@
+/*
+ * 測試：交易員的規則（完整流程、借款、持倉、工作、器官、賭局、存檔轉換）。
+ * 全部是虛構的模擬規則，不涉及真實資金。
+ */
 "use strict";
 const assert = require("node:assert/strict");
 require("./engine.js");
 const E = globalThis.BillionEngine;
+// 借一筆款項。
 function loan(s, amount, type = "bank") {
   return E.borrow(
     s,
@@ -13,9 +18,11 @@ function loan(s, amount, type = "bank") {
       : { id: s.fictionId, signedName: s.playerName, contacts: true },
   );
 }
+// 完成目前的對話。
 function chat(s) {
   while ((s.pending.turn || 0) < 3) assert(E.collectorReply(s, "answer").ok);
 }
+// 用指定的態度處理催收。
 function resolve(s, style = "safe") {
   const p = s.pending;
   if (p.type === "glitch") return E.resolveGlitch(s);
@@ -43,6 +50,7 @@ function resolve(s, style = "safe") {
     [16, 24, 38, 48].includes(s.day) ? (s.day === 24 ? 1 : 0) : 1,
   );
 }
+// 一百組亂數種子都要能正常遊玩。
 let count = 0;
 for (let seed = 1; seed <= 100; seed++)
   for (const strat of [
@@ -101,6 +109,7 @@ for (let seed = 1; seed <= 100; seed++)
     assert(["beggar", "death"].includes(s.endType));
     count++;
   }
+// 借款：淨值、利息與不合理金額。
 let s = E.create(3),
   eq = E.equity(s);
 assert(loan(s, 1e8, "online").ok);
@@ -109,6 +118,7 @@ assert.equal(E.interest(s), 4e6);
 let snap = JSON.stringify(s);
 assert(!loan(s, NaN).ok);
 assert.equal(JSON.stringify(s), snap);
+// 買進與賣出的手續費。
 s = E.create(2);
 assert(E.open(s, { asset: "sky", amount: 1e8, product: "spot" }).ok);
 assert.equal(s.daily, -150000);
@@ -118,6 +128,7 @@ assert(Math.abs(E.equity(s) - (eq - 150000)) < 1);
 snap = JSON.stringify(s);
 assert(!E.open(s, { asset: "sky", amount: NaN }).ok);
 assert.equal(JSON.stringify(s), snap);
+// 器官：不能重複賣，賣掉關鍵器官會結束遊戲。
 s = E.create(2);
 assert(E.sellOrgan(s, "kidney_left").ok);
 assert.equal(s.healthCap, 81);
@@ -127,6 +138,7 @@ assert.equal(JSON.stringify(s), snap);
 assert(E.sellOrgan(s, "core").ok);
 assert(s.ended && s.endType === "death");
 assert.equal(s.health, 0);
+// 高利貸到期：要先對話才能繼續，延期會加收。
 s = E.create(2);
 loan(s, 1e8, "shark");
 while (!s.pending) E.nextDay(s);
@@ -140,6 +152,7 @@ assert(E.choose(s, 1).ok);
 assert.equal(s.day, day);
 assert.equal(s.loans[0].due, day + 3);
 assert.equal(s.loans[0].balance, 1.2e8);
+// 故障事件：恢復後以實際價格計算，而且只能處理一次。
 s = E.create(1);
 E.open(s, { asset: "sky", amount: 1e8, product: "spot" });
 s.pending = { type: "glitch", shownProfit: 1 };
@@ -149,6 +162,7 @@ assert(E.equity(s) < eq);
 snap = JSON.stringify(s);
 assert(!E.resolveGlitch(s).ok);
 assert.equal(JSON.stringify(s), snap);
+// 練習模式不受事件影響。
 s = E.create(2, true);
 E.open(s, { asset: "sky", amount: 1e8, product: "spot" });
 E.nextDay(s);
@@ -158,7 +172,7 @@ assert(s.cash > E.INITIAL);
 console.log(
   `PASS: ${count} complete runs, guaranteed endings, healthy financial balances, loan rates/due dates, one-time body parts, death, event locking, one-time 404 settlement, and safe practice.`,
 );
-// 3.0 invariants: two independent kidneys, real intraday prices, retained archives and interactive work.
+// 3.0 不變條件：兩顆獨立的腎、真實的盤中價格、保留歷史與可操作的工作。
 s = E.create(81);
 assert(E.sellOrgan(s, "kidney_left").ok);
 assert(!s.organs.includes("kidney_right"));
@@ -171,6 +185,7 @@ assert(E.sellOrgan(s, "cornea_left").ok);
 assert(!s.organs.includes("cornea_right"));
 assert(E.sellOrgan(s, "cornea_right").ok);
 assert.equal(s.organs.filter((x) => x.startsWith("cornea")).length, 2);
+// 每一種工作。
 for (const def of E.JOBS) {
   s = E.create(203);
   const cash = s.cash;
@@ -200,6 +215,7 @@ for (const def of E.JOBS) {
   assert.equal(s.jobsDone, 1);
   assert(!E.work(s, def.id).ok, "Can earn twice in the same day");
 }
+// 工作：錯誤的選項不會改變狀態，放棄沒有收入。
 s = E.create(2);
 E.work(s, "cafe");
 snap = JSON.stringify(s);
@@ -210,6 +226,7 @@ E.quitWork(s);
 assert.equal(s.cash, eq);
 assert(E.work(s, "cashier").ok);
 assert.equal(s.job.done, 0);
+// 持倉的價值跟著即時價格變動。
 s = E.create(22);
 E.open(s, { asset: "sky", amount: 1e8 });
 const original = s.markets.sky.price,
@@ -230,6 +247,7 @@ assert(
   Math.abs(s.cash - (eq + current - 150000)) < 1,
   "Sale did not use live price",
 );
+// 中午到午夜的時間與每日費用。
 while (s.minute < 810) E.tick(s);
 const archive = JSON.stringify(s.markets.sky.series),
   middayPrice = s.markets.sky.price;
@@ -247,13 +265,13 @@ const paid = s.totalLiving;
 E.tick(s);
 assert.equal(s.totalLiving, paid, "Daily charge repeated after midnight");
 assert.equal(s.minute, 5);
-// Before-entry price extremes must not liquidate a newly purchased position.
+// 進場前的極端價格，不可以讓剛買的部位被強制平倉。
 s = E.create(4);
 s.markets.sky.bars.at(-1).low = 1;
 E.open(s, { asset: "sky", amount: 1e8, product: "margin", leverage: 2 });
 E.tick(s);
 assert.equal(s.positions.length, 1);
-// Preserve old save identity without fabricating unavailable historical ticks.
+// 保留舊存檔的身分，不捏造沒有的歷史報價。
 const old = E.create(2);
 old.version = 2;
 old.organs = ["kidney", "eye"];
@@ -267,7 +285,7 @@ const upgraded = E.migrate(old);
 assert(E.validate(upgraded));
 assert.deepEqual(upgraded.organs, ["kidney_left", "cornea_left"]);
 assert(upgraded.archiveNotice);
-// Force a 60-day survivor: verify that no data is sliced away, including day-60 closing data.
+// 強制存活 60 天：確認資料沒有被截掉，包含第 60 天收盤。
 s = E.create(102);
 while (!s.ended) {
   if (s.pending) {
@@ -292,6 +310,7 @@ assert(
   JSON.stringify(E.pack(s)).length * 2 < 4.8e6,
   "Packed history exceeds storage budget",
 );
+// 壓縮存檔解開後要和原本一致。
 const packedSave = JSON.stringify(E.pack(s)),
   restored = E.unpack(JSON.parse(packedSave));
 assert(E.validate(restored));
@@ -319,7 +338,8 @@ console.log(
 console.log(
   "PASS: both kidneys/corneas, all 3 participatory jobs, no premature/double wages, wrong answers, resumable work, job locking, actual live P&L/sale prices, prior-wick isolation, 24-hour continuation / midnight rollover, v2 migration, and all 17,340 price points per asset through day 60.",
 );
-// 4.0: identity, consent, escalating collector conversations, and all interactive gambling paths.
+// 4.0：身分、同意、逐步升高的催收對話，以及所有可操作的賭博。
+// 姓名與虛構身分：沒有簽約不能借款。
 s = E.create(6);
 snap = JSON.stringify(s);
 assert(!E.setName(s, " ").ok);
@@ -341,6 +361,7 @@ assert(
 assert(loan(s, 1e8, "online").ok);
 assert.equal(s.contracts[0].signedName, "幻影旅人");
 assert.equal(s.contracts[0].fictionId, s.fictionId);
+// 建立一個逾期未還的狀態。
 function overdue(s) {
   assert(!s.pending && !s.ended);
   s.loans[0].due = s.day + 1;
@@ -353,6 +374,7 @@ function overdue(s) {
   chat(s);
   assert(E.validate(s));
 }
+// 網路借款：第一次與第二次逾期的後果。
 s = E.create(7);
 E.setName(s, "夜班測試員");
 assert(loan(s, 5e8, "online").ok);
@@ -373,6 +395,7 @@ assert(
 );
 assert(Math.abs(E.loanRate(s.loans[0]) - 0.06) < 1e-12);
 assert(E.validate(s));
+// 高利貸：逐次加重的後果。
 s = E.create(8);
 E.setName(s, "红門測試員");
 assert(loan(s, 1e9, "shark").ok);
@@ -402,6 +425,7 @@ assert.equal(s.cash, oldCash, "Forced organ seizure gives cash");
 assert(Math.abs(s.loans[0].balance - (oldBalance * 1.2 - 2.5e8 * 0.35)) < 1);
 assert(Math.abs(s.debt - (oldDebt + oldBalance * 0.2 - 2.5e8 * 0.35)) < 1);
 assert(E.validate(s));
+// 求助：取得喘息的時間。
 s = E.create(9);
 assert(loan(s, 1e9, "shark").ok);
 s.cash = 3e8;
@@ -415,6 +439,7 @@ assert(E.choose(s, 4).ok);
 assert(s.health >= hp);
 assert.equal(s.organs.length, oldOrgans);
 assert.equal(s.loans[0].due, s.day + 3, "Aid did not grant breathing room");
+// 身上沒錢時，到期仍會被催收。
 s = E.create(10);
 assert(loan(s, 5e8, "online").ok);
 s.cash = 0;
@@ -426,6 +451,7 @@ assert.equal(
   "Empty pocket incorrectly bypassed due collector",
 );
 assert(E.validate(s));
+// 其他器官的組合。
 s = E.create(11);
 assert(E.sellOrgan(s, "lung_right").ok);
 assert(!s.ended);
@@ -440,6 +466,7 @@ assert(
     E.ORGANS.find((o) => o.id === "liver"),
   ),
 );
+// 一百五十組亂數種子的賭局。
 for (let seed = 1; seed <= 150; seed++)
   for (const mode of E.CASINO) {
     s = E.create(seed);
@@ -486,6 +513,7 @@ for (let seed = 1; seed <= 150; seed++)
     assert(!E.gambleAction(s, "roll").ok);
     assert.equal(JSON.stringify(s), snap, "Gamble settled twice");
   }
+// 踩地雷：無效與重複的選擇不會改變狀態。
 s = E.create(4);
 E.startGamble(s, "mines", 1e7);
 snap = JSON.stringify(s);
@@ -499,6 +527,7 @@ snap = JSON.stringify(s);
 assert(!E.gambleAction(s, "reveal", safe).ok);
 assert.equal(JSON.stringify(s), snap);
 assert(E.gambleAction(s, "cashout").completed);
+// 一天最多十二局。
 s = E.create(5);
 for (let i = 0; i < 12; i++) {
   assert(E.startGamble(s, "dice", 10000).ok);
@@ -506,6 +535,7 @@ for (let i = 0; i < 12; i++) {
 }
 assert(!E.startGamble(s, "dice", 10000).ok);
 assert.equal(s.gambleStats.rounds, 12);
+// 第 3 版存檔轉換後會補上新的商品。
 const previousV3 = E.create(99);
 previousV3.version = 3;
 for (const a of E.ASSETS.slice(8)) delete previousV3.markets[a.id];
@@ -521,7 +551,7 @@ console.log(
   "PASS: v4 character/fictional identity consent, named collector chats, graded online exposure/reputation/rates, shark violence and low-value seizure without cash, help branch, zero-cash due priority, fatal organ rules, 450 gambling sessions/reloads/single settlement, invalid inputs/daily cap, and v3 upgrades.",
 );
 
-// 5.0: full-day automatic and manual paths agree; final day is playable, not skipped.
+// 5.0：自動跑完一天與手動跳過結果一致；最後一天可以玩，不會被跳過。
 let automatic = E.create(232),
   manual = E.create(232);
 for (let i = 0; i < 288; i++) assert(E.tick(automatic).ok);
@@ -531,6 +561,7 @@ assert.equal(
   JSON.stringify(manual),
   "Automatic/manual day settlement differs",
 );
+// 第 60 天要能完整玩完。
 s = E.create(233);
 s.day = 59;
 s.history = Array(59).fill(E.INITIAL);
@@ -551,6 +582,7 @@ assert(s.ended);
 snap = JSON.stringify(s);
 assert(!E.tick(s).ok);
 assert.equal(JSON.stringify(s), snap);
+// 第 4 版存檔轉換。
 let legacy = E.create(234);
 legacy.version = 4;
 legacy.minute = 810;
@@ -565,6 +597,7 @@ assert(E.validate(converted));
 assert(E.tick(converted).ok);
 assert.equal(converted.minute, 815);
 assert.equal(converted.organRecords[0].cause, "legacy");
+// 器官紀錄。
 s = E.create(235);
 E.sellOrgan(s, "lung");
 assert.equal(s.organRecords[0].cause, "sold");
@@ -572,6 +605,7 @@ assert.equal(s.organRecords[0].cash, 3e8);
 assert.equal(s.organRecords[0].minute, 0);
 for (const id of ["gallbladder", "intestine", "thyroid", "bone"])
   assert(E.ORGANS.some((o) => o.id === id));
+// 故障恢復會留在價格紀錄裡。
 s = E.create(236);
 s.pending = { type: "glitch", shownProfit: 1 };
 E.resolveGlitch(s);
@@ -581,7 +615,7 @@ console.log(
   "PASS: 24-hour auto/manual parity, once-daily costs, playable day 60, terminal midnight, v4 continuity, body provenance, additional parts, retained fault timestamps.",
 );
 
-// Health exhaustion takes precedence over the final-day platform ending.
+// 健康耗盡的結局優先於最後一天的平台結局。
 s = E.create(240);
 s.day = 60;
 s.minute = 1435;

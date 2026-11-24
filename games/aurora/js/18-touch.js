@@ -14,7 +14,11 @@
   if (!window.AkaneTouch || !AkaneTouch.enabled) return;
 
   // 16-main.js 啟動時會依網址重設 noLock，這裡固定成 true，避免按「繼續」後又因為「沒鎖定滑鼠」被自動暫停
-  Object.defineProperty(Input, "noLock", { get: () => true, set() {}, configurable: true });
+  Object.defineProperty(Input, "noLock", {
+    get: () => true,
+    set() {},
+    configurable: true,
+  });
   Input.lock = function () {};
   AkaneTouch.rotateHint();
 
@@ -22,9 +26,13 @@
   const root = document.documentElement;
   let hudScale = 1;
   function fit() {
-    const w = innerWidth, h = innerHeight;
+    const w = innerWidth,
+      h = innerHeight;
     hudScale = Math.min(1, w / 1000, h / 560);
-    root.style.setProperty("--menu-s", Math.min(1, w / 1180, h / 680).toFixed(3));
+    root.style.setProperty(
+      "--menu-s",
+      Math.min(1, w / 1180, h / 680).toFixed(3),
+    );
     root.style.setProperty("--hud-s", hudScale.toFixed(3));
   }
   fit();
@@ -69,45 +77,80 @@
     buttons: [
       // 右下：射擊與常用動作（射擊鈕按住時滑動也能瞄準）
       {
-        label: "射擊", big: true, aim: true, at: [30, 42],
-        down() { Input.mouse.left = true; Input.mouse.leftHit = true; },
-        up() { Input.mouse.left = false; },
+        label: "射擊",
+        big: true,
+        aim: true,
+        at: [30, 42],
+        down() {
+          Input.mouse.left = true;
+          Input.mouse.leftHit = true;
+        },
+        up() {
+          Input.mouse.left = false;
+        },
       },
       { label: "跳", at: [41, 171], down: () => tap("Space") },
       { label: "換彈", at: [111, 143], down: () => tap("KeyR") },
       {
-        label: "開鏡", at: [151, 76],
-        down() { Input.mouse.right = !Input.mouse.right; },
+        label: "開鏡",
+        at: [151, 76],
+        down() {
+          Input.mouse.right = !Input.mouse.right;
+        },
         on: () => Input.mouse.right,
       },
       {
-        label: "蹲", at: [146, 8],
+        label: "蹲",
+        at: [146, 8],
         down: () => tap("KeyC"),
         on: () => player() && player().crouchToggle,
       },
       { label: "近戰", small: true, at: [210, 134], down: () => tap("KeyV") },
-      { label: "換槍", small: true, at: [8, 246], down: () => { Input.mouse.wheel += 1; } },
+      {
+        label: "換槍",
+        small: true,
+        at: [8, 246],
+        down: () => {
+          Input.mouse.wheel += 1;
+        },
+      },
       // 下方中間：技能、手榴彈（按住瞄準、放開投擲）、醫療包，取代原本 HUD 的技能列
       {
-        label: "技能", corner: "bc", at: [-70, 10],
-        sub: () => (player() && player().skillCd > 0 ? Math.ceil(player().skillCd) + " 秒" : "Q"),
+        label: "技能",
+        corner: "bc",
+        at: [-70, 10],
+        sub: () =>
+          player() && player().skillCd > 0
+            ? Math.ceil(player().skillCd) + " 秒"
+            : "Q",
         down: () => tap("KeyQ"),
         wait: () => player() && player().skillCd > 0,
       },
       {
-        label: "手榴", corner: "bc", at: [0, 10], aim: true,
+        label: "手榴",
+        corner: "bc",
+        at: [0, 10],
+        aim: true,
         sub: () => "×" + (player() ? player().grenades : 0),
         down: () => hold("KeyG", true),
         up: () => hold("KeyG", false),
         wait: () => !player() || player().grenades <= 0,
       },
       {
-        label: "醫療", corner: "bc", at: [70, 10],
+        label: "醫療",
+        corner: "bc",
+        at: [70, 10],
         sub: () => "×" + (player() ? player().medkits : 0),
         down: () => tap("KeyH"),
         wait: () => !player() || player().medkits <= 0,
       },
-      { label: "暫停", small: true, corner: "tl", at: [12, 12], down: () => Game.pause() },
+      {
+        label: "暫停",
+        small: true,
+        corner: "tl",
+        at: [12, 12],
+        down: () => Game.pause(),
+      },
     ],
   });
 })();

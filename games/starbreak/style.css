@@ -11,6 +11,9 @@
   --orange: #ffb479;
   --red: #ff709b;
 }
+
+/* ---------- 基本設定 ---------- */
+
 * {
   box-sizing: border-box;
 }
@@ -66,6 +69,9 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+/* ---------- 上方列 ---------- */
+
 .topbar {
   max-width: 1480px;
   padding: 18px 30px;
@@ -75,6 +81,7 @@ a {
   gap: 24px;
   border-bottom: 1px solid #26304a;
 }
+/* 遊戲名稱。 */
 .brand {
   display: flex;
   gap: 10px;
@@ -94,6 +101,7 @@ a {
   letter-spacing: 0.3em;
   line-height: 1.2;
 }
+/* 主選單。 */
 .topbar nav {
   margin-left: auto;
   display: flex;
@@ -108,6 +116,9 @@ a {
   font-size: 12px;
   color: var(--muted);
 }
+
+/* ---------- 首頁 ---------- */
+
 main {
   max-width: 1480px;
   margin: auto;
@@ -119,6 +130,7 @@ main {
   font-weight: 700;
   letter-spacing: 0.24em;
 }
+/* 首頁大標題區。 */
 .hero {
   min-height: 460px;
   position: relative;
@@ -172,6 +184,7 @@ h1 span {
   color: #c2cde2;
   max-width: 410px;
 }
+/* 主要按鈕。 */
 .primary {
   background: var(--cyan);
   color: #062e30;
@@ -212,6 +225,7 @@ h1 span {
   gap: 24px;
   margin-top: 24px;
 }
+/* 面板。 */
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -244,6 +258,7 @@ small {
 small {
   font-size: 13px;
 }
+/* 戰機選擇。 */
 .ships {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -274,6 +289,7 @@ small {
   line-height: 1.55;
   margin-top: 5px;
 }
+/* 模式與設定選單。 */
 .mode-row {
   display: flex;
   align-items: center;
@@ -290,6 +306,7 @@ input {
   color: var(--text);
   max-width: 100%;
 }
+/* 累計統計。 */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -310,6 +327,7 @@ input {
   padding: 5px;
   color: var(--cyan);
 }
+/* 最近紀錄。 */
 .record {
   display: flex;
   justify-content: space-between;
@@ -328,6 +346,9 @@ input {
   flex: 1;
   font-size: 14px;
 }
+
+/* ---------- 戰鬥畫面 ---------- */
+
 .game-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 270px;
@@ -336,6 +357,7 @@ input {
 .game-main {
   min-width: 0;
 }
+/* 上方資訊。 */
 .hud {
   display: flex;
   align-items: center;
@@ -366,6 +388,7 @@ input {
   font-size: 14px;
   padding: 8px 12px;
 }
+/* 遊戲畫布。 */
 .arena-wrap {
   position: relative;
   border-radius: 14px;
@@ -381,6 +404,7 @@ canvas {
   height: 100%;
   display: block;
 }
+/* 區域名稱。 */
 .arena-label {
   position: absolute;
   left: 20px;
@@ -399,6 +423,7 @@ canvas {
   display: flex;
   justify-content: space-between;
 }
+/* 波次進度條。 */
 .wave-progress {
   width: 140px;
 }
@@ -406,6 +431,7 @@ canvas {
   display: block;
   text-align: right;
 }
+/* 血量與經驗條。 */
 .bar {
   height: 6px;
   background: #1d2945;
@@ -447,6 +473,7 @@ canvas {
 .xp-row .bar > i {
   background: var(--purple);
 }
+/* 技能與操作提示。 */
 .game-controls {
   display: flex;
   align-items: center;
@@ -465,6 +492,7 @@ canvas {
   font-size: 13px;
   color: var(--muted);
 }
+/* 右側的武器與統計。 */
 .game-side {
   display: flex;
   flex-direction: column;
@@ -536,6 +564,9 @@ canvas {
   border-left: 2px solid #5b5399;
   padding-left: 9px;
 }
+
+/* ---------- 升級與商店 ---------- */
+
 .overlay {
   position: absolute;
   inset: 0;
@@ -562,6 +593,7 @@ canvas {
   color: #b9c7e1;
   margin: 8px 0 20px;
 }
+/* 選項卡。 */
 .choice-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -609,6 +641,7 @@ canvas {
   flex-wrap: wrap;
   margin-top: 17px;
 }
+/* 首領血條。 */
 .boss-hud {
   position: absolute;
   left: 20%;
@@ -626,6 +659,7 @@ canvas {
 .boss-hud i {
   background: #ff709b;
 }
+/* 觸控搖桿。 */
 .joystick {
   position: absolute;
   bottom: 35px;
@@ -668,6 +702,9 @@ canvas {
     opacity: 0;
   }
 }
+
+/* ---------- 視窗與其他頁面 ---------- */
+
 dialog {
   width: min(920px, calc(100% - 30px));
   max-height: 88vh;
@@ -696,6 +733,7 @@ dialog::backdrop {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
+/* 圖鑑。 */
 .codex-card {
   background: #0b1226;
   border: 1px solid #2b3751;
@@ -714,6 +752,7 @@ dialog::backdrop {
 .codex-card h3 {
   margin-top: 8px;
 }
+/* 研究室。 */
 .research-row {
   display: flex;
   align-items: center;
@@ -732,6 +771,7 @@ dialog::backdrop {
 .money {
   color: var(--orange);
 }
+/* 成就。 */
 .achievement {
   display: flex;
   align-items: center;
@@ -752,6 +792,7 @@ dialog::backdrop {
   color: var(--muted);
   margin: 3px 0;
 }
+/* 結算數值。 */
 .result-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -767,6 +808,7 @@ dialog::backdrop {
   font-size: 13px;
   color: var(--muted);
 }
+/* 提示訊息。 */
 #toast {
   position: fixed;
   left: 50%;
@@ -795,6 +837,7 @@ dialog::backdrop {
 .danger {
   color: #ff99b7;
 }
+/* 設定列。 */
 .settings-row {
   display: flex;
   gap: 15px;
@@ -805,6 +848,7 @@ dialog::backdrop {
   width: 20px;
   height: 20px;
 }
+/* 玩法步驟。 */
 .guide-steps {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -842,11 +886,17 @@ dialog::backdrop {
 .effect-note {
   color: var(--orange);
 }
+
+/* ---------- 大螢幕 ---------- */
+
 @media (min-width: 1500px) {
   main {
     padding-top: 30px;
   }
 }
+
+/* ---------- 平板 ---------- */
+
 @media (max-width: 1050px) {
   .game-layout {
     grid-template-columns: minmax(0, 1fr) 220px;
@@ -867,6 +917,9 @@ dialog::backdrop {
     display: none;
   }
 }
+
+/* ---------- 手機 ---------- */
+
 @media (max-width: 760px) {
   .topbar {
     padding: 13px 16px;
@@ -1091,6 +1144,9 @@ dialog::backdrop {
     padding: 8px 12px;
   }
 }
+
+/* ---------- 小手機 ---------- */
+
 @media (max-width: 380px) {
   .topbar nav button {
     font-size: 11px;
@@ -1126,13 +1182,16 @@ dialog::backdrop {
     display: none;
   }
 }
+
+/* ---------- 減少動態效果 ---------- */
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
     animation: none !important;
   }
 }
-/* Tall choice screens start at the top and stay fully scrollable. */
+/* 較高的選擇畫面從頂端開始排列，內容都能捲動到。 */
 .overlay {
   align-items: flex-start;
 }
@@ -1143,13 +1202,16 @@ dialog::backdrop {
 .overlay p {
   overflow-wrap: anywhere;
 }
+/* 選項卡的排列。 */
 .choice {
   overflow-wrap: anywhere;
 }
+/* 避免內容把版面撐寬。 */
 .home-layout > *,
 .ships > * {
   min-width: 0;
 }
+/* 小手機的按鈕。 */
 @media (max-width: 430px) {
   .mode-row label {
     width: 100%;
@@ -1166,7 +1228,7 @@ dialog::backdrop {
     padding: 11px 18px;
   }
 }
-/* v1.1 · flight deck, threat archive and orbital market */
+/* v1.1：飛行甲板、威脅圖鑑與軌道商店。 */
 .hero {
   min-height: 355px;
   border-color: #3b4c6b;
@@ -1184,6 +1246,7 @@ dialog::backdrop {
 .hero-actions {
   margin-top: 20px;
 }
+/* 面板與版面間距。 */
 .panel {
   background: linear-gradient(145deg, #141c32, #0e1529);
   box-shadow: 0 10px 35px #02051230;
@@ -1195,6 +1258,7 @@ dialog::backdrop {
 .home-layout {
   grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr);
 }
+/* 戰機卡。 */
 .ship-card {
   background: linear-gradient(130deg, #111a30, #0c1327);
   border-radius: 11px;
@@ -1206,6 +1270,7 @@ dialog::backdrop {
 .ship-card .glyph {
   text-shadow: 0 0 18px #8cf5e85c;
 }
+/* 快速設定按鈕。 */
 .preset-row {
   display: flex;
   gap: 8px;
@@ -1220,6 +1285,7 @@ dialog::backdrop {
   white-space: nowrap;
   border-radius: 6px;
 }
+/* 戰鬥設定。 */
 .config-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1275,6 +1341,7 @@ dialog::backdrop {
   margin-bottom: 8px;
   border-bottom: 1px solid #293853;
 }
+/* 設定摘要。 */
 .plan-summary {
   margin-top: 18px;
   border-left: 3px solid var(--cyan);
@@ -1285,6 +1352,7 @@ dialog::backdrop {
   border-radius: 0 8px 8px 0;
   line-height: 1.7;
 }
+/* 已裝備的模組。 */
 .equipped-module {
   display: flex;
   align-items: center;
@@ -1316,6 +1384,7 @@ dialog::backdrop {
   padding: 9px 12px;
   white-space: nowrap;
 }
+/* 最近紀錄的標題。 */
 .recent-title {
   margin: 25px 0 7px;
   font-size: 14px;
@@ -1342,6 +1411,9 @@ dialog::backdrop {
   background: transparent;
   font-size: 14px;
 }
+
+/* ---------- 首領預覽 ---------- */
+
 .boss-gallery {
   margin-top: 28px;
 }
@@ -1401,6 +1473,9 @@ dialog::backdrop {
   font-size: 13px;
   line-height: 1.7;
 }
+
+/* ---------- 模組市場 ---------- */
+
 .module-market {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1432,6 +1507,7 @@ dialog::backdrop {
 .module-card button {
   font-size: 14px;
 }
+/* 目前的餘額。 */
 .market-wallet {
   border: 1px solid #86694e;
   background: #4b392327;
@@ -1452,6 +1528,7 @@ dialog::backdrop {
   font-weight: 400;
   letter-spacing: 0.07em;
 }
+/* 首領圖鑑。 */
 .boss-codex {
   display: flex;
   flex-direction: column;
@@ -1490,6 +1567,9 @@ dialog::backdrop {
 .boss-codex .eyebrow {
   color: var(--boss-color);
 }
+
+/* ---------- 戰鬥版面 ---------- */
+
 .game-layout {
   grid-template-columns: minmax(0, 1fr) 285px;
 }
@@ -1499,6 +1579,7 @@ dialog::backdrop {
     inset 0 0 40px #18273b;
   border-color: #415371;
 }
+/* 首領血條。 */
 .boss-hud {
   display: flex;
   align-items: center;
@@ -1541,6 +1622,7 @@ dialog::backdrop {
 .boss-hud .bar {
   height: 7px;
 }
+/* 目前目標。 */
 .objective-hud {
   position: absolute;
   right: 16px;
@@ -1571,6 +1653,7 @@ dialog::backdrop {
 .objective-hud .bar i {
   background: var(--purple);
 }
+/* 連擊。 */
 .combo-hud {
   position: absolute;
   bottom: 28px;
@@ -1585,6 +1668,7 @@ dialog::backdrop {
 .floating-hint {
   bottom: 90px;
 }
+/* 武器列。 */
 .weapon-row {
   background: linear-gradient(90deg, #17223e, #111b30);
   border-color: #354361;
@@ -1602,6 +1686,9 @@ dialog::backdrop {
 .game-side .panel-heading {
   padding-bottom: 11px;
 }
+
+/* ---------- 商店 ---------- */
+
 .shop-heading {
   display: flex;
   justify-content: space-between;
@@ -1694,6 +1781,9 @@ dialog::backdrop {
 .codex-card .effect-note {
   color: var(--orange);
 }
+
+/* ---------- 平板 ---------- */
+
 @media (max-width: 1050px) {
   .home-layout {
     grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr);
@@ -1721,6 +1811,9 @@ dialog::backdrop {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ---------- 手機 ---------- */
+
 @media (max-width: 760px) {
   .hero {
     min-height: 335px;
@@ -1906,6 +1999,9 @@ dialog::backdrop {
     padding: 9px 7px;
   }
 }
+
+/* ---------- 小手機 ---------- */
+
 @media (max-width: 400px) {
   .config-grid {
     grid-template-columns: 1fr 1fr;

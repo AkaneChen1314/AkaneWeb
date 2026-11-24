@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 // ============================================================
 //  特效：粒子、光束、衝擊波、動態光源、畫面震動、浮動文字
 // ============================================================
@@ -7,6 +7,7 @@
 class PSys {
   // 每顆粒子的資料都放在一整條數字陣列裡（速度比一顆一個物件快很多）
   constructor(max, additive) {
+    // 每一項資料都放在固定長度的陣列裡，執行中不會再配置記憶體。
     this.max = max;
     // i：下一顆要使用的粒子編號
     this.i = 0;
@@ -23,45 +24,57 @@ class PSys {
     this.a0 = new Float32Array(max);
     this.grav = new Float32Array(max);
     this.drag = new Float32Array(max);
-    const g = this.geo = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(this.pos, 3).setUsage(THREE.DynamicDrawUsage));
-    g.setAttribute('aColor', new THREE.BufferAttribute(this.col, 4).setUsage(THREE.DynamicDrawUsage));
-    g.setAttribute('aSize', new THREE.BufferAttribute(this.size, 1).setUsage(THREE.DynamicDrawUsage));
+    const g = (this.geo = new THREE.BufferGeometry());
+    g.setAttribute(
+      "position",
+      new THREE.BufferAttribute(this.pos, 3).setUsage(THREE.DynamicDrawUsage),
+    );
+    g.setAttribute(
+      "aColor",
+      new THREE.BufferAttribute(this.col, 4).setUsage(THREE.DynamicDrawUsage),
+    );
+    g.setAttribute(
+      "aSize",
+      new THREE.BufferAttribute(this.size, 1).setUsage(THREE.DynamicDrawUsage),
+    );
+    // 著色器：依距離調整大小，並畫成柔邊的圓點。
     this.mat = new THREE.ShaderMaterial({
       uniforms: { uScale: { value: 600 } },
       // 頂點著色器：算出每顆粒子在畫面上的位置，並依距離決定大小（越遠越小，最大 900 像素）
       vertexShader: [
-        'attribute float aSize;',
-        'attribute vec4 aColor;',
-        'varying vec4 vColor;',
-        'uniform float uScale;',
-        'void main(){',
-        '  vColor = aColor;',
-        '  vec4 mv = modelViewMatrix * vec4(position, 1.0);',
-        '  gl_Position = projectionMatrix * mv;',
-        '  gl_PointSize = min(aSize * uScale / max(-mv.z, 0.1), 900.0);',
-        '}',
-      ].join('\n'),
+        "attribute float aSize;",
+        "attribute vec4 aColor;",
+        "varying vec4 vColor;",
+        "uniform float uScale;",
+        "void main(){",
+        "  vColor = aColor;",
+        "  vec4 mv = modelViewMatrix * vec4(position, 1.0);",
+        "  gl_Position = projectionMatrix * mv;",
+        "  gl_PointSize = min(aSize * uScale / max(-mv.z, 0.1), 900.0);",
+        "}",
+      ].join("\n"),
       // 片段著色器：把每顆粒子畫成中間亮、邊緣淡出的圓點
       // 發光粒子用「加亮」方式疊上去；煙霧粒子則用一般的半透明
       fragmentShader: additive
-      ? [
-        'varying vec4 vColor;',
-        'void main(){',
-        '  vec2 d = gl_PointCoord - 0.5;',
-        '  float a = smoothstep(1.0, 0.0, dot(d, d) * 4.0);',
-        '  gl_FragColor = vec4(vColor.rgb * vColor.a * a * a, 1.0);',
-        '}',
-      ].join('\n')
-      : [
-        'varying vec4 vColor;',
-        'void main(){',
-        '  vec2 d = gl_PointCoord - 0.5;',
-        '  float a = smoothstep(1.0, 0.1, dot(d, d) * 4.0);',
-        '  gl_FragColor = vec4(vColor.rgb, vColor.a * a);',
-        '}',
-      ].join('\n'),
-      transparent: true, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
+        ? [
+            "varying vec4 vColor;",
+            "void main(){",
+            "  vec2 d = gl_PointCoord - 0.5;",
+            "  float a = smoothstep(1.0, 0.0, dot(d, d) * 4.0);",
+            "  gl_FragColor = vec4(vColor.rgb * vColor.a * a * a, 1.0);",
+            "}",
+          ].join("\n")
+        : [
+            "varying vec4 vColor;",
+            "void main(){",
+            "  vec2 d = gl_PointCoord - 0.5;",
+            "  float a = smoothstep(1.0, 0.1, dot(d, d) * 4.0);",
+            "  gl_FragColor = vec4(vColor.rgb, vColor.a * a);",
+            "}",
+          ].join("\n"),
+      transparent: true,
+      depthWrite: false,
+      blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
     });
     // 把所有粒子做成一個「點雲」物件，一次畫完
     this.points = new THREE.Points(g, this.mat);
@@ -92,7 +105,8 @@ class PSys {
   }
   // 每一格更新所有還活著的粒子：移動、受重力與阻力影響、改變大小與透明度
   update(dt) {
-    const { pos, vel, life, maxLife, size, col, s0, s1, a0, grav, drag, max } = this;
+    const { pos, vel, life, maxLife, size, col, s0, s1, a0, grav, drag, max } =
+      this;
     for (let i = 0; i < max; i++) {
       if (life[i] <= 0) continue;
       life[i] -= dt;
@@ -102,7 +116,8 @@ class PSys {
         continue;
       }
       // k：這顆粒子的生命進度，0 = 剛出生，1 = 快消失
-      const k = 1 - life[i] / maxLife[i], i3 = i * 3;
+      const k = 1 - life[i] / maxLife[i],
+        i3 = i * 3;
       if (drag[i]) {
         const f = Math.max(0, 1 - drag[i] * dt);
         vel[i3] *= f;
@@ -139,7 +154,16 @@ class PSys {
 const FX = {
   // add = 發光粒子、smoke = 煙霧粒子、beams 光束、rings 衝擊波圓環、spheres 爆炸球
   // lights 動態光源、texts 浮動的傷害數字、shakeAmt 畫面震動強度、ash 飄浮的灰燼
-  add: null, smoke: null, beams: [], rings: [], spheres: [], lights: [], texts: [], shakeAmt: 0, scene: null, ash: null,
+  add: null,
+  smoke: null,
+  beams: [],
+  rings: [],
+  spheres: [],
+  lights: [],
+  texts: [],
+  shakeAmt: 0,
+  scene: null,
+  ash: null,
 
   // 建立粒子系統與所有物件池，並加進場景（只需要呼叫一次）
   init(scene) {
@@ -150,10 +174,17 @@ const FX = {
     // 光束：150 根細長圓柱
     const bg = new THREE.CylinderGeometry(1, 1, 1, 6, 1, true);
     bg.rotateX(PI / 2);
+    // 先全部建立好並隱藏，用到時再拿出來。
     for (let i = 0; i < 150; i++) {
-      const m = new THREE.Mesh(bg,
-          new THREE.MeshBasicMaterial({ transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
-              toneMapped: false }));
+      const m = new THREE.Mesh(
+        bg,
+        new THREE.MeshBasicMaterial({
+          transparent: true,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          toneMapped: false,
+        }),
+      );
       m.visible = false;
       m.frustumCulled = false;
       m.userData = { life: 0, max: 1, w: 1 };
@@ -163,10 +194,18 @@ const FX = {
     // 衝擊波：44 個平躺在地上的圓環
     const rg = new THREE.RingGeometry(0.82, 1, 48);
     rg.rotateX(-PI / 2);
+    // 圓環：44 個，用在爆炸與落地。
     for (let i = 0; i < 44; i++) {
-      const m = new THREE.Mesh(rg,
-          new THREE.MeshBasicMaterial({ transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
-              side: THREE.DoubleSide, toneMapped: false }));
+      const m = new THREE.Mesh(
+        rg,
+        new THREE.MeshBasicMaterial({
+          transparent: true,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+          toneMapped: false,
+        }),
+      );
       m.visible = false;
       m.userData = { life: 0 };
       scene.add(m);
@@ -174,10 +213,17 @@ const FX = {
     }
     // 爆炸球：10 顆半透明的球
     const sg = new THREE.SphereGeometry(1, 24, 16);
+    // 光球：10 個，用在爆炸的閃光。
     for (let i = 0; i < 10; i++) {
-      const m = new THREE.Mesh(sg,
-          new THREE.MeshBasicMaterial({ transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
-              toneMapped: false }));
+      const m = new THREE.Mesh(
+        sg,
+        new THREE.MeshBasicMaterial({
+          transparent: true,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          toneMapped: false,
+        }),
+      );
       m.visible = false;
       m.userData = { life: 0 };
       scene.add(m);
@@ -191,13 +237,23 @@ const FX = {
       this.lights.push(l);
     }
     // 飄浮的灰燼
-    const n = 500, ap = new Float32Array(n * 3);
+    const n = 500,
+      ap = new Float32Array(n * 3);
     for (let i = 0; i < n * 3; i++) ap[i] = rand(-70, 70);
     const ag = new THREE.BufferGeometry();
-    ag.setAttribute('position', new THREE.BufferAttribute(ap, 3));
-    this.ash = new THREE.Points(ag,
-        new THREE.PointsMaterial({ color: 0xcdb89a, size: 0.22, transparent: true, opacity: 0.55,
-            depthWrite: false, fog: true }));
+    // 灰燼：飄在鏡頭四周的小點。
+    ag.setAttribute("position", new THREE.BufferAttribute(ap, 3));
+    this.ash = new THREE.Points(
+      ag,
+      new THREE.PointsMaterial({
+        color: 0xcdb89a,
+        size: 0.22,
+        transparent: true,
+        opacity: 0.55,
+        depthWrite: false,
+        fog: true,
+      }),
+    );
     this.ash.frustumCulled = false;
     scene.add(this.ash);
   },
@@ -231,12 +287,16 @@ const FX = {
   beam(ax, ay, az, bx, by, bz, color, w = 0.3, life = 0.12, bright = 2.5) {
     // 找一根閒置的光束；全部都在用就放棄這一次
     let m = null;
-    for (const b of this.beams) if (b.userData.life <= 0) {
-      m = b;
-      break;
-    }
+    for (const b of this.beams)
+      if (b.userData.life <= 0) {
+        m = b;
+        break;
+      }
     if (!m) return;
-    const dx = bx - ax, dy = by - ay, dz = bz - az, len = Math.hypot(dx, dy, dz);
+    const dx = bx - ax,
+      dy = by - ay,
+      dz = bz - az,
+      len = Math.hypot(dx, dy, dz);
     if (len < 0.01) return;
     // 把圓柱放在兩點中間、轉向 B 點、再拉長到兩點的距離
     m.position.set((ax + bx) / 2, (ay + by) / 2, (az + bz) / 2);
@@ -252,10 +312,15 @@ const FX = {
   bolt(ax, ay, az, bx, by, bz, color, w = 0.25, life = 0.18) {
     // 每 7 公尺一個轉折點，每個轉折點隨機偏移一點，連起來就像閃電
     const n = Math.max(2, Math.ceil(Math.hypot(bx - ax, by - ay, bz - az) / 7));
-    let px = ax, py = ay, pz = az;
+    let px = ax,
+      py = ay,
+      pz = az;
     for (let i = 1; i <= n; i++) {
-      const t = i / n, j = i === n ? 0 : 1.6;
-      const qx = lerp(ax, bx, t) + rand(-j, j), qy = lerp(ay, by, t) + rand(-j, j), qz = lerp(az, bz, t) + rand(-j, j);
+      const t = i / n,
+        j = i === n ? 0 : 1.6;
+      const qx = lerp(ax, bx, t) + rand(-j, j),
+        qy = lerp(ay, by, t) + rand(-j, j),
+        qz = lerp(az, bz, t) + rand(-j, j);
       this.beam(px, py, pz, qx, qy, qz, color, w, life, 3);
       px = qx;
       py = qy;
@@ -264,27 +329,29 @@ const FX = {
   },
   // 擴散的衝擊波圓環：半徑在 life 秒內從 r0 變到 r1
   ring(x, y, z, color, r0, r1, life, bright = 2) {
-    for (const m of this.rings) if (m.userData.life <= 0) {
-      m.position.set(x, y, z);
-      m.scale.setScalar(r0);
-      m.material.color.copy(C(color)).multiplyScalar(bright);
-      m.material.opacity = 1;
-      m.userData = { life, max: life, r0, r1 };
-      m.visible = true;
-      return;
-    }
+    for (const m of this.rings)
+      if (m.userData.life <= 0) {
+        m.position.set(x, y, z);
+        m.scale.setScalar(r0);
+        m.material.color.copy(C(color)).multiplyScalar(bright);
+        m.material.opacity = 1;
+        m.userData = { life, max: life, r0, r1 };
+        m.visible = true;
+        return;
+      }
   },
   // 膨脹的光球：半徑在 life 秒內從 r0 變到 r1
   sphere(x, y, z, color, r0, r1, life, bright = 1.5) {
-    for (const m of this.spheres) if (m.userData.life <= 0) {
-      m.position.set(x, y, z);
-      m.scale.setScalar(r0);
-      m.material.color.copy(C(color)).multiplyScalar(bright);
-      m.material.opacity = 0.8;
-      m.userData = { life, max: life, r0, r1 };
-      m.visible = true;
-      return;
-    }
+    for (const m of this.spheres)
+      if (m.userData.life <= 0) {
+        m.position.set(x, y, z);
+        m.scale.setScalar(r0);
+        m.material.color.copy(C(color)).multiplyScalar(bright);
+        m.material.opacity = 0.8;
+        m.userData = { life, max: life, r0, r1 };
+        m.visible = true;
+        return;
+      }
   },
   // 短暫的動態光源：intensity 亮度、dist 照射距離、life 秒後熄滅
   light(x, y, z, color, intensity, dist, life) {
@@ -309,9 +376,18 @@ const FX = {
     this.shakeAmt = Math.min(2.2, Math.max(this.shakeAmt, a));
   },
   // 浮動文字（傷害數字）；實際的字是 ui.js 畫在覆蓋層畫布上的
-  text(x, y, z, str, color = '#ffffff', size = 15) {
-    if (this.texts.length < 60) this.texts.push({ x: x + rand(-1, 1), y, z: z + rand(-1, 1), str, color, size,
-        life: 0.9, max: 0.9 });
+  text(x, y, z, str, color = "#ffffff", size = 15) {
+    if (this.texts.length < 60)
+      this.texts.push({
+        x: x + rand(-1, 1),
+        y,
+        z: z + rand(-1, 1),
+        str,
+        color,
+        size,
+        life: 0.9,
+        max: 0.9,
+      });
   },
 
   // ---- 組合特效 ----
@@ -319,18 +395,50 @@ const FX = {
   sparks(x, y, z, n, color, speed = 14, life = 0.5, size = 0.35) {
     const c = C(color);
     for (let i = 0; i < n; i++) {
-      const a = rand(TAU), u = rand(-1, 1), s = Math.sqrt(1 - u * u), v = speed * rand(0.3, 1);
-      this.add.emit(x, y, z, Math.cos(a) * s * v, u * v + speed * 0.3, Math.sin(a) * s * v, life * rand(0.5, 1), size,
-          0.05, c.r, c.g, c.b, 2.2, 26, 0.5);
+      const a = rand(TAU),
+        u = rand(-1, 1),
+        s = Math.sqrt(1 - u * u),
+        v = speed * rand(0.3, 1);
+      this.add.emit(
+        x,
+        y,
+        z,
+        Math.cos(a) * s * v,
+        u * v + speed * 0.3,
+        Math.sin(a) * s * v,
+        life * rand(0.5, 1),
+        size,
+        0.05,
+        c.r,
+        c.g,
+        c.b,
+        2.2,
+        26,
+        0.5,
+      );
     }
   },
   // 一團煙霧 / 塵土。shade = 灰階深淺、up = 往上飄的速度、spread = 擴散範圍
   puff(x, y, z, n, size, life, shade = 0.3, up = 2, spread = 3, alpha = 0.5) {
     for (let i = 0; i < n; i++) {
       const g = shade * rand(0.7, 1.2);
-      this.smoke.emit(x + rand(-spread, spread) * 0.3, y + rand(-0.5, 0.5), z + rand(-spread, spread) * 0.3,
-          rand(-spread, spread), rand(0, up), rand(-spread, spread), life * rand(0.6, 1.1), size * 0.5,
-          size * rand(1.2, 2), g, g * 0.96, g * 0.9, alpha, -0.6, 1.2);
+      this.smoke.emit(
+        x + rand(-spread, spread) * 0.3,
+        y + rand(-0.5, 0.5),
+        z + rand(-spread, spread) * 0.3,
+        rand(-spread, spread),
+        rand(0, up),
+        rand(-spread, spread),
+        life * rand(0.6, 1.1),
+        size * 0.5,
+        size * rand(1.2, 2),
+        g,
+        g * 0.96,
+        g * 0.9,
+        alpha,
+        -0.6,
+        1.2,
+      );
     }
   },
   // 槍口火光：往射擊方向噴的火星 + 一團亮光 + 瞬間照亮周圍
@@ -338,8 +446,21 @@ const FX = {
     const c = C(color);
     for (let i = 0; i < 4; i++) {
       const v = rand(8, 26);
-      this.add.emit(x, y, z, dx * v + rand(-3, 3), dy * v + rand(-3, 3), dz * v + rand(-3, 3), rand(0.04, 0.1),
-          1.5 * size, 0.3, c.r, c.g, c.b, 2.5);
+      this.add.emit(
+        x,
+        y,
+        z,
+        dx * v + rand(-3, 3),
+        dy * v + rand(-3, 3),
+        dz * v + rand(-3, 3),
+        rand(0.04, 0.1),
+        1.5 * size,
+        0.3,
+        c.r,
+        c.g,
+        c.b,
+        2.5,
+      );
     }
     this.add.emit(x, y, z, 0, 0, 0, 0.06, 3 * size, 1, 1, 0.9, 0.7, 2.2);
     this.light(x, y, z, color, 2.2 * size, 30, 0.07);
@@ -356,36 +477,123 @@ const FX = {
   },
   // 爆炸：火球 + 中心閃光 + 火花 + 濃煙 + 地面衝擊波 + 光源，r = 半徑
   explosion(x, y, z, r, color = 0xff8a30) {
-    const c = C(color), n = Math.min(46, Math.floor(10 + r * 3));
+    const c = C(color),
+      n = Math.min(46, Math.floor(10 + r * 3));
     for (let i = 0; i < n; i++) {
-      const a = rand(TAU), u = rand(-0.4, 1), s = Math.sqrt(1 - u * u), v = r * rand(0.6, 2.4);
-      this.add.emit(x, y, z, Math.cos(a) * s * v, u * v, Math.sin(a) * s * v, rand(0.25, 0.6), r * rand(0.35, 0.7),
-          r * 0.12, c.r, c.g * rand(0.6, 1), c.b * 0.6, 1.5, 0, 2.2);
+      const a = rand(TAU),
+        u = rand(-0.4, 1),
+        s = Math.sqrt(1 - u * u),
+        v = r * rand(0.6, 2.4);
+      this.add.emit(
+        x,
+        y,
+        z,
+        Math.cos(a) * s * v,
+        u * v,
+        Math.sin(a) * s * v,
+        rand(0.25, 0.6),
+        r * rand(0.35, 0.7),
+        r * 0.12,
+        c.r,
+        c.g * rand(0.6, 1),
+        c.b * 0.6,
+        1.5,
+        0,
+        2.2,
+      );
     }
     this.add.emit(x, y, z, 0, 0, 0, 0.14, r * 1.6, r * 0.5, 1, 0.95, 0.8, 2.5);
     this.sparks(x, y, z, Math.min(30, 6 + r * 2), 0xffd080, r * 3.2, 0.9, 0.3);
-    this.puff(x, y + r * 0.2, z, Math.min(14, 4 + r), r * 0.9, 1.8 + r * 0.06, 0.16, r * 0.7, r * 0.8, 0.6);
+    this.puff(
+      x,
+      y + r * 0.2,
+      z,
+      Math.min(14, 4 + r),
+      r * 0.9,
+      1.8 + r * 0.06,
+      0.16,
+      r * 0.7,
+      r * 0.8,
+      0.6,
+    );
     this.ring(x, Math.max(0.2, y - r * 0.3), z, color, r * 0.2, r * 1.35, 0.35);
     this.light(x, y + 1, z, color, 3 + r * 0.35, 30 + r * 6, 0.3);
   },
   // 推進器噴出的火焰（一顆）
   thruster(x, y, z, vx, vy, vz, color, size = 1) {
     const c = C(color);
-    this.add.emit(x, y, z, vx + rand(-2, 2), vy + rand(-2, 2), vz + rand(-2, 2), rand(0.12, 0.25), 1.2 * size,
-        0.1, c.r, c.g, c.b, 1.6);
+    this.add.emit(
+      x,
+      y,
+      z,
+      vx + rand(-2, 2),
+      vy + rand(-2, 2),
+      vz + rand(-2, 2),
+      rand(0.12, 0.25),
+      1.2 * size,
+      0.1,
+      c.r,
+      c.g,
+      c.b,
+      1.6,
+    );
   },
   // 火焰噴射器的火團（會越飄越大並往上升）
   flame(x, y, z, vx, vy, vz, size = 1) {
-    this.add.emit(x, y, z, vx, vy, vz, rand(0.3, 0.55), 0.8 * size, 3.4 * size, 1, rand(0.35, 0.6), 0.1, 1.1, -5, 1.6);
+    this.add.emit(
+      x,
+      y,
+      z,
+      vx,
+      vy,
+      vz,
+      rand(0.3, 0.55),
+      0.8 * size,
+      3.4 * size,
+      1,
+      rand(0.35, 0.6),
+      0.1,
+      1.1,
+      -5,
+      1.6,
+    );
   },
   // 地圖上持續燃燒的火堆：火舌 + 偶爾冒出黑煙
   fireColumn(x, y, z, s) {
-    this.add.emit(x + rand(-s, s) * 0.6, y, z + rand(-s, s) * 0.6, rand(-0.6, 0.6), rand(2.5, 5), rand(-0.6, 0.6),
-        rand(0.5, 1.0), 1.8 * s, 0.3 * s, 1, rand(0.3, 0.55), 0.08, 1.0);
+    this.add.emit(
+      x + rand(-s, s) * 0.6,
+      y,
+      z + rand(-s, s) * 0.6,
+      rand(-0.6, 0.6),
+      rand(2.5, 5),
+      rand(-0.6, 0.6),
+      rand(0.5, 1.0),
+      1.8 * s,
+      0.3 * s,
+      1,
+      rand(0.3, 0.55),
+      0.08,
+      1.0,
+    );
     if (Math.random() < 0.35) {
       const g = rand(0.06, 0.14);
-      this.smoke.emit(x, y + 2 * s, z, rand(-1, 1) + 1.2, rand(3, 5), rand(-1, 1), rand(3, 5), 2 * s, 7 * s, g,
-          g, g, 0.45, 0, 0.2);
+      this.smoke.emit(
+        x,
+        y + 2 * s,
+        z,
+        rand(-1, 1) + 1.2,
+        rand(3, 5),
+        rand(-1, 1),
+        rand(3, 5),
+        2 * s,
+        7 * s,
+        g,
+        g,
+        g,
+        0.45,
+        0,
+        0.2,
+      );
     }
   },
   // 敵人或小兵空降時的光柱
@@ -397,7 +605,9 @@ const FX = {
 
   // 每一格更新所有特效。h = 畫面高度（像素），用來換算粒子在畫面上的大小
   update(dt, camera, h) {
-    this.add.mat.uniforms.uScale.value = this.smoke.mat.uniforms.uScale.value = h / (2 * Math.tan(camera.fov * PI / 360));
+    // 讓粒子大小跟著畫面高度。
+    this.add.mat.uniforms.uScale.value = this.smoke.mat.uniforms.uScale.value =
+      h / (2 * Math.tan((camera.fov * PI) / 360));
     this.add.update(dt);
     this.smoke.update(dt);
     // 光束：越來越細、越來越淡
@@ -455,8 +665,10 @@ const FX = {
     }
     this.shakeAmt = Math.max(0, this.shakeAmt - dt * 3.2);
     // 灰燼跟著鏡頭
-    const p = this.ash.geometry.attributes.position.array, cx = camera.position.x, cy = camera.position.y,
-        cz = camera.position.z;
+    const p = this.ash.geometry.attributes.position.array,
+      cx = camera.position.x,
+      cy = camera.position.y,
+      cz = camera.position.z;
     // 灰燼緩緩飄動；飄出鏡頭周圍的範圍就從另一側繞回來，看起來到處都有
     for (let i = 0; i < p.length; i += 3) {
       p[i] += dt * 1.6;

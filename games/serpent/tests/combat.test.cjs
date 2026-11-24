@@ -1,6 +1,10 @@
+/*
+ * 測試：霓虹蛇的戰鬥（咬、衝撞、盤繞、道具、地形與連擊）。
+ */
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const S = require("../engine.js");
+// 建立一張沒有其他干擾的地圖。
 function game(mode = "survival") {
   const g = new S.Game({ mode, seed: 12 });
   g.food = [];
@@ -17,6 +21,7 @@ function game(mode = "survival") {
   g.invulnerable = 0;
   return g;
 }
+// 放一個不會動的敵人。
 function enemy(g, x, z, extra = {}) {
   const e = g.spawnEnemy();
   Object.assign(
@@ -35,6 +40,7 @@ function enemy(g, x, z, extra = {}) {
   );
   return e;
 }
+// 前進 n 步；遇到強化選擇就選第一個。
 function tick(g, n = 1, input = {}) {
   for (let i = 0; i < n; i++) {
     if (g.needsUpgrade) g.chooseUpgrade(g.choices[0]);
@@ -42,6 +48,7 @@ function tick(g, n = 1, input = {}) {
     g.events = [];
   }
 }
+// 咬擊只打前方、有距離限制，同一條蛇不會重複計算，並有冷卻。
 test("bite is directional, bounded, deduplicates snake segments and obeys cooldown", () => {
   const g = game(),
     front = enemy(g, 0, -3, {
@@ -68,6 +75,7 @@ test("bite is directional, bounded, deduplicates snake segments and obeys cooldo
   g.needsUpgrade = true;
   assert.equal(g.bite(), false);
 });
+// 衝撞會傷敵、只擋接觸傷害，每個目標有自己的冷卻。
 test("ram damages an enemy, blocks contact only, and respects per-target cooldown", () => {
   const g = game(),
     e = enemy(g, 0, 0);
@@ -82,6 +90,7 @@ test("ram damages an enemy, blocks contact only, and respects per-target cooldow
   assert.equal(g.health, 86);
   assert.equal(g.lastDamage.cause, "projectile");
 });
+// 衝撞能傷到敵蛇的尾巴。
 test("ram can damage a serpent tail without touching its head", () => {
   const g = game(),
     e = enemy(g, 0, -3, {
@@ -93,6 +102,7 @@ test("ram can damage a serpent tail without touching its head", () => {
   assert.equal(e.hp, 430);
   assert.equal(g.health, 100);
 });
+// 身體反擊有冷卻，不會傷到自己。
 test("body counter hurts enemy once per cooldown without hurting player", () => {
   const g = game(),
     e = enemy(g, 0, 3.7);
@@ -105,6 +115,7 @@ test("body counter hurts enemy once per cooldown without hurting player", () => 
   g.update(0.01);
   assert.equal(e.hp, 450);
 });
+// 體力用完後，衝刺不再保護自己。
 test("exhausted dash loses contact protection", () => {
   const g = game();
   enemy(g, 0, 0);
@@ -114,6 +125,7 @@ test("exhausted dash loses contact protection", () => {
   assert.equal(g.dashing, false);
   assert.equal(g.health, 82);
 });
+// 競技場要打完四波，每波之間有強化，只會獲勝一次。
 test("arena requires clearing four finite waves, rewards between waves, and wins once", () => {
   const g = game("arena");
   g.health = 40;
@@ -134,6 +146,7 @@ test("arena requires clearing four finite waves, rewards between waves, and wins
   assert.equal(g.wave, 4);
   assert.ok(g.level >= 4);
 });
+// 首領模式會立刻開始，並要打倒三個首領。
 test("boss mode starts immediately and requires all three named bosses", () => {
   const g = game("boss");
   g.invulnerable = 1e6;
@@ -156,6 +169,7 @@ test("boss mode starts immediately and requires all three named bosses", () => {
   assert.equal(g.won, true);
   assert.ok(g.level >= 3);
 });
+// 首領的一般攻擊不同，血量低時直接進入最後階段。
 test("boss basic shots differ and a low-health boss jumps to its final phase", () => {
   for (let v = 0; v < 3; v++) {
     const g = game();
@@ -169,6 +183,7 @@ test("boss basic shots differ and a low-health boss jumps to its final phase", (
     assert.ok(e.roar > 0);
   }
 });
+// 紅色地面會先預警，凍結時暫停，衝刺也擋不住。
 test("red ground hazard waits for its warning, pauses when frozen, and hurts through dash", () => {
   const g = game();
   g.hazards = [{ x: 0, z: 0, r: 3, timer: 0.1, duration: 1.1 }];
@@ -182,6 +197,7 @@ test("red ground hazard waits for its warning, pauses when frozen, and hurts thr
   assert.equal(g.lastDamage.cause, "shockwave");
   assert.equal(g.hazards.length, 0);
 });
+// 無盡模式過了 180 秒仍繼續，敵人、子彈與食物有上限。
 test("endless continues past 180s and caps enemies, projectiles and food", () => {
   const g = game("endless");
   g.invulnerable = 1e6;
@@ -196,6 +212,7 @@ test("endless continues past 180s and caps enemies, projectiles and food", () =>
   for (let i = 0; i < 1000; i++) g.spawnFood();
   assert.ok(g.food.length <= g.foodLimit);
 });
+// 訓練目標不能用被動傷害或錯的動作完成。
 test("training targets cannot be cleared by passive damage or the wrong action", () => {
   const g = new S.Game({ training: true, seed: 3 }),
     t = new S.Tutorial(g);
@@ -210,6 +227,7 @@ test("training targets cannot be cleared by passive damage or the wrong action",
   t.update(0.01, {});
   assert.equal(t.step, 4);
 });
+// 新模式能存檔，舊存檔的進度會保留。
 test("new modes survive profile serialization and old saves preserve progress", () => {
   for (const mode of ["arena", "boss", "endless"]) {
     const p = S.sanitizeProfile({
@@ -224,6 +242,7 @@ test("new modes survive profile serialization and old saves preserve progress", 
     assert.equal(p.upgrades.vitality, 2);
   }
 });
+// 前方有目標才會自動咬。
 test("bite fires automatically when a target is in front, never behind", () => {
   const g = game(),
     front = enemy(g, 0, -3),
@@ -236,6 +255,7 @@ test("bite fires automatically when a target is in front, never behind", () => {
   assert.equal(empty.biteCooldown, 0);
   assert.equal(empty.events.filter((e) => e.type === "bite").length, 0);
 });
+// 衝撞會擊退小型敵人。
 test("ram knocks small enemies back", () => {
   const g = game(),
     e = enemy(g, 0, 0);
@@ -243,6 +263,7 @@ test("ram knocks small enemies back", () => {
   g.update(0.01, { dash: true });
   assert.ok(Math.hypot(e.x, e.z) > 2);
 });
+// 盤繞只傷害被圍住的敵人，也會吃掉圍住的食物，身體要夠長。
 test("coil damages only enclosed enemies, eats enclosed food and needs a long enough body", () => {
   const g = game();
   g.biteCooldown = 99;
@@ -270,6 +291,7 @@ test("coil damages only enclosed enemies, eats enclosed food and needs a long en
   enemy(s, 0, 0);
   assert.equal(s.detectCoil(), false);
 });
+// 盤繞擊殺會計入成就。
 test("coil kills are counted for the achievement", () => {
   const g = game();
   const loop = Array.from({ length: 24 }, (_, i) => {
@@ -283,6 +305,7 @@ test("coil kills are counted for the achievement", () => {
   assert.equal(g.coilKills, 1);
   assert.equal(g.kills, 1);
 });
+// 牆與岩石不扣血，頭會沿著牆滑動。
 test("walls and rocks never cost health and the head slides along walls", () => {
   const g = game();
   g.speed = 7;
@@ -303,6 +326,7 @@ test("walls and rocks never cost health and the head slides along walls", () => 
     ),
   );
 });
+// 岩石能擋住敵人的子彈。
 test("rocks block enemy bullets", () => {
   const g = game();
   g.obstacles = [{ x: 0, z: -5, r: 1.2 }];
@@ -311,6 +335,7 @@ test("rocks block enemy bullets", () => {
   assert.equal(g.projectiles.length, 0);
   assert.equal(g.health, g.maxHealth);
 });
+// 道具：狂暴、護盾、加速、炸彈與彩虹。
 test("power-ups: fury, shield, speed, bomb and rainbow", () => {
   const g = game();
   g.collect({ x: 0, z: 0, type: "fury" });
@@ -340,6 +365,7 @@ test("power-ups: fury, shield, speed, bomb and rainbow", () => {
   assert.equal(r.combo, 2);
   assert.ok(r.score >= 250);
 });
+// 泉水回血、加速板推進、傳送門會帶走整條蛇。
 test("springs heal, pads boost, portals carry the whole snake", () => {
   const g = game();
   g.health = 40;
@@ -372,6 +398,7 @@ test("springs heal, pads boost, portals carry the whole snake", () => {
   t.update(1 / 60);
   assert.ok(Math.hypot(t.snake[0].x - 30, t.snake[0].z - 30) < 3);
 });
+// 寶箱可以用自動咬擊打開並掉落獎勵。
 test("caches break from automatic bites and drop loot", () => {
   const g = game();
   g.caches = [
@@ -381,6 +408,7 @@ test("caches break from automatic bites and drop loot", () => {
   assert.equal(g.caches.length, 0);
   assert.ok(g.food.length + g.foodEaten >= 5);
 });
+// 各地圖的減速地形不同。
 test("slow ground differs per world", () => {
   const speeds = [0, 1, 2].map((world) => {
     const g = new S.Game({ world, mode: "zen", seed: 5 });
@@ -395,6 +423,7 @@ test("slow ground differs per world", () => {
   assert.ok(Math.abs(speeds[1] - 1.15) < 1e-9);
   assert.ok(Math.abs(speeds[2] - 0.55) < 1e-9);
 });
+// 連擊只算打中怪物的攻擊，並提高擊殺分數。
 test("combo only grows from attacks that land on monsters, and boosts kill score", () => {
   const g = game();
   g.biteCooldown = 99;

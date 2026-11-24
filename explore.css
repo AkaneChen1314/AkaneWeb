@@ -7,6 +7,9 @@
 #chibi-room {
   scroll-margin-top: 28px;
 }
+
+/* ---------- 閱讀導覽 ---------- */
+
 .archive-compass {
   position: relative;
   display: grid;
@@ -71,6 +74,9 @@
   background: #83cfff0b;
   color: #9ce8ff;
 }
+
+/* ---------- 小茜遊樂室 ---------- */
+
 .chibi-playroom {
   --chibi-glow: #78d9ff;
   --chibi-tone: #344773;
@@ -87,6 +93,7 @@
   --chibi-tone: #282252;
   --chibi-tint: #102035;
 }
+/* 遊樂室標題。 */
 .playroom-heading {
   display: flex;
   justify-content: space-between;
@@ -105,6 +112,7 @@
   white-space: nowrap;
   font-size: 11px;
 }
+/* 明信片、心情與互動按鈕。 */
 .chibi-playroom .chibi-postcard {
   overflow: hidden;
   grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
@@ -241,6 +249,7 @@
 .chibi-copy > .eyebrow {
   font-size: 9px;
 }
+/* 星座連線。 */
 .constellation-board {
   position: relative;
   height: 190px;
@@ -288,6 +297,7 @@
 .constellation-board.constellation-complete {
   box-shadow: inset 0 0 60px #b7caff14;
 }
+/* 活動下方的說明。 */
 .activity-footer {
   display: flex;
   align-items: center;
@@ -304,6 +314,7 @@
 .activity-footer .source-link {
   font-size: 10px;
 }
+/* 小測驗。 */
 .chibi-quiz-answers {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -346,6 +357,9 @@
 #chibi-quiz-feedback {
   min-height: 44px;
 }
+
+/* ---------- 書籤 ---------- */
+
 .archive-bookmark {
   position: fixed;
   bottom: 20px;
@@ -410,6 +424,9 @@
   color: #dcf4ff;
   background: #8bddff13;
 }
+
+/* ---------- 平板 ---------- */
+
 @media (max-width: 1000px) {
   .archive-compass {
     grid-template-columns: 1fr;
@@ -423,6 +440,9 @@
     padding: 26px;
   }
 }
+
+/* ---------- 手機 ---------- */
+
 @media (max-width: 760px) {
   .chibi-playroom .chibi-postcard {
     grid-template-columns: minmax(0, 1fr);
@@ -449,6 +469,9 @@
     margin-top: 14px;
   }
 }
+
+/* ---------- 小手機 ---------- */
+
 @media (max-width: 520px) {
   .archive-compass {
     margin: 36px 0 44px;
@@ -488,12 +511,16 @@
     padding: 11px 13px;
   }
 }
+
+/* ---------- 減少動態效果 ---------- */
+
 @media (prefers-reduced-motion: reduce) {
   .compass-links a {
     transition: none;
   }
 }
 
+/* 動態來源清單。 */
 .motion-source-list {
   padding: 18px 0;
   border-bottom: 1px solid #92cfff25;

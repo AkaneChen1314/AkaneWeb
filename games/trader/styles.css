@@ -20,6 +20,8 @@
     sans-serif;
 }
 
+/* ---------- 基本設定 ---------- */
+
 * {
   box-sizing: border-box;
 }
@@ -65,6 +67,7 @@ button:disabled {
   transform: none;
 }
 
+/* 鍵盤操作時的焦點框。 */
 :focus-visible {
   outline: 3px solid var(--yellow);
   outline-offset: 3px;
@@ -95,6 +98,8 @@ em {
   color: var(--yellow);
 }
 
+/* ---------- 遊戲外框與上方列 ---------- */
+
 .game-shell {
   max-width: 1740px;
   margin: auto;
@@ -109,6 +114,7 @@ em {
   border-bottom: 1px solid var(--line);
 }
 
+/* 遊戲名稱。 */
 .brand {
   display: flex;
   gap: 12px;
@@ -142,6 +148,7 @@ em {
   align-items: center;
 }
 
+/* 「虛構模擬」標示。 */
 .fiction-badge,
 .fiction-label {
   font-size: 0.75rem;
@@ -154,6 +161,7 @@ em {
   padding: 6px 11px;
 }
 
+/* 沒有底色的按鈕。 */
 .ghost {
   border: 1px solid var(--line);
   color: var(--muted);
@@ -162,6 +170,8 @@ em {
 main {
   padding: 26px 30px 116px;
 }
+
+/* ---------- 標題與今天的狀態 ---------- */
 
 .life-hero {
   display: flex;
@@ -190,6 +200,7 @@ h1 {
   line-height: 1.7;
 }
 
+/* 日期卡。 */
 .day-card {
   padding: 13px 17px;
   background: #1c2238;
@@ -231,6 +242,8 @@ h1 {
   transition: width 0.4s;
 }
 
+/* ---------- 資產總覽 ---------- */
+
 .money-dashboard {
   display: grid;
   grid-template-columns: 1.35fr 1fr 1fr 1fr;
@@ -260,6 +273,7 @@ h1 {
   font-size: 0.875rem;
 }
 
+/* 身分階級。 */
 .rank-badge {
   color: var(--yellow);
   font-size: 0.75rem;
@@ -269,6 +283,7 @@ h1 {
   white-space: nowrap;
 }
 
+/* 總資產。 */
 .wealth-card > strong {
   display: block;
   font:
@@ -289,6 +304,7 @@ h1 {
   color: #c4bba8;
 }
 
+/* 其他金額。 */
 .money-mini {
   display: flex;
   flex-direction: column;
@@ -313,13 +329,17 @@ h1 {
   line-height: 1.7;
 }
 
+/* 上漲與獲利。 */
 .positive {
   color: var(--green) !important;
 }
 
+/* 下跌與虧損。 */
 .negative {
   color: var(--red) !important;
 }
+
+/* ---------- 三欄版面 ---------- */
 
 .game-grid {
   display: grid;
@@ -337,6 +357,7 @@ h1 {
   min-width: 0;
 }
 
+/* 面板。 */
 .panel {
   border: 1px solid var(--line);
   border-radius: 13px;
@@ -354,6 +375,7 @@ h1 {
   border-bottom: 1px solid var(--line);
 }
 
+/* 面板小標題。 */
 .section-kicker {
   font-size: 0.75rem;
   color: var(--yellow);
@@ -377,6 +399,8 @@ h1 {
   font-size: 0.75rem;
   white-space: nowrap;
 }
+
+/* ---------- 角色與身體 ---------- */
 
 .character-stage {
   display: flex;
@@ -403,6 +427,7 @@ h1 {
   margin-top: 5px;
 }
 
+/* 血量與壓力條。 */
 .meter {
   margin: 13px 16px 18px;
 }
@@ -448,6 +473,7 @@ h1 {
   background: linear-gradient(90deg, #9f7cfa, #fb83b6);
 }
 
+/* 身體部位。 */
 .body-label {
   font-size: 0.875rem;
   padding: 0 16px;
@@ -508,6 +534,7 @@ h1 {
   filter: grayscale(1);
 }
 
+/* 工作與賭場按鈕。 */
 .life-actions {
   display: flex;
   gap: 8px;
@@ -532,6 +559,8 @@ h1 {
   padding: 0 16px 16px;
 }
 
+/* ---------- 借款 ---------- */
+
 .lender-actions {
   display: flex;
   gap: 8px;
@@ -552,6 +581,7 @@ h1 {
   white-space: nowrap;
 }
 
+/* 沒有借款時的提示。 */
 .loan-empty {
   padding: 19px 16px;
   font-size: 0.875rem;
@@ -582,6 +612,8 @@ h1 {
   color: var(--red);
 }
 
+/* ---------- 市場 ---------- */
+
 .pill-tabs {
   display: flex;
   gap: 5px;
@@ -601,6 +633,7 @@ h1 {
   color: var(--yellow);
 }
 
+/* 商品卡。 */
 .asset-cards {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -648,6 +681,7 @@ h1 {
   margin-top: 4px;
 }
 
+/* 價格走勢說明。 */
 .price-story {
   display: flex;
   align-items: center;
@@ -685,6 +719,7 @@ h1 {
   display: block;
 }
 
+/* 圖表分頁。 */
 .chart-tabs {
   padding: 0 20px;
   display: flex;
@@ -728,6 +763,8 @@ h1 {
   color: var(--text);
 }
 
+/* ---------- 持倉 ---------- */
+
 .holdings-panel .panel-title {
   padding: 11px 14px;
 }
@@ -752,6 +789,7 @@ h1 {
   line-height: 1.8;
 }
 
+/* 一筆持倉。 */
 .position-card {
   padding: 16px;
   border-bottom: 1px solid var(--line);
@@ -818,6 +856,8 @@ h1 {
   border: 1px solid #615039;
   padding: 9px 12px;
 }
+
+/* ---------- 帳本、成就與新聞 ---------- */
 
 .ledger-row {
   display: flex;
@@ -886,6 +926,8 @@ h1 {
   margin-bottom: 4px;
 }
 
+/* ---------- 下單 ---------- */
+
 .step-label {
   display: flex;
   align-items: center;
@@ -907,6 +949,7 @@ h1 {
     monospace;
 }
 
+/* 看漲或看跌。 */
 .direction-choices {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -952,6 +995,7 @@ h1 {
   color: var(--pink);
 }
 
+/* 金額。 */
 .amount-field {
   margin: 0 16px;
   display: flex;
@@ -981,6 +1025,7 @@ h1 {
   color: var(--yellow);
 }
 
+/* 快速金額。 */
 .budget-presets {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1000,6 +1045,7 @@ h1 {
   color: var(--pink);
 }
 
+/* 商品種類。 */
 .product-choices {
   display: flex;
   gap: 6px;
@@ -1034,6 +1080,7 @@ h1 {
   background: #383124;
 }
 
+/* 槓桿。 */
 #leverage-zone {
   margin: 17px 16px 0;
 }
@@ -1061,6 +1108,7 @@ h1 {
   font-size: 0.75rem;
 }
 
+/* 下單預覽。 */
 .order-preview {
   margin: 17px 16px 9px;
   border-radius: 9px;
@@ -1080,6 +1128,7 @@ h1 {
   font-size: 0.75rem;
 }
 
+/* 風險提醒。 */
 .risk-note {
   margin: 0 16px 15px;
   color: var(--pink);
@@ -1087,6 +1136,7 @@ h1 {
   line-height: 1.7;
 }
 
+/* 主要按鈕。 */
 .primary {
   background: var(--yellow);
   border: 1px solid #ffe6a2;
@@ -1115,6 +1165,7 @@ h1 {
   padding: 12px 16px 17px;
 }
 
+/* 誘惑卡片。 */
 .temptation-card {
   border: 1px solid #6e405d;
   border-radius: 13px;
@@ -1155,6 +1206,7 @@ h1 {
   margin-top: 14px;
 }
 
+/* 頁尾。 */
 .footer {
   margin-top: 28px;
   color: var(--muted);
@@ -1178,6 +1230,8 @@ h1 {
   color: var(--muted);
   padding: 4px;
 }
+
+/* ---------- 底部操作列 ---------- */
 
 .session-bar {
   position: fixed;
@@ -1221,6 +1275,8 @@ h1 {
   justify-content: space-between;
   gap: 15px;
 }
+
+/* ---------- 回饋動畫 ---------- */
 
 .feedback {
   position: fixed;
@@ -1288,6 +1344,7 @@ h1 {
   overflow: hidden;
 }
 
+/* 彩帶。 */
 .confetti {
   position: absolute;
   top: -25px;
@@ -1304,6 +1361,8 @@ h1 {
   }
 }
 
+/* ---------- 教學 ---------- */
+
 .coach-layer {
   position: fixed;
   inset: 0;
@@ -1315,6 +1374,7 @@ h1 {
   display: none;
 }
 
+/* 圈出要操作的地方。 */
 .spotlight {
   position: fixed;
   border: 3px solid var(--yellow);
@@ -1326,6 +1386,7 @@ h1 {
   pointer-events: none;
 }
 
+/* 教學的手指。 */
 .guide-hand {
   position: fixed;
   font-size: 2.6rem;
@@ -1341,6 +1402,7 @@ h1 {
   }
 }
 
+/* 教學說明。 */
 .coach-card {
   position: fixed;
   left: 20px;
@@ -1392,6 +1454,8 @@ h1 {
 .coach-track .on {
   background: var(--yellow);
 }
+
+/* ---------- 故障畫面 ---------- */
 
 .glitch-screen {
   position: fixed;
@@ -1472,6 +1536,8 @@ h1 {
     transform: translateX(150%);
   }
 }
+
+/* ---------- 提示與視窗 ---------- */
 
 .toasts {
   position: fixed;
@@ -1560,6 +1626,7 @@ dialog::backdrop {
   margin-top: 22px;
 }
 
+/* 選項。 */
 .choices {
   display: grid;
   gap: 10px;
@@ -1588,6 +1655,7 @@ dialog::backdrop {
   line-height: 1.7;
 }
 
+/* 借款種類。 */
 .loan-types {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1631,6 +1699,7 @@ dialog::backdrop {
   color: var(--pink);
 }
 
+/* 器官清單。 */
 .organ-grid {
   display: grid;
   gap: 10px;
@@ -1671,6 +1740,8 @@ dialog::backdrop {
   font-size: 1rem;
 }
 
+/* ---------- 結局 ---------- */
+
 .end-avatar {
   font-size: 4.5rem;
   text-align: center;
@@ -1705,6 +1776,7 @@ dialog::backdrop {
   color: var(--red);
 }
 
+/* 只給螢幕閱讀器的文字。 */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -1712,6 +1784,8 @@ dialog::backdrop {
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
 }
+
+/* ---------- 大螢幕 ---------- */
 
 @media (min-width: 1600px) {
   .game-grid {
@@ -1734,6 +1808,8 @@ dialog::backdrop {
     padding: 15px 9px;
   }
 }
+
+/* ---------- 較小的電腦螢幕 ---------- */
 
 @media (max-width: 1280px) {
   .game-grid {
@@ -1820,6 +1896,8 @@ dialog::backdrop {
     padding: 16px 14px;
   }
 }
+
+/* ---------- 平板 ---------- */
 
 @media (max-width: 1050px) {
   .game-grid {
@@ -1915,6 +1993,8 @@ dialog::backdrop {
     order: 3;
   }
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 760px) {
   .game-grid {
@@ -2401,6 +2481,8 @@ dialog::backdrop {
   }
 }
 
+/* ---------- 小手機 ---------- */
+
 @media (max-width: 380px) {
   .market-panel .panel-title {
     flex-wrap: wrap;
@@ -2491,6 +2573,8 @@ dialog::backdrop {
   }
 }
 
+/* ---------- 減少動態效果 ---------- */
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *:before,
@@ -2517,6 +2601,7 @@ dialog::backdrop {
   }
 }
 
+/* 關閉動態效果的設定。 */
 body.reduced-effects * {
   animation: none !important;
   transition: none !important;
@@ -2534,10 +2619,12 @@ body.reduced-effects .feedback.lose {
   background: #5d2833dd;
 }
 
+/* 教學中的借款捷徑。 */
 #tutorial-loan-shortcut {
   grid-column: 1 / -1;
 }
 
+/* 結局時的畫面。 */
 body.dead-world main {
   filter: grayscale(0.65);
 }
@@ -2549,6 +2636,7 @@ body.dead-world main {
   margin: 8px 16px 16px;
 }
 
+/* 手機的借款按鈕。 */
 @media (max-width: 760px) {
   .mobile-loan-button {
     display: block;
@@ -2572,6 +2660,8 @@ body {
   position: relative;
   z-index: 1;
 }
+
+/* ---------- 低血量的氣氛 ---------- */
 
 #dread-overlay {
   position: fixed;
@@ -2638,6 +2728,7 @@ body.dread-3 .character-panel {
   display: none;
 }
 
+/* 身體清單。 */
 .body-inventory {
   margin: 8px 16px 4px;
 }
@@ -2688,6 +2779,8 @@ body.dread-3 .character-panel {
   margin: 9px 0;
 }
 
+/* ---------- 即時行情 ---------- */
+
 .tape-toolbar {
   display: flex;
   align-items: center;
@@ -2717,6 +2810,7 @@ body.dread-3 .character-panel {
   min-height: 44px;
 }
 
+/* 圖表。 */
 .chart {
   position: relative;
   height: auto;
@@ -2758,6 +2852,7 @@ body.dread-3 .character-panel {
   font-variant-numeric: tabular-nums;
 }
 
+/* 查看過去的價格。 */
 .archive-controls {
   display: flex;
   align-items: center;
@@ -2799,6 +2894,7 @@ body.dread-3 .character-panel {
   margin: 11px 0;
 }
 
+/* 視力下降時的圖表。 */
 body.vision-one .chart svg {
   filter: blur(1.8px) brightness(0.8);
 }
@@ -2828,6 +2924,8 @@ body.vision-one #selected-price {
 body.vision-two #selected-price {
   filter: blur(1px);
 }
+
+/* ---------- 工作 ---------- */
 
 .job-progress {
   height: 8px;
@@ -2895,6 +2993,7 @@ body.vision-two #selected-price {
   margin: 18px 0;
 }
 
+/* 手機的底部導覽。 */
 .mobile-nav {
   display: none;
 }
@@ -2919,11 +3018,15 @@ summary:focus-visible,
   outline-offset: 3px;
 }
 
+/* ---------- 大螢幕 ---------- */
+
 @media (min-width: 1600px) {
   .chart {
     height: auto;
   }
 }
+
+/* ---------- 平板 ---------- */
 
 @media (max-width: 1050px) {
   .body-inventory {
@@ -2943,6 +3046,8 @@ summary:focus-visible,
     grid-row: 4;
   }
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 760px) {
   .mobile-nav {
@@ -3192,6 +3297,8 @@ summary:focus-visible,
   }
 }
 
+/* ---------- 小手機 ---------- */
+
 @media (max-width: 380px) {
   .header-actions button {
     font-size: 0.7rem;
@@ -3251,6 +3358,7 @@ summary:focus-visible,
   }
 }
 
+/* 減少動態效果。 */
 @media (prefers-reduced-motion: reduce) {
   #dread-overlay,
   body,
@@ -3259,11 +3367,12 @@ summary:focus-visible,
   }
 }
 
-/* Match plot coordinates to pointer coordinates without inherited horizontal padding. */
+/* 圖表座標與指標座標一致，不受繼承的左右內距影響。 */
 .chart {
   padding: 0;
 }
 
+/* 資產卡。 */
 .money-dashboard > * {
   min-width: 0;
 }
@@ -3280,6 +3389,7 @@ summary:focus-visible,
   overflow-wrap: anywhere;
 }
 
+/* 各區塊。 */
 .market-panel,
 .holdings-panel,
 .action-column,
@@ -3288,7 +3398,7 @@ summary:focus-visible,
   min-width: 0;
 }
 
-/* 4.0: colorful night arcade; severity still takes over when debt/health deteriorate. */
+/* ---------- 4.0：多彩的夜間遊樂場；債務或健康惡化時仍會切換成警示色 ---------- */
 :root {
   --yellow: #ffe081;
   --purple: #ad9cff;
@@ -3301,6 +3411,8 @@ body {
     radial-gradient(ellipse at 10% 5%, #252750 0, transparent 45%),
     radial-gradient(ellipse at 90% 35%, #3a1c41 0, transparent 48%), #0a1022;
 }
+
+/* ---------- 精修後的外觀 ---------- */
 
 .panel {
   background: linear-gradient(150deg, #1b2540f5, #141b30f5);
@@ -3343,6 +3455,7 @@ body {
   background: #171e32c9;
 }
 
+/* 角色名牌。 */
 .player-ribbon {
   display: flex;
   align-items: center;
@@ -3369,6 +3482,7 @@ body {
   padding: 9px 14px;
 }
 
+/* 手機未讀數。 */
 #phone-unread {
   display: inline-block;
   min-width: 22px;
@@ -3398,6 +3512,7 @@ body {
   background: linear-gradient(130deg, #402439, #1c2238);
 }
 
+/* 信譽。 */
 .reputation-mini {
   border-color: #8d7a41;
   background: linear-gradient(130deg, #383025, #1c2338);
@@ -3411,6 +3526,7 @@ body {
   line-height: 1.7;
 }
 
+/* 搜尋與篩選商品。 */
 .asset-discovery {
   padding: 12px 16px 3px;
   display: grid;
@@ -3473,6 +3589,7 @@ body {
   color: var(--muted);
 }
 
+/* 沒有資料時的圖表。 */
 .chart-empty {
   padding: 70px 24px;
   text-align: center;
@@ -3499,6 +3616,8 @@ body {
   color: #b7e4ff;
   background: linear-gradient(100deg, #443857, #254058);
 }
+
+/* ---------- 取名與身分 ---------- */
 
 .name-label {
   display: block;
@@ -3560,6 +3679,8 @@ body {
   color: #bbc8de;
 }
 
+/* ---------- 契約 ---------- */
+
 .contract-bill {
   display: grid;
   gap: 7px;
@@ -3598,6 +3719,8 @@ body {
   margin-left: 12px;
   overflow-wrap: anywhere;
 }
+
+/* ---------- 催收場景 ---------- */
 
 .collector-scene {
   position: relative;
@@ -3656,6 +3779,7 @@ body {
   color: #ffc0d3;
 }
 
+/* 對話紀錄。 */
 .chat-history {
   max-height: 235px;
   overflow: auto;
@@ -3714,6 +3838,7 @@ body {
   color: #ffe0e7;
 }
 
+/* 回覆選項。 */
 .conversation-replies {
   display: grid;
   gap: 8px;
@@ -3739,6 +3864,7 @@ body {
   line-height: 1.8;
 }
 
+/* 催收警告。 */
 .collection-warning {
   padding: 16px;
   border: 1px solid #bd5f75;
@@ -3754,6 +3880,7 @@ body {
   animation: door-pressure 2.8s ease-in-out infinite;
 }
 
+/* 後果說明。 */
 .aftermath-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -3782,6 +3909,8 @@ body {
   overflow-wrap: anywhere;
 }
 
+/* ---------- 手機畫面 ---------- */
+
 .phone-head {
   display: flex;
   align-items: center;
@@ -3802,6 +3931,7 @@ body {
   line-height: 1.8;
 }
 
+/* 社群貼文。 */
 .social-feed {
   max-height: 430px;
   overflow: auto;
@@ -3846,6 +3976,8 @@ body {
   font-size: 0.95rem;
   margin: 10px 0 0;
 }
+
+/* ---------- 賭場 ---------- */
 
 .casino-heading {
   text-align: center;
@@ -3899,6 +4031,7 @@ body {
   color: var(--muted);
 }
 
+/* 賭桌。 */
 .gamble-table {
   padding: 15px;
   border: 1px solid #665a91;
@@ -3917,6 +4050,7 @@ body {
   line-height: 1.8;
 }
 
+/* 骰盅。 */
 .dice-cup {
   font-size: 5rem;
   margin: 22px 0;
@@ -3924,6 +4058,7 @@ body {
   animation: door-pressure 3s ease-in-out infinite;
 }
 
+/* 押注選項。 */
 .gamble-choice {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -3968,6 +4103,7 @@ body {
   margin: 16px 0 10px;
 }
 
+/* 手牌。 */
 .card-hand {
   display: flex;
   justify-content: center;
@@ -3976,6 +4112,7 @@ body {
   margin: 10px 0 18px;
 }
 
+/* 撲克牌。 */
 .playing-card {
   position: relative;
   width: 58px;
@@ -4009,6 +4146,7 @@ body {
   color: #b33864;
 }
 
+/* 踩地雷。 */
 .mine-score {
   margin: 20px 0;
   color: #c2d6df;
@@ -4054,6 +4192,7 @@ body {
   border-color: #e06a8e;
 }
 
+/* 骰子結果。 */
 .dice-results {
   display: flex;
   justify-content: center;
@@ -4066,6 +4205,7 @@ body {
   font-size: 4.5rem;
 }
 
+/* 結算單。 */
 .gamble-receipt {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -4084,6 +4224,8 @@ body {
 .result-board {
   width: min(230px, 100%);
 }
+
+/* ---------- 動畫 ---------- */
 
 @keyframes incoming-message {
   from {
@@ -4110,6 +4252,8 @@ body {
   }
 }
 
+/* ---------- 較小的電腦螢幕 ---------- */
+
 @media (max-width: 1280px) {
   .money-dashboard {
     grid-template-columns: 1.2fr repeat(4, minmax(0, 1fr));
@@ -4127,6 +4271,8 @@ body {
     font-size: 1.7rem;
   }
 }
+
+/* ---------- 平板 ---------- */
 
 @media (max-width: 1050px) {
   .money-dashboard {
@@ -4153,6 +4299,8 @@ body {
     grid-template-columns: minmax(0, 1fr) 125px;
   }
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 760px) {
   .life-hero {
@@ -4371,6 +4519,8 @@ body {
   }
 }
 
+/* ---------- 小手機 ---------- */
+
 @media (max-width: 380px) {
   .day-card {
     min-width: 102px;
@@ -4425,6 +4575,7 @@ body {
   }
 }
 
+/* 減少動態效果。 */
 @media (prefers-reduced-motion: reduce) {
   .danger-scene .collector-avatar,
   .chat-current,
@@ -4440,6 +4591,8 @@ body {
   color: #90a8ca;
   font-size: 0.75rem;
 }
+
+/* ---------- 身體查看 ---------- */
 
 .character-stage button.avatar {
   background: linear-gradient(145deg, #334865, #26213d);
@@ -4500,6 +4653,7 @@ body {
   border-color: #b777a2;
 }
 
+/* 身體部位。 */
 .body-part {
   text-align: left;
   padding: 8px;
@@ -4546,6 +4700,7 @@ body {
   align-items: start;
 }
 
+/* 人體圖。 */
 .anatomy-map {
   border: 1px solid #536281;
   border-radius: 18px;
@@ -4590,6 +4745,7 @@ body {
   line-height: 1.7;
 }
 
+/* 各區的部位清單。 */
 .body-zone-links {
   display: grid;
   gap: 5px;
@@ -4702,6 +4858,7 @@ body {
   color: #ffa4b6;
 }
 
+/* 器官的數值。 */
 .organ-detail-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -4735,6 +4892,8 @@ body {
   line-height: 1.9;
 }
 
+/* ---------- 開場選擇 ---------- */
+
 .welcome-routes {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4754,6 +4913,7 @@ body {
   margin-top: 7px;
 }
 
+/* 介紹卡。 */
 .intro-cards {
   display: grid;
   gap: 10px;
@@ -4781,6 +4941,7 @@ body {
   color: #ffdb91;
 }
 
+/* 略過教學。 */
 #tutorial-skip {
   margin-top: 12px;
   width: 100%;
@@ -4788,6 +4949,7 @@ body {
   border: 1px solid #676078;
 }
 
+/* 電腦版的角色區。 */
 @media (min-width: 1051px) {
   .character-stage {
     flex-wrap: wrap;
@@ -4800,6 +4962,8 @@ body {
   }
 }
 
+/* ---------- 平板 ---------- */
+
 @media (max-width: 1050px) {
   .character-panel > .body-open {
     grid-column: 1/-1;
@@ -4810,6 +4974,8 @@ body {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+/* ---------- 手機 ---------- */
 
 @media (max-width: 760px) {
   .player-ribbon .ribbon-note {
@@ -4879,6 +5045,8 @@ body {
   }
 }
 
+/* ---------- 小手機 ---------- */
+
 @media (max-width: 380px) {
   .body-explorer {
     grid-template-columns: 1fr;
@@ -4919,7 +5087,7 @@ body {
   }
 }
 
-/* Keep the body map and the close button reachable while the part list scrolls. */
+/* 部位清單捲動時，身體圖與關閉按鈕仍然按得到。 */
 .body-detail-grid {
   max-height: min(48dvh, 470px);
   overflow-y: auto;
@@ -4928,12 +5096,14 @@ body {
   padding: 2px 5px 4px 2px;
 }
 
+/* 手機的身體資料。 */
 @media (max-width: 760px) {
   .body-detail-grid {
     max-height: 43dvh;
   }
 }
 
+/* 小手機的身體資料。 */
 @media (max-width: 380px) {
   .body-detail-grid {
     max-height: 32dvh;

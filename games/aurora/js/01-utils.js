@@ -146,6 +146,7 @@ const Util = {
 
   /* ---------- 存檔（瀏覽器 localStorage） ---------- */
 
+  // 讀取瀏覽器保存的資料；沒有資料或讀取失敗時回傳預設值。
   load(key, fallback) {
     try {
       const raw = localStorage.getItem("neonstrike2." + key);
@@ -155,6 +156,7 @@ const Util = {
     }
   },
 
+  // 把資料存進瀏覽器；無痕模式等情況存不進去時直接略過。
   save(key, value) {
     try {
       localStorage.setItem("neonstrike2." + key, JSON.stringify(value));

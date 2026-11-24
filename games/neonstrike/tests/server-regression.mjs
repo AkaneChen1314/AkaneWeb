@@ -1,12 +1,16 @@
+/*
+ * 測試：本機伺服器（首頁、檔案類型、404、逾時與過長的標頭）。
+ */
 import assert from "node:assert/strict";
 import http from "node:http";
 import net from "node:net";
 import { performance } from "node:perf_hooks";
 
-// The game server must already be running; this test never starts another server.
+// 必須先啟動遊戲伺服器；這個測試不會自己啟動。
 const host = "127.0.0.1";
 const port = 4173;
 
+// 發出 GET 請求，回傳狀態、標頭與內容。
 function get(path) {
   return new Promise((resolve, reject) => {
     const request = http.get({ host, port, path, agent: false }, (response) => {
@@ -31,6 +35,7 @@ function get(path) {
   });
 }
 
+// 直接送出一段原始文字，用來測試不完整的請求。
 function rawRequest(requestText) {
   return new Promise((resolve, reject) => {
     let response = "";
@@ -53,11 +58,13 @@ function rawRequest(requestText) {
   });
 }
 
+// 首頁。
 const home = await get("/");
 assert.equal(home.status, 200, "Homepage must return 200");
 assert.match(home.body, /NEON STRIKE/, "Homepage must contain the game");
 console.log("PASS homepage 200");
 
+// 程式檔要用正確的內容類型。
 const script = await get("/main.js");
 assert.equal(script.status, 200, "Game script must return 200");
 assert.match(
@@ -67,10 +74,12 @@ assert.match(
 );
 console.log("PASS JavaScript MIME");
 
+// 不存在的檔案。
 const missing = await get("/__server_regression_missing__.txt");
 assert.equal(missing.status, 404, "Missing file must return 404");
 console.log("PASS missing file 404");
 
+// 標頭沒送完會逾時，之後伺服器仍要正常。
 const partial = await rawRequest("GET / HTTP/1.1\r\nHost: 127.0.0.1\r\n");
 assert.match(
   partial.response,
@@ -88,6 +97,7 @@ assert.equal(
 );
 console.log("PASS partial-header timeout and server recovery");
 
+// 標頭太長會被拒絕。
 const oversized = await rawRequest(
   `GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nX-Fill: ${"a".repeat(5000)}\r\n\r\n`,
 );

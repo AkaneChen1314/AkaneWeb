@@ -1,7 +1,11 @@
+/*
+ * 測試：霓虹蛇的地圖大小、邊界、地形與食物數量。
+ */
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { Game, MODES, distance } = require("../engine.js");
 
+// 正式地圖是第 4 版的兩倍大，食物分布到新區域。
 test("formal maps are twice as wide and tall as v4, with food spread through the new area", () => {
   for (const mode of Object.keys(MODES)) {
     const g = new Game({ mode, seed: 42 });
@@ -22,6 +26,7 @@ test("formal maps are twice as wide and tall as v4, with food spread through the
   }
 });
 
+// 新的外圍區域可以移動與射擊，直到真正的邊界。
 test("new outer region supports movement and bullets until the actual boundary", () => {
   const g = new Game({ mode: "endless", seed: 9 });
   g.obstacles = [];
@@ -52,6 +57,7 @@ test("new outer region supports movement and bullets until the actual boundary",
   assert.equal(g.projectiles.length, 0);
 });
 
+// 在角落生成的敵人會在附近，獎勵也拿得到。
 test("spawns near map corners stay nearby and loot stays reachable", () => {
   const g = new Game({ mode: "endless", seed: 73 });
   for (const x of [-62, 62])
@@ -70,6 +76,7 @@ test("spawns near map corners stay nearby and loot stays reachable", () => {
   assert.ok(Math.abs(g.food[0].x) < g.bound && Math.abs(g.food[0].z) < g.bound);
 });
 
+// 地圖裡有泉水、加速板、成對傳送門、寶箱與地標。
 test("maps contain springs, pads, portal pairs, caches and landmarks inside the walls", () => {
   for (const mode of ["survival", "arena"]) {
     const g = new Game({ mode, seed: 11 }),
@@ -91,6 +98,7 @@ test("maps contain springs, pads, portal pairs, caches and landmarks inside the 
   }
 });
 
+// 食物比以前少，道具數量有上限。
 test("food is leaner than before and power-ups stay capped over time", () => {
   const g = new Game({ mode: "zen", seed: 4 });
   const s = new Game({ mode: "survival", seed: 4 });

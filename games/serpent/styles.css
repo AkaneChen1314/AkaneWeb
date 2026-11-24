@@ -1,3 +1,5 @@
+/* ---------- 顏色變數與基本設定 ---------- */
+
 :root {
   color-scheme: dark;
   --bg: #0b1115;
@@ -62,6 +64,7 @@ a {
   color: inherit;
   text-decoration: none;
 }
+/* 鍵盤操作時的焦點框。 */
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
@@ -103,6 +106,9 @@ svg use {
 .hidden {
   display: none !important;
 }
+
+/* ---------- 大廳外框與上方列 ---------- */
+
 .shell {
   max-width: 1512px;
   margin: auto;
@@ -152,6 +158,7 @@ svg use {
   height: 28px;
   stroke-width: 2.2;
 }
+/* 主選單。 */
 .main-nav {
   display: flex;
   gap: 28px;
@@ -183,6 +190,7 @@ svg use {
   height: 2px;
   background: var(--mint);
 }
+/* 錢包與設定。 */
 .top-actions {
   display: flex;
   align-items: center;
@@ -213,6 +221,7 @@ svg use {
   background: var(--surface-high);
   border-color: var(--muted);
 }
+/* 標題。 */
 .intro {
   display: flex;
   align-items: center;
@@ -246,11 +255,15 @@ h1 span {
 .text-button svg {
   width: 18px;
 }
+
+/* ---------- 大廳版面 ---------- */
+
 .lobby-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 330px;
   gap: 24px;
 }
+/* 角色展示。 */
 .showcase {
   position: relative;
   overflow: hidden;
@@ -299,6 +312,7 @@ h1 span {
   color: var(--muted);
   font-size: 10px;
 }
+/* 角色模型。 */
 .model-stage {
   height: 342px;
   position: relative;
@@ -350,6 +364,7 @@ h1 span {
   z-index: 3;
   margin-top: -10px;
 }
+/* 角色說明。 */
 .tiny-label {
   font-size: 10px;
   color: var(--mint);
@@ -363,6 +378,7 @@ h1 span {
   font-size: 12px;
   color: var(--muted);
 }
+/* 旋轉按鈕。 */
 .rotation-button {
   width: 60px;
   height: 60px;
@@ -382,6 +398,7 @@ h1 span {
 .rotation-button:hover {
   color: var(--mint);
 }
+/* 角色選擇。 */
 .character-roster {
   margin-top: auto;
   display: grid;
@@ -428,6 +445,7 @@ h1 span {
   font-size: 9px;
   white-space: nowrap;
 }
+/* 小蛇圖示。 */
 .mini-snake {
   --c: var(--mint);
   width: 34px;
@@ -460,6 +478,9 @@ h1 span {
 .mini-snake:after {
   right: 6px;
 }
+
+/* ---------- 出擊設定 ---------- */
+
 .loadout {
   padding: 22px 23px 17px;
   border: 1px solid var(--line);
@@ -493,6 +514,7 @@ h1 span {
   border-radius: 4px;
   background: #9ce9bc12;
 }
+/* 數值條。 */
 .stats-bars {
   display: grid;
   gap: 9px;
@@ -525,6 +547,7 @@ h1 span {
   color: var(--text);
   text-align: right;
 }
+/* 能力說明。 */
 .ability-info {
   display: flex;
   gap: 12px;
@@ -581,6 +604,7 @@ kbd {
   font-size: 10px;
   color: var(--muted);
 }
+/* 模式。 */
 .mode-list {
   display: grid;
   gap: 8px;
@@ -633,6 +657,7 @@ kbd {
   border: 3px solid var(--mint);
   background: var(--ink);
 }
+/* 主要按鈕。 */
 .primary-button {
   display: flex;
   width: 100%;
@@ -670,6 +695,9 @@ kbd {
   color: var(--muted);
   margin-top: 9px;
 }
+
+/* ---------- 世界選擇 ---------- */
+
 .world-section {
   padding-top: 26px;
 }
@@ -742,6 +770,7 @@ kbd {
 .selected .world-check {
   display: block;
 }
+/* 世界的風景。 */
 .landscape {
   position: absolute;
   inset: 0;
@@ -803,6 +832,7 @@ kbd {
   bottom: -12px;
   transform: rotate(-14deg);
 }
+/* 大廳底部。 */
 .lobby-footer {
   display: flex;
   align-items: center;
@@ -823,6 +853,9 @@ kbd {
 .keycap:first-child {
   margin-left: 0;
 }
+
+/* ---------- 遊戲畫面 ---------- */
+
 #game-screen {
   position: fixed;
   inset: 0;
@@ -840,6 +873,7 @@ kbd {
 #fx-canvas {
   pointer-events: none;
 }
+/* 上方資訊。 */
 .game-top {
   position: absolute;
   top: max(24px, env(safe-area-inset-top));
@@ -874,6 +908,7 @@ kbd {
 .run-profile span {
   font-size: 12px;
 }
+/* 血量。 */
 .health-track {
   height: 5px;
   border-radius: 5px;
@@ -890,6 +925,7 @@ kbd {
   transform-origin: left;
   transition: transform 0.15s;
 }
+/* 分數與時間。 */
 .run-profile small {
   font-size: 9px;
   color: var(--muted);
@@ -934,6 +970,7 @@ kbd {
 .game-actions .icon-button {
   background: #0b151be6;
 }
+/* 經驗。 */
 .xp-hud {
   position: absolute;
   top: 116px;
@@ -975,6 +1012,7 @@ kbd {
 #combo-info {
   color: var(--yellow);
 }
+/* 大字提示。 */
 .run-banner {
   position: absolute;
   top: 24%;
@@ -996,6 +1034,7 @@ kbd {
   opacity: 1;
   transform: translateY(0);
 }
+/* 首領血條。 */
 .boss-hud {
   position: absolute;
   top: 115px;
@@ -1018,6 +1057,7 @@ kbd {
   height: 100%;
   transform-origin: left;
 }
+/* 小地圖。 */
 #minimap-wrap {
   position: absolute;
   right: 32px;
@@ -1036,6 +1076,7 @@ kbd {
   font-size: 9px;
   color: var(--muted);
 }
+/* 下方資訊。 */
 .game-bottom {
   position: absolute;
   bottom: max(24px, env(safe-area-inset-bottom));
@@ -1057,6 +1098,7 @@ kbd {
   font-size: 9px;
   margin-top: 4px;
 }
+/* 技能列。 */
 .skill-dock {
   display: flex;
   gap: 12px;
@@ -1110,6 +1152,7 @@ kbd {
   font-size: 10px;
   font-weight: 400;
 }
+/* 收集到的東西。 */
 .run-loot {
   display: grid;
   grid-template-columns: 20px auto;
@@ -1132,6 +1175,7 @@ kbd {
   grid-column: span 2;
   text-align: right;
 }
+/* 觸控搖桿。 */
 #joystick {
   display: none;
   position: absolute;
@@ -1155,6 +1199,9 @@ kbd {
   border-radius: 50%;
   pointer-events: none;
 }
+
+/* ---------- 視窗 ---------- */
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -1199,6 +1246,7 @@ kbd {
   gap: 12px;
   margin-top: 25px;
 }
+/* 次要按鈕。 */
 .secondary-button {
   padding: 12px 20px;
   border-radius: 9px;
@@ -1214,6 +1262,7 @@ kbd {
 .modal-actions .primary-button {
   flex: 1;
 }
+/* 說明。 */
 .help-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1243,6 +1292,7 @@ kbd {
   margin-top: 12px;
   color: var(--muted);
 }
+/* 設定。 */
 .setting-row {
   padding: 18px 0;
   border-bottom: 1px solid var(--line);
@@ -1285,6 +1335,7 @@ kbd {
   color: var(--mint);
   border-color: #a0f0ba77;
 }
+/* 強化選擇。 */
 .upgrade-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1326,6 +1377,7 @@ kbd {
   display: inline-block;
   margin-top: 18px;
 }
+/* 結算。 */
 .result-score {
   font-family: var(--display);
   font-size: 70px;
@@ -1363,11 +1415,13 @@ kbd {
   color: var(--yellow);
   font-size: 13px;
 }
+/* 成就提示。 */
 .achievement-toast {
   font-size: 12px;
   color: var(--mint);
   margin-top: 12px;
 }
+/* 提示訊息。 */
 #toast {
   position: fixed;
   bottom: 28px;
@@ -1392,6 +1446,9 @@ kbd {
   opacity: 1;
   transform: translate(-50%, 0);
 }
+
+/* ---------- 其他頁面 ---------- */
+
 #secondary-page {
   padding: 40px 0 60px;
 }
@@ -1403,6 +1460,7 @@ kbd {
   margin-top: 10px;
   font-size: 13px;
 }
+/* 實驗室（永久強化）。 */
 .lab-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1447,6 +1505,7 @@ kbd {
 .lab-card button {
   font-size: 12px;
 }
+/* 紀錄。 */
 .record-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1469,6 +1528,7 @@ kbd {
   font-size: 12px;
   color: var(--muted);
 }
+/* 成就。 */
 .achievement-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1503,6 +1563,7 @@ kbd {
   color: var(--muted);
   margin-top: 5px;
 }
+/* 歷史。 */
 .history {
   margin-top: 32px;
   overflow: auto;
@@ -1527,6 +1588,7 @@ kbd {
   color: var(--muted);
   padding: 30px 0;
 }
+/* 不支援或發生錯誤。 */
 .noscript {
   padding: 30px;
   background: var(--surface);
@@ -1537,6 +1599,9 @@ kbd {
   text-align: center;
   color: var(--danger);
 }
+
+/* ---------- 高度較矮的電腦螢幕 ---------- */
+
 @media (min-width: 781px) and (max-height: 850px) {
   .topbar {
     height: 78px;
@@ -1602,6 +1667,9 @@ kbd {
     padding: 15px 0;
   }
 }
+
+/* ---------- 大螢幕 ---------- */
+
 @media (min-width: 1550px) {
   .shell {
     padding: 0 60px;
@@ -1626,6 +1694,9 @@ kbd {
     height: 126px;
   }
 }
+
+/* ---------- 平板 ---------- */
+
 @media (max-width: 1100px) {
   .shell {
     padding: 0 28px;
@@ -1684,6 +1755,9 @@ kbd {
     height: 39px;
   }
 }
+
+/* ---------- 手機 ---------- */
+
 @media (max-width: 780px) {
   .shell {
     padding: 0 20px;
@@ -1927,6 +2001,9 @@ kbd {
     font-size: 11px;
   }
 }
+
+/* ---------- 小手機 ---------- */
+
 @media (max-width: 440px) {
   .shell {
     padding: 0 14px;
@@ -2101,6 +2178,9 @@ kbd {
     right: 12px;
   }
 }
+
+/* ---------- 觸控裝置 ---------- */
+
 @media (pointer: coarse) {
   #joystick {
     display: block;
@@ -2118,6 +2198,9 @@ kbd {
     visibility: hidden;
   }
 }
+
+/* ---------- 減少動態效果 ---------- */
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *:before,
@@ -2128,7 +2211,7 @@ kbd {
   }
 }
 
-/* Player education: consistent rules, readable feedback, and safe practice. */
+/* ---------- 玩家教學：規則一致、回饋清楚、安全練習 ---------- */
 .rules-strip {
   display: flex;
   align-items: center;
@@ -2157,12 +2240,16 @@ kbd {
   font-size: 12px;
   border-color: #a0f0ba40;
 }
+/* 模式目標。 */
 .mode-objective {
   color: var(--mint);
   font-size: 11px;
   line-height: 1.7;
   margin: 12px 0 0;
 }
+
+/* ---------- 說明頁 ---------- */
+
 .guide-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -2199,6 +2286,7 @@ kbd {
   outline: 2px solid var(--mint);
   outline-offset: 4px;
 }
+/* 重要提醒。 */
 .rule-callout {
   padding: 18px 20px;
   border: 1px solid #a0f0ba44;
@@ -2225,6 +2313,7 @@ kbd {
 .rule-callout.danger > strong {
   color: var(--danger);
 }
+/* 入門步驟。 */
 .getting-start {
   list-style: none;
   padding: 0;
@@ -2263,6 +2352,7 @@ kbd {
   line-height: 1.9;
   margin: 15px 0;
 }
+/* 碰撞範例。 */
 .collision-examples {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2287,6 +2377,7 @@ kbd {
   text-align: center;
   margin-top: 8px;
 }
+/* 規則表。 */
 .rule-table-wrap {
   overflow-x: auto;
   margin: 18px 0;
@@ -2333,6 +2424,7 @@ kbd {
   line-height: 1.9;
   color: var(--muted);
 }
+/* 收集物。 */
 .pickup-guide {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2376,6 +2468,7 @@ kbd {
   font-style: normal;
   font-weight: 900;
 }
+/* 角色說明。 */
 .character-guide {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2411,6 +2504,9 @@ kbd {
   margin-top: 10px;
   color: var(--muted);
 }
+
+/* ---------- 出擊前簡報 ---------- */
+
 .brief-goal {
   font-size: 14px;
   line-height: 1.8;
@@ -2424,6 +2520,7 @@ kbd {
   margin: 20px auto 0;
   min-height: 36px;
 }
+/* 結算原因。 */
 .result-reason {
   padding: 14px 17px;
   margin-top: 20px;
@@ -2450,6 +2547,7 @@ kbd {
   font-size: 52px;
   margin: 14px 0;
 }
+/* 目前目標。 */
 .run-objective {
   position: absolute;
   top: 86px;
@@ -2485,6 +2583,7 @@ kbd {
 .run-safety svg {
   width: 16px;
 }
+/* 受傷提示。 */
 .damage-notice {
   position: absolute;
   top: 218px;
@@ -2498,6 +2597,9 @@ kbd {
   font-size: 12px;
   pointer-events: none;
 }
+
+/* ---------- 教學 ---------- */
+
 .training-coach {
   position: absolute;
   left: 32px;
@@ -2557,6 +2659,9 @@ kbd {
   top: 24%;
   font-size: 17px;
 }
+
+/* ---------- 手機 ---------- */
+
 @media (max-width: 780px) {
   .rules-strip {
     padding: 13px 15px;
@@ -2650,6 +2755,9 @@ kbd {
     margin-top: 10px;
   }
 }
+
+/* ---------- 小手機 ---------- */
+
 @media (max-width: 440px) {
   .rules-strip {
     flex-direction: column;
@@ -2711,6 +2819,7 @@ kbd {
     margin-bottom: 12px;
   }
 }
+/* 高度較矮的畫面。 */
 @media (max-height: 600px) and (min-width: 600px) {
   .training-coach {
     left: 20px;
@@ -2741,7 +2850,7 @@ kbd {
   }
 }
 
-/* Combat expansion: six readable choices and three direct actions. */
+/* ---------- 戰鬥擴充：六個清楚的選項與三個直接操作 ---------- */
 .mode-list {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2772,6 +2881,7 @@ kbd {
 .mode-objective {
   min-height: 58px;
 }
+/* 技能列。 */
 .skill-dock {
   gap: 10px;
 }
@@ -2794,6 +2904,9 @@ kbd {
 .run-objective {
   max-width: min(620px, 86vw);
 }
+
+/* ---------- 手機 ---------- */
+
 @media (max-width: 650px) {
   .skill-dock {
     gap: 7px;
@@ -2844,6 +2957,7 @@ kbd {
     0 0 22px #ff4d5e88,
     0 3px 20px #000;
 }
+/* 大字提示的動畫。 */
 @keyframes banner-pop {
   0% {
     transform: scale(0.7) translateY(10px);
@@ -2857,6 +2971,9 @@ kbd {
     transform: scale(1);
   }
 }
+
+/* ---------- 技能與增益 ---------- */
+
 .dock-column {
   display: flex;
   flex-direction: column;
@@ -2864,6 +2981,7 @@ kbd {
   gap: 10px;
   pointer-events: none;
 }
+/* 增益。 */
 .buff-bar {
   display: flex;
   gap: 8px;
@@ -2902,6 +3020,7 @@ kbd {
   background: var(--c);
   transform-origin: left;
 }
+/* 自動咬擊。 */
 .auto-bite {
   display: grid;
   grid-template-columns: 23px 1fr;
@@ -2918,6 +3037,7 @@ kbd {
 .auto-bite svg {
   color: var(--yellow);
 }
+/* 技能按鈕。 */
 .skill-button.free {
   border-color: #7ff5e4;
   box-shadow: 0 0 18px #7ff5e455;
@@ -2938,6 +3058,7 @@ kbd {
     transform: scale(1.18);
   }
 }
+/* 連擊。 */
 .combo-meter {
   position: absolute;
   right: 36px;
@@ -2993,6 +3114,7 @@ kbd {
     transform: scale(1);
   }
 }
+/* 小地圖。 */
 #minimap-wrap {
   all: unset;
   box-sizing: border-box;
@@ -3040,6 +3162,7 @@ kbd {
 #minimap-label {
   color: var(--mint);
 }
+/* 快捷鍵。 */
 .quick-keys {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3077,6 +3200,9 @@ kbd {
 .modal[data-type="map"] {
   width: min(760px, 100%);
 }
+
+/* ---------- 大地圖 ---------- */
+
 .big-map-wrap {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 150px;
@@ -3098,6 +3224,7 @@ kbd {
 .modal[data-type="map"] .modal-actions {
   margin-top: 14px;
 }
+/* 圖例。 */
 .map-legend {
   list-style: none;
   margin: 0;
@@ -3131,6 +3258,7 @@ kbd {
   border-radius: 2px;
   clip-path: polygon(0 0, 100% 50%, 0 100%, 30% 50%);
 }
+/* 食物與道具說明。 */
 .food-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3197,6 +3325,9 @@ kbd {
 .is-training .combo-meter {
   display: none;
 }
+
+/* ---------- 手機 ---------- */
+
 @media (max-width: 780px) {
   #minimap-wrap {
     right: auto;
@@ -3246,6 +3377,7 @@ kbd {
 .buff-bar:empty {
   min-height: 0;
 }
+/* 高度較矮的畫面。 */
 @media (max-height: 600px) {
   #minimap-wrap {
     width: 128px;
@@ -3272,6 +3404,7 @@ kbd {
     height: 88px;
   }
 }
+/* 減少動態效果。 */
 @media (prefers-reduced-motion: reduce) {
   .run-banner.visible,
   .combo-meter.pop strong,
@@ -3279,6 +3412,7 @@ kbd {
     animation: none;
   }
 }
+/* 手機的技能按鈕。 */
 @media (max-width: 650px) {
   .skill-dock .skill-button {
     width: auto;
@@ -3344,6 +3478,9 @@ kbd {
   font-size: 10px;
   color: var(--yellow);
 }
+
+/* ---------- 首領資訊 ---------- */
+
 .boss-hud {
   --boss: #ff7a81;
   top: 118px;
@@ -3493,6 +3630,7 @@ kbd {
   );
   z-index: -1;
 }
+/* 首領登場的動畫。 */
 @keyframes boss-intro {
   0% {
     opacity: 0;
@@ -3510,6 +3648,7 @@ kbd {
     transform: translateY(-12px);
   }
 }
+/* 敵人圖鑑。 */
 .enemy-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3550,6 +3689,7 @@ kbd {
   background: #ffffff0d;
   color: var(--muted);
 }
+/* 首領說明。 */
 .boss-guide {
   display: grid;
   gap: 12px;
@@ -3581,6 +3721,9 @@ kbd {
 .boss-guide b {
   color: var(--text);
 }
+
+/* ---------- 手機 ---------- */
+
 @media (max-width: 780px) {
   .boss-hud {
     top: 226px;
@@ -3611,6 +3754,7 @@ kbd {
     padding: 8px;
   }
 }
+/* 減少動態效果。 */
 @media (prefers-reduced-motion: reduce) {
   .boss-intro.show {
     animation: none;
@@ -3619,10 +3763,11 @@ kbd {
     animation: none;
   }
 }
-/* Guarded menus: briefly ignore input so a held dash key never picks an option. */
+/* ---------- 防誤按的視窗：短時間不理會輸入，按著衝刺鍵不會誤選 ---------- */
 .modal:focus {
   outline: none;
 }
+/* 防止誤按的倒數條。 */
 .guard-bar {
   height: 3px;
   margin: -14px 0 14px;
@@ -3663,6 +3808,7 @@ kbd {
   font-size: 11px;
   color: var(--text);
 }
+/* 倒數動畫。 */
 @keyframes guard-fill {
   from {
     transform: scaleX(0);
@@ -3678,6 +3824,9 @@ kbd {
   flex-wrap: wrap;
   justify-content: flex-end;
 }
+
+/* ---------- 簡報視窗 ---------- */
+
 .modal[data-type="briefing"] {
   width: min(980px, 100%);
 }
@@ -3883,6 +4032,7 @@ kbd {
   height: 16px;
   accent-color: var(--mint);
 }
+/* 手機的簡報。 */
 @media (max-width: 780px) {
   .brief-grid {
     grid-template-columns: 1fr;
@@ -3899,6 +4049,9 @@ kbd {
   display: flex;
   flex-direction: column;
 }
+
+/* ---------- 大廳的角色資料 ---------- */
+
 .model-stage {
   height: 300px;
 }
@@ -3980,6 +4133,7 @@ kbd {
   margin-top: auto;
   padding-top: 12px;
 }
+/* 高度較矮的電腦螢幕。 */
 @media (min-width: 781px) and (max-height: 850px) {
   .model-stage {
     height: 270px;
@@ -3997,6 +4151,7 @@ kbd {
     grid-template-columns: 1fr;
   }
 }
+/* 手機。 */
 @media (max-width: 780px) {
   .hero-sheet {
     grid-template-columns: 1fr;
@@ -4015,6 +4170,9 @@ kbd {
   gap: 8px;
   flex: 0 0 auto;
 }
+
+/* ---------- 圖鑑視窗 ---------- */
+
 .rules-strip .guide-cta {
   border-color: var(--mint);
   color: var(--mint);
@@ -4215,6 +4373,7 @@ kbd {
 .gg-nav button {
   min-width: 110px;
 }
+/* 手機的圖鑑。 */
 @media (max-width: 780px) {
   .gg-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4246,6 +4405,7 @@ kbd {
     min-width: 0;
   }
 }
+/* 能力資訊。 */
 .ability-meta {
   list-style: none;
   margin: 10px 0 0;
@@ -4293,6 +4453,9 @@ kbd {
   box-shadow: 0 8px 30px #0006;
   backdrop-filter: blur(10px);
 }
+
+/* ---------- 戰鬥資訊 ---------- */
+
 .hud-status-head {
   display: flex;
   align-items: center;
@@ -4369,6 +4532,7 @@ kbd {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.03em;
 }
+/* 血量低時的跳動。 */
 @keyframes hp-pulse {
   50% {
     box-shadow:
@@ -4376,6 +4540,7 @@ kbd {
       0 0 16px #ff7a8166;
   }
 }
+/* 經驗。 */
 .xp-row {
   display: flex;
   align-items: center;
@@ -4405,6 +4570,7 @@ kbd {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+/* 狀態文字。 */
 #game-screen .hud-status .run-info {
   position: static;
   display: flex;
@@ -4487,6 +4653,7 @@ kbd {
   font-size: 12.5px;
   border-radius: 10px;
 }
+/* 操作提示。 */
 .hud-hint {
   pointer-events: none;
   opacity: 0;
@@ -4531,12 +4698,16 @@ kbd {
 .dock-spacer {
   width: 220px;
 }
+/* 技能按鈕文字。 */
 #game-screen .skill-button span {
   font-size: 12px;
 }
 #game-screen .skill-button kbd {
   font-size: 9.5px;
 }
+
+/* ---------- 手機的戰鬥資訊 ---------- */
+
 @media (max-width: 780px) {
   #game-screen .game-top {
     top: 10px;
@@ -4615,6 +4786,7 @@ kbd {
     max-width: calc(100vw - 150px);
   }
 }
+/* 高度較矮的畫面。 */
 @media (max-height: 600px) and (min-width: 781px) {
   #game-screen .boss-hud {
     top: 118px;
@@ -4623,6 +4795,7 @@ kbd {
     display: none;
   }
 }
+/* 減少動態效果。 */
 @media (prefers-reduced-motion: reduce) {
   #game-screen .health-track.low {
     animation: none;

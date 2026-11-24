@@ -1,7 +1,8 @@
 /*
  * 檔案導讀：場景碰撞幾何：判斷角色或球體是否接觸掩體，以及移動路徑是否被擋住。
  */
-// Shared narrow-phase tests. Box3 bounds remain the cheap broad phase used by the map.
+// 精確的碰撞判定；地圖先用 Box3 外框快速排除。
+// 替方塊記下旋轉後的真正形狀。
 export function orientCollider(box, x, y, z, sx, sy, sz, rotation = 0) {
   box.shape = {
     kind: "box",
@@ -17,11 +18,13 @@ export function orientCollider(box, x, y, z, sx, sy, sz, rotation = 0) {
   return box;
 }
 
+// 替方塊記下圓柱形狀。
 export function roundCollider(box, x, z, radius) {
   box.shape = { kind: "cylinder", x, z, radius };
   return box;
 }
 
+// 站立的身體有沒有碰到障礙。
 export function bodyOverlapsCollider(
   box,
   x,
@@ -63,6 +66,7 @@ export function bodyOverlapsCollider(
   return dx * dx + dz * dz < radius * radius;
 }
 
+// 移動的球對軸向方塊的掃掠判定。
 function slabSweep(position, delta, min, max, radius) {
   let enter = 0,
     exit = 1,
@@ -108,6 +112,7 @@ function slabSweep(position, delta, min, max, radius) {
   return { time: enter, normal };
 }
 
+// 移動的球對圓柱的掃掠判定。
 function cylinderSweep(position, delta, box, radius) {
   const s = box.shape,
     dx = position.x - s.x,
@@ -176,6 +181,7 @@ function cylinderSweep(position, delta, box, radius) {
   return { time: enter, normal };
 }
 
+// 移動的球對任何障礙的掃掠判定。
 export function sweepSphereCollider(position, delta, box, radius = 0) {
   for (const axis of ["x", "y", "z"])
     if (
@@ -218,6 +224,7 @@ export function sweepSphereCollider(position, delta, box, radius = 0) {
   return hit ? { ...hit, box } : null;
 }
 
+// 球是否停在這個障礙上面。
 export function sphereSupportedBy(box, position, radius) {
   return (
     bodyOverlapsCollider(box, position.x, position.z, radius) &&

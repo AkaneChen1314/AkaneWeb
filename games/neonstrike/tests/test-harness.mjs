@@ -1,3 +1,6 @@
+/*
+ * 測試共用的工具：用假的瀏覽器環境執行遊戲主程式。
+ */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -12,13 +15,14 @@ import {
 } from "../grenade-trajectory.js";
 import * as spatialCollision from "../spatial-collision.js";
 
-// Exercise shipped gameplay with real Three geometry and a small browser mock.
+// 使用實際的 Three.js 幾何與最精簡的假瀏覽器來執行遊戲程式。
 const sourcePath = fileURLToPath(new URL("../main.js", import.meta.url));
 // 原始碼排版後 import 可能跨行；只移除靜態匯入，保留被測試的遊戲實作。
 const source = readFileSync(sourcePath, "utf8")
   .replace(/^import\s+[\s\S]*?\s+from\s+["'][^"']+["'];?\r?\n/gm, "")
   .replace(/\r?\ninitLoadout\(\);\s*init3D\(\);[\s\S]*$/, "");
 
+// 建立一份獨立的遊戲環境；run(程式) 會在裡面執行並回傳結果。
 export function createHarness() {
   const nodes = new Map(),
     documentListeners = new Map(),
@@ -28,6 +32,7 @@ export function createHarness() {
     nextTimer = 0;
   const noop = () => {},
     gradient = { addColorStop: noop };
+  // 假的畫布；沒有定義的函式都當成什麼都不做。
   const canvasContext = new Proxy(
     {
       measureText: (text) => ({ width: String(text).length * 10 }),
@@ -39,6 +44,7 @@ export function createHarness() {
       set: (target, key, value) => ((target[key] = value), true),
     },
   );
+  // 假的網頁元素。
   function makeNode() {
     const classes = new Set(),
       children = new Map(),
@@ -90,6 +96,7 @@ export function createHarness() {
       },
     };
   }
+  // 假的 document。
   const document = {
     pointerLockElement: null,
     documentElement: makeNode(),
@@ -104,6 +111,7 @@ export function createHarness() {
     exitPointerLock: noop,
   };
   const storage = new Map();
+  // 沙盒環境裡可以使用的東西。
   const context = vm.createContext({
     THREE,
     ...spatialCollision,
@@ -127,11 +135,26 @@ export function createHarness() {
     requestAnimationFrame: noop,
     addEventListener: (type, listener) => globalListeners.set(type, listener),
   });
+  // 執行遊戲主程式。
   vm.runInContext(source, context, { filename: sourcePath });
   const run = (expression) => vm.runInContext(expression, context);
+  // 準備最基本的場景與玩家。
   run(
-    "scene=new THREE.Scene();camera=new THREE.PerspectiveCamera();yaw=new THREE.Group();yaw.position.set(0,1.68,64);renderer={domElement:{},clear(){},clearDepth(){},shadowMap:{autoUpdate:true},render(){}};",
+    `
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera();
+      yaw = new THREE.Group();
+      yaw.position.set(0, 1.68, 64);
+      renderer = {
+        domElement: {},
+        clear() {},
+        clearDepth() {},
+        shadowMap: { autoUpdate: true },
+        render() {},
+      };
+    `,
   );
+  // 提供給測試使用的工具。
   return {
     run,
     nodes,
@@ -141,17 +164,34 @@ export function createHarness() {
     setNow: (value) => {
       now = value;
     },
+    // 觸發登記在 document 上的事件。
     dispatchDocument: (type) => {
       assert.ok(documentListeners.has(type), `Missing ${type} handler`);
       documentListeners.get(type)();
     },
+    // 觸發登記在 window 上的事件。
     dispatchGlobal: (type, event) => {
       assert.ok(globalListeners.has(type), `Missing ${type} handler`);
       globalListeners.get(type)(event);
     },
     installFrameStubs: () =>
       run(
-        "clock={getDelta(){return .05;}};updateRain=()=>{};updateEffects=()=>{};updatePlayer=()=>{};updateEnemies=()=>{};updateGrenades=()=>{};updatePickups=()=>{};updateCompass=()=>{};updateMissionStatus=()=>{};drawMinimap=()=>{};",
+        `
+          clock = {
+            getDelta() {
+              return 0.05;
+            },
+          };
+          updateRain = () => {};
+          updateEffects = () => {};
+          updatePlayer = () => {};
+          updateEnemies = () => {};
+          updateGrenades = () => {};
+          updatePickups = () => {};
+          updateCompass = () => {};
+          updateMissionStatus = () => {};
+          drawMinimap = () => {};
+        `,
       ),
   };
 }

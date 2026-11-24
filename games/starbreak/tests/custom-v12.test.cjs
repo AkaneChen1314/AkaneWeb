@@ -1,3 +1,6 @@
+/*
+ * 測試：v1.2 的首領倒數、擊破數、招式頻率與新敵人。
+ */
 "use strict";
 const assert = require("node:assert/strict");
 const {
@@ -9,23 +12,27 @@ const {
   difficultyRule,
 } = require("../game.js");
 let count = 0;
+// 執行一項測試。
 function test(name, fn) {
   fn();
   count++;
   console.log("PASS", name);
 }
+// 開始一場遠征。
 function run(config = {}) {
   const e = new Engine(defaultProfile());
   e.newRun("scout", "campaign", 0, 31717, config);
   e.r.p.inv = 1e6;
   return e;
 }
+// 前進指定秒數，並自動處理選擇畫面。
 function activeStep(e, seconds) {
   for (let i = 0; i < Math.ceil(seconds / 0.05); i++) {
     if (e.r.phase === "upgrade") e.chooseUpgrade(0);
     e.step(0.05);
   }
 }
+// 倒數結束首領才會出現。
 test("Boss appears only when its selected countdown reaches zero", () => {
   for (const delay of [15, 45, 90, 180]) {
     const e = run({ bossRule: "rush", bossDelay: delay });
@@ -40,6 +47,7 @@ test("Boss appears only when its selected countdown reaches zero", () => {
     assert.equal(e.r.enemies.filter((x) => x.type === "boss").length, 1);
   }
 });
+// 暫停、獎勵與重新載入都會保留倒數與擊破數。
 test("pause, rewards and reload preserve the active countdown and kills", () => {
   const e = run({ bossRule: "rush", bossDelay: 90 });
   e.r.waveTime = 19.5;
@@ -61,6 +69,7 @@ test("pause, rewards and reload preserve the active countdown and kills", () => 
   f.step(0.05);
   assert.equal(f.r.waveTime, 19.55);
 });
+// 達到擊破數可以提早結束，時間不會讓一波結束。
 test("kill quota can finish early; elapsed time never finishes a wave", () => {
   const e = run({ bossRule: "none", killsPerWave: 10 });
   e.r.waveTime = 10000;
@@ -74,6 +83,7 @@ test("kill quota can finish early; elapsed time never finishes a wave", () => {
   e.step(0.05);
   assert.equal(e.r.phase, "upgrade");
 });
+// 倒數結束前達標，也不能跳過首領。
 test("quota reached before countdown cannot skip the scheduled Boss", () => {
   const e = run({ bossRule: "rush", bossDelay: 45, killsPerWave: 10 });
   e.r.waveKills = 10;
@@ -90,6 +100,7 @@ test("quota reached before countdown cannot skip the scheduled Boss", () => {
   assert.equal(e.r.phase, "upgrade");
   assert.equal(e.r.waveKills, 10);
 });
+// 首領先死，仍要補足小怪的擊破數。
 test("killing Boss before the quota still requires the missing small enemies", () => {
   const e = run({ bossRule: "rush", killsPerWave: 10 });
   e.killEnemy(e.spawnEnemy("boss"));
@@ -100,6 +111,7 @@ test("killing Boss before the quota still requires the missing small enemies", (
   e.step(0.05);
   assert.equal(e.r.phase, "upgrade");
 });
+// 階段開關與首領耐久分開。
 test("phase toggles work separately from Boss durability", () => {
   for (const strength of [0, 1, 2]) {
     const e = run({
@@ -127,6 +139,7 @@ test("phase toggles work separately from Boss durability", () => {
   f.updateEnemy(c, 0.02);
   assert.equal(c.phaseLevel, 3);
 });
+// 頻率改變攻擊間隔，密度改變子彈數量。
 test("frequency changes attack intervals while density changes shot counts", () => {
   const e = run({
       bossRoster: "tyrant",
@@ -151,6 +164,7 @@ test("frequency changes attack intervals while density changes shot counts", () 
   f.r.config.bossStrength = 2;
   assert.equal(bossCooldown(f.r, 1), 4 / 1.8 / difficultyRule(f.r).bossRate);
 });
+// 敵人數量設定會影響實際生成，並遵守同時上限。
 test("quantity modes change actual spawn pressure and honor active caps", () => {
   const totals = [];
   for (const amount of ["sparse", "normal", "dense", "swarm"]) {
@@ -171,6 +185,7 @@ test("quantity modes change actual spawn pressure and honor active caps", () => 
   assert.equal(e.r.enemies.length, 40);
   assert(e.r.bossSpawned);
 });
+// 選擇的編隊會提早加入不同敵人。
 test("selected formations add distinct enemies before late-wave unlocks", () => {
   const e = run();
   e.r.wave = 2;
@@ -184,6 +199,7 @@ test("selected formations add distinct enemies before late-wave unlocks", () => 
   assert(pools.armored.includes("shield"));
   assert(pools.swarm.includes("splitter"));
 });
+// 治療怪只治療小怪，不治療首領。
 test("healers restore nearby small enemies without healing Bosses", () => {
   const e = run(),
     h = e.spawnEnemy("healer"),
@@ -198,6 +214,7 @@ test("healers restore nearby small enemies without healing Bosses", () => {
   assert(ally.hp > 1);
   assert.equal(boss.hp, 100);
 });
+// 新的遠程與自爆怪會先預警。
 test("new ranged and suicide enemies give warning before attack", () => {
   const e = run(),
     g = e.spawnEnemy("gunner");
@@ -218,6 +235,7 @@ test("new ranged and suicide enemies give warning before attack", () => {
   assert(b.dead);
   assert.equal(e.r.waveKills, k);
 });
+// 關閉精英後獵殺波也沒有；高精英模式會出現冠軍。
 test("elite off stays off in hunting waves; high mode produces champions", () => {
   const e = run({ eliteRate: "none", enemyAmount: "swarm" });
   e.r.wave = 8;
@@ -230,6 +248,7 @@ test("elite off stays off in hunting waves; high mode produces champions", () =>
   assert(f.r.enemies.some((x) => x.elite === "regenerating"));
   assert(f.r.enemies.some((x) => x.champion));
 });
+// 固定與成長的擊破數，每波都會重設。
 test("fixed and growing quotas reset correctly on each wave", () => {
   for (const growth of ["fixed", "rising"]) {
     const e = run({ quotaGrowth: growth, killsPerWave: 20 });
@@ -240,6 +259,7 @@ test("fixed and growing quotas reset correctly on each wave", () => {
     assert.equal(e.r.killTarget, growth === "fixed" ? 20 : 23);
   }
 });
+// v1.1 存檔的裝備會保留，新存檔拒絕不合理的設定。
 test("v1.1 migration preserves equipment and new saves reject invalid controls", () => {
   const e = run(),
     data = JSON.parse(JSON.stringify(e.r));

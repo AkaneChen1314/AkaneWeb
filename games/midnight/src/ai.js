@@ -13,6 +13,7 @@
 (() => {
   const game = globalThis.Midnight;
   const { FIELD, NORMALS, BURST_COST } = game;
+  // 什麼都不做的輸入。
   const NONE = {
     direction: 0,
     crouch: false,
@@ -81,7 +82,9 @@
   // 對手兩招相隔不到這麼久，就視為同一波進攻
   const WAVE_GAP = 0.55;
 
+  // 一位電腦對手；每一步由 controls() 回傳按鍵。
   class Brain {
+    // 記下自己、對手、難度與對手的習慣。
     constructor(match, index, habits) {
       this.match = match;
       this.index = index;
@@ -155,9 +158,7 @@
       const { rival } = this;
       if (rival.y > 0) return false;
       return Boolean(
-        rival.crouch ||
-          rival.move?.action === "sweep" ||
-          rival.move?.lowAttack,
+        rival.crouch || rival.move?.action === "sweep" || rival.move?.lowAttack,
       );
     }
 
@@ -207,6 +208,7 @@
       }
     }
 
+    // 依難度隨機的反應時間。
     reactDelay() {
       const [min, max] = this.level.reactTime;
       return min + (max - min) * this.roll();
@@ -239,8 +241,7 @@
       if (!r || now < r.at) return null;
       this.reaction = null;
       const { me, rival, kit, level } = this;
-      const busy =
-        me.move || me.dodge || me.stun > 0 || me.y > 0 || me.heldBy;
+      const busy = me.move || me.dodge || me.stun > 0 || me.y > 0 || me.heldBy;
       if (busy) return null;
       const roll = this.roll();
       const away = -this.toward();
@@ -402,6 +403,7 @@
       const stunned = me.stun > 0;
       const freed = this.wasStunned && !stunned;
       this.wasStunned = stunned;
+      // 剛恢復行動：看要怎麼應對壓制。
       const grounded = me.y === 0 && me.vy === 0;
       if (freed && grounded && !me.move) {
         const answer = this.recover(now);
@@ -452,6 +454,7 @@
         return { ...NONE, guard: true, crouch: this.guardLow() };
       }
 
+      // 一段時間才重新決定，平常維持上一個動作。
       this.nextDecision -= dt;
       if (this.nextDecision > 0) return this.held;
       this.nextDecision = level.think[0] + this.roll() * level.think[1];
@@ -473,6 +476,7 @@
       const aggression = level.aggression;
       const light = this.reach("light");
       const heavy = this.reach("heavy");
+      // 加入一個按鍵。
       const press = (action) => {
         c.actions.push(action);
         return c;
@@ -493,6 +497,7 @@
           !item.erupted &&
           Math.abs(item.x - me.x) < 110,
       );
+      // 快踩到對手的陷阱就離開。
       if (trap && roll < level.react) {
         c.direction = Math.sign(me.x - trap.x) || -toward;
         if (me.dodgeCooldown === 0 && roll < level.react * 0.5) press("dodge");
@@ -505,6 +510,7 @@
       const recovering = spent
         ? (rm.duration ?? rm.spec.duration) - rm.elapsed
         : 0;
+      // 對手收招的空檔。
       if (recovering > 0.1 && roll < level.punish)
         return this.punish(c, d, toward, recovering);
 
@@ -521,6 +527,7 @@
 
       // 對手一直猛攻：搶在他打得到之前用重攻截擊，靠近了就先守住
       const rush = Math.max(0, Math.min(1, (this.tempo - 1.4) / 2.6));
+      // 對手正在衝過來，搶先打斷。
       if (rush > 0.15 && rival.y === 0 && !rival.guard) {
         const intercept = level.punish * (0.25 + 0.55 * rush);
         if (d > light.near - 12 && d < heavy.near + 20 && roll < intercept)
@@ -534,6 +541,7 @@
       }
 
       // 3. 對空：對手從空中壓過來
+      // 對空。
       if (rival.y > 40 && rival.vy < 220 && d < 250) {
         const wary = level.antiAir + Math.min(0.2, habits.jump * 0.05);
         if (roll < wary) {
@@ -547,6 +555,7 @@
       }
 
       // 4. 大招：有把握才放，不亂丟
+      // 能量滿了就找機會放大招。
       if (me.meter >= 100) {
         const careless = (1 - level.confirm) * 0.45 + 0.06; // 難度越低越常亂放
         if (kit.zone && d > 250 && !rival.guard && roll < 0.45 * aggression)
@@ -558,6 +567,7 @@
 
       // 5. 對手一直防禦：投技或破防
       const turtle = rival.guard || habits.guard > 0.45;
+      // 對手一直防禦就改用摔。
       if (rival.guard && d < light.near && !rm) {
         const grab = 0.3 + level.confirm * 0.3 + habits.guard * 0.3;
         if (d < THROW_REACH && roll < grab) return press("throw");
@@ -634,11 +644,13 @@
     }
 
     // 近戰型：拉近距離，在中距離試探，貼身後用輕重攻擊、下段與投技混著打
+    // 沒有特別情況時的一般攻防：拉開、靠近與連段。
     brawl(c, d, toward, roll) {
       const { me, rival, kit, level, habits } = this;
       const aggression = level.aggression;
       const light = this.reach("light");
       const heavy = this.reach("heavy");
+      // 加入一個按鍵。
       const press = (action) => {
         c.actions.push(action);
         return c;

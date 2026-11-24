@@ -3,12 +3,20 @@
  * 常改項目可搜尋 MAX_FLOOR、save、startGame、render；SAVE_KEY 與備份鍵需保持相容。
  */
 "use strict";
+
+// ---------- 共用小工具 ----------
+
+// $ 找一個元素、$$ 找全部、clamp 限制範圍、pick 隨機挑一個、chance 依機率成功、
+// wait 等待毫秒。
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)],
   clamp = (v, a, b) => Math.max(a, Math.min(b, v)),
   pick = (a) => a[Math.floor(Math.random() * a.length)],
   chance = (n) => Math.random() < n,
   wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// ---------- 版本、存檔鍵與共用常數 ----------
+
 const APP_VERSION = "1.2",
   MAX_FLOOR = 1000,
   SAVE_KEY = "abyss-adventure-v1",
@@ -16,6 +24,10 @@ const APP_VERSION = "1.2",
 const BUILD_ID = "akane-1.2-codex",
   SETTINGS_KEY = "abyss-adventure-settings";
 const STATUS_TURNS = 3;
+
+// ---------- 遊戲資料：Boss 招式、職業、素材、裝備、藥水、怪物 ----------
+
+// 二十個世界 Boss 專屬招式的附加效果，依樓層順序排列。
 const BOSS_SPECIAL_EFFECTS = [
   "barrier",
   "weak",
@@ -38,6 +50,7 @@ const BOSS_SPECIAL_EFFECTS = [
   "burn",
   "drain",
 ];
+// 附加效果的說明文字，顯示在敵人意圖的提示裡。
 const SIGNATURE_EFFECT_HINTS = {
   barrier: "命中生命後，Boss 取得最大生命 5% 護盾",
   weak: "命中生命後，造成 2 回合虛弱（你的攻擊降低 20%）",
@@ -46,6 +59,7 @@ const SIGNATURE_EFFECT_HINTS = {
   poison: "命中生命後，附加 3 回合中毒",
   bleed: "命中生命後，附加 3 回合流血",
 };
+// 二十個世界 Boss 的招式名稱。
 const BOSS_SIGNATURES = [
   "萬根囚牢",
   "亡骨敕令",
@@ -79,6 +93,9 @@ try {
     ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"),
   };
 } catch {}
+// 職業資料：hp／atk／def 等是起始能力，gain 是每次普攻回復的資源，skills 是技能。
+// 技能欄位：d 傷害倍率、c 消耗、cd 冷卻、hits 次數、heal 回復、guard 護盾、burn
+// ／poison 異常。
 const CLASSES = {
   knight: {
     name: "守護騎士",
@@ -370,6 +387,7 @@ const CLASSES = {
     ],
   },
 };
+// 素材：n 名稱、i 圖示。
 const MATERIALS = {
   gel: {
     n: "史萊姆凝膠",
@@ -472,6 +490,7 @@ const MATERIALS = {
     i: "💎",
   },
 };
+// 裝備的五個品級：花費、素材數量與需要抵達的樓層。
 const GEAR_TIERS = [
   {
     id: "common",
@@ -509,6 +528,7 @@ const GEAR_TIERS = [
     unlockFloor: 800,
   },
 ];
+// 每個職業的裝備藍圖：使用的素材，以及五個品級的武器、防具名稱與圖示。
 const CLASS_GEAR_BLUEPRINTS = {
   knight: {
     material: "ore",
@@ -620,6 +640,7 @@ const CLASS_GEAR_BLUEPRINTS = {
   },
 };
 
+// 算出某品級裝備的製作花費。
 function gearCost(tier, primary, secondary) {
   const cost = {
     gold: tier.gold,
@@ -653,6 +674,7 @@ function gearCost(tier, primary, secondary) {
   }
   return cost;
 }
+// 依職業與品級把藍圖展開成完整的裝備表。
 const GEAR = (() => {
   const gear = {};
   const weaponAtk = [6, 16, 34, 62, 105];
@@ -660,6 +682,7 @@ const GEAR = (() => {
   const armorDef = [2, 6, 14, 27, 46];
   for (const [classId, plan] of Object.entries(CLASS_GEAR_BLUEPRINTS)) {
     GEAR_TIERS.forEach((tier, index) => {
+      // 武器：提供攻擊與暴擊。
       const weapon = {
         n: plan.weapons[index],
         i: plan.weaponIcons[index],
@@ -672,6 +695,7 @@ const GEAR = (() => {
         d: `${CLASSES[classId].name}專用的${tier.name}武器。`,
         cost: gearCost(tier, plan.material, plan.secondary),
       };
+      // 防具：提供生命、防禦與其他抗性。
       const armor = {
         n: plan.armors[index],
         i: plan.armorIcons[index],
@@ -714,6 +738,7 @@ const GEAR = (() => {
   }
   return gear;
 })();
+// 藥水：heal 回生命、resource 回資源、cleanse 解除異常；drop 代表怪物會掉。
 const POTIONS = {
   red: {
     n: "生命藥水",
@@ -791,6 +816,7 @@ const POTIONS = {
     d: "完全恢復生命與職業資源。只能在商店購買。",
   },
 };
+// 怪物類型的能力倍率與說明。
 const MONSTER_ARCHETYPES = {
   normal: {
     hp: 1,
@@ -846,6 +872,7 @@ const MONSTER_ARCHETYPES = {
     trait: "死亡刻印：4 次敵方行動後，每次命中追加最大生命 5% 傷害。",
   },
 };
+// 怪物清單：[名稱, 圖示, 掉落素材, 類型, 章節]。
 const MONSTER_DATA = [
   ["凝膠史萊姆", "🟢", "gel", "normal", 0],
   ["碎岩蟹", "🦀🪨", "ore", "tank", 0],
@@ -917,6 +944,7 @@ const MONSTER_DATA = [
   ["審判熾天使", "😇⚔️", "celestial", "burn", 19],
   ["光輪守衛", "🪽☀️", "star", "tank", 19],
 ];
+// 把上面的簡短清單補成完整的怪物資料。
 const MONSTERS = MONSTER_DATA.map(([n, i, drop, type, tier]) => ({
   n,
   i,
@@ -926,6 +954,7 @@ const MONSTERS = MONSTER_DATA.map(([n, i, drop, type, tier]) => ({
   ...MONSTER_ARCHETYPES[type],
 }));
 
+// 把對話選項的效果換成給玩家看的文字。
 function dialogueEffectHint(effect) {
   const parts = [];
   if (effect.shield)
@@ -955,6 +984,7 @@ function dialogueEffectHint(effect) {
   return parts.join("，");
 }
 
+// 組出一段 Boss 戰前對話。
 function makeBossDialogue(theme, chapter, quote, prompt, lines) {
   return {
     theme,
@@ -969,6 +999,8 @@ function makeBossDialogue(theme, chapter, quote, prompt, lines) {
     })),
   };
 }
+// 世界 Boss：每 50 層一個。hp／atk 是倍率，drop 與 bonusDrop 是掉落素材，trait
+// 是說明。
 const WORLD_BOSSES = [
   {
     floor: 50,
@@ -1872,6 +1904,7 @@ const WORLD_BOSSES = [
 const BOSS_DIALOGUES = Object.fromEntries(
   WORLD_BOSSES.map((boss) => [boss.n, boss.dialogue]),
 );
+// 每個 Boss 場景的四個背景色（光暈、中段、上方、下方）。
 const BOSS_ARENA_COLORS = {
   "ancient-tree": ["#72f5a95c", "#28774758", "#08291f", "#163b28"],
   "bone-king": ["#d4b7ff58", "#69449c55", "#1d1233", "#2b1742"],
@@ -1894,6 +1927,7 @@ const BOSS_ARENA_COLORS = {
   heaven: ["#fff3ae68", "#80c9ff55", "#18314a", "#5a4b18"],
   final: ["#ff7cdb70", "#8b36ff63", "#170522", "#4c0c40"],
 };
+// 三種難度的敵人生命、攻擊與獎勵倍率。
 const DIFF = {
     easy: {
       hp: 0.82,
@@ -1911,6 +1945,7 @@ const DIFF = {
       reward: 1.25,
     },
   },
+  // 每 50 層一個區域名稱。
   ZONES = [
     "翠葉古森",
     "亡國墓域",
@@ -1933,6 +1968,7 @@ const DIFF = {
     "天界審判庭",
     "終焉王座",
   ],
+  // 裝備品級的中文名稱。
   RARITY = {
     common: "普通",
     rare: "稀有",
@@ -1941,6 +1977,7 @@ const DIFF = {
     prismatic: "彩耀",
   };
 const GOD_PASSWORDS = new Set(["940516", "971201"]);
+// 戰術指令：cost 是資源比例、cooldown 冷卻回合、d 傷害倍率、key 快捷鍵。
 const TACTICS = {
   heavy: {
     n: "猛力重擊",
@@ -1983,6 +2020,10 @@ let difficulty = "normal",
 let potionMode = false,
   selectedBattlePotions = [];
 let activeBossDialogue = null;
+
+// ---------- 遊戲狀態 ----------
+
+// 目前的遊戲狀態，存檔就是存這個物件。
 let S = {
   started: false,
   classId: "knight",
@@ -2027,13 +2068,16 @@ let S = {
   uid: 1,
 };
 
+// 目前職業的資料。
 function baseClass() {
   return CLASSES[S.classId];
 }
 
+// 用編號找背包裡的裝備。
 function gearByUid(uid) {
   return S.gear.find((g) => g.uid === uid);
 }
+// 裝備能力的中文名稱。
 const GEAR_VALUE_LABELS = {
   atk: "攻擊",
   hp: "生命",
@@ -2051,6 +2095,7 @@ const GEAR_PERCENT_VALUES = new Set([
   "damageReduce",
 ]);
 
+// 強化後的裝備數值；百分比類每級加 1，其他依比例提高。
 function enhancedGearValue(g, key, level = 0) {
   const base = g[key] || 0;
   if (!base) return 0;
@@ -2061,6 +2106,7 @@ function enhancedGearValue(g, key, level = 0) {
   return Math.round(base * (1 + level * 0.14));
 }
 
+// 算出包含裝備的最終能力，畫面與戰鬥都用這個結果。
 function stats() {
   const out = {
     maxHp: S.baseHp,
@@ -2093,7 +2139,7 @@ function stats() {
 
 // 先整理存檔內容，再寫入主要與備份位置；這裡的資料格式需與 load 配合。
 function save(force = false) {
-  // Do not persist half-finished attack/potion transactions on pagehide.
+  // 離開頁面時，不把做到一半的攻擊或用藥存起來。
   if (!S.started || (busy && force !== true)) return;
   try {
     const next = JSON.stringify(S),
@@ -2110,9 +2156,11 @@ function save(force = false) {
   }
 }
 
+// 把舊版裝備代號換成新版代號，換不到就回傳 null。
 function migrateGearId(id, classId) {
   if (GEAR[id]) return id;
   const playable = CLASS_GEAR_BLUEPRINTS[classId] ? classId : "knight";
+  // 舊代號對照表。
   const legacy = {
     ironSword: "knight_weapon_rare",
     shadowDaggers: "rogue_weapon_rare",
@@ -2130,11 +2178,15 @@ function migrateGearId(id, classId) {
 }
 
 // 讀取舊進度並檢查資料，避免不存在的裝備或過期設定直接進入戰鬥。
+
+// ---------- 存檔與開始遊戲 ----------
+
 function load() {
   try {
     let raw =
         localStorage.getItem(SAVE_KEY) || localStorage.getItem(BACKUP_SAVE_KEY),
       v = null;
+    // 主要存檔壞掉時改讀備份。
     try {
       v = raw ? JSON.parse(raw) : null;
     } catch {
@@ -2143,6 +2195,7 @@ function load() {
       if (v) toast("主要存檔損壞，已自動載入備份");
     }
     if (!v || !CLASSES[v.classId]) return false;
+    // 用預設值補上舊存檔沒有的欄位。
     S = {
       ...S,
       ...v,
@@ -2170,7 +2223,7 @@ function load() {
       }
     }
     if (S.enemy) discoverMonster(S.enemy);
-    // Older saves may contain a discontinued side hunt: return safely without rewards.
+    // 舊存檔可能有已經取消的側面狩獵：直接安全返回，不給獎勵。
     if (S.enemy?.hunt) {
       S.enemy = null;
       toast("舊版追獵已結束，已返回原樓層整備；進度與持有物品保留。");
@@ -2181,6 +2234,7 @@ function load() {
         id: migrateGearId(item.id, S.classId),
       }))
       .filter((item) => item.id && GEAR[item.id]);
+    // 上帝模式的能力以目前版本的設定為準。
     if (S.classId === "god") {
       S.baseHp = CLASSES.god.hp;
       S.baseAtk = CLASSES.god.atk;
@@ -2210,6 +2264,7 @@ function load() {
     S.gear.forEach(
       (item) => (item.level = clamp(Math.floor(item.level || 0), 0, 9)),
     );
+    // 異常狀態沒有記錄回合數時補上，避免永遠不會消失。
     for (const key of ["poison", "burn", "bleed"])
       if (S.debuffs[key])
         S.debuffTurns[key] = clamp(
@@ -2217,6 +2272,7 @@ function load() {
           1,
           STATUS_TURNS,
         );
+    // 還在戰鬥中的存檔：補齊敵人欄位。
     if (S.enemy) {
       S.enemy.effects = S.enemy.effects || {};
       S.enemy.effectTurns = S.enemy.effectTurns || {};
@@ -2233,7 +2289,7 @@ function load() {
             1,
             STATUS_TURNS,
           );
-      // Floor 1000 is not cleared merely because the final encounter was saved.
+      // 只是存到最後一場戰鬥，不算通過第 1000 層。
       if (S.enemy.worldBoss && S.floor === MAX_FLOOR) S.completed = false;
     }
     difficulty = S.difficulty;
@@ -2252,6 +2308,7 @@ function startGame(id) {
   const c = CLASSES[id];
   busy = false;
   activeBossDialogue = null;
+  // 重設成這個職業的起始狀態。
   S = {
     started: true,
     classId: id,
@@ -2300,6 +2357,7 @@ function startGame(id) {
     difficulty,
     uid: 1,
   };
+  // 上帝模式：直接給滿等級、金幣與素材。
   if (c.godMode) {
     S.level = 99;
     S.gold = 999999;
@@ -2318,6 +2376,7 @@ function startGame(id) {
   save();
 }
 
+// 打開輸入密碼的視窗。
 function requestGodMode() {
   $("#godPassword").value = "";
   $("#godError").textContent = "";
@@ -2325,6 +2384,7 @@ function requestGodMode() {
   setTimeout(() => $("#godPassword").focus(), 50);
 }
 
+// 檢查密碼，正確就解鎖上帝模式。
 function unlockGodMode() {
   const password = $("#godPassword").value.trim();
   if (!GOD_PASSWORDS.has(password)) {
@@ -2338,6 +2398,7 @@ function unlockGodMode() {
   toast("上帝模式已解鎖");
 }
 
+// 繼續上次的進度，並回到當時的畫面（戰鬥、Boss 對話或事件）。
 function continueGame() {
   if (load()) {
     busy = false;
@@ -2358,22 +2419,28 @@ function continueGame() {
   }
 }
 
+// ---------- 遇敵與 Boss 對話 ----------
+
+// 依樓層決定會遇到哪些怪物。
 function monsterPoolForFloor(floor) {
   const chapter = Math.min(19, Math.floor((Math.max(1, floor) - 1) / 50)),
     unlocked = MONSTERS.filter((monster) => monster.tier <= chapter);
   return unlocked.slice(Math.max(0, unlocked.length - 12));
 }
 
+// 這一層的世界 Boss。
 function bossForFloor(floor) {
   return WORLD_BOSSES[Math.floor(floor / 50) - 1];
 }
 
+// 產生下一個敵人並開始戰鬥。
 function createEnemy(elite = false) {
   if (S.completed || S.floor >= MAX_FLOOR) {
     toast("你已完成 1000 層深境冒險！");
     return;
   }
   S.floor++;
+  // 決定是不是 Boss 或菁英，並依樓層與難度放大能力。
   const encounterFloor = Math.max(1, S.floor),
     worldBoss = S.floor % 50 === 0,
     boss = worldBoss,
@@ -2396,6 +2463,7 @@ function createEnemy(elite = false) {
     ...m,
   };
   delete enemyTemplate.dialogue;
+  // 戰鬥中的敵人資料。
   S.enemy = {
     ...enemyTemplate,
     poison: m.poison ? Math.max(1, Math.round(m.poison * statusScale)) : 0,
@@ -2424,6 +2492,7 @@ function createEnemy(elite = false) {
     turns: 0,
   };
   discoverMonster(m);
+  // 每場戰鬥開始時，清掉上一場的護盾、增益、異常與冷卻。
   S.shield = 0;
   S.buffs = {};
   S.debuffs = {};
@@ -2444,8 +2513,10 @@ function createEnemy(elite = false) {
   else busy = false;
 }
 
+// 依樓層換場景配色。
 function updateArenaTheme() {
   const arena = $("#arena"),
+    // 五種場景輪流使用。
     themes = [
       "zone-forest",
       "zone-cavern",
@@ -2458,6 +2529,7 @@ function updateArenaTheme() {
   arena.classList.add(themes[zoneIndex]);
 }
 
+// 把對話選項的實際效果寫成摘要。
 function bossEffectSummary(effect) {
   const parts = [],
     st = stats(),
@@ -2496,6 +2568,7 @@ function bossEffectSummary(effect) {
   return parts.join("；");
 }
 
+// 套用對話選項的效果。
 function applyBossDialogueEffect(effect) {
   const st = stats(),
     c = baseClass(),
@@ -2526,6 +2599,7 @@ function applyBossDialogueEffect(effect) {
   if (effect.enemyShield) e.shield += Math.round(e.maxHp * effect.enemyShield);
 }
 
+// 顯示 Boss 戰前對話。
 function showBossDialogue() {
   const e = S.enemy,
     dialogue = e && BOSS_DIALOGUES[e.n];
@@ -2552,8 +2626,14 @@ function showBossDialogue() {
   $("#bossDialoguePrompt").textContent = dialogue.prompt;
   $("#bossDialogueOptions").innerHTML = dialogue.options
     .map(
-      (option, index) =>
-        `<button class="boss-dialogue-option" data-boss-choice="${index}"><span>${index + 1}</span><div><b>${option.label}</b><small>${option.hint}</small></div><em>選擇</em></button>`,
+      (option, index) => /* HTML */ `<button
+          class="boss-dialogue-option"
+          data-boss-choice="${index}"
+        >
+          <span>${index + 1}</span>
+          <div><b>${option.label}</b><small>${option.hint}</small></div>
+          <em>選擇</em>
+        </button>`,
     )
     .join("");
   $("#bossDialogueReaction").classList.add("hidden");
@@ -2564,6 +2644,7 @@ function showBossDialogue() {
   setTimeout(() => $("#bossDialogueOptions button")?.focus(), 180);
 }
 
+// 選擇一個對話選項。
 function chooseBossDialogue(index) {
   const e = S.enemy,
     dialogue = activeBossDialogue,
@@ -2587,6 +2668,7 @@ function chooseBossDialogue(index) {
   setTimeout(() => $("#bossDialogueContinue")?.focus(), 120);
 }
 
+// 關閉對話，正式開打。
 function beginBossBattle() {
   if (!S.enemy?.dialogueResolved) return;
   const modal = $("#bossDialogueModal");
@@ -2601,6 +2683,7 @@ function beginBossBattle() {
   save();
 }
 
+// 決定敵人下一次要做什麼（攻擊、重擊、防禦或專屬招式）。
 function rollIntent() {
   if (!S.enemy) return;
   const e = S.enemy,
@@ -2643,6 +2726,7 @@ function rollIntent() {
     };
 }
 
+// 敵人意圖的簡短文字。
 function intentText() {
   const e = S.enemy,
     x = e?.intent;
@@ -2656,6 +2740,7 @@ function intentText() {
       : `普通攻擊：約 ${n}`;
 }
 
+// 敵人意圖的詳細提示。
 function intentTooltip() {
   const x = S.enemy?.intent;
   if (!x) return "";
@@ -2668,6 +2753,7 @@ function intentTooltip() {
   return "普通攻擊：依敵人攻擊力計算傷害，再扣除你的防禦與護盾。";
 }
 
+// 依敵人意圖給玩家的建議。
 function intentAdvice() {
   const type = S.enemy?.intent?.type;
   if (["heavy", "signature"].includes(type)) return "推薦：破勢斬或防禦";
@@ -2675,6 +2761,7 @@ function intentAdvice() {
   return "推薦：防禦或蓄力";
 }
 
+// 敵人的特性、階段與倒數等說明。
 function enemyNoteText(e) {
   const defense =
       e.def > 0
@@ -2690,7 +2777,13 @@ function enemyNoteText(e) {
     ? `低於 50% 生命進入第二階段，攻擊提升 15%。每 4 次行動準備「${e.signature || BOSS_SIGNATURES[Math.floor(S.floor / 50) - 1]}」，破勢斬可中斷。${signatureEffectHint(e)}；完全格擋可阻止附加效果。`
     : "";
   const mechanics = e.worldBoss
-    ? `<span class="status-tip boss-mechanic" tabindex="0" data-tooltip="${escapeHtml(bossTip)}">👑 ${e.phase === 2 ? "第二階段" : "第一階段"} · 招式 ${(e.turns % 4) + 1}/4 ⓘ</span>`
+    ? /* HTML */ `<span
+        class="status-tip boss-mechanic"
+        tabindex="0"
+        data-tooltip="${escapeHtml(bossTip)}"
+        >👑 ${e.phase === 2 ? "第二階段" : "第一階段"} · 招式
+        ${(e.turns % 4) + 1}/4 ⓘ</span
+      >`
     : "";
   const status = [
     e.poison ? "中毒" : "",
@@ -2703,13 +2796,19 @@ function enemyNoteText(e) {
     doom +
     mechanics +
     (status.length
-      ? `<span class="status-tip" tabindex="0" data-tooltip="${status.join("／")}最多持續 3 回合，重複命中不疊傷，完全格擋可阻止附加。">🧪 異常 ${status.join("／")} ⓘ</span>`
+      ? /* HTML */ `<span
+          class="status-tip"
+          tabindex="0"
+          data-tooltip="${status.join(
+            "／",
+          )}最多持續 3 回合，重複命中不疊傷，完全格擋可阻止附加。"
+          >🧪 異常 ${status.join("／")} ⓘ</span
+        >`
       : "")
   );
 }
-// One exit point for every player turn: unlock, render, then persist.
-// If an action fails midway, restore its pre-turn snapshot rather than leaving
-// potions/resources consumed and the controls permanently disabled.
+// 玩家每回合只有這一個出口：解除鎖定、重畫、再存檔。中途失敗就還原回合前的狀態，
+// 避免藥水或資源白白消耗、按鈕永遠不能按。
 async function runCombatAction(action) {
   if (busy || !S.enemy) return;
   const snapshot = JSON.stringify(S);
@@ -2730,10 +2829,15 @@ async function runCombatAction(action) {
     save();
   }
 }
+
+// ---------- 戰鬥：技能、戰術與傷害 ----------
+
+// 使用技能（入口），真正的內容在 performSkill。
 async function useSkill(key) {
   if (potionMode) return;
   return runCombatAction(() => performSkill(key));
 }
+// 使用一個技能：檢查資源與冷卻 → 造成效果 → 敵人回合 → 存檔。
 async function performSkill(key) {
   if (busy || !S.enemy || potionMode) return;
   const c = baseClass(),
@@ -2757,6 +2861,7 @@ async function performSkill(key) {
         : "slash",
   );
   let total = 0;
+  // 普通攻擊回資源；技能則扣資源並套用各種效果。
   if (!skill) {
     S.res = Math.min(c.maxRes, S.res + c.gain);
     total = await dealDamage({
@@ -2825,18 +2930,22 @@ async function performSkill(key) {
   save();
 }
 
+// 戰術要花多少資源（依職業上限的比例）。
 function tacticCost(tactic) {
   return tactic.cost ? Math.ceil(baseClass().maxRes * tactic.cost) : 0;
 }
 
+// 連擊數加一，最多五層。
 function advanceCombo() {
   S.combo = Math.min(5, (S.combo || 0) + 1);
   if (S.combo >= 3) toast(`連擊 ×${S.combo}：傷害加成 ${S.combo * 4}%`);
 }
+// 使用戰術（入口）。
 async function useTactic(id) {
   if (potionMode) return;
   return runCombatAction(() => performTactic(id));
 }
+// 使用一個戰術指令，流程和技能相同。
 async function performTactic(id) {
   if (busy || !S.enemy || potionMode) return;
   const tactic = TACTICS[id];
@@ -2861,6 +2970,7 @@ async function performTactic(id) {
     total = await dealDamage(tactic);
     advanceCombo();
   }
+  // 破勢斬：打斷重擊、防禦或專屬招式。
   if (id === "interrupt") {
     if (["heavy", "guard", "signature"].includes(S.enemy.intent.type)) {
       S.enemy.stunned = true;
@@ -2868,6 +2978,7 @@ async function performTactic(id) {
       floatText("中斷！", "block", 63, 35);
     } else log("破勢斬命中，但敵人目前沒有可中斷的動作。");
   }
+  // 防禦：獲得護盾並回一點資源。
   if (id === "guard") {
     const shield = Math.round(stats().maxHp * 0.28),
       gain = Math.ceil(baseClass().maxRes * 0.1);
@@ -2876,6 +2987,7 @@ async function performTactic(id) {
     floatText(`護盾 +${shield}`, "block", 30, 52);
     log(`進入防禦架勢，獲得 ${shield} 護盾並回復 ${gain} 點資源。`, true);
   }
+  // 蓄力：大量回復資源。
   if (id === "focus") {
     const gain = Math.ceil(baseClass().maxRes * 0.38);
     S.res = Math.min(baseClass().maxRes, S.res + gain);
@@ -2899,12 +3011,14 @@ async function performTactic(id) {
   render();
   save();
 }
+// 計算並造成傷害：暴擊、增益、虛弱、連擊、護盾都在這裡處理。
 async function dealDamage(skill) {
   const st = stats(),
     crit = chance((st.crit + (skill.crit || 0)) / 100),
     power = S.buffs.power?.mult || 1,
     weak = S.debuffs.weak ? 0.8 : 1,
     combo = 1 + (S.combo || 0) * 0.04;
+  // 基礎傷害，帶 ±7% 的浮動。
   let raw = Math.round(
     st.atk *
       skill.d *
@@ -2941,6 +3055,7 @@ async function dealDamage(skill) {
   return actualDamage;
 }
 
+// 敵人對玩家施加異常，抗毒有機會抵抗。
 function applyEnemyDebuff(type, amount) {
   const resistance = type === "poison" ? stats().poisonResist : 0;
   if (resistance && chance(resistance / 100)) {
@@ -2953,6 +3068,7 @@ function applyEnemyDebuff(type, amount) {
   return true;
 }
 
+// 對敵人施加異常。
 function setEnemyStatus(type, amount) {
   const e = S.enemy;
   if (!e) return;
@@ -2960,6 +3076,7 @@ function setEnemyStatus(type, amount) {
   e.effectTurns[type] = STATUS_TURNS;
 }
 
+// 敵人每回合受到異常傷害，並慢慢減弱。
 function tickEnemyStatus(type) {
   const e = S.enemy,
     amount = e.effects[type] || 0;
@@ -2977,6 +3094,7 @@ function tickEnemyStatus(type) {
   checkBossPhase();
 }
 
+// 世界 Boss 低於一半生命時進入第二階段。
 function checkBossPhase() {
   const e = S.enemy;
   if (!e?.worldBoss || e.phase === 2 || e.hp <= 0 || e.hp / e.maxHp > 0.5)
@@ -2992,6 +3110,7 @@ function checkBossPhase() {
     true,
   );
 }
+// 敵人的回合：異常結算 → 行動 → 玩家異常結算 → 冷卻減少 → 決定下一步。
 async function enemyTurn() {
   const e = S.enemy;
   if (!e) return;
@@ -3002,6 +3121,7 @@ async function enemyTurn() {
       return;
     }
   }
+  // 被控制就跳過；否則依意圖防禦或攻擊。
   if (e.stunned) {
     e.stunned = false;
     log(`${e.n} 被控制或破勢，無法行動！`);
@@ -3018,6 +3138,7 @@ async function enemyTurn() {
     }
     await wait(220);
     const st = stats();
+    // 敵人這一擊扣掉防禦與減傷後的傷害。
     let raw = Math.max(
       1,
       Math.round(
@@ -3080,6 +3201,7 @@ async function enemyTurn() {
   if (e.effects.burn) {
     tickEnemyStatus("burn");
   }
+  // 玩家身上的持續傷害。
   for (const [type, label] of [
     ["poison", "中毒"],
     ["burn", "燃燒"],
@@ -3114,12 +3236,14 @@ async function enemyTurn() {
   rollIntent();
 }
 
+// Boss 專屬招式的效果說明。
 function signatureEffectHint(enemy) {
   const effect =
     enemy.signatureEffect || BOSS_SPECIAL_EFFECTS[Math.floor(S.floor / 50) - 1];
   return SIGNATURE_EFFECT_HINTS[effect] || "只造成直接傷害";
 }
 
+// 套用 Boss 專屬招式的附加效果。
 function applyBossSpecial(enemy) {
   const effect =
     enemy.signatureEffect || BOSS_SPECIAL_EFFECTS[Math.floor(S.floor / 50) - 1];
@@ -3137,6 +3261,10 @@ function applyBossSpecial(enemy) {
     true,
   );
 }
+
+// ---------- 戰鬥結果 ----------
+
+// 打贏：金幣、經驗、素材、藥水、升級，並回到探索畫面。
 async function victory() {
   const e = S.enemy;
   if (!e) return;
@@ -3153,6 +3281,7 @@ async function victory() {
     (e.worldBoss ? 10 : e.boss ? 4 : e.elite ? 2 : 1) +
     Math.floor(Math.random() * 2);
   const rewards = {};
+  // 加入素材，同時記下來給結算文字使用。
   const grantMaterial = (id, amount) => {
     if (!id || !MATERIALS[id] || amount <= 0) return;
     rewards[id] = (rewards[id] || 0) + amount;
@@ -3182,6 +3311,7 @@ async function victory() {
     true,
   );
   battleFX("victory");
+  // 上一場的戰果，顯示在探索畫面。
   S.lastVictory = {
     gold,
     xp,
@@ -3193,6 +3323,7 @@ async function victory() {
   S.enemy = null;
   S.shield = 0;
   await wait(350);
+  // 經驗夠就升級，可能一次升好幾級。
   while (S.xp >= S.xpNext) {
     S.xp -= S.xpNext;
     S.level++;
@@ -3205,6 +3336,7 @@ async function victory() {
     toast(`升級！目前 Lv.${S.level}`);
     log(`升到 Lv.${S.level}，能力提升並完全恢復。`, true);
   }
+  // 打倒最後一層 Boss 的通關畫面。
   if (e.worldBoss && S.floor === MAX_FLOOR) {
     S.completed = true;
     showExplore();
@@ -3235,6 +3367,7 @@ async function victory() {
   save(true);
 }
 
+// 戰敗：損失部分金幣、退兩層，回滿後繼續。
 function defeat() {
   S.enemy = null;
   S.gold = Math.floor(S.gold * 0.75);
@@ -3260,10 +3393,12 @@ function defeat() {
   ]);
 }
 
+// 逃跑（入口）。
 async function tryFlee() {
   if (potionMode) return;
   return runCombatAction(performFlee);
 }
+// 依速度計算逃跑機率；失敗會輪到敵人行動。
 async function performFlee() {
   if (!S.enemy || busy) return;
   busy = true;
@@ -3282,6 +3417,9 @@ async function performFlee() {
   }
 }
 
+// ---------- 探索路線與隨機事件 ----------
+
+// 選擇探索、休息或菁英路線。
 function chooseRoute(type) {
   if (busy || S.enemy || S.pendingEvent) return;
   if (S.completed || S.floor >= MAX_FLOOR) {
@@ -3314,6 +3452,7 @@ function chooseRoute(type) {
   else createEnemy(false);
 }
 
+// 休息：每三層才能休息一次。
 function rest() {
   if (S.floor - S.lastRest < 3) {
     toast(`再前進 ${3 - (S.floor - S.lastRest)} 區才能休息`);
@@ -3328,6 +3467,7 @@ function rest() {
   save();
 }
 
+// 補給箱事件。
 function treasure() {
   const reward = S.pendingEvent?.reward || {
     gold: 25 + S.floor * 3,
@@ -3354,6 +3494,7 @@ function treasure() {
   );
 }
 
+// 安排下一次事件在幾層後，避開 Boss 樓層。
 function scheduleNextEventFloor(fromFloor) {
   const gap = 5 + Math.floor(Math.random() * 6);
   let target = fromFloor + gap;
@@ -3361,6 +3502,7 @@ function scheduleNextEventFloor(fromFloor) {
   return target;
 }
 
+// 觸發一個隨機事件，不會連續兩次同一種。
 function event() {
   S.floor++;
   S.nextEventAt = scheduleNextEventFloor(S.floor);
@@ -3385,11 +3527,13 @@ function event() {
   save();
 }
 
+// 重新打開沒處理完的事件。
 function resumePendingEvent() {
   if (S.pendingEvent?.type === "result") {
     showEventResult();
     return;
   }
+  // 事件代號對應的函式。
   const handlers = {
     fountain: eventFountain,
     gamble: eventGambleChest,
@@ -3404,6 +3548,7 @@ function resumePendingEvent() {
   else S.pendingEvent = null;
 }
 
+// 這一章會出現的素材，事件獎勵從裡面挑。
 function eventMaterialPool() {
   const chapter = Math.min(19, Math.floor(Math.max(0, S.floor - 1) / 50)),
     drops = MONSTERS.filter((monster) => monster.tier <= chapter).map(
@@ -3414,6 +3559,7 @@ function eventMaterialPool() {
   );
 }
 
+// 古老泉水：回生命或資源。
 function eventFountain() {
   const heal = Math.round(stats().maxHp * 0.35);
   openEvent("⛲", "古老泉水", "泉水散發柔和光芒，你可以恢復生命或汲取能量。", [
@@ -3436,6 +3582,7 @@ function eventFountain() {
   ]);
 }
 
+// 命運賭博箱：一半大獎、一半陷阱。
 function eventGambleChest() {
   const good = S.pendingEvent?.good ?? chance(0.5);
   openEvent(
@@ -3479,6 +3626,7 @@ function eventGambleChest() {
   );
 }
 
+// 迷途商隊：付錢護送或交換情報。
 function eventCaravan() {
   const aidCost = 40 + Math.floor(S.floor * 0.35),
     mat = pick(eventMaterialPool());
@@ -3515,6 +3663,7 @@ function eventCaravan() {
   ]);
 }
 
+// 低語祭壇：犧牲生命換攻擊，或淨化異常。
 function eventAltar() {
   const sacrifice = Math.max(1, Math.round(stats().maxHp * 0.18));
   openEvent(
@@ -3548,6 +3697,7 @@ function eventAltar() {
   );
 }
 
+// 失落鍛造爐：付錢換強化石，或免費撿素材。
 function eventForge() {
   const cost = 55 + Math.floor(S.floor * 0.5),
     mat = pick(eventMaterialPool());
@@ -3581,6 +3731,7 @@ function eventForge() {
   );
 }
 
+// 深境流星：受傷拿多一點，或等它冷卻拿少一點。
 function eventMeteor() {
   const mat =
     S.floor >= 800
@@ -3618,6 +3769,7 @@ function eventMeteor() {
 
 // 選項執行前記下數值，結果卡顯示「實際」增減（含回復上限）。
 let eventBefore = null;
+// 記下事件前的數值，用來算實際增減。
 function eventResources() {
   return {
     gold: S.gold,
@@ -3629,9 +3781,11 @@ function eventResources() {
     debuffs: { ...S.debuffs },
   };
 }
+// 比較事件前後，列出有變動的項目。
 function eventChanges(before) {
   if (!before) return [];
   const changes = [];
+  // 有變動才加入清單。
   const add = (label, oldValue, newValue) => {
     const delta = newValue - oldValue;
     if (delta) changes.push({ label, delta });
@@ -3655,6 +3809,7 @@ function eventChanges(before) {
       });
   return changes;
 }
+// 事件結束：把結果存起來並顯示結果卡。
 function finishEvent(msg) {
   // 結果本身也存檔，重開只會再顯示結果，不會重新扣款或領獎。
   if (S.pendingEvent?.type === "result") return;
@@ -3672,6 +3827,7 @@ function finishEvent(msg) {
   save();
   showEventResult();
 }
+// 顯示事件結果與增減。
 function showEventResult() {
   const result = S.pendingEvent;
   if (result?.type !== "result") return;
@@ -3682,14 +3838,25 @@ function showEventResult() {
   $("#eventResult").innerHTML = result.changes.length
     ? result.changes
         .map(
-          ({ label, delta }) =>
-            `<div class="event-change ${delta < 0 ? "loss" : "gain"}"><span>${escapeHtml(label)}</span><b>${delta === null ? "✓" : `${delta > 0 ? "+" : "−"}${Math.abs(delta)}`}</b></div>`,
+          ({ label, delta }) => /* HTML */ `<div
+              class="event-change ${delta < 0 ? "loss" : "gain"}"
+            >
+              <span>${escapeHtml(label)}</span
+              ><b
+                >${
+                  delta === null
+                    ? "✓"
+                    : `${delta > 0 ? "+" : "−"}${Math.abs(delta)}`
+                }</b
+              >
+            </div>`,
         )
         .join("")
     : '<p class="muted">持有金幣、生命、資源與物品沒有變化。</p>';
   $("#eventResult").classList.remove("hidden");
   $("#eventDismiss").classList.remove("hidden");
 }
+// 看完結果，回到探索。
 function acknowledgeEventResult() {
   if (S.pendingEvent?.type !== "result") return;
   S.pendingEvent = null;
@@ -3698,10 +3865,14 @@ function acknowledgeEventResult() {
   save();
 }
 
+// ---------- 素材、製作、強化與藥水 ----------
+
+// 增加素材。
 function addMaterial(id, n) {
   S.materials[id] = (S.materials[id] || 0) + n;
 }
 
+// 製作裝備：檢查樓層、職業與花費。
 function buyGear(id) {
   if (S.enemy) {
     toast("戰鬥中無法製作裝備");
@@ -3732,6 +3903,7 @@ function buyGear(id) {
   save();
 }
 
+// 在商店買藥水。
 function buyPotion(id) {
   const p = POTIONS[id];
   if (S.enemy) {
@@ -3750,17 +3922,20 @@ function buyPotion(id) {
   save();
 }
 
+// 金幣與素材夠不夠。
 function canPay(cost) {
   return Object.entries(cost).every(([k, v]) =>
     k === "gold" ? S.gold >= v : (S.materials[k] || 0) >= v,
   );
 }
 
+// 扣掉花費。
 function pay(cost) {
   for (const [k, v] of Object.entries(cost))
     k === "gold" ? (S.gold -= v) : (S.materials[k] -= v);
 }
 
+// 強化需要的金幣與強化石。
 function enhanceCost(level) {
   const next = level + 1;
   return {
@@ -3769,10 +3944,12 @@ function enhanceCost(level) {
   };
 }
 
+// 各等級的強化成功率。
 function enhanceRate(level) {
   return [100, 100, 95, 90, 82, 72, 62, 52, 42][level] || 0;
 }
 
+// 強化一件裝備。
 function enhance(uid) {
   if (S.enemy) {
     toast("戰鬥中無法強化");
@@ -3798,6 +3975,7 @@ function enhance(uid) {
   save();
 }
 
+// 穿上或脫下裝備。
 function equip(uid) {
   if (S.enemy) {
     toast("戰鬥中無法更換裝備");
@@ -3825,6 +4003,7 @@ function equip(uid) {
   save();
 }
 
+// 這瓶藥水現在喝有沒有用。
 function potionUseful(id) {
   const p = POTIONS[id];
   if (!p) return false;
@@ -3836,6 +4015,7 @@ function potionUseful(id) {
   return false;
 }
 
+// 真正喝下藥水，回傳實際回復量。
 function consumePotion(id) {
   const p = POTIONS[id],
     beforeHp = S.hp,
@@ -3868,6 +4048,7 @@ function consumePotion(id) {
     resGain,
   };
 }
+// 戰鬥外從背包使用藥水。
 async function usePotion(id) {
   if (S.enemy) {
     toast("戰鬥中請使用「使用藥水」按鈕");
@@ -3881,6 +4062,7 @@ async function usePotion(id) {
   save();
 }
 
+// 戰鬥中打開藥水選單（一次最多三瓶）。
 function openBattlePotionMode() {
   if (busy || !S.enemy) return;
   potionMode = true;
@@ -3892,6 +4074,7 @@ function openBattlePotionMode() {
     ?.focus();
 }
 
+// 關閉藥水選單。
 function closeBattlePotionMode() {
   potionMode = false;
   selectedBattlePotions = [];
@@ -3900,6 +4083,7 @@ function closeBattlePotionMode() {
   $("#openPotionMode").focus();
 }
 
+// 選取或取消一瓶藥水。
 function toggleBattlePotion(id) {
   if (busy || !S.enemy || !potionMode || !POTIONS[id]) return;
   const index = selectedBattlePotions.indexOf(id);
@@ -3923,10 +4107,12 @@ function toggleBattlePotion(id) {
   selectedBattlePotions.push(id);
   renderPotionMode();
 }
+// 確認使用選取的藥水（入口）。
 async function confirmBattlePotions() {
   if (!potionMode) return;
   return runCombatAction(performBattlePotions);
 }
+// 喝下選取的藥水，接著輪到敵人。
 async function performBattlePotions() {
   if (busy || !S.enemy || !potionMode) return;
   const ids = [...new Set(selectedBattlePotions)]
@@ -3949,6 +4135,9 @@ async function performBattlePotions() {
   save();
 }
 
+// ---------- 畫面更新 ----------
+
+// 依是否在戰鬥或選藥水，顯示對應的操作區。
 function renderBattleControlMode() {
   const inBattle = !!S.enemy,
     selecting = inBattle && potionMode;
@@ -3964,6 +4153,7 @@ function renderBattleControlMode() {
   }
 }
 
+// 切換到探索畫面。
 function showExplore() {
   const arena = $("#arena"),
     next = S.floor + 1;
@@ -3991,8 +4181,23 @@ function showExplore() {
     const nextBossFloor = Math.ceil(next / 50) * 50,
       nextBoss = bossForFloor(nextBossFloor),
       eventRemain = Math.max(0, S.nextEventAt - next);
-    $("#sceneCopy").innerHTML =
-      `<p class="eyebrow">第 ${next} / ${MAX_FLOOR} 層</p><h2>${next % 50 === 0 ? `⚠ ${nextBoss.n} 正在前方等待` : "冒險道路延伸至迷霧深處"}</h2><p>${next % 50 === 0 ? "每 50 層只會出現一次大型 Boss，開戰前會觸發專屬對話。" : `距離下一隻大型 Boss 還有 ${nextBossFloor - next} 層；特殊事件${eventRemain ? `最快 ${eventRemain} 層後出現` : "將在下一層觸發"}。`}</p>`;
+    $("#sceneCopy").innerHTML = /* HTML */ `<p class="eyebrow">
+        第 ${next} / ${MAX_FLOOR} 層
+      </p>
+      <h2>
+        ${
+          next % 50 === 0
+            ? `⚠ ${nextBoss.n} 正在前方等待`
+            : "冒險道路延伸至迷霧深處"
+        }
+      </h2>
+      <p>
+        ${
+          next % 50 === 0
+            ? "每 50 層只會出現一次大型 Boss，開戰前會觸發專屬對話。"
+            : `距離下一隻大型 Boss 還有 ${nextBossFloor - next} 層；特殊事件${eventRemain ? `最快 ${eventRemain} 層後出現` : "將在下一層觸發"}。`
+        }
+      </p>`;
   }
   $("#enemyWrap").classList.remove("active");
   $("#enemyCard").classList.add("hidden");
@@ -4006,6 +4211,7 @@ function showExplore() {
   $("#turnText").textContent = "選擇下一步";
 }
 
+// 切換到戰鬥畫面。
 function showBattle() {
   const arena = $("#arena"),
     e = S.enemy;
@@ -4107,6 +4313,7 @@ function render() {
   renderRoutes();
 }
 
+// 更新三個路線按鈕能不能按。
 function renderRoutes() {
   const rest = $("[data-route=rest]"),
     elite = $("[data-route=elite]"),
@@ -4151,29 +4358,47 @@ function glyphCount(text) {
     ].length;
   return Array.from(String(text).replace(/️/g, "")).length;
 }
+// 更新血條、資源條這類的長條與文字。
 function setMeter(id, v, m) {
   $(`#${id}Label`).textContent = `${Math.ceil(v)} / ${m}`;
   $(`#${id}Bar`).style.width = `${clamp((v / m) * 100, 0, 100)}%`;
 }
 
+// 更新技能按鈕。
 function renderSkills() {
   const c = baseClass();
   $("#classSkills").innerHTML = c.skills
     .map(
-      (s, i) =>
-        `<button class="skill-command" data-skill="${i}" ${!S.enemy || busy || S.res < s.c || S.cooldowns[i] > 0 ? "disabled" : ""}><em class="command-key">${i + 2}</em><span>${s.i}</span><div><small>${
-          S.cooldowns[i]
-            ? `冷卻 ${S.cooldowns[i]}
+      (s, i) => /* HTML */ `<button
+          class="skill-command"
+          data-skill="${i}"
+          ${
+            !S.enemy || busy || S.res < s.c || S.cooldowns[i] > 0
+              ? "disabled"
+              : ""
+          }
+        >
+          <em class="command-key">${i + 2}</em><span>${s.i}</span>
+          <div>
+            <small
+              >${
+                S.cooldowns[i]
+                  ? `冷卻 ${S.cooldowns[i]}
   回合`
-            : `消耗 ${s.c}
+                  : `消耗 ${s.c}
   `
-        }</small><b>${s.n}</b><p>${s.t}</p></div></button>`,
+              }</small
+            ><b>${s.n}</b>
+            <p>${s.t}</p>
+          </div>
+        </button>`,
     )
     .join("");
   const basic = $("[data-skill=basic]");
   if (basic) basic.disabled = !S.enemy || busy;
 }
 
+// 更新戰術按鈕。
 function renderTactics() {
   $("#tacticBar").innerHTML = Object.entries(TACTICS)
     .map(([id, tactic]) => {
@@ -4181,12 +4406,25 @@ function renderTactics() {
         cd = S.tacticCooldowns[id] || 0,
         unavailable = !S.enemy || busy || S.res < cost || cd > 0,
         status = cd ? `冷卻 ${cd} 回合` : cost ? `消耗 ${cost}` : "不消耗資源";
-      return `<button class="tactic-command tactic-${id}" data-tactic="${id}" ${unavailable ? "disabled" : ""}><span class="tactic-key">${tactic.key}</span><span class="tactic-icon">${tactic.i}</span><div><small>${status}</small><b>${tactic.n}</b><p>${tactic.t}</p></div></button>`;
+      return /* HTML */ `<button
+        class="tactic-command tactic-${id}"
+        data-tactic="${id}"
+        ${unavailable ? "disabled" : ""}
+      >
+        <span class="tactic-key">${tactic.key}</span
+        ><span class="tactic-icon">${tactic.i}</span>
+        <div>
+          <small>${status}</small><b>${tactic.n}</b>
+          <p>${tactic.t}</p>
+        </div>
+      </button>`;
     })
     .join("");
 }
 
+// 更新戰鬥藥水選單。
 function renderPotionMode() {
+  // 藥水顯示的順序。
   const priority = [
     "red",
     "blue",
@@ -4213,12 +4451,27 @@ function renderPotionMode() {
             : useful
               ? "點擊加入"
               : "目前無可作用效果";
-      return `<button class="potion-select-card ${isSelected ? "selected" : ""}" data-select-potion="${id}" ${disabled ? "disabled" : ""} aria-pressed="${isSelected}"><span class="potion-select-icon">${p.i}</span><div><span class="potion-select-title"><b>${p.n}</b><em>持有 ${count}</em></span><p>${p.d}</p><small>${state}</small></div></button>`;
+      return /* HTML */ `<button
+        class="potion-select-card ${isSelected ? "selected" : ""}"
+        data-select-potion="${id}"
+        ${disabled ? "disabled" : ""}
+        aria-pressed="${isSelected}"
+      >
+        <span class="potion-select-icon">${p.i}</span>
+        <div>
+          <span class="potion-select-title"
+            ><b>${p.n}</b><em>持有 ${count}</em></span
+          >
+          <p>${p.d}</p>
+          <small>${state}</small>
+        </div>
+      </button>`;
     })
     .join("");
   $("#confirmPotions").disabled = busy || selectedBattlePotions.length === 0;
 }
 
+// 更新敵人的名稱、血條、意圖與異常。
 function renderEnemy() {
   const e = S.enemy;
   if (!e) return;
@@ -4265,6 +4518,7 @@ function renderEnemy() {
   $("#enemyNote").innerHTML = enemyNoteText(e);
 }
 
+// 更新目前穿戴的武器與防具。
 function renderEquipment() {
   for (const slot of ["weapon", "armor"]) {
     const inst = gearByUid(S.equipped[slot]),
@@ -4297,6 +4551,7 @@ function renderEquipment() {
   }
 }
 
+// 更新玩家身上的增益與異常標籤。
 function renderEffects() {
   const a = [],
     st = stats();
@@ -4358,6 +4613,7 @@ function renderEffects() {
     .join("");
 }
 
+// 依篩選條件整理背包要顯示的項目。
 function bagEntries() {
   const f = $(".filter.active")?.dataset.filter || "all",
     arr = [];
@@ -4402,6 +4658,7 @@ function bagEntries() {
   return arr;
 }
 
+// 更新背包。
 function renderBag() {
   const a = bagEntries();
   const total =
@@ -4413,13 +4670,22 @@ function renderBag() {
   $("#inventoryList").innerHTML = a.length
     ? a
         .map(
-          (x) =>
-            `<button class="item-row ${x.rarity ? `rarity-${x.rarity}` : ""}" data-kind="${x.kind}" data-id="${x.id}"><span class="item-icon">${x.icon}</span><span class="item-copy"><b>${x.name}</b><small>${x.sub}</small></span><span class="item-count">×${x.n}</span></button>`,
+          (x) => /* HTML */ `<button
+              class="item-row ${x.rarity ? `rarity-${x.rarity}` : ""}"
+              data-kind="${x.kind}"
+              data-id="${x.id}"
+            >
+              <span class="item-icon">${x.icon}</span
+              ><span class="item-copy"
+                ><b>${x.name}</b><small>${x.sub}</small></span
+              ><span class="item-count">×${x.n}</span>
+            </button>`,
         )
         .join("")
     : `<div class="inventory-empty">目前沒有這類物品</div>`;
 }
 
+// 花費文字，不夠的項目會標紅。
 function costText(cost) {
   return Object.entries(cost)
     .map(([k, v]) => {
@@ -4427,11 +4693,19 @@ function costText(cost) {
         label = k === "gold" ? `🪙${v}` : `${MATERIALS[k].i}${v}`;
       return k === "gold"
         ? `<span class="${owned < v ? "cost-missing" : ""}">${label}</span>`
-        : `<span class="cost-material ${owned < v ? "cost-missing" : ""}" tabindex="0" data-tooltip="${escapeHtml(`${MATERIALS[k].n}：持有 ${owned}／需要 ${v}。${materialSourceText(k)}`)}">${label}</span>`;
+        : /* HTML */ `<span
+            class="cost-material ${owned < v ? "cost-missing" : ""}"
+            tabindex="0"
+            data-tooltip="${escapeHtml(
+              `${MATERIALS[k].n}：持有 ${owned}／需要 ${v}。${materialSourceText(k)}`,
+            )}"
+            >${label}</span
+          >`;
     })
     .join(" ");
 }
 
+// 裝備能力的文字說明。
 function gearEffect(g, level = 0) {
   const parts = [];
   for (const key of [
@@ -4453,10 +4727,15 @@ function gearEffect(g, level = 0) {
   return parts.join("、");
 }
 
+// 戰鬥中不能使用的功能，顯示鎖住的提示。
 function battleLockedHtml(feature) {
-  return `<div class="battle-locked"><span>⚔️</span><b>戰鬥中無法使用${feature}</b><p>請先擊敗或逃離目前的怪物；回到探索休息區後，此功能會自動恢復。</p></div>`;
+  return /* HTML */ `<div class="battle-locked">
+    <span>⚔️</span><b>戰鬥中無法使用${feature}</b>
+    <p>請先擊敗或逃離目前的怪物；回到探索休息區後，此功能會自動恢復。</p>
+  </div>`;
 }
 
+// 更新商店。
 function renderShop() {
   $("#shopFilters").classList.toggle("hidden", !!S.enemy);
   if (S.enemy) {
@@ -4466,22 +4745,77 @@ function renderShop() {
   const filter = $("[data-shop-filter].active")?.dataset.shopFilter || "all";
   const potions = Object.entries(POTIONS)
     .map(
-      ([id, p]) =>
-        `<div class="shop-row potion-shop"><span>${p.i}</span><div class="shop-copy"><b>${p.n}${p.drop ? ' <em class="drop-tag">怪物可掉落</em>' : ' <em class="shop-tag">商店限定</em>'}</b><span class="effect-line">${p.d}</span><small><span class="cost-line">價格：${costText(p.cost)}</span> · 持有 ${S.potions[id] || 0}</small></div><button data-buy-potion="${id}" ${!canPay(p.cost) || S.enemy ? "disabled" : ""}>購買</button></div>`,
+      ([id, p]) => /* HTML */ `<div class="shop-row potion-shop">
+          <span>${p.i}</span>
+          <div class="shop-copy">
+            <b
+              >${p.n}${
+                p.drop
+                  ? ' <em class="drop-tag">怪物可掉落</em>'
+                  : ' <em class="shop-tag">商店限定</em>'
+              }</b
+            ><span class="effect-line">${p.d}</span
+            ><small
+              ><span class="cost-line">價格：${costText(p.cost)}</span> · 持有
+              ${S.potions[id] || 0}</small
+            >
+          </div>
+          <button
+            data-buy-potion="${id}"
+            ${!canPay(p.cost) || S.enemy ? "disabled" : ""}
+          >
+            購買
+          </button>
+        </div>`,
     )
     .join("");
+  // 商店裡某一類裝備的列表。
   const gearRows = (slot) =>
     Object.entries(GEAR)
       .filter(([, g]) => g.slot === slot && g.classes.includes(S.classId))
       .map(([id, g]) => {
         const locked =
           S.classId !== "god" && S.highestFloor < (g.unlockFloor || 0);
-        return `<div class="shop-row rarity-${g.r} ${locked ? "gear-locked" : ""}"><span>${g.i}</span><div class="shop-copy"><b>${g.n} <em class="rarity-tag ${g.r}">${RARITY[g.r]}</em></b><span class="effect-line">${gearEffect(g)}</span><small>${g.d}<br>${locked ? `<span class="unlock-line">🔒 第 ${g.unlockFloor} 層解鎖</span><br>` : ""}<span class="cost-line">需要：${costText(g.cost)}</span></small></div><button data-buy="${id}" ${locked || !canPay(g.cost) || S.enemy ? "disabled" : ""}>${locked ? "未解鎖" : "製作"}</button></div>`;
+        return /* HTML */ `<div
+          class="shop-row rarity-${g.r} ${locked ? "gear-locked" : ""}"
+        >
+          <span>${g.i}</span>
+          <div class="shop-copy">
+            <b>${g.n} <em class="rarity-tag ${g.r}">${RARITY[g.r]}</em></b
+            ><span class="effect-line">${gearEffect(g)}</span
+            ><small
+              >${g.d}<br />${
+                locked
+                  ? /* HTML */ `<span class="unlock-line"
+                      >🔒 第 ${g.unlockFloor} 層解鎖</span
+                    ><br />`
+                  : ""
+              }<span class="cost-line"
+                >需要：${costText(g.cost)}</span
+              ></small
+            >
+          </div>
+          <button
+            data-buy="${id}"
+            ${locked || !canPay(g.cost) || S.enemy ? "disabled" : ""}
+          >
+            ${locked ? "未解鎖" : "製作"}
+          </button>
+        </div>`;
       })
       .join("");
-  const potionSection = `<div class="shop-section-title"><b>🧪 藥水補給</b><small>異常解除藥只能在這裡購買</small></div>${potions}`;
-  const weaponSection = `<div class="shop-section-title"><b>⚔️ 武器製作</b><small>普通至彩耀五階；高階武器附帶吸血</small></div>${gearRows("weapon")}`;
-  const armorSection = `<div class="shop-section-title"><b>🛡️ 盔甲製作</b><small>普通至彩耀五階；高階盔甲附帶抗毒與減傷</small></div>${gearRows("armor")}`;
+  const potionSection = /* HTML */ `<div class="shop-section-title">
+      <b>🧪 藥水補給</b><small>異常解除藥只能在這裡購買</small>
+    </div>
+    ${potions}`;
+  const weaponSection = /* HTML */ `<div class="shop-section-title">
+      <b>⚔️ 武器製作</b><small>普通至彩耀五階；高階武器附帶吸血</small>
+    </div>
+    ${gearRows("weapon")}`;
+  const armorSection = /* HTML */ `<div class="shop-section-title">
+      <b>🛡️ 盔甲製作</b><small>普通至彩耀五階；高階盔甲附帶抗毒與減傷</small>
+    </div>
+    ${gearRows("armor")}`;
   const sections = {
     potion: potionSection,
     weapon: weaponSection,
@@ -4493,6 +4827,7 @@ function renderShop() {
       : sections[filter] || potionSection;
 }
 
+// 更新裝備強化頁。
 function renderUpgrade() {
   if (S.enemy) {
     $("#upgradeList").innerHTML = battleLockedHtml("裝備強化");
@@ -4506,21 +4841,39 @@ function renderUpgrade() {
             next = x.level + 1,
             cost = enhanceCost(x.level),
             rate = enhanceRate(x.level);
-          return `<div class="upgrade-row rarity-${g.r}"><span>${g.i}</span><div class="shop-copy"><b>${g.n} <em class="rarity-tag ${g.r}">${RARITY[g.r]}</em> <span class="enhance-level">＋${x.level}</span></b>${
-            x.level >= 9
-              ? `<span class="effect-line">最終效果：${gearEffect(g, 9)}
-    </span><small>已達最高強化等級</small>`
-              : `<span class="upgrade-preview"><em>${gearEffect(g, x.level)}
-    </em><strong>→</strong><em>${gearEffect(g, next)}
-    </em></span><small><span class="rate-line">成功率 ${rate}
-    %</span> · 需要：${costText(cost)}
-    <br>失敗不降級、不損壞</small>`
-          }</div><button data-enhance="${x.uid}" ${x.level >= 9 || !canPay(cost) || S.enemy ? "disabled" : ""}>${x.level >= 9 ? "已滿級" : "強化"}</button></div>`;
+          return /* HTML */ `<div class="upgrade-row rarity-${g.r}">
+            <span>${g.i}</span>
+            <div class="shop-copy">
+              <b
+                >${g.n} <em class="rarity-tag ${g.r}">${RARITY[g.r]}</em>
+                <span class="enhance-level">＋${x.level}</span></b
+              >${
+                x.level >= 9
+                  ? /* HTML */ `<span class="effect-line"
+                      >最終效果：${gearEffect(g, 9)} </span
+                    ><small>已達最高強化等級</small>`
+                  : /* HTML */ `<span class="upgrade-preview"
+                      ><em>${gearEffect(g, x.level)} </em><strong>→</strong
+                      ><em>${gearEffect(g, next)} </em></span
+                    ><small
+                      ><span class="rate-line">成功率 ${rate} %</span> ·
+                      需要：${costText(cost)} <br />失敗不降級、不損壞</small
+                    >`
+              }
+            </div>
+            <button
+              data-enhance="${x.uid}"
+              ${x.level >= 9 || !canPay(cost) || S.enemy ? "disabled" : ""}
+            >
+              ${x.level >= 9 ? "已滿級" : "強化"}
+            </button>
+          </div>`;
         })
         .join("")
     : `<div class="inventory-empty">先在商店製作一件裝備</div>`;
 }
 
+// 打開物品詳細視窗，依種類顯示內容與按鈕。
 function openItem(kind, id) {
   selected = {
     kind,
@@ -4580,7 +4933,11 @@ function openItem(kind, id) {
       .map((key) => {
         const value = enhancedGearValue(g, key, inst.level);
         if (!value) return "";
-        return `<div>${GEAR_VALUE_LABELS[key]}<br><b>＋${value}${GEAR_PERCENT_VALUES.has(key) ? "%" : ""}</b></div>`;
+        return /* HTML */ `<div>
+          ${GEAR_VALUE_LABELS[key]}<br /><b
+            >＋${value}${GEAR_PERCENT_VALUES.has(key) ? "%" : ""}</b
+          >
+        </div>`;
       })
       .join("");
     primary = {
@@ -4609,6 +4966,7 @@ function openItem(kind, id) {
   openModal("itemModal");
 }
 
+// 新增一則冒險紀錄。
 function log(msg, important = false) {
   S.logs.unshift({
     msg,
@@ -4622,17 +4980,20 @@ function log(msg, important = false) {
   renderLog();
 }
 
+// 更新冒險紀錄頁。
 function renderLog() {
   const page = $("#logPage");
   page.innerHTML = S.logs
     .map(
-      (x) =>
-        `<div class="log-row ${x.important ? "important" : ""}"><small>${escapeHtml(x.t)}</small>　${escapeHtml(x.msg)}</div>`,
+      (x) => /* HTML */ `<div class="log-row ${x.important ? "important" : ""}">
+          <small>${escapeHtml(x.t)}</small>　${escapeHtml(x.msg)}
+        </div>`,
     )
     .join("");
   page.scrollTop = 0;
 }
 
+// 把特殊字元換掉，避免文字被當成 HTML。
 function escapeHtml(value) {
   return String(value ?? "").replace(
     /[&<>"']/g,
@@ -4655,6 +5016,9 @@ function normalizeDiscoveredMonsters(value) {
   );
 }
 
+// ---------- 怪物圖鑑 ----------
+
+// 第一次遇到就記進圖鑑。
 function discoverMonster(monster) {
   if (!monster || !MONSTERS.some((entry) => entry.n === monster.n)) return;
   if (!Array.isArray(S.discoveredMonsters)) S.discoveredMonsters = [];
@@ -4662,10 +5026,12 @@ function discoverMonster(monster) {
     S.discoveredMonsters.push(monster.n);
 }
 
+// 這隻怪物有沒有遇過。
 function isMonsterDiscovered(monster) {
   return S.discoveredMonsters.includes(monster.n);
 }
 
+// 素材可以從哪裡拿到。
 function materialSourceText(id) {
   if (id === "crown") return "王冠碎片：每 50 層大型 Boss 固定掉落。";
   if (id === "stone")
@@ -4677,6 +5043,7 @@ function materialSourceText(id) {
   return `${MATERIALS[id].n}：${names || "尚未發現來源魔物，探索遭遇後會更新圖鑑"}。點擊可查看來源圖鑑。`;
 }
 
+// 打開圖鑑，可以指定素材。
 function openCodex(material = "all") {
   $("#codexMaterial").innerHTML =
     `<option value="all">全部魔物 · ${MONSTERS.length} 種</option>` +
@@ -4691,6 +5058,7 @@ function openCodex(material = "all") {
   openModal("codexModal");
 }
 
+// 更新圖鑑列表，遇過的排前面。
 function renderCodex() {
   const filter = $("#codexMaterial").value || "all";
   const list = MONSTERS.filter(
@@ -4704,15 +5072,34 @@ function renderCodex() {
     ? list
         .map((monster) => {
           if (!isMonsterDiscovered(monster)) {
-            return `<article class="codex-entry locked"><span aria-hidden="true">?</span><div><b>未發現的魔物</b><small>尚未遭遇，探索發現後解鎖</small></div></article>`;
+            return /* HTML */ `<article class="codex-entry locked">
+              <span aria-hidden="true">?</span>
+              <div>
+                <b>未發現的魔物</b><small>尚未遭遇，探索發現後解鎖</small>
+              </div>
+            </article>`;
           }
           const material = MATERIALS[monster.drop];
-          return `<article class="codex-entry"><span aria-hidden="true">${monster.i}</span><div><b>${monster.n}</b><small>掉落素材：${material.i} ${material.n}</small><p>${monster.trait}</p></div></article>`;
+          return /* HTML */ `<article class="codex-entry">
+            <span aria-hidden="true">${monster.i}</span>
+            <div>
+              <b>${monster.n}</b
+              ><small>掉落素材：${material.i} ${material.n}</small>
+              <p>${monster.trait}</p>
+            </div>
+          </article>`;
         })
         .join("")
-    : `<div class="source-empty"><span>${MATERIALS[filter]?.i || "📖"}</span><b>${MATERIALS[filter]?.n || "素材"}</b><p>${materialSourceText(filter)}</p></div>`;
+    : /* HTML */ `<div class="source-empty">
+        <span>${MATERIALS[filter]?.i || "📖"}</span
+        ><b>${MATERIALS[filter]?.n || "素材"}</b>
+        <p>${materialSourceText(filter)}</p>
+      </div>`;
 }
 
+// ---------- 特效、音效與提示 ----------
+
+// 動態效果有沒有開（同時尊重系統的減少動態）。
 function motionEnabled() {
   return (
     preferences.effects &&
@@ -4720,6 +5107,7 @@ function motionEnabled() {
   );
 }
 
+// 套用並儲存設定。
 function applyPreferences() {
   document.body.classList.toggle("effects-off", !motionEnabled());
   $("#effectsToggle").checked = preferences.effects;
@@ -4729,6 +5117,7 @@ function applyPreferences() {
   } catch {}
 }
 
+// 用 Web Audio 合成音效，不需要音檔。
 function playTone(type) {
   if (!preferences.sound) return;
   try {
@@ -4765,6 +5154,7 @@ function playTone(type) {
     gain.connect(audioContext.destination);
     oscillator.start(now);
     oscillator.stop(now + 0.23);
+    // 播完就斷開，釋放資源。
     oscillator.onended = () => {
       oscillator.disconnect();
       gain.disconnect();
@@ -4774,6 +5164,7 @@ function playTone(type) {
   }
 }
 
+// 戰鬥特效與火花。
 function battleFX(type) {
   playTone(type);
   if (!motionEnabled()) return;
@@ -4787,7 +5178,7 @@ function battleFX(type) {
     effect.append(spark);
   }
   layer.append(effect);
-  // Limit transient DOM even during very fast God-mode play.
+  // 神模式速度很快時，也要限制暫時元素的數量。
   const effects = [...layer.children].filter((node) =>
     node.classList.contains("battle-fx"),
   );
@@ -4795,10 +5186,12 @@ function battleFX(type) {
   setTimeout(() => effect.remove(), 1300);
 }
 
+// 大型公告。
 function announce(title, subtitle) {
   toast(`${subtitle} · ${title}`);
 }
 
+// 跳出傷害數字。
 function floatText(t, c, x, y) {
   const n = document.createElement("span");
   n.className = `float-text ${c}`;
@@ -4809,6 +5202,7 @@ function floatText(t, c, x, y) {
   setTimeout(() => n.remove(), 1050);
 }
 
+// 重新播放敵人的動畫。
 function animateEnemy(c) {
   const e = $("#enemyWrap");
   e.classList.remove(c);
@@ -4817,6 +5211,7 @@ function animateEnemy(c) {
   setTimeout(() => e.classList.remove(c), 380);
 }
 
+// 畫面角落的短訊息。
 function toast(t, type = "") {
   const n = document.createElement("div");
   n.className = `toast${type ? ` ${type}` : ""}`;
@@ -4832,12 +5227,14 @@ function toast(t, type = "") {
 let currentTooltipTarget = null;
 const modalReturnFocus = new Map();
 
+// 是不是觸控裝置（提示改成點擊顯示）。
 function usesTouchTooltip() {
   return window.matchMedia(
     "(hover: none), (pointer: coarse), (max-width: 740px)",
   ).matches;
 }
 
+// 計算提示框放在目標的上下左右哪一邊，不超出畫面。
 function positionGlobalTooltip(target, tooltip, mobile) {
   const viewport = window.visualViewport,
     viewLeft = viewport?.offsetLeft || 0,
@@ -4856,6 +5253,7 @@ function positionGlobalTooltip(target, tooltip, mobile) {
   tooltip.style.bottom = "auto";
   tooltip.style.width = `${preferredWidth}px`;
   tooltip.style.maxHeight = `${Math.max(120, Math.min(260, viewHeight - margin * 2))}px`;
+  // 四個方向的候選位置，選第一個放得下的。
   const width = tooltip.offsetWidth || preferredWidth,
     height = tooltip.offsetHeight || 80,
     minX = viewLeft + margin,
@@ -4912,6 +5310,7 @@ function positionGlobalTooltip(target, tooltip, mobile) {
   let chosen = candidates.find(
     (p) => p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY,
   );
+  // 都放不下時，選空間最大的一邊。
   if (!chosen) {
     const sideSpace = {
         right: viewLeft + viewWidth - rect.right,
@@ -4927,6 +5326,7 @@ function positionGlobalTooltip(target, tooltip, mobile) {
   tooltip.style.top = `${clamp(chosen.y, minY, Math.max(minY, maxY))}px`;
 }
 
+// 顯示提示框。
 function showGlobalTooltip(target) {
   const text = target?.dataset?.tooltip;
   if (!text) return;
@@ -4940,6 +5340,7 @@ function showGlobalTooltip(target) {
   positionGlobalTooltip(target, tooltip, mobile);
 }
 
+// 收起提示框。
 function hideGlobalTooltip() {
   currentTooltipTarget?.removeAttribute("aria-describedby");
   currentTooltipTarget = null;
@@ -4949,6 +5350,7 @@ function hideGlobalTooltip() {
 }
 let runtimeErrorShown = false;
 
+// 記錄錯誤，並提醒玩家存檔沒有遺失。
 function reportRuntimeError(message, error) {
   console.error(`[深境冒險 v${APP_VERSION}] ${message}`, error || "");
   try {
@@ -4967,6 +5369,9 @@ function reportRuntimeError(message, error) {
   }
 }
 
+// ---------- 視窗、事件綁定與啟動 ----------
+
+// 建立一個按鈕。
 function button(t, run, c = "") {
   const b = document.createElement("button");
   b.textContent = t;
@@ -4975,6 +5380,7 @@ function button(t, run, c = "") {
   return b;
 }
 
+// 打開視窗，並記住焦點原本在哪裡。
 function openModal(id) {
   const modal = $("#" + id);
   modalReturnFocus.set(id, document.activeElement);
@@ -4987,6 +5393,7 @@ function openModal(id) {
   );
 }
 
+// 關閉視窗，把焦點還回去。
 function closeModal(id) {
   $("#" + id).classList.remove("open");
   document.body.classList.toggle("modal-active", !!$(".modal.open"));
@@ -4994,6 +5401,7 @@ function closeModal(id) {
   modalReturnFocus.delete(id);
 }
 
+// 打開事件視窗並放上選項按鈕。
 function openEvent(i, t, d, opts) {
   $("#eventKicker").textContent = "特殊事件";
   $("#eventResult").innerHTML = "";
@@ -5025,6 +5433,7 @@ function openEvent(i, t, d, opts) {
   }
   openModal("eventModal");
 }
+// 整個頁面的點擊都在這裡分派：依按鈕上的 data-… 屬性決定要做什麼。
 document.addEventListener("click", (e) => {
   const close = e.target.closest("[data-close]");
   if (close) {
@@ -5078,29 +5487,35 @@ document.addEventListener("click", (e) => {
     renderShop();
   }
 });
+// 滑鼠移到有提示的元素上。
 document.addEventListener("pointerover", (e) => {
   const target = e.target.closest("[data-tooltip]");
   if (target && !usesTouchTooltip()) showGlobalTooltip(target);
 });
+// 滑鼠移開。
 document.addEventListener("pointerout", (e) => {
   const target = e.target.closest("[data-tooltip]");
   if (target && !target.contains(e.relatedTarget) && !usesTouchTooltip())
     hideGlobalTooltip();
 });
+// 鍵盤焦點移到有提示的元素上。
 document.addEventListener("focusin", (e) => {
   const target = e.target.closest("[data-tooltip]");
   if (target && !usesTouchTooltip()) showGlobalTooltip(target);
 });
+// 焦點離開。
 document.addEventListener("focusout", (e) => {
   if (e.target.closest("[data-tooltip]") && !usesTouchTooltip())
     hideGlobalTooltip();
 });
 
+// 重新計算提示框的位置。
 function refreshTooltipPosition() {
   if (currentTooltipTarget?.isConnected === false) hideGlobalTooltip();
   else if (currentTooltipTarget) showGlobalTooltip(currentTooltipTarget);
 }
 let tooltipPositionFrame = 0;
+// 捲動或縮放時，一幀最多重算一次。
 function scheduleTooltipPosition() {
   if (!currentTooltipTarget || tooltipPositionFrame) return;
   tooltipPositionFrame = requestAnimationFrame(() => {
@@ -5116,6 +5531,7 @@ try {
 } catch (_) {
   // 外部網站嵌入時，改用遊戲自己的 viewport。
 }
+// 畫面被放大時關掉部分特效。
 function syncZoomEffects() {
   const zoomed = (zoomViewport?.scale || 1) > 1.01;
   if (document.body.classList.contains("viewport-zoomed") === zoomed) return;
@@ -5141,20 +5557,25 @@ window.visualViewport?.addEventListener("scroll", scheduleTooltipPosition, {
   passive: true,
 });
 window.addEventListener("pagehide", save);
+// 切到背景時先存檔。
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden") save();
 });
+// 程式出錯時記錄並提示。
 window.addEventListener("error", (e) => {
   reportRuntimeError(
     "遊戲發生錯誤，已保留目前存檔；重新整理後仍可繼續。",
     e.error || e.message,
   );
 });
+// 非同步操作出錯時記錄並提示。
 window.addEventListener("unhandledrejection", (e) => {
   reportRuntimeError("遊戲操作未完成，請再試一次。", e.reason);
 });
 
+// 啟動時自我檢查：元素、裝備、Boss 等資料有沒有缺。
 function validateGameBuild() {
+  // 頁面上一定要有的元素。
   const requiredIds = [
       "arena",
       "skillBar",
@@ -5205,14 +5626,31 @@ try {
 }
 $("#classGrid").innerHTML = Object.entries(CLASSES)
   .map(
-    ([id, c]) =>
-      `<button class="class-card${c.godMode ? " god-class" : ""}" data-class="${id}"><span>${c.icon}</span><b>${c.name}</b><small>${c.desc}</small>${c.godMode ? '<em class="god-lock">🔒 密碼限定</em>' : ""}<div class="class-stats"><i>HP <strong>${c.hp}</strong></i><i>攻擊 <strong>${c.atk}</strong></i><i>防禦 <strong>${c.def}</strong></i><i>爆擊 <strong>${c.crit}%</strong></i><i>速度 <strong>${c.speed}</strong></i><i>${c.resource} <strong>${c.maxRes}</strong></i></div></button>`,
+    ([id, c]) => /* HTML */ `<button
+        class="class-card${c.godMode ? " god-class" : ""}"
+        data-class="${id}"
+      >
+        <span>${c.icon}</span><b>${c.name}</b
+        ><small>${c.desc}</small>${
+          c.godMode ? '<em class="god-lock">🔒 密碼限定</em>' : ""
+        }
+        <div class="class-stats">
+          <i>HP <strong>${c.hp}</strong></i
+          ><i>攻擊 <strong>${c.atk}</strong></i
+          ><i>防禦 <strong>${c.def}</strong></i
+          ><i>爆擊 <strong>${c.crit}%</strong></i
+          ><i>速度 <strong>${c.speed}</strong></i
+          ><i>${c.resource} <strong>${c.maxRes}</strong></i>
+        </div>
+      </button>`,
   )
   .join("");
+// 選職業。
 $("#classGrid").onclick = (e) => {
   const b = e.target.closest("[data-class]");
   if (b) startGame(b.dataset.class);
 };
+// 選難度。
 $("#difficultyButtons").onclick = (e) => {
   const b = e.target.closest("[data-difficulty]");
   if (b) {
@@ -5251,6 +5689,7 @@ $("#godUnlockBtn").onclick = unlockGodMode;
 $("#godPassword").addEventListener("keydown", (e) => {
   if (e.key === "Enter") unlockGodMode();
 });
+// 鍵盤快捷鍵：數字鍵是技能、字母鍵是戰術。
 document.addEventListener("keydown", (e) => {
   if (
     e.repeat ||
@@ -5287,6 +5726,7 @@ document.addEventListener("keydown", (e) => {
     useTactic(tacticKeys[key]);
   }
 });
+// 刪除存檔並重新選擇職業。
 $("#resetBtn").onclick = () => {
   if (busy) {
     toast("請等本回合結束後再重新開始");
@@ -5310,6 +5750,7 @@ try {
 applyPreferences();
 render();
 document.body.classList.add("modal-active");
+// 視窗開著時：Esc 關閉，Tab 只在視窗裡移動。
 document.addEventListener("keydown", (event) => {
   const modal = $$(".modal.open").at(-1),
     dialog = modal || (potionMode ? $("#potionModePanel") : null);
