@@ -82,7 +82,7 @@
         aria-label="放大：${item.title}"
       >
         <img
-          src="assets/akane/${item.id}.webp?v=1.2-r6"
+          src="assets/akane/${item.id}.webp?v=1.1"
           alt="${item.title}，黑川茜官方${item.type === "visual" ? "立繪" : "劇照"}"
           width="${item.width}"
           height="${item.height}"

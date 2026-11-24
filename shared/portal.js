@@ -34,7 +34,7 @@
     back.href = "../../index.html#games";
     back.textContent = "‹ 返回 Blue World 遊戲館";
     const version = document.createElement("span");
-    version.textContent = "整合版 1.2";
+    version.textContent = "整合版 1.3";
     nav.append(back, version);
     document.body.prepend(nav);
     document.body.classList.add("standalone-portal-game");

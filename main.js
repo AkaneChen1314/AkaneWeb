@@ -15,7 +15,7 @@ const games = {
     name: "NEON STRIKE II：極光戰線",
     category: "3D 第一人稱射擊 / 團隊對戰",
     version: "鍵鼠・觸控",
-    path: "games/aurora/index.html?v=20261121-r15c",
+    path: "games/aurora/index.html?v=20261124-v1.3",
     cover: "assets/cover-aurora.webp",
     description:
       "霓光突擊的續作。選擇五名幹員之一，帶著各自的武器與技能，在新東京、末日之城、軌道環站與海底研究站四張地圖，挑戰團隊死鬥、據點爭奪、個人亂鬥、生存波次或首領討伐。",
@@ -30,7 +30,7 @@ const games = {
     name: "鋼鐵廢墟：機甲戰線",
     category: "第三人稱機甲射擊 / 波次生存",
     version: "鍵鼠・觸控",
-    path: "games/mech/index.html?v=20261121-r15c",
+    path: "games/mech/index.html?v=20261124-v1.3",
     cover: "assets/cover-mech.webp",
     description:
       "在機庫組出你的機甲：五台機體、八種塗裝、主副武器、八種技能與五種小兵自由搭配。闖過一波波敵潮，每波三選一強化，迎戰十隻各有招式的巨型 Boss。",
@@ -45,7 +45,7 @@ const games = {
     name: "運氣戰鬥：FORTUNE SIEGE",
     category: "塔防 × 賭場 / Roguelike",
     version: "滑鼠・觸控",
-    path: "games/fortune/index.html?v=20261121-r15c",
+    path: "games/fortune/index.html?v=20261124-v1.3",
     cover: "assets/cover-fortune.webp",
     description:
       "賭場、商店與戰場三個區域輪流切換。用金幣在七種賭場小遊戲贏取道具與限定塔，到商店升星與融合元素，再布陣守住 30 波敵人與首領，之後還能挑戰無盡模式。",
@@ -60,7 +60,7 @@ const games = {
     name: "午夜擂台：MIDNIGHT CIRCUIT",
     category: "即時格鬥 / 單人與本機雙人",
     version: "鍵盤・觸控",
-    path: "games/midnight/index.html?v=20261123-r15d",
+    path: "games/midnight/index.html?v=20261124-v1.3",
     cover: "assets/cover-midnight-art.webp",
     description:
       "四名原創鬥士，在雨夜天台展開對決。選擇單人對電腦、本機雙人、練習或街機挑戰，用連擊、防禦與大招拿下兩回合。",
@@ -75,7 +75,7 @@ const games = {
     name: "霓境蛇行：NEON SERPENT",
     category: "生存貪吃蛇 / 隨機進化",
     version: "鍵鼠・觸控",
-    path: "games/serpent/index.html?v=20261113-r14-games",
+    path: "games/serpent/index.html?v=20261124-v1.3",
     cover: "assets/cover-serpent-art.webp",
     description:
       "化身四種蛇靈，在三座戰場收集食物、成長與進化。從無傷練習、悠遊秘境到蟲群對戰與首領連戰，選擇自己的冒險節奏。",
@@ -90,7 +90,7 @@ const games = {
     name: "NEON STRIKE：霓光突擊",
     category: "3D 第一人稱射擊 / 戰術任務",
     version: "鍵鼠・觸控",
-    path: "games/neonstrike/index.html?v=20261030-r13-touch",
+    path: "games/neonstrike/index.html?v=20261124-v1.3",
     description:
       "進入暗夜港區與熔火工廠，選擇三名幹員、裝備與難度，挑戰全面肅清、波次攻堅、限時獵殺與首領討伐。利用掩體、補給與技能突破防線。",
     steps: [
@@ -146,7 +146,7 @@ const games = {
     name: "星夜突圍：STARBREAK",
     category: "即時射擊 / 星艦生存",
     cover: "games/starbreak/assets/starbreak.webp",
-    path: "games/starbreak/index.html?v=1.2-r11-touch",
+    path: "games/starbreak/index.html?v=20261124-v1.3",
     description:
       "駕駛星艦穿越異星敵潮，武器會自動攻擊。靠走位、衝刺與過載突破包圍，搭配武器進化、研究與模組，迎戰擁有獨立本體血量及防護罩的星域 Boss。",
     steps: [

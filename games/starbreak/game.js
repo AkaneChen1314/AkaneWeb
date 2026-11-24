@@ -2,7 +2,7 @@
  * 檔案導讀：星夜突圍原始碼：資料設定 → 畫面與輸入 → 戰局更新 → 存檔與初始化。
  * WEAPONS 是武器資料；KEY／RUNKEY 是存檔位置；VERSION 是存檔格式，並非網站修訂編號。
  */
-/* 星夜突圍 v1.2 · Blue World r11 — 戰場外 Boss 狀態列與返回休息整合。 */
+/* 整合 Blue World：戰場外的 Boss 狀態列，以及返回遊戲館時休息。 */
 "use strict";
 (() => {
   const VERSION = 1,

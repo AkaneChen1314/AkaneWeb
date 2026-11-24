@@ -1,4 +1,4 @@
-星夜突圍 · STARBREAK v1.2（Blue World 整合版 r11）
+星夜突圍 · STARBREAK v1.2（Blue World 整合版）
 =========================
 
 本包以原 Starbreak v1.5 為基礎，公開顯示依 Blue World 統一為 1.2，

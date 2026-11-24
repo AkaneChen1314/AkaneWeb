@@ -595,7 +595,7 @@ console.log(
   "PASS v1.5 presentation/HUD smoke: effect preference save, four Boss effects, snapshot label, full/off/reduced/mobile draw and paused camera stability.",
 );
 
-// Blue World r11：精簡 HUD 的完整資訊與返回休息必須保留原戰鬥。
+// Blue World 整合：精簡 HUD 的完整資訊與返回休息必須保留原戰鬥。
 click("boss-status-details");
 assert(document.getElementById("dialog").open);
 assert.equal(engine.r.phase, "paused");
@@ -632,5 +632,5 @@ sandbox.frame(2000);
 sandbox.frame(2100);
 assert(engine.r.time > pausedTime);
 console.log(
-  "PASS Blue World r11: Boss details, safe close, portal pause/save, no hidden draw/time, manual resume and original save keys.",
+  "PASS Blue World: Boss details, safe close, portal pause/save, no hidden draw/time, manual resume and original save keys.",
 );
