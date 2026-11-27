@@ -25,7 +25,11 @@ function hit(x, y, w, h) {
 }
 // 畫一個按鈕並登記點擊範圍；每一格畫面都重新登記。
 function button(id, x, y, w, h, label, o = {}) {
+  // hov 表示滑鼠是不是在按鈕上。這個遊戲整個畫面都畫在畫布上，按鈕也是自己畫的，
+  // 所以要自己判斷滑鼠位置。
   const hov = !UI.noHover && hit(x, y, w, h);
+  // 畫按鈕：依樣式（金色、紫色、藍色、紅色…）畫出陰影、底色、亮邊；停用時變淡，
+  // 滑過時變亮，active（目前選中）時加金框。
   if (!o.invisible) {
     const st = BTN_STYLE[o.style || "dark"],
       c = ctx,
@@ -64,6 +68,7 @@ function button(id, x, y, w, h, label, o = {}) {
     if (label) {
       const lines = String(label).split("\n");
       let sz = o.size || 22;
+      // 按鈕文字太長時自動縮小字級，多行文字上下置中。
       for (const l of lines) {
         c.font = font(sz, o.weight || 800);
         while (sz > 10 && c.measureText(l).width > w - 14) {
@@ -89,6 +94,8 @@ function button(id, x, y, w, h, label, o = {}) {
     }
     c.restore();
   }
+  // 把這個按鈕的位置與要做的事記下來，滑鼠點下去時就從這份清單找被點到的按鈕；
+  // 有提示文字的話，滑過時顯示。
   if (!o.disabled && o.fn) UI.nh.push({ id, x, y, w, h, fn: o.fn });
   if (hov && o.tip) UI.tip = { lines: [o.tip] };
   return hov;
@@ -144,6 +151,7 @@ function goldText(c, s, x, y, size, o = {}) {
 let MENU_SYMS = null;
 // 主選單背景：光束、漂浮符號與星光。
 function menuBg(c, dt) {
+  // 主選單背景：中間亮、四周暗的紫色漸層。
   const t = G.time;
   const g = c.createRadialGradient(W / 2, H * 0.42, 50, W / 2, H / 2, W * 0.75);
   g.addColorStop(0, "#3a1260");
@@ -151,6 +159,7 @@ function menuBg(c, dt) {
   g.addColorStop(1, "#05020e");
   c.fillStyle = g;
   c.fillRect(0, 0, W, H);
+  // 中間慢慢旋轉的光芒。
   c.save();
   c.translate(W / 2, H * 0.36);
   c.rotate(t * 0.05);
@@ -185,6 +194,7 @@ function menuBg(c, dt) {
         a: rand(0.15, 0.45),
       });
   }
+  // 往上飄的拉霸圖案（7、櫻桃、鈴鐺…），飄出畫面後從下面重新出現。
   for (const s of MENU_SYMS) {
     s.y -= s.v * dt;
     s.r += s.vr * dt;
@@ -200,6 +210,7 @@ function menuBg(c, dt) {
     c.drawImage(getSym(s.id), -s.s / 2, -s.s / 2, s.s, s.s);
     c.restore();
   }
+  // 隨機冒出閃爍的小星星。
   if (Math.random() < dt * 20)
     fxU.add({
       kind: "star",
@@ -245,6 +256,7 @@ function drawTitle(c, y) {
 }
 // 主選單。
 function drawMenu(c, dt) {
+  // 主選單：背景、遊戲標題，以及標題下方上下浮動的五個圖案。
   menuBg(c, dt);
   drawTitle(c, 230);
   const ids = ["seven", "wild", "chest", "wheel", "seven"];
@@ -255,6 +267,7 @@ function drawMenu(c, dt) {
   });
   // 中央的按鈕。
   const bx = W / 2 - 180;
+  // 「開始遊戲」：進入選擇戰場的畫面。
   button("play", bx, 530, 360, 84, "開始遊戲", {
     style: "gold",
     size: 36,
@@ -263,6 +276,7 @@ function drawMenu(c, dt) {
       AU.play("click");
     },
   });
+  // 「天賦樹」「圖鑑」「遊戲說明」按鈕。
   button("talent", bx, 632, 360, 68, `天賦樹  ⭐ ${G.meta.stars}`, {
     style: "purple",
     size: 26,
@@ -286,6 +300,7 @@ function drawMenu(c, dt) {
       AU.play("click");
     },
   });
+  // 音樂開關。
   button(
     "snd",
     bx + 185,
@@ -301,6 +316,7 @@ function drawMenu(c, dt) {
       },
     },
   );
+  // 選單右邊的拉霸與防禦塔裝飾。
   const t = G.time;
   // 左：賭場展示（迷你轉輪）
   // 左側：賭場預覽。
@@ -415,6 +431,7 @@ function drawMenu(c, dt) {
       weight: 700,
     });
   }
+  // 下方的遊玩統計與快捷鍵提示。
   const m = G.meta;
   txt(
     c,
@@ -430,6 +447,7 @@ function drawMenu(c, dt) {
     1040,
     { size: 17, color: "rgba(255,255,255,.4)", weight: 500 },
   );
+  // 更新並畫出特效；按了「遊戲說明」就蓋上說明視窗。
   fxU.update(dt);
   fxU.draw(c);
   if (G.menuHelp) {
@@ -462,10 +480,12 @@ function mapUnlocked(i) {
 }
 // 選擇地圖。
 function drawMaps(c, dt) {
+  // 選擇戰場畫面：每張地圖一張卡片。
   menuBg(c, dt);
   goldText(c, "選擇戰場", W / 2, 110, 72);
   // 每張地圖的卡片。
   MAPS.forEach((m, i) => {
+    // 卡片的位置與大小；滑鼠移上去時放大一點、外框變金色。
     const w = 520,
       h = 600,
       x = W / 2 - 810 + i * 560,
@@ -487,6 +507,7 @@ function drawMaps(c, dt) {
     rr(c, x + 20, y + 20, w - 40, 336, 12);
     c.clip();
     c.drawImage(MAP_THUMB[i], x + 20, y + 20, w - 40, 336);
+    // 還沒解鎖的地圖蓋上半透明的黑色與鎖頭，並顯示解鎖條件。
     if (!un) {
       c.fillStyle = "rgba(0,0,0,.65)";
       c.fillRect(x + 20, y + 20, w - 40, 336);
@@ -494,6 +515,7 @@ function drawMaps(c, dt) {
     }
     c.restore();
     goldText(c, m.name, x + w / 2, y + 400, 44);
+    // 地圖的副標、最佳紀錄與星星獎勵倍率。
     txt(c, m.sub, x + w / 2, y + 450, {
       size: 22,
       color: "#ffe0c0",
@@ -524,6 +546,7 @@ function drawMaps(c, dt) {
         weight: 800,
       });
     c.restore();
+    // 已解鎖的地圖可以點：點下去就開始新的一局。
     if (un)
       UI.nh.push({
         id: "map" + i,
@@ -537,6 +560,7 @@ function drawMaps(c, dt) {
         },
       });
   });
+  // 左下角的返回按鈕。
   button("back", 60, 960, 200, 70, "← 返回", {
     size: 26,
     fn: () => {
@@ -549,6 +573,7 @@ function drawMaps(c, dt) {
 
 // ===== 天賦樹 =====
 function drawTalents(c, dt) {
+  // 天賦樹畫面：標題與目前的星星數。
   menuBg(c, dt);
   goldText(c, "天賦樹", W / 2, 100, 72);
   txt(
@@ -560,6 +585,7 @@ function drawTalents(c, dt) {
   );
   // 每個天賦的卡片。
   TALENTS.forEach((tl, i) => {
+    // 每個天賦一張卡片（4 欄）：名稱、說明、目前等級的圓點與升級按鈕。
     const col = i % 4,
       row = Math.floor(i / 4),
       w = 400,
@@ -580,6 +606,7 @@ function drawTalents(c, dt) {
       color: "#e8e0ff",
       weight: 600,
     });
+    // 等級圓點：已升的實心，還沒升的空心。
     for (let k = 0; k < tl.max; k++) {
       const px = x + w / 2 + (k - (tl.max - 1) / 2) * 34;
       c.beginPath();
@@ -590,6 +617,7 @@ function drawTalents(c, dt) {
       c.lineWidth = 1.5;
       c.stroke();
     }
+    // 升級按鈕：星星不夠時變暗；滿級時顯示「已滿級」。
     button(
       "tal" + i,
       x + 70,
@@ -681,6 +709,7 @@ function silhouette(id, size, draw) {
 }
 // 圖鑑：塔、遺物與敵人三個分頁。
 function drawCodex(c, dt) {
+  // 圖鑑畫面：上方三個分頁（防禦塔、遺物、敵人），旁邊的數字是已發現的數量。
   menuBg(c, dt);
   c.fillStyle = "rgba(5,2,14,.55)";
   c.fillRect(0, 0, W, H);
@@ -701,6 +730,7 @@ function drawCodex(c, dt) {
       },
     }),
   );
+  // 防禦塔分頁：已發現的顯示圖案、名稱、元素與攻擊方式；還沒發現的顯示「？？？」。
   if (G.codexTab === 0) {
     // 塔。
     ALL_TOWERS.forEach((key, i) => {
@@ -785,6 +815,7 @@ function drawCodex(c, dt) {
         y + 92,
         { size: 13, color: "#a8f0ff", weight: 600 },
       );
+      // 滑過卡片時顯示詳細說明。
       if (hit(x, y, w, h))
         // 滑鼠提示。
         UI.tip = {
@@ -804,6 +835,7 @@ function drawCodex(c, dt) {
         };
     });
   } else if (G.codexTab === 1) {
+    // 遺物分頁：已發現的顯示圖案、稀有度與說明。
     RELICS.forEach((rel, i) => {
       const col = i % 8,
         row = Math.floor(i / 8),
@@ -855,6 +887,7 @@ function drawCodex(c, dt) {
         UI.tip = { title: rel.n, col: RAR_COL[rel.r], lines: [rel.d] };
     });
   } else {
+    // 敵人分頁：已遇過的顯示模樣與生命、速度等數值；首領用紅色框。
     Object.keys(ENEMY).forEach((type, i) => {
       const col = i % 4,
         row = Math.floor(i / 4),
@@ -918,6 +951,7 @@ function drawCodex(c, dt) {
       }
     });
   }
+  // 左上角的返回按鈕。
   button("back", 40, 40, 180, 60, "← 返回", {
     size: 24,
     fn: () => {
@@ -928,6 +962,7 @@ function drawCodex(c, dt) {
 
 // ===== 結算畫面 =====
 function drawResult(c, dt) {
+  // 結算畫面：勝利或失敗的大標題、地圖與到達的波數。
   menuBg(c, dt);
   const r = G.result;
   goldText(
@@ -943,6 +978,7 @@ function drawResult(c, dt) {
     color: "#ffe6c0",
     weight: 800,
   });
+  // 結算數據表（擊殺數、頭獎次數、賺到的金幣等）。
   panel(c, W / 2 - 420, 320, 840, 420);
   // 統計項目。
   const rows = [
@@ -973,6 +1009,7 @@ function drawResult(c, dt) {
       weight: 800,
     });
   });
+  // 獲得的星星：數字從 0 慢慢跑到最後的值；破紀錄時顯示「新紀錄」。
   const k = Math.min(1, (G.time - r.t0) / 1.5);
   goldText(c, `+ ${Math.floor(r.stars * easeOutCubic(k))} ⭐`, W / 2, 800, 64, {
     glow: "#ffcf3a",
@@ -983,6 +1020,7 @@ function drawResult(c, dt) {
       color: "#7affb0",
       weight: 900,
     });
+  // 「再玩一局」「主選單」按鈕。
   button("again", W / 2 - 380, 920, 360, 80, "再玩一局", {
     style: "gold",
     size: 32,
@@ -1002,6 +1040,8 @@ function drawResult(c, dt) {
 // 結束這一局：計算星星、更新紀錄並進入結算畫面。
 function endRun(victory) {
   const m = R.map;
+  // 獲得的星星：到達波數 × 0.6，加上勝利獎勵 15、每次頭獎 2 顆，再乘上地圖的星
+  // 星倍率，至少 1 顆。
   const stars = Math.max(
     1,
     Math.round(
@@ -1015,6 +1055,7 @@ function endRun(victory) {
   G.meta.runs++;
   G.meta.jackpots += R.stats.jackpots;
   saveMeta();
+  // 記下這一局的結果，給結算畫面顯示。
   G.result = {
     victory: R.victory || victory,
     wave: R.wave,
@@ -1110,6 +1151,7 @@ function switchTab(id) {
 }
 // 上方狀態列。
 function drawTopBar(c) {
+  // 上方資訊列：深紫色漸層底，下面一條彩色線。
   const g = c.createLinearGradient(0, 0, 0, 72);
   g.addColorStop(0, "#2e1450");
   g.addColorStop(1, "#140828");
@@ -1121,6 +1163,7 @@ function drawTopBar(c) {
   lg.addColorStop(1, "#3ae8ff");
   c.fillStyle = lg;
   c.fillRect(0, 70, W, 3);
+  // 遊戲名稱與城堡生命（紅色長條，越少顏色越深）。
   goldText(c, "運氣戰鬥", 86, 37, 30);
   statIcon(c, "heart", 190, 36, 44);
   const hk = R.hp / R.maxHp;
@@ -1136,6 +1179,7 @@ function drawTopBar(c) {
     stroke: "rgba(0,0,0,.6)",
     sw: 3,
   });
+  // 金幣、寶石與幸運值；滑過幸運值時顯示它的效果。
   statIcon(c, "coin", 372, 36, 44);
   txt(c, fmtComma(R.gold), 396, 37, {
     size: 24,
@@ -1164,6 +1208,7 @@ function drawTopBar(c) {
     sw: 4,
   });
   if (hit(610, 10, 80, 50))
+    // 幸運值的說明：會提高暴擊率、賭輸時重來的機率等。
     UI.tip = {
       title: "幸運值",
       col: "#7affb0",
@@ -1175,6 +1220,8 @@ function drawTopBar(c) {
     };
   // 分頁按鈕。
   TABS.forEach((tb, i) => {
+    // 中間的分頁按鈕（戰鬥、賭場、商店…）：目前分頁發亮；戰鬥進行中其他分頁會鎖
+    // 住。
     const x = 720 + i * 190,
       y = 8,
       w = 180,
@@ -1218,6 +1265,7 @@ function drawTopBar(c) {
     });
     UI.nh.push({ id: "tab" + tb.id, x, y, w, h, fn: () => switchTab(tb.id) });
   });
+  // 右邊的波數與狀態（戰鬥中還剩幾隻、或備戰中）。
   const wv = R.endless
     ? `無盡 第 ${R.wave} 波`
     : `第 ${R.wave} / ${WIN_WAVE} 波`;
@@ -1241,6 +1289,7 @@ function drawTopBar(c) {
       color: R.phase === "wave" ? "#ff9a9a" : "#7affb0",
     },
   );
+  // 地圖名稱、音效開關與暫停按鈕。
   txt(c, R.map.name, 1580, 37, { size: 18, color: "#e0d0ff", weight: 700 });
   button("mute", 1690, 12, 90, 46, G.settings.sfx ? "🔊" : "🔇", {
     size: 22,
@@ -1506,6 +1555,7 @@ function drawBattlePanel(c) {
     {
       style: R.autoNext ? "green" : "dark",
       size: 16,
+      // 自動開始下一波的開關；打開時備戰 4 秒後自動開戰。
       fn: () => {
         R.autoNext = !R.autoNext;
         if (R.autoNext && R.phase === "build") R.nextT = 4;
@@ -1602,6 +1652,8 @@ function drawTowerCards(c) {
 }
 // 塔的資訊卡；pinned 表示已選取，會多出操作按鈕。
 function drawTowerCard(c, tw, pinned) {
+  // 防禦塔的詳細卡片：寬 380、選中時比較高；預設放在塔的右邊，超出地圖就改放左
+  // 邊。
   const st = tw.st,
     w = 380,
     h = pinned ? 384 : 288,
@@ -1610,6 +1662,7 @@ function drawTowerCard(c, tw, pinned) {
     y = tw.y - h / 2;
   if (x + w > MX + COLS * TS - 6) x = tw.x - 44 - w;
   y = clamp(y, MY + 6, MY + ROWS * TS - h - 6);
+  // 從塔畫一條虛線連到卡片。
   c.save();
   c.globalAlpha = 0.9;
   c.strokeStyle = tc;
@@ -1621,6 +1674,7 @@ function drawTowerCard(c, tw, pinned) {
   c.stroke();
   c.setLineDash([]);
   c.globalAlpha = 1;
+  // 卡片底色（深紫漸層）與霓虹外框（六星以上是彩虹色）。
   c.shadowColor = "rgba(0,0,0,.6)";
   c.shadowBlur = 20;
   rr(c, x, y, w, h, 16);
@@ -1631,6 +1685,7 @@ function drawTowerCard(c, tw, pinned) {
   c.fill();
   c.shadowBlur = 0;
   neonRR(c, x, y, w, h, 16, { col: tw.tier >= 6 ? null : tc, w: 2, speed: 2 });
+  // 卡片左上角：塔的圖案與光暈。
   c.save();
   c.beginPath();
   rr(c, x, y, w, 96, 16);
@@ -1644,6 +1699,7 @@ function drawTowerCard(c, tw, pinned) {
     mode: st.mode,
     shots: st.shots,
   });
+  // 塔的名稱、星級與種類。
   txt(c, towerName(tw.key), x + 104, y + 26, {
     size: 22,
     align: "left",
@@ -1695,6 +1751,7 @@ function drawTowerCard(c, tw, pinned) {
     ],
     ["擊殺 / 總傷", `${tw.kills} / ${fmt(tw.dmg)}`],
   ];
+  // 能力表：經濟、輔助、光環類的塔顯示專屬數值；有戰鼓加成時多一列。
   if (["eco", "support", "aura"].includes(st.mode)) {
     rows.length = 0;
     statPairs(tw.key, tw.tier).forEach(([n, a]) => rows.push([n, a]));
@@ -1718,6 +1775,7 @@ function drawTowerCard(c, tw, pinned) {
       weight: 800,
     });
   });
+  // 下面依序列出能力數值與這個星級的技能說明。
   let px = x + 16;
   const py = y + 192;
   // 附加效果標籤。
@@ -1769,6 +1827,7 @@ function drawTowerCard(c, tw, pinned) {
   c.restore();
   // 升星、目標優先順序與出售按鈕。
   if (pinned) {
+    // 還沒到最高星級時，顯示升星按鈕與需要的金幣。
     if (tw.tier < MAX_TIER) {
       const g = ownedGroups().find(
           (q) => q.key === tw.key && q.tier === tw.tier,
@@ -1834,11 +1893,13 @@ function drawTowerCard(c, tw, pinned) {
 }
 // 「我的塔」小卡片：塔、名字、星級、數量、在地圖上的數量
 function drawSlotCard(c, key, tier, x, y, o = {}) {
+  // 拉霸機上的塔卡片：寬 CARD_W、高 CARD_H，tc 是星級顏色，els 是這座塔的元素。
   const w = CARD_W,
     h = CARD_H,
     tc = TIER_COL[tier],
     els = elemsOf(key),
     t = G.time;
+  // 選中的卡片後面加一圈光。
   c.save();
   if (o.alpha != null) c.globalAlpha = o.alpha;
   if (o.sel) {
@@ -1846,6 +1907,7 @@ function drawSlotCard(c, key, tier, x, y, o = {}) {
     glow(c, x + w / 2, y + h / 2, w * 0.85, tc, 0.4);
     c.globalCompositeOperation = "source-over";
   }
+  // 卡片底色：用元素顏色做斜向漸層（稜鏡塔是彩虹），外框是星級顏色。
   rr(c, x, y, w, h, 10);
   const g = c.createLinearGradient(x, y, x + w, y + h);
   g.addColorStop(
@@ -1879,6 +1941,7 @@ function drawSlotCard(c, key, tier, x, y, o = {}) {
     c.fillRect(x, y, w, h);
     c.restore();
   }
+  // 卡片上的塔圖案、名稱（太長就縮小字）與星星。
   drawTower(
     c,
     key,
@@ -1917,6 +1980,7 @@ function drawSlotCard(c, key, tier, x, y, o = {}) {
       weight: 800,
     });
   }
+  // 選中時外面加金框；右下角顯示備戰區與地圖上各有幾座。
   if (o.sel)
     neonRR(c, x - 2, y - 2, w + 4, h + 4, 12, { col: "#ffe080", w: 3 });
   const total = (o.nHand || 0) + (o.nMap || 0);
@@ -2006,6 +2070,7 @@ function drawHand(c) {
           : nHand
             ? "拖到別的塔上可以融合；到 ⚔ 戰場就能放到地圖上"
             : "已經全部放在地圖上了";
+      // 滑過手牌時的說明：塔名、星級，以及備戰區、地圖上各有幾座。
       UI.tip = {
         title: `${towerName(g.key)} ★${g.tier}${total >= 2 ? `　×${total}` : ""}`,
         col: TIER_COL[g.tier],
@@ -2077,6 +2142,7 @@ function drawHand(c) {
       y: bd.y - 2,
       w: 54,
       h: 28,
+      // 升星按鈕：把兩座同星級的塔合成一座更高星級的。
       fn: () => {
         doUpgrade(
           ownedGroups().find((q) => q.key === g.key && q.tier === g.tier),
@@ -2089,6 +2155,7 @@ function drawHand(c) {
       const sp = statPairs(g.key, g.tier)
         .slice(0, 3)
         .map(([nm, a2, b2]) => `${nm} ${a2} → ${b2}`);
+      // 升星按鈕的說明：要花多少金幣、合成後的變化。
       UI.tip = {
         title: `⬆ 升星 ★${g.tier} → ★${g.tier + 1}`,
         col: "#7affb0",
@@ -2158,6 +2225,7 @@ function drawHand(c) {
 }
 // 拖曳中的塔。
 function drawDragGhost(c) {
+  // 拖曳中的東西跟著滑鼠走：拖卡片時畫出塔的樣子。
   const d = G.drag,
     m = G.mouse;
   if (d.kind === "card") {
@@ -2380,11 +2448,14 @@ function modalBegin(m) {
 }
 // 更新目前的視窗；一次只顯示一個。
 function updateModals(dt) {
+  // 視窗佇列：沒有打開的視窗、而且拉霸沒在轉時，打開下一個排隊中的視窗（例如連
+  // 續的獎勵）。
   if (!R) return;
   if (!R.modal && R.modals.length && !SL.spinning) {
     R.modal = R.modals.shift();
     modalBegin(R.modal);
   }
+  // m 是目前的視窗，t 累計它打開多久（用來播動畫）。
   const m = R.modal;
   if (!m) return;
   m.t += dt;
@@ -2566,8 +2637,11 @@ function godRays(c, x, y, t, cols, n = 16, len = 1300, a = 0.16) {
 }
 // 中獎慶祝畫面。
 function drawCelebrate(c, m) {
+  // 中獎慶祝畫面：L 是等級（2 大獎、3 超級大獎、4 傳說頭獎），等級越高特效越華
+  // 麗。
   const L = m.level,
     t = m.t;
+  // 背景變暗、放出旋轉的光束與光暈。
   dim(c, Math.min(0.72, t * 3));
   const cols =
     L >= 4
@@ -2583,6 +2657,7 @@ function drawCelebrate(c, m) {
   c.save();
   c.globalCompositeOperation = "lighter";
   c.lineCap = "round";
+  // 往外放射的光線。
   const nl = L >= 4 ? 8 : L >= 3 ? 6 : 4;
   // 兩側的聚光燈。
   for (let k = 0; k < nl; k++) {
@@ -2608,7 +2683,9 @@ function drawCelebrate(c, m) {
     }
   }
   c.restore();
+  // 等級 3 以上時畫面四周加霓虹框。
   if (L >= 3) neonRR(c, 14, 14, W - 28, H - 28, 30, { w: 6, speed: 5 });
+  // 中間的大字（例如「超級大獎 MEGA WIN」）：彈跳放大的動畫，等級 4 用彩虹色。
   const T = [
     ["", ""],
     ["", ""],
@@ -2636,6 +2713,7 @@ function drawCelebrate(c, m) {
     glow: L >= 4 ? "#ffffff" : "#ffcf3a",
   });
   goldText(c, T[0], 0, 60, 80, { stroke: "#2a0a0a" });
+  // 連鎖與倍率的文字。
   if (m.combo)
     neonText(c, `連鎖 ×${m.chain || 3} COMBO！`, 0, 140, 40, "#3affff", {
       core: "#ffffff",
@@ -2645,8 +2723,10 @@ function drawCelebrate(c, m) {
       core: "#ffffff",
     });
   c.restore();
+  // 點畫面任何地方：動畫還沒播完就快轉，播完了就關閉。
   button("cel", 0, 0, W, H, "", {
     invisible: true,
+    // 點擊時：動畫還沒播到 60% 就跳到 60%，否則關閉視窗。
     fn: () => {
       if (m.t < m.dur * 0.6) m.t = m.dur * 0.6;
       else closeModal();
@@ -2740,11 +2820,13 @@ function drawFever(c, m) {
 }
 // --- 轉盤 ---
 function drawWheel(c, m) {
+  // 首領轉盤：中心位置、半徑，分成 12 格。
   const t = G.time,
     cx = W / 2,
     cy = 540,
     Rr = 330,
     seg = TAU / 12;
+  // 背景變暗、光束、標題與轉盤後面的光暈。
   dim(c, 0.75);
   godRays(c, cx, cy, t, ["#ff4ad8", "#ffcf3a", "#3ad8ff"], 18, 1200, 0.1);
   goldText(c, "首領轉盤", cx, 90, 64, { glow: "#ff4ad8" });
@@ -2752,6 +2834,7 @@ function drawWheel(c, m) {
   c.globalCompositeOperation = "lighter";
   glow(c, cx, cy, Rr * 1.5, "#ff4ad8", 0.35);
   c.restore();
+  // 轉盤本體：依目前角度旋轉，每一格畫上獎勵。
   c.save();
   c.translate(cx, cy);
   c.rotate(m.ang);
@@ -2795,6 +2878,7 @@ function drawWheel(c, m) {
     c.restore();
   });
   c.restore();
+  // 轉盤外圈的金邊。
   c.beginPath();
   c.arc(cx, cy, Rr + 14, 0, TAU);
   c.lineWidth = 26;
@@ -2821,6 +2905,7 @@ function drawWheel(c, m) {
       c.globalCompositeOperation = "source-over";
     }
   }
+  // 中間的「命運」圓鈕。
   c.beginPath();
   c.arc(cx, cy, 52, 0, TAU);
   const hg = c.createRadialGradient(cx - 14, cy - 14, 4, cx, cy, 52);
@@ -2832,6 +2917,7 @@ function drawWheel(c, m) {
   c.strokeStyle = "#6a3a00";
   c.stroke();
   txt(c, "命運", cx, cy, { size: 26, weight: 900, color: "#6a2a00" });
+  // 上方的紅色指針。
   c.save();
   c.translate(cx, cy - Rr - 30);
   poly(c, [
@@ -2845,6 +2931,7 @@ function drawWheel(c, m) {
   c.strokeStyle = "#fff";
   c.stroke();
   c.restore();
+  // 「轉動」按鈕（還沒轉、也還沒轉完時才顯示）。
   if (!m.spinning && !m.done)
     button("wspin", cx - 160, 950, 320, 80, "轉動！", {
       style: "gold",
@@ -2865,6 +2952,7 @@ function drawWheel(c, m) {
       button("wagain", cx - 160, 970, 320, 76, "再轉一次！", {
         style: "red",
         size: 32,
+        // 再轉一次：重設狀態後再轉。
         fn: () => {
           m.done = false;
           m.again = false;
@@ -2983,12 +3071,14 @@ function setupChest(m) {
 }
 // 寶箱：三選一。
 function drawChest(c, m) {
+  // 命運寶箱：沒有牌可以選時直接關閉。
   if (m.empty) {
     closeModal();
     return;
   }
   const t = G.time,
     NC = m.cards.length;
+  // 背景變暗、光束、標題與提示文字。
   dim(c, 0.78);
   godRays(c, W / 2, 520, t, ["#c868ff", "#ffcf3a"], 14, 1200, 0.08);
   goldText(c, m.title || "命運寶箱", W / 2, 110, 72, { glow: "#c868ff" });
@@ -2999,6 +3089,7 @@ function drawChest(c, m) {
     185,
     { size: 28, color: "#f0e0ff", weight: 700 },
   );
+  // 選了一張牌之後：那張牌先翻面，接著其他牌也翻開，讓玩家看到原本可以拿到什麼。
   if (m.picked >= 0) {
     m.pt += G.dt;
     m.flip[m.picked] = Math.min(1, m.flip[m.picked] + G.dt * 3);
@@ -3102,6 +3193,7 @@ function drawChest(c, m) {
     button("take", W / 2 - 340, 920, 320, 80, "收下遺物", {
       style: "green",
       size: 32,
+      // 拿走選中的遺物並關閉視窗。
       fn: () => {
         addRelic(m.cards[m.picked].id);
         AU.play("gem");
@@ -3112,6 +3204,7 @@ function drawChest(c, m) {
       style: R.gems >= 5 ? "purple" : "dark",
       size: 28,
       disabled: R.gems < 5,
+      // 花 5 顆寶石重新洗一次牌。
       fn: () => {
         R.gems -= 5;
         setupChest(m);
@@ -3143,6 +3236,7 @@ function pickChest(m, i) {
 }
 // --- 說明 / 賠率 / 暫停 / 結束 ---
 function drawHelpBox(c, onClose) {
+  // 遊戲說明視窗：每一列左邊是標題、右邊是說明。
   dim(c, 0.8);
   panel(c, 260, 70, 1400, 940, { r: 24, border: "#ffcf3a", lw: 3 });
   goldText(c, "遊戲說明", W / 2, 140, 60);
@@ -3195,6 +3289,7 @@ function drawHelpBox(c, onClose) {
       }),
     );
   });
+  // 「開始冒險」按鈕：順便啟動音效（瀏覽器規定要使用者按過按鈕才能播放聲音）。
   button("helpok", W / 2 - 160, 960 - 30, 320, 70, "開始冒險！", {
     style: "gold",
     size: 30,
@@ -3206,6 +3301,7 @@ function drawHelpBox(c, onClose) {
 }
 // 賠率表。
 function drawPaytable(c) {
+  // 賠率表視窗：每一列是一種連線組合、名稱與獎勵說明。
   dim(c, 0.82);
   panel(c, 300, 50, 1320, 980, { r: 24, border: "#ffcf3a", lw: 3 });
   neonRR(c, 300, 50, 1320, 980, 24, { w: 3 });
@@ -3259,6 +3355,7 @@ function drawPaytable(c) {
       }),
     );
   });
+  // 最下面說明 5 條連線的位置。
   txt(
     c,
     "5 條連線：上、中、下三橫線與兩條斜線。沒中獎時有機率觸發「幸運微調」幫你推一格！",
@@ -3274,10 +3371,12 @@ function drawPaytable(c) {
 }
 // 暫停視窗。
 function drawPause(c) {
+  // 暫停視窗：背景變暗，中間一個面板。
   dim(c, 0.75);
   panel(c, W / 2 - 300, 220, 600, 640, { r: 24, border: "#ffcf3a", lw: 3 });
   goldText(c, "暫停", W / 2, 300, 64);
   const bx = W / 2 - 220;
+  // 「繼續遊戲」與音效、音樂、傷害數字三個開關。
   button("resume", bx, 370, 440, 76, "繼續遊戲", {
     style: "gold",
     size: 30,
@@ -3328,6 +3427,7 @@ function drawPause(c) {
       },
     },
   );
+  // 「放棄並結算」：結束這一局（算失敗）。
   button("quit", bx, 730, 440, 70, "放棄並結算", {
     style: "red",
     size: 26,
@@ -3358,6 +3458,7 @@ function drawGameOver(c, m) {
     button("goend", W / 2 - 180, 640, 360, 84, "查看結算", {
       style: "gold",
       size: 32,
+      // 遊戲失敗時的「結算」按鈕。
       fn: () => {
         R.modal = null;
         endRun(false);
@@ -3397,6 +3498,7 @@ function drawVictory(c, m) {
     button("endless", W / 2 - 380, 680, 360, 84, "挑戰無盡模式", {
       style: "purple",
       size: 30,
+      // 打贏後選「繼續挑戰」：進入無盡模式，敵人會越來越強。
       fn: () => {
         R.endless = true;
         closeModal();
@@ -3406,6 +3508,7 @@ function drawVictory(c, m) {
     button("vend", W / 2 + 20, 680, 360, 84, "凱旋結算", {
       style: "gold",
       size: 30,
+      // 打贏後選「結算」。
       fn: () => {
         R.modal = null;
         endRun(true);

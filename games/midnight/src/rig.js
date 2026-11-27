@@ -501,6 +501,8 @@ void main() {
 
     // 建立著色器、貼圖與所有圖的網格。
     setup(atlas) {
+      // 準備 WebGL：把頂點與像素兩段著色器（在顯示卡上執行的小程式）編譯並連結
+      // 起來，失敗就丟出錯誤。
       const { gl } = this;
       const program = gl.createProgram();
       gl.attachShader(program, compile(gl, gl.VERTEX_SHADER, VERTEX));
@@ -508,6 +510,7 @@ void main() {
       gl.linkProgram(program);
       if (!gl.getProgramParameter(program, gl.LINK_STATUS))
         throw new Error(gl.getProgramInfoLog(program));
+      // 設定畫圖時要用的參數；at(名稱) 找出著色器裡某個參數的位置。
       gl.useProgram(program);
       const at = (name) => gl.getUniformLocation(program, name);
       // 著色器裡的變數位置。
@@ -521,10 +524,12 @@ void main() {
         face: at("uFace"),
       };
       gl.uniform1i(at("uTex"), 0);
+      // 開啟半透明混色（角色邊緣才會平滑）。
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.clearColor(0, 0, 0, 0);
 
+      // 把角色圖集畫到一個暫時的畫布，讀出像素，再上傳到顯示卡當作貼圖。
       const { width, height } = atlas;
       const source = document.createElement("canvas");
       source.width = width;
@@ -543,6 +548,7 @@ void main() {
         gl.UNSIGNED_BYTE,
         source,
       );
+      // 貼圖縮小時用多層次的平滑取樣，邊緣不會鋸齒；超出範圍不重複。
       gl.generateMipmap(gl.TEXTURE_2D);
       const set = (key, value) => gl.texParameteri(gl.TEXTURE_2D, key, value);
       set(gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
@@ -550,6 +556,7 @@ void main() {
       set(gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       set(gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
+      // 每位鬥士各自的骨架資料，與骨頭位置的暫存陣列（每根骨頭 6 個數字）。
       this.fighters = new Map();
       // 每位鬥士的每一張圖。
       for (const profile of game.FIGHTERS) {

@@ -745,6 +745,7 @@
       icon: "target",
       description: "自動咬擊範圍 +20%，咬擊間隔縮短 15%。",
       max: 3,
+      // 效果：咬擊範圍變大 20%，咬擊間隔縮短 15%（*= 是「乘上」的意思）。
       apply: (g) => {
         g.biteRange *= 1.2;
         g.biteRate *= 0.85;
@@ -764,6 +765,7 @@
       icon: "leaf",
       description: "移動速度 +10%，衝刺恢復更快。",
       max: 4,
+      // 效果：移動速度 +10%，衝刺能量回得更快。
       apply: (g) => {
         g.speed *= 1.1;
         g.dashRegen += 4;
@@ -775,6 +777,7 @@
       icon: "shield",
       description: "生命上限 +25，立即恢復 40 點生命。",
       max: 5,
+      // 效果：最大生命 +25，並立刻回復 40 點（不超過上限）。
       apply: (g) => {
         g.maxHealth += 25;
         g.health = Math.min(g.maxHealth, g.health + 40);
@@ -818,6 +821,7 @@
       icon: "shield",
       description: "立即恢復全部生命，並獲得 5 枚晶體。",
       max: Infinity,
+      // 效果：生命補滿，再加 5 個晶體。
       apply: (g) => {
         g.health = g.maxHealth;
         g.crystals += 5;
@@ -953,8 +957,11 @@
   }
   // 檢查並修正讀到的存檔，缺漏或不合理的值改回預設。
   function sanitizeProfile(raw) {
+    // 先建立一份全新的預設資料；讀到的存檔不是物件（壞掉或空的）就直接用預設值。
     const p = defaultProfile();
     if (!raw || typeof raw !== "object") return p;
+    // 下面逐項把存檔裡的數字「洗乾淨」：不是數字、是負數或太大都會被修正到合理
+    // 範圍（clamp），避免被改壞的存檔讓遊戲出錯。
     p.guideVersion = clamp(
       Math.floor(Number(raw.guideVersion) || 0),
       0,
@@ -963,12 +970,15 @@
     p.tutorialCompleted = raw.tutorialCompleted === true;
     for (const key of ["crystals", "runs", "best", "totalKills", "wins"])
       p[key] = clamp(Math.floor(Number(raw[key]) || 0), 0, 1e9);
+    // 永久升級每項 0～5 級。
     for (const key of Object.keys(p.upgrades))
       p.upgrades[key] = clamp(
         Math.floor(Number(raw.upgrades?.[key]) || 0),
         0,
         5,
       );
+    // 已達成的成就、已解鎖的地圖（0～2）與角色（0～3）：只保留遊戲裡真的存在的，
+    // 並去掉重複（new Set）。
     p.achievements = [
       ...new Set(
         Array.isArray(raw.achievements)
@@ -1032,6 +1042,7 @@
             ? "keyboard"
             : "auto";
     }
+    // 上次選的角色、地圖、模式與難度；不合理就用預設值。
     p.selected = clamp(Math.floor(Number(raw.selected) || 0), 0, 3);
     p.world = clamp(Math.floor(Number(raw.world) || 0), 0, 2);
     p.mode = MODES[raw.mode] ? raw.mode : "survival";
@@ -1100,11 +1111,14 @@
       training = false,
       difficulty = "normal",
     } = {}) {
+      // 練習模式固定用「禪模式＋簡單難度」（沒有敵人、不會受傷）。
       this.training = training;
       if (training) {
         mode = "zen";
         difficulty = "easy";
       }
+      // 難度、隨機數產生器（同一個 seed 會產生同一組隨機結果）、角色、地圖與模
+      // 式。
       this.difficulty = DIFFICULTIES[difficulty] ? difficulty : "normal";
       this.diff = DIFFICULTIES[this.difficulty];
       this.random = seeded(seed);
@@ -1116,6 +1130,7 @@
       this.compact = mode === "arena" || mode === "boss";
       // 正式地圖長寬都是以前的兩倍（面積四倍）；新手練習維持小地圖。
       this.bound = training ? 42 : this.compact ? 84 : 126;
+      // 本局的統計：時間、分數、晶體、擊退數、絞殺數、吃了多少、等級與經驗。
       this.time = 0;
       this.score = 0;
       this.crystals = 0;
@@ -1126,6 +1141,7 @@
       this.level = 1;
       this.xp = 0;
       this.nextXP = 25;
+      // 角色能力：生命（加上永久升級）、速度、吸取範圍、獎勵加成、傷害、回血。
       this.maxHealth = this.character.health + (upgrades.vitality || 0) * 10;
       this.health = this.maxHealth;
       this.speed = this.character.speed;
@@ -1133,28 +1149,35 @@
       this.bonus = 1 + (upgrades.fortune || 0) * 0.05;
       this.damage = character === 1 ? 1.2 : 1;
       this.regen = 0;
+      // 環繞光球、脈衝、咬擊範圍與間隔、絞殺威力。
       this.orbitCount = 1;
       this.pulseLevel = 0;
       this.pulseTimer = 4;
       this.biteRange = COMBAT.biteRange;
       this.biteRate = COMBAT.biteCooldown;
       this.coilPower = 1;
+      // 技能冷卻、技能持續、凍結、開場 2 秒無敵。
       this.cooldown = 0;
       this.cooldownMax = this.character.cooldown;
       this.activeSkill = 0;
       this.frozen = 0;
       this.invulnerable = 2;
+      // 衝刺能量（滿 100）、回復速度與狀態。
       this.dash = 100;
       this.dashRegen = 24;
       this.dashing = false;
       this.dashLocked = false;
+      // 前進方向與速度。
       this.angle = -Math.PI / 2;
       this.targetAngle = this.angle;
       this.currentSpeed = this.speed;
+      // 蛇的身體：14 節，從頭往後排成一直線；SEG 是每節的間距。
       this.snake = Array.from({ length: 14 }, (_, i) => ({ x: 0, z: i * SEG }));
       this.maxLength = 14;
       this.targetLength = 14;
       this.growth = 0;
+      // 場上的東西：食物、敵人、子彈、粒子、光圈、事件、障礙物、裝飾、區域、跳
+      // 躍板、傳送門、寶箱、地面花紋與危險區。
       this.food = [];
       this.enemies = [];
       this.projectiles = [];
@@ -1169,12 +1192,14 @@
       this.caches = [];
       this.patches = [];
       this.hazards = [];
+      // 能力道具的剩餘時間：加速、磁吸、狂暴、護盾。
       this.powers = { speed: 0, magnet: 0, fury: 0, shield: 0 };
       this.boost = 0;
       this.portalCooldown = 0;
       this.coilCooldown = 0;
       this.zone = null;
       this.inSpring = false;
+      // 升級選項、暫停與結束狀態、首領是否出現或被打倒。
       this.upgrades = {};
       this.choices = [];
       this.needsUpgrade = false;
@@ -1183,10 +1208,12 @@
       this.won = false;
       this.bossSpawned = false;
       this.bossKilled = false;
+      // 各種計時器：多久生一次敵人、食物、道具與寶箱。
       this.spawnTimer = 4;
       this.foodTimer = 0;
       this.powerTimer = 8;
       this.cacheTimer = 12;
+      // 連擊數、波數、環繞角度、最後一次受傷的原因與結束原因。
       this.combo = 0;
       this.comboTimer = 0;
       this.maxCombo = 0;
@@ -1196,6 +1223,7 @@
       this.lastDamage = null;
       this.endReason = null;
       this.lastNotice = {};
+      // 咬擊冷卻、這一波還剩幾隻、波與波之間的整備時間、首領關卡的進度。
       this.biteCooldown = 0;
       this.biteVisual = 0;
       this.waveRemaining = this.diff.waves[0];
@@ -1206,16 +1234,19 @@
       // 食物刻意放得少一點，讓每次撿到都有感覺。
       const area = (this.bound * 2) ** 2,
         density = mode === "blitz" ? 0.019 : mode === "zen" ? 0.014 : 0.012;
+      // 地圖上食物的目標數量（依面積與密度），以及最多同時幾份。
       this.foodTarget = training ? 0 : Math.round(area * density);
       this.foodLimit =
         this.foodTarget + Math.round(this.foodTarget * 0.15) + 60;
       // 道具會出現在玩家附近，所以上限看附近密度，不看地圖大小。
       this.powerCap = training ? 0 : this.compact ? 3 : 5;
+      // 寶箱數量；練習模式沒有寶箱，速度也放慢，然後直接結束設定。
       this.cacheTarget = training ? 0 : this.compact ? 10 : 24;
       if (training) {
         this.speed = 5;
         return;
       }
+      // 蓋出地圖，放滿食物、寶箱與能力道具。
       this.buildMap();
       while (this.food.length < this.foodTarget) this.spawnAmbientFood();
       // 開場在前方放一小排食物，馬上學會移動與撿取。
@@ -1230,6 +1261,7 @@
       }
       for (let i = 0; i < this.cacheTarget; i++) this.spawnCache();
       for (let i = 0; i < Math.min(2, this.powerCap); i++) this.spawnPower();
+      // 競技場模式馬上開始第一波；首領模式一開始就出現首領。
       if (mode === "arena") this.spawnTimer = 0.3;
       if (mode === "boss") {
         const e = this.spawnEnemy(true, 0);
@@ -1748,16 +1780,19 @@
     }
     // 擊敗敵人：計分、經驗、掉落物與首領獎勵。
     kill(e, source = "passive") {
+      // 已經被打倒的不再處理；計入擊退數（用身體纏繞打倒的另外計算）。
       if (e.dead) return;
       e.dead = true;
       this.kills++;
       if (source === "coil") this.coilKills++;
+      // 加分：首領 1500、菁英 200、一般 80，再乘上獎勵、難度與連擊倍率。
       this.score += Math.round(
         (e.boss ? 1500 : e.elite ? 200 : 80) *
           this.bonus *
           this.diff.score *
           this.comboMultiplier(),
       );
+      // 加經驗，並在敵人位置放出碎片與光圈。
       this.xp += (e.boss ? 30 : e.elite ? 10 : 4) * this.bonus;
       this.burst(
         e.x,
@@ -1767,6 +1802,7 @@
         e.boss ? 9 : 6,
       );
       this.ring(e.x, e.z, e.boss ? 8 : 2.6, "#f6cf85");
+      // 練習用的假人只發出「擊退」事件，不掉東西。
       if (e.dummy) {
         this.emit("kill", {
           x: e.x,
@@ -1779,6 +1815,7 @@
       }
       // 首領：掉一圈食物，清掉它留下的攻擊。
       if (e.boss) {
+        // 首領：掉一圈 16 份食物與晶體。
         for (let i = 0; i < 16; i++) {
           const a = (i / 16) * TAU;
           this.spawnFood(
@@ -1814,6 +1851,7 @@
           }
           this.emit("split", { x: e.x, z: e.z, count: n });
         }
+        // 一般敵人掉 1～2 份食物；菁英一定掉晶體或能量；有小機率掉能力道具。
         for (
           let i = 0;
           i < (e.kind === "swarm" || e.kind === "mini" ? 1 : 2);
@@ -1837,6 +1875,7 @@
         )
           this.spawnPower({ x: e.x, z: e.z });
       }
+      // 發出「擊退」事件，畫面那邊會播放音效與特效。
       this.emit("kill", {
         x: e.x,
         z: e.z,
@@ -2013,7 +2052,9 @@
     }
     // 生一隻敵人或首領，依難度與波數調整數值。
     spawnEnemy(boss = false, variant = 0, kind = null, at = null) {
+      // 場上最多 45 隻敵人。
       if (this.enemies.filter((e) => !e.dead).length >= 45) return null;
+      // h 是蛇頭；在地圖邊緣附近、離蛇頭夠遠的地方找出生位置。
       const h = this.snake[0],
         edge = this.bound - 3,
         D = this.diff;
@@ -2032,6 +2073,7 @@
           z = clamp(h.z + Math.sin(inward) * 18, -edge, edge);
         }
       }
+      // 每隻敵人共用的基本資料：位置、方向、計時器，以及 9 節身體（蛇形敵人用）。
       const base = {
         x,
         z,
@@ -2048,6 +2090,7 @@
       let e;
       // 首領的數值。
       if (boss) {
+        // 首領：依種類決定生命（無盡模式越後面越強）。
         const def = BOSSES[variant % 3],
           hp =
             def.hp *
@@ -2079,11 +2122,13 @@
         };
       } else {
         kind = kind || this.pickKind();
+        // 一般敵人：依種類決定能力；第 2 波以後有機會變成菁英（比較大、比較強）。
         const t = ENEMIES[kind] || ENEMIES.chaser,
           elite =
             !at && kind !== "mini" && this.wave >= 2 && this.random() < D.elite,
           waveScale = 1 + (this.wave - 1) * 0.12;
         const hp = t.hp * waveScale * D.hp * (elite ? 2.2 : 1);
+        // 一般敵人的完整資料：種類、是否菁英、大小、生命、速度、攻擊等。
         e = {
           ...base,
           kind,
@@ -2111,6 +2156,7 @@
           state: "",
         };
       }
+      // 放進場上的敵人清單。
       this.enemies.push(e);
       return e;
     }
@@ -2157,12 +2203,14 @@
     }
     // 各模式的進度：生怪、換波與勝利條件。
     updateMode(dt) {
+      // 禪模式沒有敵人；整備時間中也不生敵人。
       if (this.mode === "zen") return;
       const living = this.enemies.filter((e) => !e.dead);
       if (this.stageGap > 0) {
         this.stageGap = Math.max(0, this.stageGap - dt);
         return;
       }
+      // 競技場模式：一波打完才出下一波，打完第 4 波就勝利。
       this.spawnTimer -= dt;
       // 蟲群對戰：四波全部清完才獲勝。
       if (this.mode === "arena") {
@@ -2186,6 +2234,7 @@
           this.spawnTimer = 1.1 * this.diff.spawn;
         }
       } else if (this.mode === "boss") {
+        // 首領模式：打倒一隻後出下一隻，三隻都打倒就勝利。
         if (!living.some((e) => e.boss)) {
           if (this.bossesDefeated === 3) {
             this.end(true, "boss-cleared");
@@ -2202,6 +2251,7 @@
         }
       } else {
         const wave = Math.floor(this.time / 30) + 1;
+        // 生存與無盡模式：依時間增加波數，生怪速度越來越快。
         if (wave > this.wave) {
           this.wave = wave;
           this.emit("wave", { wave, kinds: this.newKinds(wave) });
@@ -2215,6 +2265,7 @@
           this.spawnPack();
           if (this.wave >= (this.diff.tier >= 3 ? 2 : 3)) this.spawnPack();
         }
+        // 生存模式 120 秒時出現首領；無盡模式每隔一段時間出現首領。
         if (this.mode === "survival" && this.time >= 120 && !this.bossSpawned) {
           this.bossSpawned = true;
           const e = this.spawnEnemy(true);
@@ -2276,19 +2327,23 @@
     }
     // 一隻普通敵人的行動。
     updateEnemy(e, dt) {
+      // h 是蛇頭、d 是敵人與蛇頭的距離；敵人一律面向蛇頭。
       const h = this.snake[0],
         d = distance(h, e);
       e.angle = Math.atan2(h.z - e.z, h.x - e.x);
+      // 假人、被凍結、剛出生 0.8 秒內的敵人不行動；首領另外處理。
       if (e.dummy || this.frozen > 0 || e.age <= 0.8) return;
       if (e.boss) {
         this.updateBoss(e, dt, h, d);
         return;
       }
+      // 破盾計時與暈眩：暈眩中不行動。
       e.shieldBreak = Math.max(0, e.shieldBreak - dt);
       if (e.stunned > 0) {
         e.stunned -= dt;
         return;
       }
+      // 這一步要走多遠（踩在減速區裡會變慢）。
       const D = this.diff,
         step =
           e.speed * dt * (this.world !== 1 && this.slowZoneAt(e) ? 0.55 : 1);
@@ -2308,6 +2363,7 @@
         case "ranged":
           keep(6, 10);
           e.shot -= dt * D.rate;
+          // 射手：每 2.8 秒射一次（高難度一次三發）。
           if (e.shot <= 0) {
             e.shot = 2.8;
             this.shoot(e, D.tier >= 3 ? 3 : 1, 0.22, false, {
@@ -2323,6 +2379,7 @@
           this.updateCharger(e, dt, d, move);
           break;
         case "bomber":
+          // 自爆蟲：靠近蛇頭後開始倒數，時間到就爆炸。
           if (e.fuse > 0) {
             e.fuse -= dt;
             if (e.fuse <= 0) this.explodeBomber(e);
@@ -2337,12 +2394,15 @@
         case "healer":
           keep(9, 13);
           e.special -= dt * D.rate;
+          // 治療者：每 3.2 秒替附近的同伴回血。
           if (e.special <= 0) {
             e.special = 3.2;
             this.healAllies(e);
           }
           break;
         case "sniper":
+          // 狙擊手：先瞄準（地上出現瞄準線），快發射前鎖定方向，時間到就射出高
+          // 速子彈。
           if (e.aim > 0) {
             e.aim -= dt;
             if (e.aim > 0.3 * D.warn) e.aimAngle = e.angle;
@@ -2371,6 +2431,7 @@
         default:
           move(e.angle);
       }
+      // 敵人不能走出地圖邊界。
       e.x = clamp(e.x, -this.bound + 2, this.bound - 2);
       e.z = clamp(e.z, -this.bound + 2, this.bound - 2);
     }
@@ -2547,6 +2608,8 @@
     }
     // 首領開始一個招式；warn 是預警時間的倍率。
     startCast(e, h, forced) {
+      // 這隻首領能用的招式清單；forced 是指定要出的招式（沒有就輪流出，避免連續
+      // 兩次同一招）。
       const list = this.bossMoves(e);
       let move = forced;
       if (!move) {
@@ -2558,7 +2621,10 @@
         }
       }
       e.lastMove = move;
+      // 下一次出招的間隔：階段越後面越短。
       e.special = [4.2, 3.4, 2.7][e.phase - 1];
+      // p 是首領目前階段，warn 是預警時間倍率，n([…]) 依階段與難度決定次數，
+      // at() 把位置限制在地圖裡。
       const p = e.phase,
         D = this.diff,
         warn = D.warn,
@@ -2566,6 +2632,7 @@
         R = this.random,
         lim = this.bound - 2;
       const at = (x, z) => ({ x: clamp(x, -lim, lim), z: clamp(z, -lim, lim) });
+      // 通知畫面顯示招式名稱。
       this.emit("boss-cast", {
         name: BOSS_MOVES[move].name,
         move,
@@ -2573,6 +2640,8 @@
         z: e.z,
         color: e.color,
       });
+      // 依招式種類放出攻擊：地震（一圈一圈的圓形範圍）、熔岩環、衝撞、彈幕、雷
+      // 射等。
       switch (move) {
         // 震波：在玩家前方連續落下。
         case "quake": {
@@ -2644,6 +2713,7 @@
           break;
         }
         case "magma":
+          // 熔岩環：原地連續放出 1～2 圈往外擴散的火環。
           e.cast = {
             move,
             t: 0,
@@ -2656,6 +2726,7 @@
           };
           break;
         case "pulse":
+          // 脈衝：邊移動邊放出 1～3 圈光環。
           e.cast = {
             move,
             t: 0,
@@ -2697,6 +2768,7 @@
           break;
         }
         case "spiral":
+          // 螺旋彈幕：原地旋轉，朝 2～3 個方向持續發射。
           e.cast = {
             move,
             t: 0,
@@ -2799,8 +2871,10 @@
     }
     // 持續中的招式每一步要做的事。
     continueCast(e, dt, rate) {
+      // c 是首領正在進行中的招式；t 累計已經過了多久。
       const c = e.cast;
       c.t = (c.t || 0) + dt;
+      // 熔岩環與脈衝：每隔一段時間（gap）放出一圈，直到次數用完。
       if (c.move === "magma" || c.move === "pulse") {
         if (c.count < c.max && c.t >= c.count * c.gap) {
           this.hazards.push({
@@ -2822,6 +2896,7 @@
         if (c.count >= c.max && c.t >= c.max * c.gap) e.cast = null;
       } else if (c.move === "spiral") {
         c.emit -= dt * rate;
+        // 螺旋彈幕：每 0.09 秒朝每個方向各射一發，並慢慢旋轉。
         while (c.emit <= 0) {
           c.emit += 0.09;
           e.spin += 0.33;
@@ -2836,6 +2911,7 @@
       } else if (c.move === "laser") {
         if (c.t >= c.dur) e.cast = null;
       } else if (c.move === "charge") {
+        // 衝撞：先蓄力（windup），然後朝鎖定的方向高速衝刺（charge）。
         if (e.windup > 0) {
           e.windup -= dt;
           if (e.windup <= 0) {
@@ -2860,6 +2936,7 @@
           }
           return;
         }
+        // 連續衝撞之間的短暫停頓。
         if (c.pause > 0) {
           c.pause -= dt;
           if (c.pause <= 0) this.beginCharge(e);
@@ -2962,11 +3039,13 @@
     }
     // 危險區域：圓形與直線預警後爆一次；光束與毒池會持續；圓環往外擴。
     updateHazards(dt, h) {
+      // 逐一處理場上的危險區：damage 是傷害、cause 是受傷原因（顯示在畫面上）。
       for (const hz of this.hazards) {
         const type = hz.type || "circle",
           damage = hz.damage ?? DAMAGE.shockwave.amount,
           cause = hz.cause || "shockwave";
         if (this.frozen > 0) continue;
+        // 擴散環：半徑越來越大，碰到蛇頭就受傷（衝刺中可以穿過去）。
         if (type === "ring") {
           hz.radius += hz.speed * dt;
           // 衝刺可以跳過擴散的圓環。
@@ -2981,10 +3060,12 @@
           if (hz.radius >= hz.maxR) hz.done = true;
           continue;
         }
+        // 雷射跟著首領移動。
         if (type === "beam" && hz.owner && !hz.owner.dead) {
           hz.x = hz.owner.x;
           hz.z = hz.owner.z;
         }
+        // 預警倒數：時間到才真的生效。圓形範圍生效時對範圍內的蛇頭造成傷害。
         if (hz.timer > 0) {
           hz.timer -= dt;
           if (hz.timer > 0) continue;
@@ -3020,6 +3101,7 @@
           } else this.emit("erupt", { cause, x: hz.x, z: hz.z });
           continue;
         }
+        // 掃射雷射：在持續時間內從起始角度轉到結束角度。
         if (type === "beam") {
           hz.active -= dt;
           hz.angle =
@@ -3036,6 +3118,7 @@
           if (hz.active <= 0) hz.done = true;
         }
       }
+      // 移除已經結束的危險區。
       this.hazards = this.hazards.filter((x) => !x.done);
     }
     // 一步更新：計時 → 轉向移動 → 地形 → 吃東西 → 技能 → 敵人 → 子彈。

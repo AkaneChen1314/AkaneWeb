@@ -1655,6 +1655,7 @@ function genWorld(scene, seed) {
   grp0.add(im);
   // 墜毀的巨型機甲殘骸（地標）
   for (const w of WORLD.wrecks) {
+    // 廢墟裡的機體殘骸：隨機選一種機體與武器，塗成廢墟的顏色，放大 1.25 倍。
     const rig = makeMech(
       pick(CHASSIS),
       WRECK_PAINT,

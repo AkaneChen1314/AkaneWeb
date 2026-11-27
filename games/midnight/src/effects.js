@@ -243,6 +243,8 @@
 
     // ---------- 遊戲事件 ----------
     cue(event) {
+      // f 是發生這件事的鬥士；先交給招式特效（fx.js）處理各鬥士自己的演出，下面
+      // 再處理共用的效果。
       const f = event.fighter;
       this.skills.cue(event);
       switch (event.type) {
@@ -284,6 +286,7 @@
         // 大招開場。
         case "super-flash": {
           const p = this.palette(f.profile.id);
+          // 記下大招開場的閃光：哪一位、顏色，持續 0.62 秒。
           this.superFlash = {
             index: f.index,
             color: f.profile.color,
@@ -413,6 +416,7 @@
           break;
         }
         case "dash":
+          // 衝刺：腳下揚起塵土（往前衝時比較多）。
           this.burst(f.x, G - 6, event.forward ? 12 : 8, {
             colors: ["#c9d3e6", "#8b93a8"],
             kind: "smoke",
@@ -503,6 +507,7 @@
           break;
         }
         case "dodge":
+          // 閃避：腳下的塵土。
           this.burst(f.x, G - 6, 10, {
             colors: ["#c9d3e6", "#8b93a8"],
             kind: "smoke",
@@ -516,6 +521,7 @@
           });
           break;
         case "land":
+          // 落地：揚起塵土（重落地比較多）。
           this.burst(f.x, G - 4, event.heavy ? 20 : 8, {
             colors: ["#c9d3e6", "#8b93a8"],
             kind: "smoke",
@@ -530,6 +536,7 @@
           if (event.heavy) this.wave(f.x, G - 4, 200, "#e6e9f3", 0.45, 0.18, 5);
           break;
         case "jump":
+          // 起跳：腳下一點塵土。
           this.burst(f.x, G - 4, 6, {
             colors: ["#c9d3e6"],
             kind: "smoke",
@@ -588,6 +595,7 @@
           break;
         }
         case "round-end":
+          // 回合結束：K.O. 時從被打倒的一方放出白色衝擊波。
           if (event.reason === "ko" && event.loser) {
             const l = event.loser;
             this.wave(l.x, G - 120, 420, WHITE, 0.7, 1, 10, 0.05);
@@ -647,6 +655,8 @@
 
     // 揮擊：拳腳路線的光帶與屬性附加效果。
     swing({ fighter: f, strike, low, high, direction, action, path }) {
+      // 這一擊的特效配色：輕攻用白色，有專屬特效的招式用該鬥士的配色。y 是刀光
+      // 的高度（手腳經過的高度中間）。
       const id = EFFECT_ID[strike.effect] ?? null;
       const p = id ? this.palette(id) : null;
       const color = action === "light" ? WHITE : p ? p.main : f.profile.color;
@@ -654,6 +664,8 @@
       // 往四周的震波。
       if (strike.radial) {
         const pal = this.palette("lion");
+        // 依招式附加的特效：震波是一圈一圈往外的波紋，火焰招式噴出火星，大地招
+        // 式彈起碎石。
         for (let i = 0; i < 3; i += 1)
           this.wave(
             f.x,
@@ -684,6 +696,7 @@
         });
         return;
       }
+      // 刀光：沿著手腳真正經過的軌跡畫出一道弧線，重攻比較粗、留得比較久。
       const big = action !== "light";
       this.slashes.push({
         points: this.slashPoints(f, strike, path, y, direction),
@@ -694,6 +707,7 @@
         thick: (big ? 34 : 20) * (path?.foot ? 1.2 : 1),
         double: strike.effect === "shade",
       });
+      // 雷系招式加一道閃電，大地招式在落點揚起碎石。
       if (strike.effect === "bolt") {
         const reach = strike.range * 0.9;
         this.bolt(
@@ -958,6 +972,8 @@
 
     // 持續冒出來的粒子：施招的氣、飛行道具的尾巴、集氣滿的光點
     ambient(dt, fighters, match) {
+      // 「減少動態」設定下不播放環境特效；chance(rate) 依每秒的頻率決定這一幀要
+      // 不要產生一顆粒子。
       if (this.calm) return;
       const chance = (rate) => Math.random() < rate * dt;
       // 蓄力中的鬥士。
@@ -967,6 +983,8 @@
         const p = this.palette(cast.id);
         const strength = Math.sin((cast.age / cast.life) * Math.PI);
         const rate = (cast.ultimate ? 90 : 45) * strength;
+        // 蓄力中的鬥士身邊冒出各自屬性的粒子：雷隼放電、霜弦飄雪、赤獅噴火星、
+        // 影燕冒黑煙。
         if (cast.id === "thunder" && chance(rate * 0.25)) {
           const a = rand(0, TAU);
           const cy = G - f.y - 120;
@@ -1040,6 +1058,7 @@
       for (const shot of match.projectiles) {
         const y = G - shot.y;
         const back = shot.x - shot.direction * shot.radius;
+        // 飛行道具後面拖著尾跡：冰彈飄雪花，岩石彈掉碎石，火球噴火星。
         if (shot.shape === "ice") {
           if (chance(70))
             this.emit(

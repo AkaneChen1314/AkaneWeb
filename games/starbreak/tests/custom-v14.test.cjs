@@ -59,6 +59,8 @@ test("shield variants, body durability, rate, density and guard pressure scale i
   for (const d of DIFFICULTIES) {
     const e = run(d.id),
       b = e.spawnEnemy("boss");
+    // 記下這一組設定下的 Boss 本體耐久、護盾、出招頻率、彈幕密度與護衛壓力，等
+    // 一下比較各設定是否各自獨立。
     const row = [
       b.maxHp,
       b.maxShield,

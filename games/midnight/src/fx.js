@@ -984,11 +984,15 @@
 
     // 大招定格：背後張開一對閃電的翅膀
     thunderWings(f) {
+      // 雷翼：先在鬥士兩側各打下一道落雷。
       for (const side of [-1, 1])
         this.strikeDown(f.x + side * 210, "#8fd3ff", {
           delay: side > 0 ? 0.08 : 0,
         });
+      // 翅膀由 10 根羽毛組成（0～1 表示從根部到尖端的位置）。
       const feathers = Array.from({ length: 10 }, (_, i) => i / 9);
+      // 0.95 秒的雷翼動畫：翅膀快速張開、隨著拍動起伏，最後淡出；每根羽毛畫成一
+      // 道發光的電弧。
       this.add(
         0.95,
         (ctx, k, me, scene) => {

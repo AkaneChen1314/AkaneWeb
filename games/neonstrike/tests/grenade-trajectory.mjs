@@ -200,6 +200,7 @@ console.log("PASS first-contact timing and airborne explosion prediction");
 
 // 從主程式取出預覽相關的函式來測試。
 const mainSource = readFileSync(new URL("../main.js", import.meta.url), "utf8");
+// 從 main.js 抓出手榴彈預覽相關的函式原始碼，放進測試環境執行。
 const previewFunctions = [
   "getGrenadeAim",
   "createGrenadePreview",
@@ -216,6 +217,7 @@ const previewFunctions = [
 // 假的提示文字節點。
 const labelNodes = new Map();
 const hintClasses = new Set();
+// 假的提示元素：記下 class 的開關與文字。
 const hint = {
   classList: {
     toggle(name, value) {
@@ -236,6 +238,7 @@ const hint = {
 const scene = new THREE.Scene(),
   camera = new THREE.PerspectiveCamera();
 camera.position.copy(origin);
+// 測試環境：放入 Three.js、場景、鏡頭與手榴彈的預測函式。
 const context = vm.createContext({
   THREE,
   scene,

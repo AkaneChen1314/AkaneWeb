@@ -16,9 +16,11 @@
   --display: "Bahnschrift", "Arial Narrow", "Microsoft JhengHei", sans-serif;
   --radius: 18px;
 }
+/* 所有元素的寬高都包含內距與框線，排版比較好算。 */
 * {
   box-sizing: border-box;
 }
+/* 頁面不出現左右捲軸；底色、文字顏色與字型用上面的變數。 */
 html,
 body {
   margin: 0;
@@ -32,6 +34,7 @@ body {
   font-size: 14px;
   line-height: 1.6;
 }
+/* 按鈕與輸入框沿用頁面字型；按下時往下壓一點，停用時變淡。 */
 button,
 input,
 select {
@@ -60,6 +63,7 @@ button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
 }
+/* 連結沿用外面的顏色，不加底線。 */
 a {
   color: inherit;
   text-decoration: none;
@@ -73,6 +77,7 @@ canvas:focus-visible {
   outline: 2px solid var(--yellow);
   outline-offset: 5px;
 }
+/* 標題與段落先拿掉預設的上下空白。 */
 h1,
 h2,
 h3,
@@ -84,6 +89,7 @@ h2,
 h3 {
   line-height: 1.35;
 }
+/* 圖示（SVG）的預設大小與線條樣式。 */
 svg {
   width: 22px;
   height: 22px;
@@ -97,6 +103,7 @@ svg {
 svg use {
   pointer-events: none;
 }
+/* 放圖示定義的隱藏區塊，以及 hidden 一律隱藏。 */
 .svg-defs {
   position: absolute;
   width: 0;
@@ -114,6 +121,7 @@ svg use {
   margin: auto;
   padding: 0 52px;
 }
+/* 大廳最上面一列：遊戲名稱、導覽與右邊的晶體與按鈕。 */
 .topbar {
   height: 100px;
   display: flex;
@@ -122,6 +130,7 @@ svg use {
   gap: 24px;
   border-bottom: 1px solid var(--line);
 }
+/* 左上角的遊戲名稱與圖示。 */
 .brand {
   display: flex;
   gap: 12px;
@@ -164,6 +173,7 @@ svg use {
   gap: 28px;
   align-self: stretch;
 }
+/* 中間的導覽按鈕（遊戲大廳、進化研究所、冒險紀錄）；目前所在的頁面有底線。 */
 .nav-button {
   position: relative;
   background: none;
@@ -196,6 +206,7 @@ svg use {
   align-items: center;
   gap: 19px;
 }
+/* 右上角的晶體數量與圓形圖示按鈕。 */
 .wallet {
   display: flex;
   align-items: center;
@@ -228,6 +239,7 @@ svg use {
   justify-content: space-between;
   padding: 30px 0 25px;
 }
+/* 大廳左邊的小標、大標題與文字按鈕。 */
 .section-label {
   font-size: 12px;
   color: var(--muted);
@@ -287,6 +299,7 @@ h1 span {
     linear-gradient(90deg, #8bbaa50d 1px, transparent 1px);
   background-size: 36px 36px;
 }
+/* 中間展示台上方的標籤與小字。 */
 .showcase-top {
   position: absolute;
   top: 22px;
@@ -330,6 +343,7 @@ h1 span {
 .model-stage canvas:active {
   cursor: grabbing;
 }
+/* 展示台上的大字、底下的軌道光圈與說明列。 */
 .model-word {
   position: absolute;
   top: 62px;
@@ -408,6 +422,7 @@ h1 span {
   position: relative;
   z-index: 3;
 }
+/* 選角卡片：選中時框線變亮。 */
 .character-card {
   position: relative;
   text-align: left;
@@ -487,6 +502,7 @@ h1 span {
   border-radius: var(--radius);
   background: var(--surface);
 }
+/* 右邊出戰設定的標題列。 */
 .panel-heading {
   display: flex;
   justify-content: space-between;
@@ -500,6 +516,7 @@ h1 span {
   font-size: 12px;
   color: var(--muted);
 }
+/* 角色名稱與定位標籤（例如「靈巧型」）。 */
 .character-title {
   margin: 21px 0 17px;
   display: flex;
@@ -519,6 +536,7 @@ h1 span {
   display: grid;
   gap: 9px;
 }
+/* 能力長條：左邊名稱、中間長條、右邊數字。 */
 .stat-row {
   display: grid;
   grid-template-columns: 45px 1fr 24px;
@@ -555,6 +573,7 @@ h1 span {
   margin-top: 6px;
   border-bottom: 1px solid var(--line);
 }
+/* 技能說明：左邊圖示、右邊名稱與按鍵。 */
 .ability-symbol {
   width: 38px;
   height: 38px;
@@ -578,6 +597,7 @@ h1 span {
   line-height: 1.7;
   color: var(--muted);
 }
+/* 按鍵提示的小方框（kbd）。 */
 kbd {
   font-family: var(--font);
   font-size: 10px;
@@ -588,6 +608,7 @@ kbd {
   color: var(--muted);
   font-weight: 400;
 }
+/* 設定區每一段的標題列。 */
 .section-row {
   display: flex;
   align-items: center;
@@ -609,6 +630,7 @@ kbd {
   display: grid;
   gap: 8px;
 }
+/* 模式卡片：左邊圓點、右邊名稱與說明，選中時圓點填滿。 */
 .mode-card {
   display: flex;
   align-items: center;
@@ -686,6 +708,7 @@ kbd {
 .primary-button svg {
   width: 18px;
 }
+/* 「開始冒險」按鈕與下方的小提示。 */
 .loadout > .primary-button {
   margin-top: 19px;
 }
@@ -711,6 +734,7 @@ kbd {
   font-weight: 400;
   margin-left: 15px;
 }
+/* 地圖選擇：三欄卡片，選中時右上角出現打勾。 */
 .world-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -799,6 +823,7 @@ kbd {
   opacity: 0.6;
   transform: rotate(-12deg);
 }
+/* 三張地圖卡片各自的背景顏色與裝飾。 */
 .world-card[data-world="1"] {
   background: #172831;
 }
@@ -884,6 +909,7 @@ kbd {
   align-items: flex-start;
   pointer-events: none;
 }
+/* 遊戲畫面左上角：頭像、名字、生命與經驗。 */
 .run-profile {
   display: flex;
   gap: 12px;
@@ -930,6 +956,7 @@ kbd {
   font-size: 9px;
   color: var(--muted);
 }
+/* 上方中間的計時器與分數，右邊的按鈕。 */
 .run-clock {
   text-align: center;
   text-shadow: 0 3px 16px #000;
@@ -981,6 +1008,7 @@ kbd {
   font-size: 10px;
   color: var(--mint);
 }
+/* 經驗條與進化百分比。 */
 .xp-track {
   height: 4px;
   background: var(--line);
@@ -1000,6 +1028,7 @@ kbd {
   color: var(--muted);
   font-size: 9px;
 }
+/* 生命下方的長度、擊退、晶體與連擊資訊。 */
 .run-info {
   position: absolute;
   top: 143px;
@@ -1104,6 +1133,7 @@ kbd {
   gap: 12px;
   pointer-events: auto;
 }
+/* 右下角的技能與衝刺按鈕：冷卻中變暗，裡面的長條表示冷卻進度。 */
 .skill-button {
   position: relative;
   isolation: isolate;
@@ -1213,6 +1243,7 @@ kbd {
   backdrop-filter: blur(12px);
   padding: 22px;
 }
+/* 視窗本體：最高 90% 畫面高度，超過就捲動。 */
 .modal {
   width: min(620px, 100%);
   max-height: 90dvh;
@@ -1231,6 +1262,7 @@ kbd {
   font-size: 26px;
   margin-bottom: 10px;
 }
+/* 視窗的副標、右上角的關閉按鈕與下方的按鈕列。 */
 .modal-subtitle {
   font-size: 13px;
   color: var(--muted);
@@ -1268,6 +1300,7 @@ kbd {
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
+/* 遊戲說明的每一項與提示框。 */
 .help-item {
   border-top: 1px solid var(--line);
   padding: 16px 0;
@@ -1323,6 +1356,7 @@ kbd {
   width: 130px;
   accent-color: var(--mint);
 }
+/* 設定視窗的開關按鈕。 */
 .toggle {
   min-width: 55px;
   padding: 7px 10px;
@@ -1341,6 +1375,7 @@ kbd {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 15px;
 }
+/* 升級選項卡片：滑過或用鍵盤選到時發光。 */
 .upgrade-card {
   text-align: left;
   padding: 23px 19px;
@@ -1385,6 +1420,7 @@ kbd {
   color: var(--mint);
   margin: 20px 0;
 }
+/* 結算畫面的數據、標題與獲得的晶體。 */
 .result-meta {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
@@ -1466,6 +1502,7 @@ kbd {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 22px;
 }
+/* 進化研究所的升級卡片：等級點與購買按鈕。 */
 .lab-card {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -1512,6 +1549,7 @@ kbd {
   gap: 20px;
   margin: 30px 0;
 }
+/* 冒險紀錄的統計格。 */
 .record-stat {
   padding: 25px;
   background: var(--surface);
@@ -1535,6 +1573,7 @@ kbd {
   gap: 15px;
   margin-top: 20px;
 }
+/* 成就卡片：還沒達成的變淡。 */
 .achievement {
   padding: 20px;
   border: 1px solid var(--line);
@@ -1584,6 +1623,7 @@ kbd {
   color: var(--muted);
   font-weight: 400;
 }
+/* 沒有紀錄時的提示。 */
 .empty-note {
   color: var(--muted);
   padding: 30px 0;
@@ -2275,6 +2315,7 @@ kbd {
 .guide-tabs button:hover {
   border-color: var(--mint);
 }
+/* 規則視窗的內容區：太長時捲動。 */
 .guide-content {
   max-height: min(53dvh, 560px);
   overflow-y: auto;
@@ -2345,6 +2386,7 @@ kbd {
   color: var(--muted);
   line-height: 1.85;
 }
+/* 規則說明的開頭與補充小字。 */
 .rule-footnote,
 .rule-intro {
   font-size: 13px;
@@ -2366,6 +2408,7 @@ kbd {
   border-radius: 12px;
   border: 1px solid var(--line);
 }
+/* 碰撞示意圖與圖說。 */
 .collision-diagram {
   width: 100%;
   height: auto;
@@ -2382,6 +2425,7 @@ kbd {
   overflow-x: auto;
   margin: 18px 0;
 }
+/* 規則表格與兩欄的規則說明。 */
 .rule-table {
   width: 100%;
   border-collapse: collapse;
@@ -2444,6 +2488,7 @@ kbd {
   color: var(--muted);
   line-height: 1.8;
 }
+/* 道具說明裡的顏色樣本。 */
 .pickup-sample {
   display: block;
   width: 24px;
@@ -2479,6 +2524,7 @@ kbd {
   border: 1px solid var(--line);
   border-radius: 12px;
 }
+/* 角色說明的標題與內容。 */
 .character-guide-title {
   display: flex;
   gap: 13px;
@@ -2562,6 +2608,7 @@ kbd {
   padding: 5px 10px;
   pointer-events: none;
 }
+/* 左上角的安全提示（無敵、護盾等）。 */
 .run-safety {
   position: absolute;
   top: 168px;
@@ -2611,6 +2658,7 @@ kbd {
   border-radius: 16px;
   box-shadow: 0 12px 40px #0005;
 }
+/* 練習模式的教練卡片：標題、進度條與小字；練習時隱藏小地圖。 */
 .coach-top {
   display: flex;
   justify-content: space-between;
@@ -2856,6 +2904,7 @@ kbd {
   grid-template-columns: 1fr 1fr;
   gap: 7px;
 }
+/* 模式卡片在這個寬度下的排法。 */
 .mode-card {
   padding: 11px 8px;
   gap: 7px;
@@ -2878,6 +2927,7 @@ kbd {
 .mode-card.selected {
   box-shadow: inset 0 0 0 1px var(--mint);
 }
+/* 模式說明保留固定高度，切換時版面不跳動。 */
 .mode-objective {
   min-height: 58px;
 }
@@ -2885,12 +2935,14 @@ kbd {
 .skill-dock {
   gap: 10px;
 }
+/* 咬擊與衝刺按鈕的外框顏色。 */
 .skill-button.bite {
   border-color: #d5f87580;
 }
 .skill-button.bite i {
   background: #d5f87522;
 }
+/* 畫面中央大字提示、首領血條與目前目標的最大寬度。 */
 .run-banner {
   max-width: min(800px, 90vw);
   text-align: center;
@@ -2989,6 +3041,7 @@ kbd {
   justify-content: center;
   flex-wrap: wrap;
 }
+/* 增益效果的小標籤：底部的長條表示剩餘時間。 */
 .buff {
   position: relative;
   overflow: hidden;
@@ -3053,6 +3106,7 @@ kbd {
 .skill-button.special.ready svg {
   animation: skill-ready 1.4s ease-in-out infinite;
 }
+/* 技能冷卻好時，按鈕放大一下的動畫。 */
 @keyframes skill-ready {
   50% {
     transform: scale(1.18);
@@ -3106,6 +3160,7 @@ kbd {
 .combo-meter.pop strong {
   animation: combo-pop 0.28s ease-out;
 }
+/* 連擊數字跳動的動畫。 */
 @keyframes combo-pop {
   0% {
     transform: scale(1.35);
@@ -3140,6 +3195,7 @@ kbd {
   outline: 2px solid var(--yellow);
   outline-offset: 3px;
 }
+/* 小地圖與下方的地圖名稱。 */
 #minimap {
   display: block;
   width: 176px;
@@ -3197,6 +3253,7 @@ kbd {
   font-size: 12px;
   color: var(--muted);
 }
+/* 大地圖視窗：地圖保持正方形，最大不超過畫面高度的 54%。 */
 .modal[data-type="map"] {
   width: min(760px, 100%);
 }
@@ -3285,6 +3342,7 @@ kbd {
   line-height: 1.7;
   grid-column: 2;
 }
+/* 食物說明裡的顏色點與「能力」小標籤。 */
 .food-dot {
   grid-row: span 2;
   width: 22px;
@@ -3321,6 +3379,7 @@ kbd {
   color: #f7c8ff;
   vertical-align: 2px;
 }
+/* 練習模式隱藏小地圖與連擊數。 */
 .is-training #minimap-wrap,
 .is-training .combo-meter {
   display: none;
@@ -3429,6 +3488,7 @@ kbd {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
+/* 難度選項：選中時框線變亮；下面是難度說明與注意事項。 */
 .difficulty-option {
   display: grid;
   gap: 1px;
@@ -3506,6 +3566,7 @@ kbd {
   align-items: baseline;
   gap: 8px;
 }
+/* 首領血條：名字、血條（--boss 是首領的代表色）、下方的階段與招式。 */
 .boss-head b {
   font-size: 15px;
   color: var(--boss);
@@ -3552,6 +3613,7 @@ kbd {
   font-size: 12px;
   color: #fff3c0;
 }
+/* 首領有護衛時，血條外框發光，表示暫時打不動。 */
 .boss-hud.guarded {
   border-color: #ffd0ff;
   box-shadow: 0 0 26px #ffd0ff55;
@@ -3563,6 +3625,7 @@ kbd {
   color: #fff3a8;
   animation: skill-ready 0.6s ease-in-out infinite;
 }
+/* 首領登場時畫面中央的介紹。 */
 .boss-intro {
   --boss: #ff7a81;
   position: absolute;
@@ -3680,6 +3743,7 @@ kbd {
   color: var(--muted);
   line-height: 1.7;
 }
+/* 敵人說明裡的等級小標籤。 */
 .tier-tag {
   margin-left: auto;
   font-size: 10px;
@@ -3783,6 +3847,7 @@ kbd {
   transform-origin: left;
   transform: scaleX(1);
 }
+/* 視窗剛打開時的防誤按倒數條。 */
 .modal.guarding .guard-bar i {
   animation: guard-fill var(--guard, 650ms) linear forwards;
 }
@@ -3795,6 +3860,7 @@ kbd {
   filter: saturate(0.5);
   pointer-events: none;
 }
+/* 升級卡片與視窗按鈕的過渡動畫；副標裡的按鍵提示。 */
 .upgrade-card,
 .modal .modal-actions button {
   transition:
@@ -3836,6 +3902,7 @@ kbd {
   gap: 12px;
   flex-wrap: wrap;
 }
+/* 開局說明視窗：副標、目標框、兩欄的說明格。 */
 .brief-sub {
   font-size: 14px;
   font-weight: 400;
@@ -3896,6 +3963,7 @@ kbd {
 .brief-grid h3 em.bad {
   color: var(--danger);
 }
+/* 說明清單：左邊圖示、右邊文字；按鍵說明排成一列。 */
 .brief-list {
   list-style: none;
   margin: 0;
@@ -3946,6 +4014,7 @@ kbd {
   font-size: 12.5px;
   margin-left: 4px;
 }
+/* 敵人與道具的小標籤。 */
 .brief-chips {
   display: flex;
   flex-wrap: wrap;

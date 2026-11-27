@@ -357,6 +357,8 @@ test("simultaneous explosion visuals have a bounded light and mesh lifetime", ()
 
 // 煙霧的變化不受畫面更新率影響。
 test("particle drag and smoke expansion do not depend on the render frequency", () => {
+  // 用指定的更新頻率（dt）跑一段時間，回傳煙霧的大小與位置；不同頻率的結果應該
+  // 一樣。
   const atRate = (dt) => {
     const h = createHarness();
     h.run(`
@@ -387,6 +389,7 @@ test("particle drag and smoke expansion do not depend on the render frequency", 
 
 // 陰影降低更新次數時，槍口火光仍每格繪製。
 test("shadow throttling retains per-frame layer-1 muzzle flashes and restores render state", () => {
+  // 陰影每隔幾幀才更新一次，但槍口火光每一幀都要畫到，畫完要把設定還原。
   const h = createHarness();
   h.run(`
     scene.add(camera);
@@ -411,6 +414,7 @@ test("shadow throttling retains per-frame layer-1 muzzle flashes and restores re
     };
     renderFrame();
   `);
+  // 依序畫幾幀，檢查每一幀的繪製圖層與陰影設定是否正確。
   h.setNow(1030);
   h.run("renderFrame();");
   h.setNow(1070);
@@ -440,6 +444,7 @@ test("shadow throttling retains per-frame layer-1 muzzle flashes and restores re
     ),
     true,
   );
+  // 畫完之後，背景、鏡頭圖層與陰影設定都恢復原狀。
   assert.equal(h.run("scene.background===originalBackground"), true);
   assert.equal(h.run("camera.layers.mask"), 1);
   assert.equal(h.run("renderer.shadowMap.autoUpdate"), true);

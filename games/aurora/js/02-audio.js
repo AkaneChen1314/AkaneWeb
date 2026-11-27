@@ -199,6 +199,9 @@ const Sound = {
     // 突擊步槍。
     ar: {
       range: 90,
+      // 聲音是用程式合成的：_noise 是一段「沙沙聲」（雜訊），_tone 是一段音調。
+      // dur 是長度（秒），f0→f1 是聲音從高到低（或低到高）的頻率變化，vol 是音
+      // 量。幾段疊在一起就成了槍聲。
       make(o) {
         this._noise(o, { dur: 0.16, f0: 5200, f1: 500, vol: 0.9 });
         this._noise(o, {

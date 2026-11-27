@@ -18,6 +18,8 @@
   box-sizing: border-box;
 }
 
+/* 整個頁面的底色、字型與文字顏色（--bg、--text 這類寫法是上面定義好的顏色變
+   數）。 */
 html {
   background: var(--bg);
   font-family:
@@ -25,6 +27,7 @@ html {
   color: var(--text);
 }
 
+/* 頁面本體：至少佔滿整個視窗高度，不出現左右捲軸。 */
 body {
   margin: 0;
   min-height: 100vh;
@@ -34,6 +37,7 @@ body {
     linear-gradient(145deg, #040913, #071425 55%, #060b18);
 }
 
+/* 按鈕沿用外面的字型與顏色，不用瀏覽器預設的樣子。 */
 button {
   font: inherit;
   color: inherit;
@@ -91,12 +95,14 @@ button {
   gap: 18px;
 }
 
+/* 左上角的遊戲標誌與名稱。 */
 .brand {
   display: flex;
   align-items: center;
   gap: 11px;
 }
 
+/* 標誌圖示的方框。 */
 .brand-mark {
   display: grid;
   place-items: center;
@@ -109,6 +115,7 @@ button {
   background: #49dce615;
 }
 
+/* 遊戲名稱與下面的小字。 */
 .brand h1 {
   font-size: 18px;
   line-height: 1;
@@ -179,6 +186,7 @@ button {
   flex: 1;
 }
 
+/* 左邊的角色面板與右邊的背包面板：圓角卡片。 */
 .hero-panel,
 .inventory-panel {
   border-radius: 20px;
@@ -192,6 +200,7 @@ button {
   gap: 15px;
 }
 
+/* 角色卡片：頭像、名字與等級排在同一列。 */
 .hero-card {
   display: flex;
   align-items: center;
@@ -239,6 +248,7 @@ button {
   gap: 6px;
 }
 
+/* 生命、職業資源、經驗條上方的文字（左邊名稱、右邊數字）。 */
 .meter-label,
 .enemy-hp-label {
   display: flex;
@@ -253,6 +263,7 @@ button {
   color: var(--text);
 }
 
+/* 能力條本身：深色底，裡面的彩色長條代表目前剩多少。 */
 .meter {
   height: 9px;
   border-radius: 99px;
@@ -306,6 +317,7 @@ button {
   font-size: 14px;
 }
 
+/* 各區塊的小標題。 */
 .section-label {
   font-size: 12.5px;
   letter-spacing: 0.12em;
@@ -319,6 +331,7 @@ button {
   margin-top: auto;
 }
 
+/* 裝備欄：武器、盔甲各一格，左邊圖示、右邊名稱。 */
 .equip-slot {
   display: flex;
   width: 100%;
@@ -376,6 +389,7 @@ button {
   gap: 10px;
 }
 
+/* 戰鬥場地：敵人與特效都畫在這個框裡。 */
 .arena {
   position: relative;
   overflow: hidden;
@@ -486,6 +500,7 @@ button {
   animation: enemyEnter 0.5s;
 }
 
+/* 敵人圖像（用表情符號放大顯示）與腳下的影子。 */
 .enemy-sprite {
   position: relative;
   font-size: 94px;
@@ -507,6 +522,7 @@ button {
   transform: translateX(-50%);
 }
 
+/* 敵人被打中、攻擊時的動畫。 */
 .enemy-wrap.hit {
   animation: enemyHit 0.25s;
 }
@@ -515,6 +531,7 @@ button {
   animation: enemyAttack 0.35s;
 }
 
+/* 左下角的敵人資訊卡：名字、等級與生命條。 */
 .enemy-card {
   position: absolute;
   left: 18px;
@@ -549,6 +566,7 @@ button {
   color: var(--muted);
 }
 
+/* 敵人的生命條與數字。 */
 .enemy-hp {
   height: 8px;
 }
@@ -558,6 +576,7 @@ button {
   font-size: 12px;
 }
 
+/* 右上角的「敵人下一步」提示：攻擊、防禦或大招。 */
 .enemy-intent {
   position: absolute;
   right: 18px;
@@ -625,6 +644,7 @@ button {
   z-index: 8;
 }
 
+/* 跳出來的數字：紅色是傷害、綠色是回復、藍色是擋下。 */
 .float-text {
   position: absolute;
   font-size: 26px;
@@ -645,6 +665,7 @@ button {
   color: #70d8ff;
 }
 
+/* 加上 hidden 就隱藏（!important 表示一定要套用，不會被其他規則蓋掉）。 */
 .hidden {
   display: none !important;
 }
@@ -694,6 +715,7 @@ button {
   box-shadow: 0 0 12px #4ee8ef;
 }
 
+/* 「結束回合」按鈕。 */
 .end-turn {
   border: 1px solid #ffb85b44;
   background: #2c1d13;
@@ -714,6 +736,7 @@ button {
   min-height: 145px;
 }
 
+/* 技能卡片：外框、上方的圖示與消耗、名稱與類型。 */
 .battle-card {
   position: relative;
   padding: 11px 10px;
@@ -736,6 +759,7 @@ button {
   opacity: 0.42;
 }
 
+/* 卡片上方：左邊圖示、右邊消耗。 */
 .card-top {
   display: flex;
   justify-content: space-between;
@@ -745,6 +769,7 @@ button {
   font-size: 24px;
 }
 
+/* 卡片右上角的消耗數字圓圈。 */
 .card-cost {
   width: 25px;
   height: 25px;
@@ -757,6 +782,7 @@ button {
   font-weight: 900;
 }
 
+/* 卡片名稱與說明。 */
 .battle-card b {
   display: block;
   font-size: 13px;
@@ -770,6 +796,7 @@ button {
   margin: 0;
 }
 
+/* 卡片最下面的類型小字。 */
 .card-type {
   display: block;
   font-size: 11px;
@@ -785,6 +812,7 @@ button {
   gap: 8px;
 }
 
+/* 探索畫面的路線卡片（繼續前進、菁英、休息等）。 */
 .route-card {
   min-height: 118px;
   display: flex;
@@ -860,6 +888,7 @@ button {
   border-radius: 12px;
 }
 
+/* 右邊面板的分頁按鈕（背包、商店、強化、戰報）與分頁內容。 */
 .tab {
   border: 0;
   border-radius: 9px;
@@ -960,6 +989,7 @@ button {
   background: #10253a;
 }
 
+/* 背包每一列：左邊圖示、中間名稱與說明、右邊數量。 */
 .item-icon {
   height: 42px;
   display: grid;
@@ -994,6 +1024,7 @@ button {
   border-radius: 8px;
 }
 
+/* 依稀有度改變框線與底色：普通、稀有、史詩、傳說等。 */
 .item-row.rarity-common,
 .shop-row.rarity-common,
 .upgrade-row.rarity-common,
@@ -1198,6 +1229,7 @@ button {
   width: min(780px, 100%);
 }
 
+/* 開始畫面的標誌、標題與說明文字。 */
 .modal-brand {
   font-size: 39px;
   color: var(--cyan);
@@ -1249,6 +1281,7 @@ button {
   gap: 9px;
 }
 
+/* 選職業的卡片：滑過或選中時變亮。 */
 .class-card {
   border: 1px solid var(--line);
   border-radius: 17px;
@@ -1283,6 +1316,7 @@ button {
   color: var(--cyan);
 }
 
+/* 主要按鈕（例如「繼續冒險」）的漸層底色。 */
 .continue-btn,
 .primary {
   margin-top: 12px;
@@ -1295,10 +1329,12 @@ button {
   cursor: pointer;
 }
 
+/* wide 讓按鈕佔滿整列。 */
 .wide {
   width: 100%;
 }
 
+/* 視窗右上角的關閉按鈕。 */
 .modal-close {
   position: absolute;
   right: 14px;
@@ -1358,6 +1394,7 @@ button {
   font-size: 12px;
 }
 
+/* 事件視窗裡的選項按鈕：一個一個往下排。 */
 .event-options {
   flex-direction: column;
   margin-top: 18px;
@@ -1411,6 +1448,8 @@ button {
   }
 }
 
+/* 各種動畫的關鍵影格：漂浮、呼吸、敵人登場、受擊、攻擊、跳字、危險閃爍、提
+   示滑入。 */
 @keyframes float {
   50% {
     transform: translateY(-24px);
@@ -1733,11 +1772,13 @@ button {
   grid-template-columns: repeat(4, 1fr);
 }
 
+/* 手機上的分頁按鈕縮小一點。 */
 .tab {
   padding: 9px 4px;
   font-size: 12px;
 }
 
+/* 面板的標題列。 */
 .panel-heading {
   display: grid;
   flex: 0 0 auto;
@@ -1767,10 +1808,12 @@ button {
   gap: 8px;
 }
 
+/* 職業技能按鈕外層不佔版面，按鈕直接排進技能列。 */
 .class-skills {
   display: contents;
 }
 
+/* 每一個技能按鈕：名稱、消耗、冷卻，冷卻中或資源不足時變暗。 */
 .skill-command {
   position: relative;
   min-height: 132px;
@@ -1844,6 +1887,7 @@ button {
   text-align: center;
 }
 
+/* 商店與強化每一列的說明文字。 */
 .shop-copy {
   min-width: 0;
   display: grid;
@@ -1860,6 +1904,7 @@ button {
   line-height: 1.35;
 }
 
+/* 商店與強化每一列右邊的按鈕。 */
 .shop-row button,
 .upgrade-row button {
   border: 1px solid #4ddfea55;
@@ -2075,6 +2120,7 @@ button {
   color: var(--gold);
 }
 
+/* 強化成功率那一行（金色字）。 */
 .rate-line {
   color: #ffd36c;
   font-weight: 800;
@@ -2132,6 +2178,7 @@ button {
   background: #16405a;
 }
 
+/* 遊戲說明視窗：兩欄的說明格。 */
 .intro-card {
   width: min(680px, 100%);
 }
@@ -2194,6 +2241,7 @@ button {
   font-size: 12px;
 }
 
+/* 滑到職業卡片時，能力小格的框線變亮。 */
 .class-card:hover .class-stats i {
   border-color: #5adbe82e;
 }
@@ -2531,6 +2579,7 @@ button {
   filter: drop-shadow(0 0 12px #ffd76f);
 }
 
+/* 上帝模式的鎖頭提示、卡片、符號、密碼欄與錯誤訊息。 */
 .god-lock {
   color: #ffd96d !important;
   font-size: 11.5px !important;
@@ -2732,6 +2781,7 @@ button:focus-visible {
   box-shadow: 0 14px 36px #0003;
 }
 
+/* 戰術區的標題列。 */
 .battle-section-heading {
   display: flex;
   align-items: end;
@@ -2763,12 +2813,14 @@ button:focus-visible {
   text-align: right;
 }
 
+/* 戰術按鈕：電腦 4 欄。 */
 .tactic-bar {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 7px;
 }
 
+/* 每個戰術按鈕的外框、圖示與文字。 */
 .tactic-command {
   position: relative;
   min-width: 0;
@@ -2827,6 +2879,7 @@ button:focus-visible {
   line-height: 1.35;
 }
 
+/* 不同戰術用不同顏色的框線：重擊、打斷、防禦、蓄力、治療。 */
 .tactic-heavy {
   border-color: #ff8a6445;
 }
@@ -2899,6 +2952,7 @@ button:focus-visible {
   backdrop-filter: blur(4px);
 }
 
+/* 戰鬥中選藥水的面板：固定在畫面正中央。 */
 .potion-mode-panel {
   position: fixed;
   z-index: 90;
@@ -2921,6 +2975,7 @@ button:focus-visible {
     inset 0 0 34px #4ff3a20c;
 }
 
+/* 藥水面板的標題列、說明與藥水卡片。 */
 .potion-mode-heading {
   display: flex;
   align-items: center;
@@ -2959,6 +3014,7 @@ button:focus-visible {
   line-height: 1.55;
 }
 
+/* 藥水卡片：自動依寬度排成多欄。 */
 .potion-selection-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(225px, 1fr));
@@ -3040,6 +3096,7 @@ button:focus-visible {
   font-size: 11px;
 }
 
+/* 藥水面板最下面的「取消」與「確定使用」按鈕。 */
 .potion-mode-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -3070,6 +3127,7 @@ button:focus-visible {
   background: linear-gradient(135deg, #1a3a50, #10283a);
 }
 
+/* 「確定使用」按鈕的亮色外觀。 */
 #confirmPotions {
   border: 1px solid #63e1cc99;
   background: linear-gradient(135deg, #188f83, #238db5);
@@ -3126,6 +3184,7 @@ button:focus-visible {
   line-height: 1.65;
 }
 
+/* 視窗按鈕在手機上也維持左右並排。 */
 .modal-actions {
   flex-direction: row !important;
 }
@@ -3376,6 +3435,7 @@ button:focus-visible {
   left: calc(50% - 5px);
 }
 
+/* 提示框出現時的淡入動畫。 */
 @keyframes tooltipIn {
   from {
     opacity: 0;
@@ -3398,6 +3458,7 @@ body,
   scrollbar-color: #355d78 #071421;
 }
 
+/* 捲軸的外觀（Chrome、Edge、Safari）：寬度、軌道、拉桿與滑過時的顏色。 */
 ::-webkit-scrollbar {
   width: 9px;
   height: 9px;
@@ -3765,6 +3826,7 @@ body:after {
   animation: panelGleam 16s linear infinite;
 }
 
+/* 上方標題列與標誌的動態光效。 */
 .topbar {
   position: relative;
   overflow: hidden;
@@ -3920,6 +3982,7 @@ body:after {
   opacity: 1;
 }
 
+/* Boss 對話視窗：--dialogue-* 是對話主題色，不同 Boss 會換成不同顏色。 */
 .boss-dialogue-card {
   --dialogue-main: #ffae58;
   --dialogue-soft: #ff7a3830;
@@ -4101,6 +4164,7 @@ body:after {
   --dialogue-glow: #c33dff60;
 }
 
+/* 50 層大型 Boss 的對話框加粗外框。 */
 .boss-dialogue-card.world-dialogue {
   border-width: 2px;
   box-shadow:
@@ -4109,6 +4173,7 @@ body:after {
     inset 0 0 65px var(--dialogue-soft);
 }
 
+/* 對話框右上角旋轉的裂縫光效。 */
 .boss-dialogue-rift {
   position: absolute;
   top: -160px;
@@ -4129,6 +4194,7 @@ body:after {
   animation: dialogueRift 16s linear infinite;
 }
 
+/* 對話框上方：左邊 Boss 頭像、右邊名字與稱號。 */
 .boss-dialogue-header {
   position: relative;
   display: flex;
@@ -4137,6 +4203,7 @@ body:after {
   text-align: left;
 }
 
+/* Boss 頭像的圓框。 */
 .boss-dialogue-portrait {
   flex: 0 0 105px;
   width: 105px;
@@ -4162,6 +4229,7 @@ body:after {
   animation: dialoguePortrait 2.8s ease-in-out infinite;
 }
 
+/* Boss 的名字、稱號與樓層。 */
 .boss-dialogue-identity {
   min-width: 0;
 }
@@ -4185,6 +4253,7 @@ body:after {
   text-shadow: 0 0 20px var(--dialogue-glow);
 }
 
+/* Boss 說的台詞（引言框）。 */
 .boss-dialogue-card blockquote {
   position: relative;
   margin: 18px 0 14px;
@@ -4201,6 +4270,7 @@ body:after {
   overflow-wrap: anywhere;
 }
 
+/* 「你要怎麼回應？」提示與下方的選項按鈕。 */
 .boss-dialogue-prompt {
   margin: 14px 0 9px;
   color: #c7d2df;
@@ -4215,6 +4285,7 @@ body:after {
   gap: 8px;
 }
 
+/* 每一個回應選項：左邊編號、右邊文字，滑過時發光。 */
 .boss-dialogue-option {
   width: 100%;
   min-height: 62px;
@@ -4295,6 +4366,7 @@ body:after {
   box-shadow: inset 0 0 20px var(--dialogue-soft);
 }
 
+/* 選完之後 Boss 的反應文字。 */
 .boss-dialogue-reaction {
   margin-top: 11px;
   padding: 13px 15px;
@@ -4327,6 +4399,7 @@ body:after {
   line-height: 1.55;
 }
 
+/* 「開始戰鬥」按鈕。 */
 .boss-dialogue-continue {
   width: 100%;
   min-height: 48px;
@@ -4366,6 +4439,7 @@ body:after {
   }
 }
 
+/* 背景與面板的動畫：光暈、反光、標題線、標誌脈動、地面流動、霧氣旋轉。 */
 @keyframes worldGlow {
   to {
     transform: translate(-15vw, -8vh) scale(1.15);
@@ -4410,6 +4484,7 @@ body:after {
   }
 }
 
+/* Boss 準備大招時的閃光、懸浮與影子動畫。 */
 @keyframes bossReadyFlash {
   0% {
     filter: brightness(2.2);
@@ -4435,6 +4510,7 @@ body:after {
   }
 }
 
+/* Boss 對話視窗的動畫：裂縫旋轉、頭像浮動、反應淡入、按鈕發光。 */
 @keyframes dialogueRift {
   to {
     transform: rotate(360deg);
@@ -4695,6 +4771,7 @@ html {
   cursor: help;
 }
 
+/* 敵人準備 Boss 專屬招式時，右上角提示改成紫色。 */
 .enemy-intent.intent-signature {
   border-color: #bba0d8;
   background: #241d35ed;
@@ -4759,6 +4836,7 @@ html {
   transform: rotate(-35deg);
 }
 
+/* 不同攻擊特效的顏色：魔法、防禦、暴擊與勝利、Boss 專屬招式。 */
 .fx-magic {
   color: #a393c9;
 }
@@ -4831,6 +4909,7 @@ html {
   font-size: 12px;
 }
 
+/* 圖鑑視窗：上方的素材篩選、下面可捲動的怪物清單。 */
 #codexMaterial {
   width: 100%;
   margin: 0 0 12px;
@@ -4852,6 +4931,7 @@ html {
   overscroll-behavior: contain;
 }
 
+/* 圖鑑每一列：左邊圖示、中間名字與特性、右邊掉落物。 */
 .codex-entry {
   display: grid;
   grid-template-columns: 35px minmax(0, 1fr);
@@ -5105,6 +5185,7 @@ body.modal-active {
   color: #8cd9f0;
   font-size: 13px;
 }
+/* 圖鑑列的名字與小字。 */
 .codex-entry b {
   font-size: 14px;
 }
@@ -5227,6 +5308,7 @@ body.viewport-zoomed .boss-dialogue-portrait {
   gap: 8px;
   margin: 22px 0;
 }
+/* 事件結果卡：每一列顯示一項變化（例如金幣 +120）。 */
 .event-change {
   display: flex;
   justify-content: space-between;

@@ -43,6 +43,7 @@
 
   // 遊戲館隱藏這個 iframe 時不必再繪製 3D 場景，省下顯示卡與電量。
   const drawScene = window.renderScene;
+  // 遊戲館暫停時不畫 3D 畫面（節省電力），回來再繼續畫。
   window.renderScene = function (scene, camera) {
     if (window.akanePortalPaused) return;
     drawScene(scene, camera);

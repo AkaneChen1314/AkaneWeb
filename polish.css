@@ -14,9 +14,11 @@ body {
     radial-gradient(ellipse at 88% 10%, #7661ba21, transparent 45%),
     radial-gradient(ellipse at 8% 40%, #46aaac17, transparent 45%), #071524;
 }
+/* 右側的極光背景光暈。 */
 .aurora-right {
   background: radial-gradient(ellipse, #867ed625, transparent 65%);
 }
+/* 首頁主標題區：上方小字的字距、標題與介紹文字的間距及顏色。 */
 .hero-type .eyebrow {
   letter-spacing: 2.3px;
 }
@@ -31,6 +33,7 @@ body {
   color: #aabed1;
 }
 /* 封面旁的簡介。 */
+/* 首頁的網站介紹卡片：小標、標題、內文。 */
 .hero-about {
   border-left: 2px solid #b9b0ff55;
   padding: 3px 0 3px 20px;
@@ -55,6 +58,7 @@ body {
   margin: 0;
   color: #8ea9c1;
 }
+/* 介紹卡片下方的小標籤。 */
 .hero-about-tags {
   display: flex;
   flex-wrap: wrap;
@@ -69,6 +73,7 @@ body {
   border-radius: 20px;
   padding: 3px 10px;
 }
+/* 人物圖的外框邊線與背景光。 */
 .hero-character {
   border-color: #a6bfff47;
   background:
@@ -225,6 +230,7 @@ body.playing .edge-film {
   align-items: flex-end;
   gap: 11px;
 }
+/* 「動態播放」開關與一般柔和按鈕的外觀；滑過時變亮。 */
 .motion-toggle,
 .soft-button {
   display: inline-flex;
@@ -243,10 +249,12 @@ body.playing .edge-film {
 .soft-button:hover {
   border-color: #aacbe389;
 }
+/* 開關旁邊的狀態文字（例如「動態播放中」）。 */
 #motion-status {
   font-size: 9px;
   color: #8eacc3;
 }
+/* 動態卡片區上方的介紹文字。 */
 .home-editorial.blue-hour > .moments-intro {
   max-width: 760px;
   margin: 0 0 28px;
@@ -269,6 +277,7 @@ body.playing .edge-film {
   display: flex;
   flex-direction: column;
 }
+/* 三張動態卡片各自的底色。 */
 .moment-feature {
   background: linear-gradient(145deg, #42365038, #1535477a);
 }
@@ -278,6 +287,7 @@ body.playing .edge-film {
 .moment-sunlight {
   background: linear-gradient(145deg, #60465824, #1b294b78);
 }
+/* 動態卡片上的影片區：固定高度，影片填滿不變形。 */
 .moment-screen {
   position: relative;
   height: 250px;
@@ -294,16 +304,19 @@ body.playing .edge-film {
     transparent 95%
   );
 }
+/* 第一張（較大）卡片的影片區比較高。 */
 .moment-feature .moment-screen {
   height: 285px;
 }
 .moment-feature video {
   object-position: center 42%;
 }
+/* 第二張卡片的影片取景位置，讓人物臉部在畫面中間。 */
 .moment-smile video {
   object-fit: cover;
   object-position: center 31%;
 }
+/* 影片左上角的小標籤。 */
 .moment-badge {
   position: absolute;
   top: 18px;
@@ -315,6 +328,7 @@ body.playing .edge-film {
   border-radius: 20px;
   background: #0717279e;
 }
+/* 動態卡片下半部的文字：小標、標題、說明與來源連結。 */
 .moment-copy {
   position: relative;
   padding: 21px 23px 25px;
@@ -333,9 +347,11 @@ body.playing .edge-film {
   margin: 0 0 12px;
   color: #d9e7f5;
 }
+/* 第一張卡片的標題字比較大。 */
 .moment-feature .moment-copy h3 {
   font-size: 24px;
 }
+/* 卡片說明文字與來源連結。 */
 .moment-copy p:not(.eyebrow) {
   font-size: 12px;
   line-height: 1.95;
@@ -374,11 +390,13 @@ body.playing .edge-film {
     radial-gradient(ellipse at 0 70%, #8980cb18, transparent 65%), #112b3e6e;
   margin-top: 23px;
 }
+/* 收藏筆記左邊的大引號裝飾。 */
 .curator-mark {
   color: #b7cbe4;
   font-size: 53px;
   text-shadow: 0 0 25px #a398df39;
 }
+/* 收藏筆記的小標、標題與內文。 */
 .curator-note-copy .eyebrow {
   font-size: 8px;
   letter-spacing: 1.7px;
@@ -397,6 +415,7 @@ body.playing .edge-film {
   margin: 0;
   max-width: 720px;
 }
+/* 收藏筆記下方的關鍵字標籤。 */
 .curator-tags {
   display: flex;
   gap: 17px;
@@ -409,6 +428,7 @@ body.playing .edge-film {
   color: #b6afd9;
   margin-right: 5px;
 }
+/* 收藏筆記右邊的按鈕列。 */
 .curator-actions {
   display: flex;
   flex-direction: column;
@@ -419,6 +439,7 @@ body.playing .edge-film {
   font-size: 11px;
   color: #a8c5dc;
 }
+/* 第一、二則收藏筆記各自的底色。 */
 .curator-note[data-note="1"] {
   background:
     radial-gradient(ellipse at 15% 75%, #b18ba11f, transparent 65%), #112b3e6e;
@@ -445,12 +466,14 @@ body.playing .edge-film {
   font-size: 31px;
   line-height: 1.45;
 }
+/* 造型資料室：左邊設定圖、右邊說明，兩欄排列。 */
 .design-room-grid {
   display: grid;
   grid-template-columns: 1.55fr 1fr;
   align-items: center;
   gap: 30px;
 }
+/* 左邊的設定圖卡片；圖片本身是按鈕，按下可以放大。 */
 .design-sheet {
   margin: 0;
   padding: 15px;
@@ -504,6 +527,7 @@ body.playing .edge-film {
   padding: 13px 0 3px;
   color: #8aa6c3;
 }
+/* 右邊的說明區。 */
 .design-notes {
   padding: 18px 10px;
 }
@@ -512,6 +536,7 @@ body.playing .edge-film {
   letter-spacing: 2px;
   color: #b5a9d5;
 }
+/* 說明區的分頁按鈕（表情、造型、色彩）；選中的那一個變亮。 */
 .design-note-tabs {
   display: flex;
   gap: 10px;
@@ -531,6 +556,7 @@ body.playing .edge-film {
   border-color: #b6b6dca0;
   color: #dceafa;
 }
+/* 分頁的內容：編號、標題與內文。 */
 .design-note-content {
   min-height: 192px;
 }
@@ -586,6 +612,7 @@ body.playing .edge-film {
     linear-gradient(transparent, #000 6%, #000 94%, transparent);
   mask-composite: intersect;
 }
+/* 三季圖庫卡片各自的底色：第一季、第二季、第三季。 */
 .gallery-card[data-season="1"] {
   background: linear-gradient(150deg, #32366465, #0c2139dc);
 }
@@ -620,6 +647,7 @@ body.playing .edge-film {
   background: #051224e8;
   backdrop-filter: blur(8px);
 }
+/* 設定圖放大視窗的標題區。 */
 .reference-viewer-heading {
   padding: 26px 30px 23px;
 }
@@ -640,6 +668,7 @@ body.playing .edge-film {
   line-height: 1.9;
   max-width: 680px;
 }
+/* 放大後可以捲動看的圖片區域；original-size 是「原始尺寸」模式。 */
 .reference-scroll {
   margin: 0 20px 20px;
   border-radius: 8px;

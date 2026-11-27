@@ -25,6 +25,8 @@
   // 選單和 HUD 是照電腦螢幕設計的：小螢幕上整個等比例縮小（搭配 css/style.css 最後一段）
   const root = document.documentElement;
   let hudScale = 1;
+  // 依螢幕大小算出選單（--menu-s）與 HUD（--hud-s）的縮小倍率，最多 1 倍（不放
+  // 大）。
   function fit() {
     const w = innerWidth,
       h = innerHeight;
@@ -53,6 +55,7 @@
     if (on && !Input.keys[code]) Input.pressed[code] = true;
     Input.keys[code] = on;
   };
+  // tap(按鍵)：模擬按一下；player() 取得目前的玩家角色。
   const tap = (code) => {
     Input.pressed[code] = true;
   };
@@ -63,6 +66,8 @@
     accent: "#58e6ff",
     hint: "左邊拖曳移動（推到底衝刺）・右邊滑動轉視角",
     active: () => Game.state === "playing",
+    // 搖桿推超過 0.38 就當作按下 W、S、A、D；推到底而且往前，就同時按住 Shift（
+    // 衝刺）。
     move(x, y, push) {
       hold("KeyW", y > 0.38);
       hold("KeyS", y < -0.38);
@@ -70,6 +75,7 @@
       hold("KeyA", x < -0.38);
       hold("ShiftLeft", push > 1.3 && y > 0.6);
     },
+    // 手指滑動的距離換算成滑鼠移動，用來轉視角（1.9 是靈敏度倍率）。
     look(dx, dy) {
       Input.mouse.dx += dx * 1.9;
       Input.mouse.dy += dy * 1.9;
@@ -81,6 +87,7 @@
         big: true,
         aim: true,
         at: [30, 42],
+        // 按下射擊鈕＝按住滑鼠左鍵；放開就鬆開。
         down() {
           Input.mouse.left = true;
           Input.mouse.leftHit = true;
@@ -119,6 +126,7 @@
         label: "技能",
         corner: "bc",
         at: [-70, 10],
+        // 技能按鈕下方的小字：冷卻中顯示剩幾秒，好了就顯示按鍵 Q。
         sub: () =>
           player() && player().skillCd > 0
             ? Math.ceil(player().skillCd) + " 秒"

@@ -157,10 +157,14 @@
 
     // 依事件加上鏡頭震動、文字與殘影。
     cue(event) {
+      // 收到規則傳來的事件時：先讓動作系統做出對應的反應，再交給特效。
       const { fighter } = event;
       const anim = this.animation;
       if (anim) this.aimEffects(event, anim);
       this.effects.cue(event);
+      // 下面依事件種類加上畫面效果：招式名稱字幕、畫面震動、命中數字，以及「防
+      // 禦」「霸體」「精準防禦！」「破防！」「影返！」「閃過」「拆投！」「爆氣！」
+      // 等文字。
       switch (event.type) {
         case "round":
           this.reset();

@@ -187,7 +187,7 @@
     <!-- 網站版本，要和 VERSION.txt 相同，更新時一起改。 -->
     <meta
       name="akane-edition"
-      content="20261124-blueworld-v1.3"
+      content="20261128-blueworld-v1.3"
     />
     <!-- 動態播放、設定圖放大與筆記。 -->
     <script
@@ -369,6 +369,7 @@
             >✦</span
           ><span>BLUE WORLD<small>KUROKAWA AKANE</small></span></a
         >
+        <!-- 頁首的專區導覽：首頁、黑川茜專區、小遊戲專區。 -->
         <nav aria-label="主要導覽">
           <a
             href="#home"
@@ -441,6 +442,7 @@
                 class="stage-ring ring-two"
                 aria-hidden="true"
               ></div>
+              <!-- 首頁右邊的黑川茜立繪與圖說。 -->
               <figure class="hero-character">
                 <img
                   src="assets/akane/hero.webp"
@@ -459,6 +461,7 @@
             </div>
             <p>今天想收藏一點星光，<br />還是走進一個新的遊戲世界？</p>
           </div>
+          <!-- 兩張專區入口卡片：黑川茜專區與小遊戲專區。 -->
           <div class="gateway-grid">
             <!-- 入口：黑川茜專區。 -->
             <article class="gateway character-gateway">
@@ -562,6 +565,7 @@
               一個點頭、一點笑意，也能讓角色更靠近。把這些短暫的表情留在這裡，讓
               Blue World有一點生活的溫度。
             </p>
+            <!-- 三張動態卡片：上面是無聲影片，下面是說明與來源。 -->
             <div class="moments-grid">
               <!-- 動態卡：主要的一張。 -->
               <article class="moment-card moment-feature loop-card">
@@ -729,6 +733,7 @@
             class="profile-grid"
             id="profile"
           >
+            <!-- 人物介紹左邊的官方肖像。 -->
             <figure class="profile-portrait">
               <img
                 src="assets/akane/profile.webp"
@@ -747,6 +752,7 @@
                 >
               </figcaption>
             </figure>
+            <!-- 人物介紹右邊：名字、簡介、基本資料與特徵標籤。 -->
             <article class="profile-content">
               <p class="eyebrow">MEET THE ACTRESS</p>
               <h3>安靜的藍，<br />有著走上舞台的力量。</h3>
@@ -859,6 +865,7 @@
               </div>
               <p>不只劇照，也收藏造型、<br />正側背面與表情的細節。</p>
             </div>
+            <!-- 造型資料室：左邊是設定圖，右邊是說明分頁（表情、造型、色彩）。 -->
             <div class="design-room-grid">
               <figure class="design-sheet">
                 <button
@@ -946,6 +953,7 @@
               <p>不只有舞台上的光。<br />也收藏她眨眼、微笑與專注的片刻。</p>
             </div>
             <div class="actor-room-layout">
+              <!-- 表情觀察室左邊的圖片，切換表情時由程式換圖。 -->
               <figure class="actor-room-art">
                 <img
                   id="actor-room-image"
@@ -1022,6 +1030,7 @@
               class="little-facts"
               id="little-facts"
             >
+              <!-- 每一則小知識：點標題展開說明。 -->
               <details>
                 <summary>
                   <span>01</span> Lalalai 是什麼？ <b aria-hidden="true">＋</b>
@@ -1195,6 +1204,7 @@
             </div>
             <p>以下為本館的觀賞筆記，<br />由官方角色與故事介紹延伸整理。</p>
           </div>
+          <!-- 角色特點：三張卡片。 -->
           <div class="trait-grid">
             <article class="trait-card">
               <span>01 / DEDICATION</span>
@@ -1253,6 +1263,7 @@
               ><b>含動畫第 1–3 季劇情，點開閱讀 <i aria-hidden="true">＋</i></b>
             </summary>
             <div class="timeline">
+              <!-- 劇情筆記的時間軸：每一季一段。 -->
               <article>
                 <span>01 / 第一季</span>
                 <h3>在節目中被看見</h3>
@@ -1431,6 +1442,7 @@
           ></p>
           <!-- 圖片由 archive.js 放進這裡。 -->
           <div id="akane-gallery">
+            <!-- 圖庫的「動畫劇照」分組。 -->
             <section
               id="still-section"
               aria-labelledby="still-title"
@@ -1446,6 +1458,7 @@
                 id="still-gallery"
               ></div>
             </section>
+            <!-- 圖庫的「立繪」分組（目前沒有單獨的篩選按鈕）。 -->
             <section
               id="visual-section"
               aria-labelledby="visual-title"
@@ -1481,6 +1494,7 @@
                 和服與魔女，收藏節慶裡的茜。<br />讓每一種色彩，都留在喜歡的畫面裡。
               </p>
             </div>
+            <!-- 特別收藏：四張橫幅插畫卡片，點圖片可以放大。 -->
             <div class="special-art-grid">
               <article class="special-art-card">
                 <button
@@ -2080,6 +2094,7 @@
               hidden
             >
               <summary>✧ <span id="bookmark-current">逛逛茜</span></summary>
+              <!-- 閱讀書籤展開後的段落清單。 -->
               <nav aria-label="段落書籤">
                 <p>下一束光，想看哪裡？</p>
                 <div>
@@ -2114,6 +2129,7 @@
           >
             <p class="eyebrow">CREDITS &amp; READING</p>
             <h2 id="sources-title">從官方資料，走近黑川茜。</h2>
+            <!-- 影片來源清單：可以展開查看每段影片的出處。 -->
             <details class="motion-source-list">
               <summary>本次新增的五段側邊動畫來源 ↗</summary>
               <p>
@@ -2221,6 +2237,7 @@
                 先看看玩法，再走進你的故事。隨時都能回到這裡，換個心情繼續玩。
               </p>
             </div>
+            <!-- 遊戲館上方的三格統計。 -->
             <ul
               class="hall-stats"
               aria-label="遊戲館概況"
@@ -2831,6 +2848,7 @@
       <footer>
         <details class="appearance-settings">
           <summary>外觀設定</summary>
+          <!-- 外觀設定展開後的內容：三種光色按鈕與說明。 -->
           <div class="appearance-settings-panel">
             <span>網站光色</span>
             <div
@@ -2868,7 +2886,7 @@
         <span>✦ BLUE WORLD</span>
         <p>二次元守護者的收藏館 · 非官方粉絲主題</p>
         <a href="#sources">來源與圖片權利</a
-        ><small>Blue World · 十款獨立遊戲 · 2026.11.24 v1.3</small>
+        ><small>Blue World · 十款獨立遊戲 · 2026.11.28 v1.3</small>
       </footer>
     </div>
 
@@ -2895,6 +2913,7 @@
         <h2 id="details-title"></h2>
         <p id="details-description"></p>
         <h3>怎麼玩？</h3>
+        <!-- 遊戲介紹視窗的「怎麼玩」步驟，由 main.js 依遊戲填入。 -->
         <ol id="details-steps"></ol>
         <div
           class="detail-note"
@@ -3064,6 +3083,7 @@
       hidden
       aria-label="遊戲視窗"
     >
+      <!-- 遊戲區上方的標題列：返回按鈕、遊戲名稱與小提示。 -->
       <header class="player-bar">
         <button
           id="return-lounge"

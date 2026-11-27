@@ -7,6 +7,7 @@
   z-index: 110;
   font-family: "Noto Sans TC", sans-serif;
 }
+/* 直接開啟遊戲時，上方有返回列，遊戲畫面往下讓出 46px。 */
 .standalone-portal-game #game {
   height: calc(100% - 46px);
   margin-top: 46px;

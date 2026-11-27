@@ -132,6 +132,8 @@ test("difficulty scales spawn pressure and warning windows independently", () =>
 // 關閉精英後維持關閉，首領間隔與頻率互不影響。
 test("elite off remains off and Boss interval/frequency choices stay independent", () => {
   for (const d of DIFFICULTIES) {
+    // 開一局：關閉菁英，並指定 Boss 間隔、延遲、頻率與密度，檢查這些設定互不影
+    // 響。
     const e = run(d.id, {
       eliteRate: "none",
       bossEvery: 7,

@@ -1746,6 +1746,7 @@ input[type="range"]::-webkit-slider-thumb {
   color: var(--c);
   margin-bottom: 6px;
 }
+/* 結算畫面的數據（3 欄）與強化紀錄。 */
 #res-body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

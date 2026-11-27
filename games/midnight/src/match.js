@@ -68,6 +68,7 @@
 
   // 小工具：限制範圍、倒數與場地邊界。
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+  // decay：計時器往下數，不會變成負數。stageX：把位置限制在場地左右邊界之間。
   const decay = (value, dt) => Math.max(0, value - dt);
   const stageX = (x) => clamp(x, FIELD.left, FIELD.right);
   // 目前是否在招式的某個時間區段內。
@@ -920,6 +921,7 @@
 
     // 推進招式，時間到就產生攻擊判定。
     advanceAttack(fighter, target, contacts, dt) {
+      // move 是正在出的招式，spec 是這一招的固定資料（多長、什麼時候打出判定）。
       const move = fighter.move;
       if (!move) return;
       const { spec } = move;
@@ -930,6 +932,7 @@
         if (!near && move.rush.time < RUSH_TIME) return;
         move.rush = null;
       }
+      // 累計已經出招多久。
       move.elapsed += dt;
       // 上一幀揮出去、還沒碰到人的拳腳，繼續判定
       if (move.live?.length)
@@ -938,6 +941,7 @@
             move.elapsed <= item.until &&
             !this.tryStrike(fighter, target, item.strike, move, contacts),
         );
+      // 依時間依序觸發這一招的每個事件：瞬移、上升、放開被抓住的人、打出判定等。
       while (
         move.next < spec.events.length &&
         spec.events[move.next].at <= move.elapsed + 0.000001
@@ -980,6 +984,7 @@
           }
         }
       }
+      // 招式時間到了就結束，回到一般狀態。
       if (
         fighter.move === move &&
         move.elapsed >= (move.duration ?? spec.duration)

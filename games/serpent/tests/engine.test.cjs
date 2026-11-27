@@ -211,6 +211,8 @@ test("settlement is idempotent and persists history and achievements", () => {
 });
 // 壞掉的個人資料與文字會被修正。
 test("malformed profile and stored text are sanitized", () => {
+  // 故意給一份亂七八糟的存檔（負數晶體、不存在的地圖與模式、超過上限的升級），
+  // 檢查會被修正成合理的值。
   const p = S.sanitizeProfile({
     crystals: -100,
     selected: Infinity,
@@ -356,6 +358,7 @@ test("eight-step tutorial requires real actions and finishes without rewards", (
   assert.equal(g.mode, "zen");
   assert.equal(g.food.length, 0);
   assert.equal(g.obstacles.length, 0);
+  // 模擬一幀：遊戲與教學各前進 1/60 秒（60 FPS 的一幀）。
   const tick = (input) => {
     g.update(1 / 60, input);
     t.update(1 / 60, input);
@@ -419,6 +422,7 @@ test("tutorial does not skip tasks due to unrelated actions or elapsed time", ()
 });
 // 舊存檔的貨幣、成就與強化會保留。
 test("old saves retain currency, achievements and upgrades with new guide fields", () => {
+  // 建立一份舊版存檔，檢查晶體、成就與升級在升級後還在。
   const p = S.sanitizeProfile({
     version: 1,
     crystals: 123,

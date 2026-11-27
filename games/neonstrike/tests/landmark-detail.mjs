@@ -74,6 +74,7 @@ assert.equal(bridges.length, 2);
 for (const bridge of bridges) {
   const bounds = new THREE.Box3().setFromObject(bridge);
   for (const x of [-11, 11]) {
+    // 找出橋下支撐柱的位置，檢查它真的在橋的正下方。
     const support = foundry.run(
       `
         worldMeshes.find(

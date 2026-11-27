@@ -618,10 +618,9 @@ const soundFiles = {
   step1: "./assets/audio/step-1.wav",
 };
 
-// 建立幹員、武器與任務選項，並將玩家選擇同步到大廳介面。
-
 // ---------- 大廳 ----------
 
+// 建立幹員、武器與任務選項，並將玩家選擇同步到大廳介面。
 function initLoadout() {
   weaponSkins.forEach((skin, index) => {
     const button = document.createElement("button");
@@ -1291,6 +1290,7 @@ function createWallTexture() {
 
 // 加一個方塊，預設會擋人與擋子彈。
 function addBox(x, y, z, sx, sy, sz, color, options = {}) {
+  // 方塊本體：BoxGeometry 是大小，mat(顏色, 粗糙度, 金屬感) 是材質。
   const mesh = new THREE.Mesh(
     new THREE.BoxGeometry(sx, sy, sz),
     mat(
@@ -1538,6 +1538,7 @@ function districtContext() {
   };
 }
 
+// 熔火工廠地圖：地面材質、背景天際線，再交給 district-maps.js 擺放各區的建築。
 function createFoundryArena() {
   // 第二張地圖是露天鑄造廠：短走廊通向圓形熔爐，外圈有寬的側路，南邊保留暢通的
   // 出發通道。
@@ -1985,6 +1986,8 @@ function createFoundryArena() {
   createFoundryDistricts(districtContext());
 }
 
+// 工廠的背景天際線：用 InstancedMesh（同一個形狀畫很多次，只算一次繪圖）放在圍
+// 牆外面。
 function createFoundrySkyline() {
   // 鑄造廠有自己的工業天際線。剪影在可玩範圍之外，只用三次繪圖。
   const factory = new THREE.InstancedMesh(
@@ -2113,6 +2116,7 @@ function createPortSkyline() {
 
 // 港區的細節：倉庫、貨櫃、油庫、閘門與維修區。
 function createHarborDetails() {
+  // 港區的細節材質：鋼鐵、深色、黃色警示、管線等。
   const steel = mat(0x263238, 0.58, 0.55),
     dark = mat(0x11191d, 0.7, 0.35),
     yellow = mat(0xb4cb38, 0.62, 0.22),
@@ -2131,6 +2135,7 @@ function createHarborDetails() {
 
   // 03 號機庫：走道、欄杆、通風、電箱與燈。
   detailBox(0, 3.28, 0.15, 10.7, 0.16, 1.05, steel);
+  // 中央倉庫屋頂的欄杆（22 根，用 InstancedMesh 一次畫出）與上方的鋼樑。
   const railGeo = new THREE.BoxGeometry(0.055, 1, 0.055),
     railMat = dark,
     rail = new THREE.InstancedMesh(railGeo, railMat, 22),
@@ -2147,6 +2152,7 @@ function createHarborDetails() {
   worldMeshes.push(rail);
   detailBox(0, 4.2, -0.48, 10.5, 0.07, 0.07, steel);
   detailBox(0, 4.2, 0.48, 10.5, 0.07, 0.07, steel);
+  // 三根垂直的通風管。
   [-3.8, 0, 3.8].forEach((x, index) => {
     const duct = new THREE.Mesh(
       new THREE.CylinderGeometry(0.19, 0.19, 4.3, 10),
@@ -2164,6 +2170,7 @@ function createHarborDetails() {
     lamp.position.set(x, 4.55, index === 1 ? 1.5 : -1.6);
     scene.add(lamp);
   });
+  // 倉庫兩側的配電箱與區域標示牌。
   addBox(-4.75, 0.8, 1.5, 1.15, 1.6, 0.55, 0x47545a);
   addBox(4.75, 0.8, -1.5, 1.15, 1.6, 0.55, 0x47545a);
   placeZoneSign("HANGAR—03", "CENTRAL PROCESSING", 0, 4.5, 5.54, 0, 0xc8ff2e, {
@@ -2173,6 +2180,7 @@ function createHarborDetails() {
 
   // 貨櫃區：堆疊的剪影與簡單的堆高機。
   createContainer(-35, 4.8, -29, 4.8, 3.2, 11, 0x3d5967, Math.PI / 2, true);
+  // 北側貨櫃區：上下疊兩個貨櫃，上層只是裝飾；旁邊有照亮貨櫃的藍色燈。
   createContainer(27, 1.6, -35, 4.8, 3.2, 11, 0x39515a, Math.PI / 2);
   createContainer(27, 4.8, -35, 4.8, 3.2, 11, 0x6e4534, Math.PI / 2, true);
   // 固定在地上的吊貨架，讓北區容易辨認。
@@ -2191,6 +2199,7 @@ function createHarborDetails() {
   const cargoLamp = new THREE.PointLight(0x7bd9f5, 1.8, 18, 2);
   cargoLamp.position.set(27, 6.9, -38.4);
   scene.add(cargoLamp);
+  // 堆高機：車身、駕駛室、四個輪子與兩根貨叉，並登記碰撞範圍。
   const fork = new THREE.Group();
   fork.position.set(20, 0, -31);
   scene.add(fork);
@@ -2227,6 +2236,7 @@ function createHarborDetails() {
       new THREE.Vector3(21.2, 2.65, -29.4),
     ),
   );
+  // 貨櫃區與燃料區的標示牌與管線。
   placeZoneSign("CONTAINER ROW", "NORTH YARD", -31, 2.4, -46.2, 0, 0x5de3ff);
 
   // 油庫：兩座臥式油槽、管線與危險標示。
@@ -2280,6 +2290,7 @@ function createHarborDetails() {
 
   // A 門：警衛亭、柵欄與路障。
   addBox(7, 1.55, 40, 4.1, 3.1, 4.2, 0x35464c);
+  // 南側檢查站：崗亭的玻璃、柵欄桿（可以跳過去）與紅白條紋。
   detailBox(
     7,
     2.05,
@@ -2325,6 +2336,7 @@ function createHarborDetails() {
     roughness: 0.8,
     metalness: 0.14,
   });
+  // 西側維修區：牆上的格柵與兩台會轉的排風扇。
   for (let z = -0.5; z < 15; z += 0.65)
     detailBox(-43.38, 2.5, z, 0.06, 0.045, 0.52, steel);
   [1, 11].forEach((z) => {
@@ -2383,6 +2395,7 @@ function createHarborDetails() {
       0.76,
     );
   }
+  // 維修區標示牌，最後加上共用的小道具、圍欄、路面標線與下雨效果。
   placeZoneSign(
     "SERVICE BAY",
     "AUTHORIZED CREW ONLY",
@@ -2876,11 +2889,13 @@ function openPickupSpot(x, z) {
 
 // 建立一個補給：底座、光圈與各種模型。
 function createPickup(type, x, z, index) {
+  // 建立補給：def 是這種補給的資料，openPickupSpot 會找一個沒有東西擋住的位置。
   const def = pickupTypes[type],
     [px, pz] = openPickupSpot(x, z),
     root = new THREE.Group();
   root.position.set(px, 0, pz);
   scene.add(root);
+  // 共用的材質：發光材質與深色底座。
   const glow = new THREE.MeshBasicMaterial({
       color: def.color,
       transparent: true,
@@ -2889,6 +2904,7 @@ function createPickup(type, x, z, index) {
     }),
     dark = mat(0x11181b, 0.52, 0.5),
     steel = mat(0x89969a, 0.32, 0.8);
+  // 地上的圓形底座與發光的光環。
   const pad = new THREE.Mesh(
     new THREE.CylinderGeometry(0.56, 0.65, 0.1, 8),
     dark,
@@ -2902,6 +2918,7 @@ function createPickup(type, x, z, index) {
   ring.rotation.x = Math.PI / 2;
   ring.position.y = 0.11;
   root.add(ring);
+  // 補給模型放在 model 這個群組裡，下面依種類組合出不同的樣子。
   const model = new THREE.Group();
   model.position.y = 0.57;
   root.add(model);
@@ -2913,8 +2930,10 @@ function createPickup(type, x, z, index) {
     model.add(mesh);
     return mesh;
   };
+  // box(大小, 材質, 位置) 是組模型用的小工具。
   const box = (sx, sy, sz, material, x = 0, y = 0, z = 0) =>
     part(new THREE.BoxGeometry(sx, sy, sz), material, [x, y, z]);
+  // 醫療包：白色外殼、紅色十字、四角的橡膠墊。
   if (type === "medkit") {
     const shell = mat(0xe5ece8, 0.62, 0.08),
       red = new THREE.MeshBasicMaterial({ color: 0xf1404e }),
@@ -2937,6 +2956,7 @@ function createPickup(type, x, z, index) {
       for (const end of [-1, 1])
         box(0.095, 0.13, 0.47, rubber, side * 0.34, end * 0.19, 0);
   } else if (type === "armor") {
+    // 護甲：藍灰色背心、肩帶與標誌。
     const plate = mat(0x426771, 0.6, 0.4),
       trim = mat(0x1e343d, 0.8, 0.12),
       mark = new THREE.MeshBasicMaterial({ color: 0x76eaff });
@@ -2953,6 +2973,7 @@ function createPickup(type, x, z, index) {
       box(0.035, 0.17, 0.02, mark, 0, 0.01, side * 0.102);
     });
   } else if (type === "ammo") {
+    // 彈藥箱：橄欖綠箱子、銅色子彈。
     const olive = mat(0x59674a, 0.72, 0.22),
       brass = mat(0xd2a64b, 0.3, 0.8),
       tip = mat(0x9b6e34, 0.42, 0.6),
@@ -3006,6 +3027,7 @@ function createPickup(type, x, z, index) {
     );
     box(0.055, 0.055, 0.025, safety, 0, -0.11, 0.224);
   }
+  // 所有零件都會投射與接收影子；再把模型放到底座上方（量出模型的實際高度）。
   model.traverse((object) => {
     if (object.isMesh) {
       object.castShadow = true;
@@ -3015,6 +3037,7 @@ function createPickup(type, x, z, index) {
   model.position.y = 0;
   const modelBounds = new THREE.Box3().setFromObject(model);
   model.position.y = 0.1 - modelBounds.min.y;
+  // 補給上方的名稱標籤與一道光柱，最後加入場上的補給清單。
   const label = createPickupLabel(def);
   label.position.set(0, 1.24, 0);
   root.add(label);
@@ -3199,6 +3222,7 @@ function createContainer(
   rotation,
   visualOnly = false,
 ) {
+  // 貨櫃本體（有碰撞），並標記為貨櫃。
   const body = addBox(x, y, z, sx, sy, sz, color, {
     rotation,
     metalness: 0.32,
@@ -3206,6 +3230,7 @@ function createContainer(
     castShadow: !visualOnly,
   });
   body.userData.container = true;
+  // 四個角的柱子。
   const edgeMat = mat(0x20282b, 0.55, 0.5);
   const localX = rotation ? sz : sx;
   const localZ = rotation ? sx : sz;
@@ -3225,6 +3250,7 @@ function createContainer(
       scene.add(post);
     }),
   );
+  // 兩側的波浪板（一根一根的肋條，用 InstancedMesh 一次畫）。
   const ribCount = Math.ceil(sz / 0.48),
     ribs = new THREE.InstancedMesh(
       new THREE.BoxGeometry(0.065, sy - 0.22, 0.045),
@@ -3245,6 +3271,7 @@ function createContainer(
   ribs.castShadow = false;
   ribs.receiveShadow = true;
   body.add(ribs);
+  // 門上的四根鎖桿與門軸。
   const doorBars = new THREE.InstancedMesh(
     new THREE.BoxGeometry(0.065, sy - 0.3, 0.07),
     edgeMat,
@@ -3278,6 +3305,7 @@ function createContainer(
     }
   hinges.instanceMatrix.needsUpdate = true;
   body.add(hinges);
+  // 回傳貨櫃本體。
   return body;
 }
 
@@ -3292,6 +3320,7 @@ function placeZoneSign(
   accent = 0xc8ff2e,
   options = {},
 ) {
+  // 標示牌的圖案：在畫布上畫出深色底、上方彩色線條、大標題與副標，再轉成貼圖。
   const canvas = document.createElement("canvas");
   canvas.width = 512;
   canvas.height = 128;
@@ -3310,6 +3339,7 @@ function placeZoneSign(
   ctx.fillText(subtitle, 25, 94);
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
+  // 牌子本體與外框。
   const material = new THREE.MeshBasicMaterial({
       map: texture,
       side: THREE.FrontSide,
@@ -3335,6 +3365,7 @@ function placeZoneSign(
   sign.children[0].position.z = 0.032;
   sign.children[1].position.z = -0.032;
   sign.add(frame);
+  // 依掛法（吊掛、屋頂、牆面）加上支架。
   const mount = new THREE.Group();
   mount.name = "sign-mount";
   sign.add(mount);
@@ -3404,6 +3435,8 @@ function placeZoneSign(
 
 // 重複的小物件：三角錐、欄杆與棧板。
 function createInstancedProps() {
+  // 小道具都用 InstancedMesh：同一個形狀畫很多份，只需要一次繪圖。這裡是交通錐
+  // （9 對，有碰撞）。
   const coneGeo = new THREE.ConeGeometry(0.18, 0.6, 9),
     coneMat = mat(0xff6838, 0.72, 0.08),
     cones = new THREE.InstancedMesh(coneGeo, coneMat, 18),
@@ -3431,6 +3464,7 @@ function createInstancedProps() {
   cones.instanceMatrix.needsUpdate = true;
   cones.receiveShadow = true;
   scene.add(cones);
+  // 港區兩側的護柱（10 對）。
   const bollardGeo = new THREE.CylinderGeometry(0.1, 0.12, 0.75, 8),
     bollardMat = mat(0x738188, 0.48, 0.54),
     bollards = new THREE.InstancedMesh(bollardGeo, bollardMat, 20);
@@ -3445,6 +3479,7 @@ function createInstancedProps() {
   }
   bollards.instanceMatrix.needsUpdate = true;
   scene.add(bollards);
+  // 棧板堆。
   const palletGeo = new THREE.BoxGeometry(1.7, 0.16, 1.15),
     palletMat = mat(0x6f5236, 0.88, 0.02),
     pallets = new THREE.InstancedMesh(palletGeo, palletMat, 9);
@@ -3489,6 +3524,7 @@ function createInstancedProps() {
 
 // 鐵絲網圍欄。
 function createFenceLines() {
+  // 鐵絲網的圖案：在小畫布上畫斜線格子，轉成可以重複的貼圖。
   const canvas = document.createElement("canvas");
   canvas.width = 128;
   canvas.height = 64;
@@ -3509,12 +3545,14 @@ function createFenceLines() {
   const tex = new THREE.CanvasTexture(canvas);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
   tex.repeat.set(6, 2);
+  // 鐵絲網材質：半透明、兩面都看得到。
   const fenceMat = new THREE.MeshBasicMaterial({
     map: tex,
     transparent: true,
     side: THREE.DoubleSide,
     depthWrite: false,
   });
+  // 三段鐵絲網的位置與大小，並加上碰撞（子彈可以穿過，人不行）。
   const segments = [
       [-22, 1.5, -45, 26, 3, 0],
       [26, 1.5, -45, 22, 3, 0],
@@ -3547,6 +3585,7 @@ function createFenceLines() {
       postPositions.push([px, pz]);
     }
   });
+  // 鐵絲網的柱子。
   const postGeo = new THREE.CylinderGeometry(0.065, 0.08, 3.35, 7),
     posts = new THREE.InstancedMesh(postGeo, steel, postPositions.length),
     footGeo = new THREE.BoxGeometry(0.34, 0.18, 0.34),
@@ -3853,6 +3892,7 @@ function createGrenadeModel() {
 
 // 建立步槍：槍身零件、準鏡、細節與手臂。
 function createWeapon() {
+  // 玩家手上的步槍：所有零件放進 weapon 這個群組，跟著鏡頭移動。
   weapon = new THREE.Group();
   weapon.position.set(0.33, -0.29, -0.6);
   weapon.rotation.set(-0.03, -0.04, 0);
@@ -3925,6 +3965,7 @@ function createWeapon() {
       0.12,
     ],
   ];
+  // 槍身各零件建立後，記下它屬於哪個塗裝部位，換塗裝時才知道要改哪些顏色。
   parts.forEach(([name, geo, pos, rot, index, blend]) => {
     const mesh = new THREE.Mesh(geo, mat(0xffffff, 0.45, 0.55));
     mesh.name = name;
@@ -3936,6 +3977,7 @@ function createWeapon() {
     weapon.add(mesh);
   });
 
+  // 槍口火光：一盞瞬間亮起的點光源，加上一個錐形的火焰（平常隱藏）。
   muzzleFlash = new THREE.PointLight(0xffc35a, 0, 4, 2);
   muzzleFlash.position.set(0, 0.015, -0.92);
   weapon.add(muzzleFlash);
@@ -3955,6 +3997,7 @@ function createWeapon() {
   flashCone.name = "flash";
   weapon.add(flashCone);
 
+  // 子彈射出的位置與槍口制退器。
   muzzleAnchor = new THREE.Object3D();
   muzzleAnchor.position.set(0, 0.015, -0.93);
   weapon.add(muzzleAnchor);
@@ -3967,6 +4010,7 @@ function createWeapon() {
   brake.userData.skinIndex = 2;
   brake.userData.skinBlend = 0.2;
   weapon.add(brake);
+  // 紅點瞄準鏡：外框、鏡片與反光。
   opticGroup = new THREE.Group();
   opticGroup.name = "optic";
   opticGroup.position.set(0, 0.225, -0.18);
@@ -3994,6 +4038,7 @@ function createWeapon() {
   );
   opticGlass.position.z = 0.001;
   opticGroup.add(opticGlass);
+  // 鏡片的反光貼圖：在畫布上畫出漸層與兩道斜線。
   const glintCanvas = document.createElement("canvas");
   glintCanvas.width = glintCanvas.height = 256;
   const glint = glintCanvas.getContext("2d");
@@ -4046,6 +4091,7 @@ function createWeapon() {
   );
   opticDot.position.z = 0.008;
   opticGroup.add(opticDot);
+  // 瞄準鏡的底座、扳機護弓與槍身側面的散熱孔。
   const mountBase = new THREE.Mesh(
     bevelBoxGeometry(0.095, 0.025, 0.1),
     mat(0x172126, 0.4, 0.7),
@@ -4087,6 +4133,7 @@ function createWeapon() {
     weapon.add(mesh);
     return mesh;
   };
+  // 槍身細節：側面的導軌、螺絲、刻線。
   [-1, 1].forEach((side) => {
     detail(
       new THREE.BoxGeometry(0.006, 0.045, 0.23),
@@ -4192,6 +4239,7 @@ function createWeapon() {
       0.015,
       z,
     );
+  // 槍身上的序號字樣（畫在畫布上再貼上去）。
   const serial = document.createElement("canvas");
   serial.width = 256;
   serial.height = 64;
@@ -4217,6 +4265,7 @@ function createWeapon() {
   serialPlate.position.set(0.079, -0.024, 0.16);
   weapon.add(serialPlate);
 
+  // 加上手臂、套用目前的塗裝，並記下槍管各點的位置（用來偵測槍是不是戳到牆）。
   createArms();
   weapon.userData.arms = weapon.children.filter(
     (object) => object.userData.arm,
@@ -4330,20 +4379,25 @@ function navSpawnPoint(point, large = false) {
 
 // 在安全的位置產生一批敵人。
 function spawnEnemies(count, options = {}) {
+  // 敵人的顏色清單。
   const colors = [
     0xb64a4f, 0xc17d3d, 0x4d79a8, 0x7853a6, 0x426d52, 0xa33f75, 0x81733c,
     0x496a70, 0x9a593f,
   ];
+  // 依波數與模式決定從哪個出生點開始放，避免每次都一樣。
   const offset =
     (currentWave * 7 +
       selectedMode * 3 +
       Math.floor(Math.random() * enemySpawnPoints.length)) %
     enemySpawnPoints.length;
+  // 這一波裡有幾隻是菁英（依菁英比例）。
   const eliteCount = Math.min(
     count - (options.boss ? 1 : 0),
     Math.round(Math.max(0, Math.min(1, options.eliteRate ?? 0)) * count),
   );
   let spawned = 0;
+  // 一隻一隻建立：最後一隻是首領（如果這一波有），前面幾隻是菁英，其他是一般敵
+  // 人。
   for (let i = 0; i < count; i++) {
     const variant =
       options.boss && i === count - 1
@@ -4395,12 +4449,15 @@ function spawnEnemies(count, options = {}) {
     );
     spawned++;
   }
+  // 實際生出幾隻（出生點被擋住時可能少於預定），並修正總數。
   matchTotalEnemies = Math.max(0, matchTotalEnemies - count + spawned);
   return spawned;
 }
 
 // 建立一個敵人：數值、模型、血條與狀態。
 function createEnemy(x, z, color, index, variant = "standard") {
+  // rank 是等級（一般、菁英、首領）；difficulty 是難度設定，tuning 是自訂的敵人
+  // 強度。
   const rank =
     variant === "boss" ? "boss" : variant === "elite" ? "elite" : "standard";
   const difficulty = currentDifficulty(),
@@ -4415,6 +4472,7 @@ function createEnemy(x, z, color, index, variant = "standard") {
       : index % 3 === 2
         ? "marksman"
         : "assault";
+  // 首領的生命、速度、火力由任務設定決定，只接受幾個固定的選項。
   const rankLabel = boss ? commanderName() : elite ? "菁英幹員" : "一般敵軍";
   const bossSettings = encounterSettings();
   const bossHealth = [350, 700, 1200, 2000].includes(bossSettings.bossHealth)
@@ -4426,20 +4484,24 @@ function createEnemy(x, z, color, index, variant = "standard") {
   const bossPower = [0.75, 1, 1.5, 2].includes(bossSettings.bossPower)
     ? bossSettings.bossPower
     : 1;
+  // 生命：一般 100、菁英 155、首領依設定，再乘上難度。
   const enemyMaxHealth = Math.round(
     (boss ? bossHealth : elite ? 155 : 100) *
       difficulty.enemyHealth *
       tuning.health,
   );
+  // 移動速度與反應時間：每隻有一點隨機差異，首領與菁英反應比較快。
   const baseSpeed =
     (2.25 + Math.random() * 0.55) *
     (boss ? 0.82 * bossSpeed : elite ? 1.06 : 1) *
     (role === "flanker" ? 1.1 : role === "marksman" ? 0.94 : 1);
   const baseReaction =
     (Math.random() * 0.4 + 0.25) * (boss ? 0.9 : elite ? 0.82 : 1);
+  // 頭上顯示的名字。
   const enemyName = boss
     ? `WARLORD // ${commanderName()}`
     : `${elite ? "ELITE " : ""}${botNames[index % botNames.length]}-${String((index * 7 + currentWave * 13) % 100).padStart(2, "0")}`;
+  // 建立敵人模型：root 是整隻敵人；下面依等級選擇衣服、護甲與皮膚顏色。
   const root = new THREE.Group();
   root.position.set(x, 0, z);
   if (boss) root.scale.setScalar(1.25);
@@ -4464,6 +4526,7 @@ function createEnemy(x, z, color, index, variant = "standard") {
     root.add(mesh);
     return mesh;
   };
+  // 身體、胸甲、頭、頭盔、雙腿、護膝、雙手、肩甲、背包與天線。
   const torso = addPart(
     new THREE.CapsuleGeometry(0.35, 0.58, 4, 8),
     suit,
@@ -4543,6 +4606,7 @@ function createEnemy(x, z, color, index, variant = "standard") {
     "body",
   );
   antenna.rotation.z = -0.08;
+  // 手上的槍與槍口位置（敵人開槍時從這裡射出子彈）。
   const gun = addPart(
     new THREE.BoxGeometry(0.12, 0.13, 0.66),
     mat(0x15191b, 0.38, 0.68),
@@ -4565,10 +4629,12 @@ function createEnemy(x, z, color, index, variant = "standard") {
     }),
   );
   enemyFlash.rotation.x = Math.PI / 2;
+  // 敵人開槍時的火光（平常隱藏）。
   enemyFlash.position.copy(muzzle.position);
   enemyFlash.visible = false;
   root.add(enemyFlash);
 
+  // 菁英與首領的等級標誌。
   let rankMaterial = null;
   // 精英與首領多一些裝備。
   if (elite || boss) {
@@ -4664,6 +4730,7 @@ function createEnemy(x, z, color, index, variant = "standard") {
   fill.position.z = 0.002;
   barGroup.add(back, fill);
   root.add(barGroup);
+  // 頭上的名牌與血條；marker 是小地圖用的標記。
   const nameplate = createNameplate(enemyName, enemyMaxHealth);
   nameplate.position.set(0, 2.52, 0);
   root.add(nameplate);
@@ -4757,6 +4824,7 @@ function createEnemy(x, z, color, index, variant = "standard") {
     hitMaterials: [],
     stridePhase: Math.random() * Math.PI * 2,
   };
+  // 被打中時要閃白的材質清單，最後加入場上的敵人清單。
   const hitMaterials = new Set();
   root.traverse((obj) => {
     if (obj.isMesh && obj.material?.emissive) hitMaterials.add(obj.material);
@@ -5199,12 +5267,14 @@ function resumeGame() {
 
 // 開始一局：重設所有狀態並產生敵人。
 function startGame() {
+  // 只能從大廳開始；先建立選好的地圖。
   if (gameState !== "lobby") return;
   prepareSelectedMap();
   // 先編譯場景裡所有材質，第一次看到某一區時才不會在戰鬥中卡一下。
   try {
     renderer.compile(scene, camera);
   } catch {}
+  // 記下這一場的任務設定，並依幹員設定生命、護甲、彈藥與手榴彈。
   activeEncounter = { settings: { ...missionSettings } };
   const operator = currentOperator(),
     mode = currentMode();
@@ -5217,6 +5287,8 @@ function startGame() {
   grenadeCount = operator.grenades;
   speedBoostUntil = 0;
   damageShieldUntil = 0;
+  // 重設這一場的所有狀態：敵人數、波數、技能冷卻、連殺、時間限制、首領、尋路與
+  // 統計數據。
   matchTotalEnemies = encounterTotal(mode);
   defeatedEnemies = 0;
   currentWave = 0;
@@ -5443,11 +5515,13 @@ function createGrenadePreview() {
 
 // 更新預覽；瞄準沒變就不重算。
 function updateGrenadePreview(time, force = false) {
+  // 是否正在瞄準手榴彈（按住投擲鍵、而且還有手榴彈）。
   const active = gameState === "playing" && grenadeAiming && grenadeCount > 0;
   touchControls?.setGrenadePreview(active);
   ui.hud.classList.toggle("grenade-aiming", active);
   const hint = ui.grenadeHint;
   if (hint) hint.classList.toggle("hidden", !active);
+  // 沒有在瞄準時隱藏預覽線與落點。
   if (!grenadePreview) return;
   grenadePreview.group.visible = active;
   if (!active) {
@@ -5458,6 +5532,7 @@ function updateGrenadePreview(time, force = false) {
     hint?.classList.remove("danger");
     return;
   }
+  // 從目前的視角算出投擲起點與方向，預測整條飛行路線（含反彈）。
   const { origin, direction } = getGrenadeAim(
     grenadePreview.probeOrigin,
     grenadePreview.probeDirection,
@@ -5478,6 +5553,7 @@ function updateGrenadePreview(time, force = false) {
   grenadePreview.boxCount = collisionBoxes.length;
   const previewPoints = prediction.previewPoints,
     landing = prediction.firstImpact || prediction.end;
+  // 把預測的點填進預覽線，越遠越淡。
   let distance = 0;
   previewPoints.forEach((point, index) => {
     const offset = index * 3;
@@ -5505,6 +5581,7 @@ function updateGrenadePreview(time, force = false) {
       landing.y - prediction.end.y,
       landing.z - prediction.end.z,
     ) > 1.4;
+  // 落點標記：貼在第一次撞到的表面上，方向依表面朝向。
   grenadePreview.blastMarker.visible = true;
   const normal = grenadePreview.normal.set(0, 1, 0);
   if (prediction.firstImpactNormal) normal.copy(prediction.firstImpactNormal);
@@ -5516,6 +5593,7 @@ function updateGrenadePreview(time, force = false) {
     normal,
   );
   grenadePreview.dot.position.copy(normal).multiplyScalar(0.045);
+  // 爆炸範圍：最後停下的位置；玩家自己在範圍內時顯示紅色。
   grenadePreview.blastMarker.position.copy(prediction.end);
   grenadePreview.blastMarker.position.y -= prediction.grounded ? 0.105 : 0;
   grenadePreview.blastRing.visible = prediction.grounded;
@@ -5529,6 +5607,7 @@ function updateGrenadePreview(time, force = false) {
   const blastColor = danger ? 0xff596b : 0xffb05b;
   for (const mesh of [grenadePreview.blastRing, grenadePreview.blastDot])
     mesh.material.color.setHex(blastColor);
+  // 提示文字：會先落地、撞牆還是撞到天花板。
   if (hint) {
     const contact = prediction.firstImpact
       ? normal.y > 0.5
@@ -5680,11 +5759,13 @@ function findWeaponClearance(
 
 // 槍的位置：腰射、瞄準、靠牆收槍、後座力與換彈。
 function updateWeaponPose(dt, time, bob = 0, reloadPose = 0) {
+  // 每一幀調整手上槍的姿勢：先取得鏡頭的位置與方向。
   camera.getWorldPosition(weaponEye);
   camera.getWorldDirection(weaponForward);
   camera.getWorldQuaternion(weaponQuaternion);
   weaponRight.set(1, 0, 0).applyQuaternion(weaponQuaternion);
   weaponUp.set(0, 1, 0).applyQuaternion(weaponQuaternion);
+  // 往前方與左右偵測，看槍會不會戳進牆裡（clearance 是離牆多遠）。
   const centerClearance = findWeaponClearance(weaponEye, weaponForward);
   let clearance = centerClearance;
   for (const side of [0.14, 0.32]) {
@@ -5697,18 +5778,21 @@ function updateWeaponPose(dt, time, bob = 0, reloadPose = 0) {
       findWeaponClearance(weaponProbe, weaponForward),
     );
   }
+  // 靠近牆壁時把槍往後收、往上舉（wallPoseAmount 平滑變化，不會突然跳動）。
   const wallTarget = THREE.MathUtils.clamp((1.45 - clearance) / 0.9, 0, 1);
   wallPoseAmount += (wallTarget - wallPoseAmount) * (1 - Math.exp(-dt * 14));
   weaponObstructed = centerClearance < 0.64;
   ui.hud.classList.toggle("weapon-blocked", weaponObstructed);
   if (centerClearance < 1.15) adsWallSuppressed = true;
   else if (centerClearance > 1.32) adsWallSuppressed = false;
+  // 開鏡瞄準：太靠近牆時不能開鏡；adsAmount 從 0 平滑變到 1。
   const adsTarget =
     aiming && !reloading && !grenadeAiming && !adsWallSuppressed ? 1 : 0;
   if (centerClearance < 0.8) adsAmount = Math.min(adsAmount, 0.4);
   adsAmount += (adsTarget - adsAmount) * (1 - Math.exp(-dt * 12));
   grenadePoseAmount +=
     ((grenadeAiming ? 1 : 0) - grenadePoseAmount) * (1 - Math.exp(-dt * 12));
+  // 非常靠近牆時把槍舉高（high ready），手臂暫時隱藏。
   const highReadyTarget =
     clearance < 0.85 && !grenadeAiming ? 1 - adsAmount : 0;
   highReadyAmount +=
@@ -5716,11 +5800,13 @@ function updateWeaponPose(dt, time, bob = 0, reloadPose = 0) {
   for (const arm of weapon.userData.arms || [])
     arm.visible = highReadyAmount < 0.45;
   weapon.scale.setScalar(1 - highReadyAmount * 0.45);
+  // 開鏡時視角從 73 度縮到 54 度（看起來像放大）。
   const targetFov = THREE.MathUtils.lerp(73, 54, adsAmount);
   if (Math.abs(camera.fov - targetFov) > 0.01) {
     camera.fov = targetFov;
     camera.updateProjectionMatrix();
   }
+  // HUD 依瞄準狀態切換樣式，最後依離牆距離把槍往後縮。
   ui.hud.classList.toggle("aiming", adsAmount > 0.55);
   ui.hud.classList.toggle("ads-ready", adsAmount > 0.995);
   const hipWall = wallPoseAmount * (1 - adsAmount);
@@ -6075,12 +6161,14 @@ function worldRayTargets() {
 // 算出子彈路徑：先看準心打到哪，再檢查槍口到目標有沒有被擋。
 function resolveShotPath(aimNdc = new THREE.Vector2()) {
   scene.updateMatrixWorld(true);
+  // 決定一槍打到哪裡：先收集所有可能被打到的東西（牆、物件、活著的敵人）。
   const targets = worldRayTargets().slice();
   for (const enemy of enemies)
     if (enemy.userData.state.alive)
       enemy.traverse((object) => {
         if (object.isMesh && object.userData.part) targets.push(object);
       });
+  // 暫時讓所有表面都能從兩面被打中（射線檢測需要），結束後再還原。
   const sides = new Map(),
     previousNear = raycaster.near;
   for (const target of targets) {
@@ -6100,6 +6188,8 @@ function resolveShotPath(aimNdc = new THREE.Vector2()) {
     raycaster.far = distance;
     return raycaster.intersectObjects(targets, false)[0] || null;
   };
+  // 從準星（加上散布）發出一條射線，找出最先碰到的東西，並確認槍口到那一點之間
+  // 沒有被擋住。
   try {
     raycaster.setFromCamera(aimNdc, camera);
     const eye = raycaster.ray.origin.clone(),
@@ -6151,6 +6241,7 @@ function resolveShotPath(aimNdc = new THREE.Vector2()) {
 
 // 開一槍。
 function shoot(time) {
+  // 正在瞄準手榴彈或換彈時不能開槍。
   if (gameState !== "playing" || grenadeAiming) return;
   if (reloading) return;
   if (ammo <= 0) {
@@ -6162,9 +6253,11 @@ function shoot(time) {
     }
     return;
   }
+  // 散布：開鏡比較準，移動時比較不準。
   const spread =
     THREE.MathUtils.lerp(0.007, 0.002, adsAmount) +
     playerMoving * 0.0025 * (1 - adsAmount * 0.65);
+  // 算出這一槍打到哪裡；扣一發子彈並記錄時間。
   const shot = resolveShotPath(
     new THREE.Vector2(
       (Math.random() - 0.5) * spread,
@@ -6179,6 +6272,7 @@ function shoot(time) {
     lastNoiseAt = navClock;
     alertEnemiesToNoise(yaw.position.x, yaw.position.z, 36, 6);
   }
+  // 後座力、準星擴大、槍口火光（0.035 秒後熄滅）與槍聲。
   weaponKick = Math.min(0.65, weaponKick + 0.28);
   pitch.rotation.x = Math.min(
     1.38,
@@ -6227,6 +6321,7 @@ function shoot(time) {
         hit.face?.normal?.clone().transformDirection(hit.object.matrixWorld),
       );
   }
+  // 畫出子彈軌跡、拋出彈殼；子彈打完會自動換彈。
   createTracer(shot.origin, shot.end, 0xc8ff2e);
   ejectShell();
   if (gameState === "playing" && ammo === 0 && reserve > 0) reload(true);
@@ -6679,6 +6774,7 @@ function createBossZone(
   mode = "strike",
   safeAngle = 0,
 ) {
+  // 首領攻擊的地面範圍：group 放在攻擊位置；扇形震波會留一個安全缺口。
   const group = new THREE.Group();
   group.position.copy(position);
   const safeHalf = 0.65,
@@ -6741,12 +6837,14 @@ function createBossZone(
   sweep.position.y = 0.012;
   sweep.scale.setScalar(0.08);
   group.add(sweep);
+  // 範圍中心的小標記。
   const beacon = new THREE.Mesh(
     new THREE.OctahedronGeometry(0.12),
     new THREE.MeshBasicMaterial({ color }),
   );
   beacon.position.y = 0.3;
   group.add(beacon);
+  // 扇形震波：安全的缺口用青色標示。
   if (mode === "shockwave") {
     // 扇形震波的安全區。
     const safe = new THREE.Mesh(
@@ -6784,6 +6882,7 @@ function createBossZone(
     safeEdge.position.y = 0.012;
     group.add(safeEdge);
   }
+  // 回傳這個範圍的所有資料（位置、半徑、倒數時間、模式等）。
   return {
     position,
     radius,
@@ -6807,6 +6906,7 @@ function createBossZone(
 
 // 首領開始一個招式：精準轟擊、連段轟擊或扇形震波。
 function queueBossAttack(enemy, target, patternOverride) {
+  // 首領出招：首領還沒死、沒在恢復、而且目標存在時才出招。
   const state = enemy?.userData.state;
   if (
     gameState !== "playing" ||
@@ -6819,12 +6919,15 @@ function queueBossAttack(enemy, target, patternOverride) {
     bossAttacks.some((attack) => attack.owner === enemy && !attack.detonated)
   )
     return false;
+  // phase 是首領階段（第二階段更兇），castIndex 是第幾次出招，distance 是與目標
+  // 的距離。
   const phase = state.bossPhase || 1,
     castIndex = state.bossCastIndex || 0,
     distance = Math.hypot(
       target.x - enemy.position.x,
       target.z - enemy.position.z,
     );
+  // 輪流使用三種招式：精準轟擊、連段轟擊、扇形震波（距離太近時不用震波）。
   const requested = ["precision", "barrage", "shockwave"].includes(
     patternOverride,
   )
@@ -6832,6 +6935,7 @@ function queueBossAttack(enemy, target, patternOverride) {
     : ["precision", "barrage", "shockwave"][castIndex % 3];
   const pattern =
     requested === "shockwave" && distance > 16 ? "barrage" : requested;
+  // 依招式與階段決定預警時間與範圍大小。
   const duration =
     pattern === "precision"
       ? phase === 2
@@ -6854,6 +6958,7 @@ function queueBossAttack(enemy, target, patternOverride) {
           ? 2.6
           : 2.4
         : Math.min(14, Math.max(8, distance + 2));
+  // 攻擊位置在目標腳下；第二階段用紅色，第一階段用橘色。
   const position = new THREE.Vector3(target.x, bossGroundY(target), target.z),
     group = new THREE.Group(),
     markers = [];
@@ -6901,6 +7006,7 @@ function queueBossAttack(enemy, target, patternOverride) {
   }
   group.name = "boss-attack";
   for (const marker of markers) group.add(marker.group);
+  // 招式名稱，總持續時間，加入攻擊清單。
   const name =
       pattern === "precision"
         ? "精準轟擊"
@@ -6929,6 +7035,7 @@ function queueBossAttack(enemy, target, patternOverride) {
     detonated: false,
     recoveryStarted: false,
   });
+  // 出招期間首領暫停開槍；畫面上方顯示招式名稱與躲避提示，並播放警告聲。
   state.bossCastIndex = castIndex + 1;
   state.bossPatternName = name;
   state.specialWindup = Math.max(state.specialWindup, totalDuration + 0.05);
@@ -7008,6 +7115,8 @@ function createBossBurst(origin, phase) {
 
 // 推進首領的所有攻擊。
 function updateBossAttacks(dt, time) {
+  // 每一幀更新首領攻擊：倒數、閃爍、時間到就爆炸並對範圍內的玩家造成傷害（扇形
+  // 震波可以跳過去）。
   if (gameState !== "playing") return;
   for (let i = bossAttacks.length - 1; i >= 0; i--) {
     const attack = bossAttacks[i];
@@ -7138,6 +7247,7 @@ function updateBossAttacks(dt, time) {
       bossAttacks.splice(i, 1);
     }
   }
+  // 還有即將爆炸的攻擊時，顯示警告與倒數。
   const imminent = bossAttacks.find((attack) => !attack.detonated);
   ui.bossWarning.classList.toggle("hidden", !imminent);
   ui.hud.classList.toggle("strike-warning", !!imminent);
@@ -7239,7 +7349,9 @@ function reload(automatic = false) {
 
 // 計時：技能、換彈、下一波、首領登場與延遲爆炸。
 function updateCombatTimers(dt, time) {
+  // 技能冷卻往下數。
   abilityCooldown = Math.max(0, abilityCooldown - dt);
+  // 換彈：時間到就把備用彈藥裝進彈匣。
   if (reloading) {
     reloadRemaining = Math.max(0, reloadRemaining - dt);
     const progress = 1 - reloadRemaining / reloadDuration;
@@ -7259,6 +7371,7 @@ function updateCombatTimers(dt, time) {
       updateHUD();
     }
   }
+  // 下一波倒數：時間到就生出新的一波敵人，並補充彈藥。
   if (wavePending && (waveRemaining -= dt) <= 0) {
     currentWave++;
     wavePending = false;
@@ -7275,6 +7388,7 @@ function updateCombatTimers(dt, time) {
     playTone(180, 0.22, "sawtooth", 0.045);
     if (ammo === 0) reload(true);
   }
+  // 首領登場倒數：時間到首領出現。
   if (
     bossArrivalQueued &&
     (bossArrivalRemaining = Math.max(0, bossArrivalRemaining - dt)) <= 0
@@ -7292,6 +7406,7 @@ function updateCombatTimers(dt, time) {
     playTone(95, 0.28, "sawtooth", 0.035);
     if (ammo === 0) reload(true);
   }
+  // 延遲爆炸（例如手榴彈）：時間到就爆炸。
   for (let i = pendingBlasts.length - 1; i >= 0; i--) {
     const blast = pendingBlasts[i];
     blast.remaining -= dt;
@@ -7784,11 +7899,13 @@ function steerEnemy(enemy, goalX, goalZ, dt, arriveRadius = 0.9) {
     pz = enemy.position.z,
     large = s.rank === "boss",
     toGoal = Math.hypot(goalX - px, goalZ - pz);
+  // 已經到達目的地就停下。
   if (toGoal <= arriveRadius) {
     s.path = null;
     s.navStuck = 0;
     return STEER_ARRIVED;
   }
+  // 還沒建立導航格時，直接朝目標走。
   if (!navGrid) return { x: (goalX - px) / toGoal, z: (goalZ - pz) / toGoal };
   // 卡住檢查，只在持續移動時才計算。
   if (navClock - (s.lastSteerAt ?? -1) > 0.3) {
@@ -7796,6 +7913,7 @@ function steerEnemy(enemy, goalX, goalZ, dt, arriveRadius = 0.9) {
     s.navCheckX = px;
     s.navCheckZ = pz;
   }
+  // 每 1.1 秒檢查一次有沒有在前進；卡住太久就重新尋路或脫困。
   s.lastSteerAt = navClock;
   s.navCheckTime += dt;
   if (s.navCheckTime >= 1.1) {
@@ -7815,6 +7933,7 @@ function steerEnemy(enemy, goalX, goalZ, dt, arriveRadius = 0.9) {
       }
     } else s.navStuck = Math.max(0, s.navStuck - 1);
   }
+  // 定期檢查能不能直接走過去（中間沒有障礙）；可以的話就直走，不用跟路線。
   s.pathAge += dt;
   s.directCheck -= dt;
   if (
@@ -7831,12 +7950,14 @@ function steerEnemy(enemy, goalX, goalZ, dt, arriveRadius = 0.9) {
     s.path = null;
     return { x: (goalX - px) / toGoal, z: (goalZ - pz) / toGoal };
   }
+  // 需要重新找路的情況：還沒有路線、走完了、目標移動太遠、路線太舊。
   const goalMoved = Math.hypot(goalX - s.pathGoalX, goalZ - s.pathGoalZ),
     needPath =
       !s.path ||
       s.pathIndex >= s.path.length ||
       goalMoved > Math.max(1.5, toGoal * 0.25) ||
       s.pathAge > 6;
+  // 用 A* 找一條新路線；太常找路時先等一下，節省效能。
   if (needPath) {
     if (navClock < s.pathRetryAt)
       return s.path ? followPath(s, px, pz) : STEER_FAILED;
@@ -8012,6 +8133,7 @@ function dispatchHunters() {
 
 // 選下一個巡邏點，避開最近去過與同伴附近的地方。
 function pickPatrolPoint(enemy) {
+  // 為敵人找一個新的巡邏點：從全圖分散的候選點中挑一個沒有其他敵人去的。
   const s = enemy.userData.state;
   s.hasPatrolGoal = false;
   if (navGrid && navPatrolPoints.length) {
@@ -8107,6 +8229,7 @@ function pickPatrolPoint(enemy) {
       return;
     }
   }
+  // 找不到就原地停留一下再試。
   s.target.copy(enemy.position);
   s.patrolPause = 0.7 + Math.random() * 0.5;
   s.patrolWaiting = true;
@@ -8114,10 +8237,12 @@ function pickPatrolPoint(enemy) {
 
 // guided = 正沿導航路徑前進：只做局部閃避（隊友、玩家），不留下長時間的繞牆記憶。
 function moveBot(enemy, dx, dz, dt, guided = false, pace = 1) {
+  // 敵人這一幀要走多遠；走太遠時分成幾小步，避免穿過牆。
   const s = enemy.userData.state,
     distance = s.speed * pace * dt,
     steps = Math.max(1, Math.ceil(distance / ((s.radius ?? 0.34) * 0.45))),
     step = distance / steps;
+  // 避讓與前進的計時。
   s.avoidTime = Math.max(0, (s.avoidTime || 0) - dt);
   s.progressTime = (s.progressTime || 0) + dt;
   if (guided) {
@@ -8144,6 +8269,7 @@ function moveBot(enemy, dx, dz, dt, guided = false, pace = 1) {
     s.progressZ = enemy.position.z;
     s.progressTime = 0;
   }
+  // 每一小步：先試著直走；被擋住就往旁邊繞，繞不過去就換另一邊。
   for (let index = 0; index < steps; index++) {
     let moved = false;
     const side = s.avoidSide || 1,
@@ -8262,9 +8388,11 @@ function hasLineOfSight(from, to) {
 
 // 敵人開槍：準度受難度、距離與移動影響。
 function enemyShoot(enemy, distance) {
+  // 敵人開槍：依難度與距離決定準度。
   const difficulty = currentDifficulty(),
     tuning = getEnemyTuning();
   const s = enemy.userData.state;
+  // 子彈從槍口射向玩家的身體中央，再加上隨機偏移（距離越遠越不準）。
   const origin = s.muzzle.getWorldPosition(new THREE.Vector3());
   const playerCenter = new THREE.Vector3(
     yaw.position.x,
@@ -8280,6 +8408,7 @@ function enemyShoot(enemy, distance) {
   target.x += (Math.random() - 0.5) * distance * spread;
   target.y += (Math.random() - 0.5) * distance * spread * 0.62;
   target.z += (Math.random() - 0.5) * distance * spread;
+  // 檢查槍口到目標之間有沒有被牆擋住。
   const targets = worldRayTargets(),
     sides = new Map(),
     previousNear = raycaster.near,
@@ -8324,6 +8453,7 @@ function enemyShoot(enemy, distance) {
     raycaster.near = previousNear;
     raycaster.far = previousFar;
   }
+  // 子彈停在第一個擋住的地方（最遠 45 公尺），打到牆會留下彈孔。
   const blockedDistance = obstacle?.distance ?? Infinity;
   const end = origin
     .clone()
@@ -8336,6 +8466,7 @@ function enemyShoot(enemy, distance) {
         .transformDirection(obstacle.object.matrixWorld),
       0xff7f50,
     );
+  // 沒被擋住而且夠接近玩家就算打中，扣血。
   if (miss < 0.5 && along < blockedDistance && along < distance + 2)
     takeDamage(
       Math.round(
@@ -8346,6 +8477,7 @@ function enemyShoot(enemy, distance) {
       ),
       enemy.position,
     );
+  // 畫出紅色的子彈軌跡、後座力與遠方的槍聲。
   createTracer(origin, end, 0xff5d43);
   s.recoil = 0.16;
   s.enemyFlash.rotation.z = Math.random() * Math.PI;
@@ -8598,6 +8730,7 @@ function showHitmarker(kill) {
 
 // 更新生命、彈藥、敵人數量等資訊。
 function updateHUD() {
+  // HUD：生命、護甲（數字與長條）、彈藥與備彈（彈藥不多時變色）。
   const healthRatio = Math.max(0, health / maxHealth),
     armorRatio = maxArmor ? Math.max(0, armor / maxArmor) : 0;
   ui.health.textContent = Math.ceil(health);
@@ -8608,6 +8741,7 @@ function updateHUD() {
   ui.hud.classList.toggle("ammo-low", ammo > 0 && ammo <= 8);
   ui.hud.classList.toggle("ammo-empty", ammo === 0);
   ui.reserve.textContent = String(reserve).padStart(3, "0");
+  // 敵人數量：剩餘、總數、已擊殺與進度條；剩很少時變色。
   const mode = currentMode(),
     configuredTotal = encounterTotal(mode),
     total = matchTotalEnemies || configuredTotal,
@@ -8628,6 +8762,7 @@ function updateHUD() {
     "critical",
     gameState === "playing" && remaining <= 1,
   );
+  // 敵人狀態文字（首領即將登場、援軍將至等）。
   ui.enemyStatus.textContent = bossArrivalQueued
     ? "COMMANDER INBOUND"
     : wavePending
@@ -8639,6 +8774,7 @@ function updateHUD() {
           : mode.killTarget
             ? `CONTRACT ${String(Math.min(kills, mode.killTarget)).padStart(2, "0")} / ${mode.killTarget}`
             : "ACTIVE CONTACTS";
+  // 擊殺數、手榴彈數、換彈提示與彈匣格子。
   ui.kills.textContent = kills;
   ui.grenadeCount.textContent = grenadeCount;
   ui.hud.classList.toggle("reloading", reloading);
@@ -8659,6 +8795,7 @@ function updateHUD() {
   [...ui.ammoTrack.children].forEach((tick, i) =>
     tick.classList.toggle("empty", i >= ammo),
   );
+  // 生命低於 30% 時數字變紅，畫面四周出現紅色警示。
   ui.health.style.color = healthRatio < 0.3 ? "var(--red)" : "";
   ui.hud.classList.toggle(
     "low-health",
@@ -8710,9 +8847,11 @@ function getZoneName(x, z) {
 
 // 任務時間、階段、技能與區域提示。
 function updateMissionStatus(time, force = false) {
+  // 任務狀態每 0.16 秒更新一次就好（不必每幀更新）。
   if (!force && time - lastMissionPaint < 160) return;
   lastMissionPaint = time;
   updateBossHUD();
+  // 技能名稱、冷卻與是否就緒。
   ui.ability.querySelector("b").textContent =
     operatorAbilities[selectedOperator].name;
   ui.ability.querySelector("small").textContent =
@@ -8724,6 +8863,7 @@ function updateMissionStatus(time, force = false) {
     "--ready",
     `${(1 - abilityCooldown / 28) * 100}%`,
   );
+  // 連殺：15 秒內沒有再擊殺就中斷。
   const streakLeft = lastKillAt
     ? Math.max(0, 15 - (time - lastKillAt) / 1000)
     : 0;
@@ -8733,6 +8873,7 @@ function updateMissionStatus(time, force = false) {
     ui.streak.querySelector("small").textContent =
       `${Math.ceil(streakLeft)} 秒內擊殺 • 每 3 連殺獲得補給`;
   }
+  // 進入新的區域時，短暫顯示區域名稱。
   const mode = currentMode();
   const zone = getZoneName(yaw.position.x, yaw.position.z);
   if (zone !== lastZoneName) {
@@ -8832,6 +8973,7 @@ function drawMinimapCollider(ctx, box, scale, ox, oy) {
 
 // 小地圖：地形、補給、敵人、手榴彈與首領攻擊。
 function drawMinimap(time = 0) {
+  // 小地圖每 0.08 秒畫一次。
   if (time - lastMinimapPaint < 80) return;
   lastMinimapPaint = time;
   const c = ui.minimap,
@@ -8839,11 +8981,13 @@ function drawMinimap(time = 0) {
   ctx.clearRect(0, 0, c.width, c.height);
   ctx.fillStyle = "rgba(7,11,14,.88)";
   ctx.fillRect(0, 0, c.width, c.height);
+  // scale 把地圖座標換成小地圖的像素；ox、oy 是小地圖中心。
   const scale = (c.width - 16) / (ARENA_HALF * 2),
     ox = c.width / 2,
     oy = c.height / 2;
   ctx.strokeStyle = "rgba(200,255,46,.14)";
   ctx.lineWidth = 1;
+  // 背景格線與所有碰撞方塊（牆、掩體）。
   for (let i = 15; i < c.width; i += 30) {
     ctx.beginPath();
     ctx.moveTo(i, 0);
@@ -8873,6 +9017,7 @@ function drawMinimap(time = 0) {
     py = oy + yaw.position.z * scale,
     heading = -yaw.rotation.y - Math.PI / 2,
     cone = ctx.createRadialGradient(px, py, 0, px, py, 36 * k);
+  // 玩家視野的扇形。
   cone.addColorStop(0, "rgba(200,255,46,.32)");
   cone.addColorStop(1, "rgba(200,255,46,0)");
   ctx.fillStyle = cone;
@@ -8893,6 +9038,7 @@ function drawMinimap(time = 0) {
   }
   // 敵人都是一樣的紅點，只有首領特別標示。
   let bossAlive = false;
+  // 敵人：紅點（首領是橘色菱形）。
   for (const enemy of enemies) {
     const state = enemy.userData.state;
     if (!state.alive) continue;
@@ -8984,6 +9130,7 @@ function drawMinimap(time = 0) {
   ctx.fillRect(0, 0, c.width, 17);
   ctx.font = "700 10px 'Noto Sans TC', sans-serif";
   ctx.textBaseline = "middle";
+  // 下方的圖例。
   let lx = 7;
   for (const [rank, label] of bossAlive
     ? [
@@ -9293,6 +9440,7 @@ async function loadAudioAssets() {
 
 // 換彈的各段聲音，用雜訊合成。
 function playReloadSound(stage) {
+  // 換彈音效：沒有音效環境或音效音量為 0 時不播放。
   if (
     !audioContext ||
     audioContext.state === "closed" ||
@@ -9342,6 +9490,7 @@ function playReloadSound(stage) {
     }
     mechanicalBuffers[stage] = buffer;
   }
+  // 播放錄好的換彈聲，加上濾波器調整音色。
   const source = audioContext.createBufferSource(),
     filter = audioContext.createBiquadFilter(),
     gain = audioContext.createGain();

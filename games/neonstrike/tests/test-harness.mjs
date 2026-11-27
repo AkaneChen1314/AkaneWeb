@@ -61,6 +61,7 @@ export function createHarness() {
         add: (...names) => names.forEach((name) => classes.add(name)),
         remove: (...names) => names.forEach((name) => classes.delete(name)),
         contains: (name) => classes.has(name),
+        // 假元素的 class 開關。
         toggle: (name, force) => {
           const add = force ?? !classes.has(name);
           if (add) classes.add(name);
@@ -74,6 +75,7 @@ export function createHarness() {
       dispatch(type, event = {}) {
         listeners.get(type)?.(event);
       },
+      // 加入、移除、替換子元素。
       appendChild(child) {
         this.children.push(child);
         child.parent = this;
@@ -90,6 +92,7 @@ export function createHarness() {
         items.forEach((child) => (child.parent = this));
       },
       getContext: () => canvasContext,
+      // 在假元素裡找子元素（找不到就建立一個新的，讓程式不會出錯）。
       querySelector: (selector) => {
         if (!children.has(selector)) children.set(selector, makeNode());
         return children.get(selector);
@@ -101,6 +104,7 @@ export function createHarness() {
     pointerLockElement: null,
     documentElement: makeNode(),
     body: makeNode(),
+    // 假的 document.querySelector：找不到就建立一個新的假元素。
     querySelector: (selector) => {
       if (!nodes.has(selector)) nodes.set(selector, makeNode());
       return nodes.get(selector);
@@ -127,6 +131,7 @@ export function createHarness() {
       getItem: (key) => storage.get(key) ?? null,
       setItem: (key, value) => storage.set(key, String(value)),
     },
+    // 假的 setTimeout：先記下來，測試再決定什麼時候執行。
     setTimeout: (callback) => {
       scheduled.set(++nextTimer, callback);
       return nextTimer;
@@ -174,6 +179,7 @@ export function createHarness() {
       assert.ok(globalListeners.has(type), `Missing ${type} handler`);
       globalListeners.get(type)(event);
     },
+    // 把每一幀會呼叫的更新函式換成什麼都不做，只測試想測的部分。
     installFrameStubs: () =>
       run(
         `

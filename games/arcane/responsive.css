@@ -37,6 +37,7 @@ button,
   touch-action: manipulation;
 }
 
+/* 用鍵盤移到按鈕上時，外面加一圈明顯的亮框。 */
 button:focus-visible,
 [role="button"]:focus-visible,
 summary:focus-visible {
@@ -44,6 +45,7 @@ summary:focus-visible {
   outline-offset: 3px;
 }
 
+/* 按鈕至少 44px 高，手指比較好按。 */
 .btn {
   min-height: 44px;
   line-height: 1.2;
@@ -58,6 +60,7 @@ summary:focus-visible {
   transform: scale(0.98);
 }
 
+/* 加上 hidden 屬性的元素一定隱藏。 */
 [hidden] {
   display: none !important;
 }
@@ -76,6 +79,7 @@ body.setup-mode #app {
   overflow: hidden;
 }
 
+/* 選角、援護、挑戰畫面在手機上固定成畫面高度，內容在裡面捲動。 */
 .selection-screen.active {
   height: var(--app-height);
   min-height: 0;
@@ -150,6 +154,7 @@ body.setup-mode #app {
   z-index: 5;
 }
 
+/* 下方操作列的文字：太長時截斷。 */
 .dock > div:first-child {
   min-width: 0;
 }
@@ -168,6 +173,7 @@ body.setup-mode #app {
   line-height: 1.3;
 }
 
+/* 下方操作列的按鈕不縮小。 */
 .dock .btn {
   flex: none;
   font-size: 0.8rem;
@@ -222,6 +228,7 @@ body.setup-mode #app {
   padding: 5px 4px 9px;
 }
 
+/* 選角卡片在手機上的高度與文字位置。 */
 .fighter-card {
   height: 550px;
   min-width: 0;
@@ -278,6 +285,7 @@ body.setup-mode #app {
   display: none;
 }
 
+/* 天賦說明的小字。 */
 .trait-list em {
   display: block;
   line-height: 1.45;
@@ -300,6 +308,7 @@ body.setup-mode #app {
   margin: 0 auto;
 }
 
+/* 援護卡片上方的分類按鈕。 */
 .filter-tabs {
   display: flex;
   gap: 5px;
@@ -392,6 +401,7 @@ body.setup-mode #app {
   color: #e4f5ff;
 }
 
+/* 援護卡片右上角「已選」的小標籤。 */
 .support-card .select-state {
   font-size: 0.54rem;
   padding: 3px 6px;
@@ -416,6 +426,7 @@ body.setup-mode #app {
   display: block;
 }
 
+/* 下方已選援護的摘要列。 */
 .support-dock .loadout-summary {
   width: 100%;
   min-height: 0;
@@ -429,6 +440,7 @@ body.setup-mode #app {
   border-radius: 0;
 }
 
+/* 摘要列左邊的標題與數量。 */
 .loadout-summary > div:first-child {
   flex: none;
   display: flex;
@@ -477,6 +489,7 @@ body.setup-mode #app {
   white-space: nowrap;
 }
 
+/* 摘要列右邊的「下一步」按鈕區。 */
 .support-dock .dock-actions {
   display: flex;
   justify-content: space-between;
@@ -508,18 +521,21 @@ body.setup-mode #app {
   padding: 0 4px 8px;
 }
 
+/* 挑戰設定畫面的標題。 */
 .mode-section h3,
 .difficulty-heading h3 {
   font-size: 1rem;
   margin: 3px 0 8px;
 }
 
+/* 模式卡片（一般、試煉）：兩欄。 */
 .mode-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
+/* 每張模式卡片：選中時框線變亮。 */
 .mode-card {
   min-width: 0;
   min-height: 66px;
@@ -562,6 +578,7 @@ body.setup-mode #app {
   background: #28547644;
 }
 
+/* 挑戰設定畫面裡的難度區。 */
 .challenge-content .difficulty-section {
   width: 100%;
   margin: 16px 0;
@@ -581,6 +598,7 @@ body.setup-mode #app {
   gap: 8px;
 }
 
+/* 手機上的難度卡片內距縮小。 */
 .difficulty-card {
   padding: 12px 14px;
 }
@@ -599,6 +617,7 @@ body.setup-mode #app {
   margin: 0;
 }
 
+/* 對手選擇區：說明文字、卡片間距與卡片高度。 */
 .villain-section .difficulty-heading p {
   font-size: 0.7rem;
 }
@@ -677,6 +696,7 @@ body.setup-mode #app {
   gap: 14px;
 }
 
+/* 試煉獎勵卡片：左邊圖示、右邊說明。 */
 .reward-card {
   min-width: 0;
   display: block;
@@ -692,6 +712,7 @@ body.setup-mode #app {
   box-shadow: inset 0 0 0 1px #8be9ff;
 }
 
+/* 獎勵卡片的圖示方框。 */
 .reward-icon {
   display: grid;
   place-items: center;
@@ -705,6 +726,7 @@ body.setup-mode #app {
   margin-bottom: 18px;
 }
 
+/* 獎勵卡片上的小字。 */
 .reward-card small {
   color: #a0f2d9;
   font-size: 0.72rem;
@@ -823,6 +845,7 @@ body.setup-mode #app {
   margin: 14px 0;
 }
 
+/* 卡牌說明視窗：類型、效果標籤與最下面的按鈕。 */
 .detail-type {
   color: #92dff5 !important;
 }
@@ -868,6 +891,7 @@ body.setup-mode #app {
   margin: 8px 0;
 }
 
+/* 玩法說明太長時，在視窗裡捲動。 */
 .rules-book {
   max-height: calc(var(--app-height) - 30px);
   overflow: auto;
@@ -882,6 +906,7 @@ body.setup-mode #app {
   line-height: 1.2;
 }
 
+/* 滑過手牌時，卡牌往上浮一點。 */
 .battle-card:hover {
   transform: translateY(-6px);
 }
@@ -890,6 +915,7 @@ body.setup-mode #app {
   z-index: 6;
 }
 
+/* 戰鬥紀錄收起時不顯示，也不能點。 */
 .battle-log {
   visibility: hidden;
   pointer-events: none;

@@ -10,6 +10,8 @@ function env(storage = new Map(), width = 1440) {
   let doc;
   // 假的網頁元素。
   class El {
+    // 建立一個假元素：記下標籤名稱、屬性、子元素與父元素，夠遊戲程式使用就好，
+    // 不會真的顯示在畫面上。
     constructor(tag = "div", attrs = {}) {
       this.tagName = tag.toUpperCase();
       this.attrs = { ...attrs };
@@ -41,6 +43,8 @@ function env(storage = new Map(), width = 1440) {
     set className(v) {
       this.attrs.class = v;
     }
+    // classList：用 className 這串文字模擬 add、remove、toggle（和瀏覽器的用法
+    // 一樣）。
     get classList() {
       let e = this;
       return {
@@ -67,10 +71,12 @@ function env(storage = new Map(), width = 1440) {
     get textContent() {
       return this._text + this.children.map((c) => c.textContent).join("");
     }
+    // 設定 textContent 時只留下純文字。
     set textContent(t) {
       this._text = String(t);
       this.children = [];
     }
+    // 設定 innerHTML 時，把 HTML 文字解析成假的子元素，測試才能找到裡面的按鈕。
     set innerHTML(html) {
       this.children = [];
       this._text = "";
@@ -79,6 +85,7 @@ function env(storage = new Map(), width = 1440) {
     get innerHTML() {
       return this._html || "";
     }
+    // append 把子元素加到最後面，remove 把自己從父元素拿掉。
     append(child) {
       child.parentElement = this;
       this.children.push(child);
@@ -128,6 +135,7 @@ function env(storage = new Map(), width = 1440) {
       for (let e = this; e; e = e.parentElement) if (e.matches(sel)) return e;
       return null;
     }
+    // contains：往上找父元素，判斷某個元素是不是在自己裡面。
     contains(el) {
       for (let e = el; e; e = e.parentElement) if (e === this) return true;
       return false;
@@ -212,6 +220,7 @@ function env(storage = new Map(), width = 1440) {
     if (typeof el === "string") el = doc.querySelector(el);
     assert(el, "Click target missing");
     if (el.disabled) return;
+    // 模擬一次點擊事件：記錄有沒有被 preventDefault（取消預設動作）或停止傳遞。
     const e = {
       target: el,
       preventDefault() {
@@ -242,6 +251,7 @@ function env(storage = new Map(), width = 1440) {
   // 排程的工作；測試可以自己決定何時執行。
   const tasks = new Map();
   let taskId = 0;
+  // 假的 window：固定的視窗大小，matchMedia 一律回答「沒有符合」。
   const window = {
     document: doc,
     innerWidth: width,
@@ -259,6 +269,7 @@ function env(storage = new Map(), width = 1440) {
       setItem: (k, v) => storage.set(k, v),
       removeItem: (k) => storage.delete(k),
     },
+    // 假的 setTimeout：不真的等待，先把要做的事記下來，測試再一次執行。
     setTimeout: (fn, ms) => {
       tasks.set(++taskId, { fn, ms });
       return taskId;
@@ -404,6 +415,7 @@ const E = b.engine,
 E.open(g, { asset: "sky", amount: 1e8, product: "spot" });
 g.pending = { type: "glitch", shownProfit: 1e7 };
 E.setName(g, "故障測試員");
+// 準備一份已經玩到一半的存檔與偏好設定（已看完教學、關閉特效與音效）。
 const map = new Map([
   ["billion-to-zero-v2", JSON.stringify(g)],
   [
@@ -523,6 +535,7 @@ const terror = E.create(3);
 terror.health = 12;
 terror.debt = 2e10;
 E.setName(terror, "門外測試員");
+// 準備一份「恐怖模式」的存檔，測試紅屏等特效。
 const terrorMap = new Map([
   ["billion-to-zero-v2", JSON.stringify(terror)],
   [

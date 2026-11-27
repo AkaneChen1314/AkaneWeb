@@ -4,6 +4,8 @@
 // 精確的碰撞判定；地圖先用 Box3 外框快速排除。
 // 替方塊記下旋轉後的真正形狀。
 export function orientCollider(box, x, y, z, sx, sy, sz, rotation = 0) {
+  // 一個方塊碰撞範圍：中心 x、y、z，各方向的一半長度 hx、hy、hz，以及轉向（cos、
+  // sin）。
   box.shape = {
     kind: "box",
     x,
@@ -118,6 +120,8 @@ function cylinderSweep(position, delta, box, radius) {
     dx = position.x - s.x,
     dz = position.z - s.z,
     r = s.radius + radius;
+  // 圓柱（例如手榴彈的移動範圍）掃過一段距離時，會不會撞到這個碰撞範圍：先檢查
+  // 高度，再檢查水平距離。
   const lo = box.min.y - radius,
     hi = box.max.y + radius,
     radial = Math.hypot(dx, dz);
@@ -141,9 +145,12 @@ function cylinderSweep(position, delta, box, radius) {
       penetration: Math.min(bottom, top) + 0.0003,
     };
   }
+  // enter、exit 是開始碰到與離開的時間（0～1 表示這一段移動的比例），normal 是
+  // 撞到的表面方向。
   let enter = 0,
     exit = 1,
     normal = null;
+  // 解一元二次方程式，求出圓柱什麼時候碰到圓形範圍的邊緣。
   const a = delta.x ** 2 + delta.z ** 2,
     b = 2 * (dx * delta.x + dz * delta.z),
     c = dx * dx + dz * dz - r * r;
@@ -174,10 +181,12 @@ function cylinderSweep(position, delta, box, radius) {
     }
     exit = Math.min(exit, far);
   }
+  // 沒有碰到、或是往外移動（不是撞進去），就回傳 null。
   if (enter > exit || enter < 0 || enter > 1 || exit < 0 || !normal)
     return null;
   if (delta.x * normal.x + delta.y * normal.y + delta.z * normal.z >= -1e-10)
     return null;
+  // 回傳撞到的時間與表面方向。
   return { time: enter, normal };
 }
 

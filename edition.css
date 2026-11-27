@@ -157,12 +157,14 @@ footer small {
   display: grid;
   gap: 12px;
 }
+/* 收藏筆記上方的小標。 */
 .hero-notes-label {
   margin: 0 0 3px 8px;
   font-size: 8px;
   letter-spacing: 2px;
   color: #aab7d8;
 }
+/* 每一張收藏筆記卡片。 */
 .hero-collection-note {
   padding: 17px 16px;
   border: 1px solid #c3caff21;
@@ -189,12 +191,14 @@ footer small {
   letter-spacing: 1px;
   color: #b8b8ef;
 }
+/* 不同主題的筆記用不同顏色的小字。 */
 .note-daily small {
   color: #e0b7d7;
 }
 .note-collection small {
   color: #97d4df;
 }
+/* 收藏筆記的標題與內文。 */
 .hero-collection-note h3 {
   margin: 9px 0 7px;
   font-size: 15px;

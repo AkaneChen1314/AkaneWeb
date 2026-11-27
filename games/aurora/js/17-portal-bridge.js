@@ -11,6 +11,7 @@
 (function () {
   "use strict";
 
+  // 遊戲館通知暫停時：對戰中就暫停，放開滑鼠鎖定與所有按鍵，聲音也暫停。
   window.addEventListener("akane-portal-pause", (event) => {
     if (event.detail.paused) {
       if (Game.state === "playing") Game.pause();

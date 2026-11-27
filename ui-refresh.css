@@ -55,12 +55,14 @@ html {
   -webkit-font-smoothing: antialiased;
 }
 
+/* 全站文字的基本顏色、大小與行距。 */
 body {
   color: #edf6ff;
   font-size: 17px;
   line-height: 1.75;
 }
 
+/* 段落換行時避免最後一行只剩一兩個字。 */
 p {
   text-wrap: pretty;
 }
@@ -734,10 +736,12 @@ button.text-link:hover {
   height: 100%;
 }
 
+/* 動態卡片：影片標籤的位置。 */
 .moment-badge {
   top: 28px;
 }
 
+/* 動態卡片的文字區往下貼齊，三張卡片的來源連結對在同一條線上。 */
 .moment-copy {
   display: flex;
   flex: 1 1 auto;
@@ -1142,6 +1146,7 @@ footer small {
   gap: clamp(24px, 3vw, 36px);
 }
 
+/* 三張肖像：圖片舞台、肖像框（固定 899×1221 的比例）。 */
 .portrait-stage {
   min-width: 0;
 }
@@ -1170,6 +1175,7 @@ footer small {
   filter: brightness(1.06);
   transform: none;
 }
+/* 肖像下方的主題按鈕與「上一張／下一張」列。 */
 .portrait-choices,
 .portrait-pagination {
   display: flex;
@@ -1184,6 +1190,7 @@ footer small {
   border-color: #a5e0ee;
   background: #2d6176;
 }
+/* 「上一張／下一張」與目前張數。 */
 .portrait-pagination {
   margin-top: 20px;
   padding-top: 18px;
@@ -1200,6 +1207,7 @@ footer small {
   padding: 0;
 }
 
+/* 肖像旁邊的標題與說明文字。 */
 .portrait-copy h2 {
   margin: 14px 0 20px;
   font-size: clamp(23px, 2.5vw, 32px);
@@ -1213,6 +1221,7 @@ footer small {
   line-height: 1.9;
 }
 
+/* 肖像說明下方的按鈕列。 */
 .portrait-actions {
   display: flex;
   align-items: center;
@@ -1221,6 +1230,7 @@ footer small {
   margin-top: 20px;
 }
 
+/* 肖像的小資料表（兩欄）。 */
 .portrait-details {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1268,6 +1278,7 @@ footer small {
   min-width: 0;
   padding-inline: 8px;
 }
+/* 翻牌遊戲：4 欄的牌面。 */
 .chibi-memory-board {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1299,6 +1310,7 @@ footer small {
   background: #2d6176;
   border-color: #a5e0ee;
 }
+/* 心情籤抽出來的短句框。 */
 .chibi-fortune-note {
   margin: 18px 0;
   padding: 18px;
@@ -1309,6 +1321,7 @@ footer small {
   font-size: 17px;
   line-height: 1.8;
 }
+/* 調色遊戲：上方兩格是「目標色」與「你調的顏色」。 */
 .chibi-color-tiles {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1321,12 +1334,14 @@ footer small {
   color: #bed5e7;
   font-size: 14px;
 }
+/* 每一格顏色色塊。 */
 .chibi-color-tile {
   display: block;
   height: 58px;
   border: 1px solid #b3d4e45c;
   border-radius: 12px;
 }
+/* 紅、綠、藍三條滑桿與數值。 */
 .chibi-color-sliders {
   display: grid;
   grid-template-columns: 76px minmax(0, 1fr);

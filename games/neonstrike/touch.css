@@ -156,6 +156,7 @@
   font-weight: inherit;
   color: #d5edf2;
 }
+/* 右下角的射擊、跳躍等按鈕。 */
 .touch-actions {
   position: absolute;
   bottom: max(20px, env(safe-area-inset-bottom));
@@ -183,6 +184,7 @@
   top: max(12px, env(safe-area-inset-top));
   right: var(--touch-edge);
 }
+/* 左下角的衝刺按鈕、取消投擲按鈕與畫面中間的操作提示。 */
 .touch-sprint {
   position: absolute;
   left: max(20px, env(safe-area-inset-left));

@@ -33,6 +33,8 @@ function harness(saved = {}) {
   });
   // 假的音訊節點；會記住接到哪裡、何時開始。
   function node(kind) {
+    // 假的聲音節點：記下種類、音量、頻率等參數，以及接到哪裡，測試再檢查音效有
+    // 沒有接對。
     const result = {
       kind,
       gain: parameter(),
@@ -45,6 +47,7 @@ function harness(saved = {}) {
       ratio: parameter(),
       attack: parameter(),
       release: parameter(),
+      // connect 記下下一個節點；start 記下這個聲音有播放。
       connect(next) {
         this.target = next;
         return next;
@@ -65,6 +68,7 @@ function harness(saved = {}) {
   }
   // 假的 AudioContext。
   class FakeAudioContext {
+    // 假的聲音環境（AudioContext）：固定的取樣率與時間，不會真的發出聲音。
     constructor() {
       this.sampleRate = 8000;
       this.currentTime = 1;
@@ -89,6 +93,7 @@ function harness(saved = {}) {
     createOscillator() {
       return node("oscillator");
     }
+    // 假的聲音資料（buffer）：只準備好空的樣本陣列。
     createBuffer(channels, length) {
       const samples = new Float32Array(length),
         buffer = {
@@ -102,6 +107,7 @@ function harness(saved = {}) {
     resume() {
       return Promise.resolve();
     }
+    // 關閉聲音環境。
     close() {
       this.state = "closed";
       return Promise.resolve();

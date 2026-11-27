@@ -176,6 +176,8 @@ const FX = {
     bg.rotateX(PI / 2);
     // 先全部建立好並隱藏，用到時再拿出來。
     for (let i = 0; i < 150; i++) {
+      // 預先建立一批光點：發光混色（AdditiveBlending，重疊時越疊越亮），需要時
+      // 拿出來重複使用，不必每次新建。
       const m = new THREE.Mesh(
         bg,
         new THREE.MeshBasicMaterial({
@@ -196,6 +198,7 @@ const FX = {
     rg.rotateX(-PI / 2);
     // 圓環：44 個，用在爆炸與落地。
     for (let i = 0; i < 44; i++) {
+      // 預先建立一批光環。
       const m = new THREE.Mesh(
         rg,
         new THREE.MeshBasicMaterial({
@@ -215,6 +218,7 @@ const FX = {
     const sg = new THREE.SphereGeometry(1, 24, 16);
     // 光球：10 個，用在爆炸的閃光。
     for (let i = 0; i < 10; i++) {
+      // 預先建立一批球形爆炸。
       const m = new THREE.Mesh(
         sg,
         new THREE.MeshBasicMaterial({

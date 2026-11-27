@@ -61,6 +61,7 @@ const KIND_ORDER = {
 // 把備戰區與地圖上的塔依種類與星級分組並排序。
 function myGroups() {
   const m = new Map();
+  // 把一座塔加入分組（同種類、同星級的放在一起），記下它在備戰區還是地圖上。
   const add = (key, tier, src, ref) => {
     const k = key + "|" + tier;
     if (!m.has(k)) m.set(k, { key, tier, hand: [], map: [] });
@@ -154,6 +155,8 @@ function payMerge(res, tier) {
 function newRun(mapIdx) {
   const map = MAPS[mapIdx],
     t = G.meta.talents;
+  // 一局遊戲的完整資料（R）：地圖、路線、城堡生命、金幣、寶石、手牌、防禦塔、敵
+  // 人、波數、遺物、統計等。
   R = {
     // 地圖、路徑與預先畫好的背景。
     mapIdx,
@@ -581,6 +584,7 @@ function waveClear() {
 }
 // 產生一個敵人；s 是種類、是否精英或首領等設定。
 function spawnEnemy(s) {
+  // d 是這種敵人的基本資料，el 表示是不是菁英；菁英生命是 6 倍。
   const d = ENEMY[s.type],
     el = !!s.elite;
   const hp = d.hp * s.hpS * (el ? 6 : 1);
@@ -631,6 +635,7 @@ function spawnEnemy(s) {
     dead: false,
     hpS: s.hpS,
   };
+  // 把敵人放到路線上的起點，面向前進方向，加入場上的敵人清單。
   const p = posAt(e.d);
   e.x = p.x;
   e.y = p.y;
@@ -641,6 +646,7 @@ function spawnEnemy(s) {
     G.meta.codex.enemies[s.type] = 1;
     saveMeta();
   }
+  // 首領出場時畫面震動、播放腳步聲。
   if (e.boss) {
     shake(10);
     AU.play("stomp");
@@ -1255,6 +1261,7 @@ function hitEnemy(e, tw, dmg, fxo, o) {
 
 // ===== 塔 =====
 function makeTower(key, tier, gx, gy) {
+  // 一座防禦塔的資料：種類、星級、格子位置、畫面位置、冷卻與朝向等。
   const t = {
     key,
     tier,
@@ -1330,6 +1337,7 @@ function prioritize(t, list) {
 }
 // 更新一座塔：冷卻、瞄準與攻擊。
 function updTower(t, dt) {
+  // 開火後的放大與後座力慢慢恢復；四星以上的塔周圍偶爾冒出星光。
   if (t.pop > 0) t.pop = Math.max(0, t.pop - dt * 2.5);
   if (t.recoil > 0) t.recoil = Math.max(0, t.recoil - dt * 6);
   // 被首領踩踏後暫時失效。
@@ -1349,10 +1357,13 @@ function updTower(t, dt) {
       col: t.tier >= 6 ? rainbow(rand(360)) : TIER_COL[t.tier],
       twinkle: true,
     });
+  // s 是這座塔的能力表；冷卻時間往下數（有戰鼓加成時數得更快）。四星以上有額外
+  // 技能。
   const s = t.st;
   t.cd -= dt * (1 + (t.bR || 0));
   if (t.tier >= 4 && s.mode !== "eco" && s.mode !== "support")
     towerSkills(t, dt);
+  // 經濟塔不攻擊（只產生金幣）。
   if (s.mode === "eco") return;
   // 輔助塔與產金塔不會攻擊。
   if (s.mode === "support") {
@@ -1387,6 +1398,7 @@ function updTower(t, dt) {
   // 拉霸塔：每 10 秒開一次獎，攻擊範圍內所有敵人。
   if (s.def && s.def.slotT) {
     t.jpT = (t.jpT ?? 10) - dt;
+    // 拉霸塔：每 10 秒對範圍內所有敵人打出 6 倍傷害（777！）。
     if (t.jpT <= 0) {
       const hs = enemiesInRange(t.x, t.y, s.range);
       if (hs.length) {
@@ -1421,6 +1433,7 @@ function updTower(t, dt) {
   }
   // 範圍脈衝。
   if (s.mode === "pulse") {
+    // 範圍脈衝塔：冷卻好了就對射程內所有敵人造成傷害。
     if (t.cd <= 0) {
       const hits = enemiesInRange(t.x, t.y, s.range);
       if (hits.length) {
@@ -1464,6 +1477,7 @@ function updTower(t, dt) {
   // 持續光束：照越久傷害越高。
   if (s.mode === "beam") {
     const R2 = s.range;
+    // 光束塔：保持鎖定射程內的敵人，持續造成傷害；鎖定越久傷害越高（ramp）。
     t.beams = t.beams.filter(
       (e) => targetable(e) && d2(t.x, t.y, e.x, e.y) < (R2 + e.r) ** 2,
     );
@@ -1503,6 +1517,7 @@ function updTower(t, dt) {
     AU.play("shoot", "beam");
     return;
   }
+  // 一般塔：找出射程內的敵人，依優先順序挑第一個當目標，慢慢轉向它。
   const cand = enemiesInRange(t.x, t.y, s.range);
   if (!cand.length) return;
   prioritize(t, cand);
@@ -1510,6 +1525,7 @@ function updTower(t, dt) {
   const ta = Math.atan2(tg.y - t.y, tg.x - t.x);
   let da = ((ta - t.ang + Math.PI * 3) % TAU) - Math.PI;
   t.ang += da * Math.min(1, dt * 14);
+  // 冷卻好了就開火，產生後座力與槍口閃光。
   if (t.cd > 0) return;
   t.cd = 1 / s.rate;
   t.recoil = 1;
@@ -1525,6 +1541,7 @@ function updTower(t, dt) {
     mx = t.x + Math.cos(t.ang) * 22,
     my = t.y - 14 + Math.sin(t.ang) * 22;
   fxW.add({ kind: "glow", x: mx, y: my, size: 16, col, life: 0.12 });
+  // 依攻擊方式發射：狙擊（打血最多的）、子彈、拋物線砲彈、連鎖閃電、雷射等。
   if (s.mode === "snipe") {
     // 狙擊：全場優先攻擊血量最高的敵人。
     const tgt =
@@ -1631,6 +1648,7 @@ function updTower(t, dt) {
     // 連鎖閃電。
     const hit = [tg];
     let cur = tg;
+    // 連鎖閃電：從第一個目標跳到最近的下一個，最多跳 chain 次。
     for (let k = 1; k < s.chain; k++) {
       let best = null,
         bd = 130 * 130 * (s.range > 170 ? 1.6 : 1);
@@ -1674,6 +1692,7 @@ function updTower(t, dt) {
     const L = s.range * 1.6,
       dx = Math.cos(t.ang),
       dy = Math.sin(t.ang);
+    // 雷射：一直線打穿路上的所有敵人。
     const x1 = t.x + dx * 20,
       y1 = t.y - 14 + dy * 20,
       x2 = x1 + dx * L,
@@ -1754,6 +1773,7 @@ function splashAt(x, y, r, tw, dmg, src) {
 }
 // 更新所有飛行物。
 function updProj(dt) {
+  // 更新每一顆投射物：子彈會追著目標飛，砲彈依拋物線落地後爆炸。
   for (const p of R.proj) {
     if (p.kind === "bullet") {
       p.life -= dt;
@@ -1761,6 +1781,7 @@ function updProj(dt) {
         p.tx = p.tg.x;
         p.ty = p.tg.y;
       }
+      // dx、dy 是到目標的距離；夠近就算打中。
       const dx = p.tx - p.x,
         dy = p.ty - p.y,
         dist = Math.hypot(dx, dy);
@@ -1773,6 +1794,7 @@ function updProj(dt) {
       p.vy = Math.sin(a) * p.spd;
       const st = p.spd * dt;
       p.trail -= dt;
+      // 飛行中留下光點尾巴。
       if (p.trail <= 0) {
         p.trail = 0.03 - p.tier * 0.003;
         fxW.add({
@@ -1902,6 +1924,7 @@ function updProj(dt) {
       }
     }
   }
+  // 移除已經打中或消失的投射物。
   if (R.proj.some((p) => p.dead)) R.proj = R.proj.filter((p) => !p.dead);
 }
 // 地面區域：站在上面的敵人持續受傷。
@@ -2022,6 +2045,8 @@ function applyFuse(target, res) {
 }
 // 合成與升星的特效。
 function fuseFx(x, y, key, type, tier = 2) {
+  // 合成或升星時的特效：cols 是元素顏色，tc 是星級顏色；放出碎片、光環、光柱與
+  // 星星。
   const cols = elemsOf(key).map((e) => ELEM[e].c),
     tc = TIER_COL[tier];
   burst(fxW, x, y, 24 + tier * 10, {
@@ -2084,6 +2109,7 @@ function fuseFx(x, y, key, type, tier = 2) {
       twinkle: true,
       force: true,
     });
+  // 跳出「融合！」或「★幾 稱號！」的文字，播放音效；五星以上畫面震動並閃光。
   const label =
     type === "fuse"
       ? `融合！${towerName(key)}`
@@ -2103,6 +2129,7 @@ function fuseFx(x, y, key, type, tier = 2) {
     shake(4 + tier);
     flash(0.25, tc);
   }
+  // 記錄合成與升星次數（結算時顯示）。
   if (type === "fuse") {
     R.stats.fusions++;
     shake(4);
@@ -2110,12 +2137,14 @@ function fuseFx(x, y, key, type, tier = 2) {
 }
 // 放開塔卡：出售、合成或放到地圖上。
 function dropCard(idx, x, y) {
+  // 把手牌拖放到某個位置：拖到垃圾桶就賣掉。
   const c = R.hand[idx];
   if (!c) return;
   if (inTrash(x, y)) {
     sellCard(idx);
     return;
   }
+  // 放到備戰區的格子：空格就放進去，有同樣的塔就嘗試合成（要同星級）。
   const g = slotAt(x, y);
   // 放在另一張塔卡上：嘗試合成。
   if (g) {
@@ -2168,6 +2197,7 @@ function dropCard(idx, x, y) {
     R.selCard = -1;
     return;
   }
+  // 放到戰場上：空地就蓋塔，上面已經有塔就嘗試合成。
   if (R.tab !== "battle") return;
   const tl = tileAt(x, y);
   if (!tl) return;
@@ -2554,6 +2584,7 @@ function dragItem(drag) {
 }
 // 拖曳時的格子預覽：可以放置、合成或不能放。
 function drawDragPreview(c, drag) {
+  // 拖曳時在地圖上預覽：可以放的格子顯示綠色，不能放的顯示紅色並說明原因。
   const it = dragItem(drag);
   if (!it) return;
   const m = G.mouse,
@@ -2566,6 +2597,7 @@ function drawDragPreview(c, drag) {
     let ok = false,
       label = "",
       col = "#ff5a5a";
+    // 拖到另一座塔上：顯示合成後的結果與費用。
     if (o && o !== it) {
       const res = fuseResult(it, o);
       ok = !!res;
@@ -2628,9 +2660,11 @@ function hoverTower() {
 
 // ===== 星級技能：覺醒新星（★4~5）與神話天罰（★6） =====
 function towerSkills(t, dt) {
+  // 四星以上的塔技能：s 是能力表。
   const s = t.st;
   // 覺醒新星：倒數結束後攻擊範圍內所有敵人。
   t.novaT = (t.novaT ?? rand(2, 5)) - dt;
+  // 新星：每隔一段時間對射程內所有敵人造成 3 倍（五星 5 倍）傷害，並放出大光環。
   if (t.novaT <= 0) {
     const R2 = s.range * 1.1,
       hits = enemiesInRange(t.x, t.y, R2);
@@ -2697,6 +2731,7 @@ function towerSkills(t, dt) {
   // 神話天罰：隨機轟擊全場最多 12 個敵人。
   if (t.tier >= 6) {
     t.ultT = (t.ultT ?? 6) - dt;
+    // 終極技能：每 12 秒隨機打擊最多 12 個敵人。
     if (t.ultT <= 0) {
       const es = R.enemies.filter((e) => targetable(e));
       if (es.length) {
@@ -2758,6 +2793,7 @@ function comboMul() {
 
 // ===== 寶劍法術：連線三把劍時施放全場法術 =====
 function castSpell(el, B) {
+  // 施放元素法術：場上沒有敵人或不在戰鬥中就不能放。
   const es = R.enemies.filter((e) => !e.dead);
   if (!es.length || R.phase !== "wave") return false;
   // 法術傷害：依波次、遺物與 B（強度）計算。
@@ -2768,6 +2804,7 @@ function castSpell(el, B) {
     B *
     (1 + R.mods.dmg) *
     (1 + R.mods.spellDmg);
+  // 顯示法術名稱、畫面閃光並播放音效。
   const col = ELEM[el].c,
     name = SPELL_NAME[el];
   floatText(fxW, MX + 640, MY + 360, name + "！", col, 72, {
@@ -2784,11 +2821,14 @@ function castSpell(el, B) {
     if (e.dead) return;
     dealDamage(e, pw * mul * (e.boss ? 0.35 : 1), null, {});
   };
+  // 依元素產生不同效果：火（連續落下火球）、冰（全場冰凍）、雷（隨機落雷）、毒
+  // （路線上毒霧）、風（把敵人吹回去）、土（地面碎石）。
   if (el === "fire") {
     // 隕石雨。
     for (let k = 0; k < 10 + B * 2; k++)
       R.timers.push({
         t: k * 0.1,
+        // 每隔一段時間隨機挑一個敵人打下火球，爆炸範圍內的敵人都受傷。
         fn: () => {
           const live = R.enemies.filter((e) => !e.dead);
           const tg = live.length ? pick(live) : null;
@@ -2807,6 +2847,7 @@ function castSpell(el, B) {
           });
           R.timers.push({
             t: 0.2,
+            // 火球落地：80 範圍內的敵人受到傷害。
             fn: () => {
               for (const e of R.enemies)
                 if (!e.dead && d2(x, y, e.x, e.y) < 80 * 80) {
@@ -2873,6 +2914,7 @@ function castSpell(el, B) {
     for (let k = 0; k < 12 + B * 2; k++)
       R.timers.push({
         t: k * 0.08,
+        // 隨機挑一個敵人打下落雷。
         fn: () => {
           const live = R.enemies.filter((e) => !e.dead);
           if (!live.length) return;

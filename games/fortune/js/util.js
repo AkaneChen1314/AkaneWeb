@@ -37,8 +37,9 @@ const G = {
   codexPage: 0,
 };
 
-// ---------- 數值與亂數 == ----------
+// ---------- 數值與亂數 ----------
 
+// 隨機數：rand(10) 是 0～10 之間，rand(3, 8) 是 3～8 之間。
 function rand(a = 1, b) {
   return b === undefined ? Math.random() * a : a + Math.random() * (b - a);
 }
@@ -65,8 +66,9 @@ function d2(ax, ay, bx, by) {
   return dx * dx + dy * dy;
 }
 
-// ---------- 動畫曲線 == ----------
+// ---------- 動畫曲線 ----------
 
+// 有一點「超過頭再彈回來」的動畫曲線（t 從 0 到 1）。
 function easeOutBack(t) {
   const c1 = 1.70158,
     c3 = c1 + 1;
@@ -128,8 +130,9 @@ function mulberry32(a) {
   };
 }
 
-// ---------- 顏色 == ----------
+// ---------- 顏色 ----------
 
+// 把 "#ff8800" 這種顏色碼轉成紅、綠、藍三個數字（也支援 "#f80" 這種短寫法）。
 function hexRgb(h) {
   h = h.replace("#", "");
   if (h.length === 3)
@@ -183,8 +186,9 @@ function rainbow(h, l = 60) {
   return hslHex(Math.round(h / 10) * 10, 100, l);
 }
 
-// ---------- 畫布工具 == ----------
+// ---------- 畫布工具 ----------
 
+// 畫圓角矩形的路徑（r 是圓角半徑，不會超過寬高的一半）。
 function rr(c, x, y, w, h, r) {
   r = Math.min(r, w / 2, h / 2);
   c.beginPath();
@@ -195,6 +199,7 @@ function rr(c, x, y, w, h, r) {
   c.arcTo(x, y, x + w, y, r);
   c.closePath();
 }
+// 組合畫布用的字型字串，例如 "700 20px 字型名稱"。
 function font(size, weight = 700) {
   return `${weight} ${size}px ${FONT}`;
 }

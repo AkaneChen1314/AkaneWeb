@@ -703,6 +703,8 @@
   }
   // ---------- 出發前說明：先認識這一局會遇到的東西 ----------
   const briefIcon = {
+    // 規則說明用的小圖示：寶箱（c 是顏色）。下面依序是治癒泉、跳躍板、傳送門、
+    // 危險區、石頭、圓形範圍、直線、毒池、環形、雷射、子彈與蛇頭。
     chest: (c) => /* HTML */ `<svg viewBox="0 0 32 32">
         <rect
           x="5"
@@ -891,6 +893,7 @@
       world = S.WORLDS[inRun ? game.world : profile.world],
       d = S.DIFFICULTIES[inRun ? game.difficulty : profile.difficulty],
       ch = inRun ? game.character : S.CHARACTERS[profile.selected];
+    // 一張說明卡片：左邊小圖、右邊標題與說明；tone 可以讓卡片換成警告色。
     const card = (
       art,
       title,
@@ -1375,12 +1378,16 @@
 
   // 開始一局（或練習）：建立繪圖器與規則，重設所有畫面狀態。
   function startGame(training = false) {
+    // training 是「八步無傷練習」模式；先準備音效、關掉視窗、清空按住的按鍵，切
+    // 到遊戲畫面。
     training = training === true;
     sound.init();
     closeModal();
     resetInput();
     $("lobby").classList.add("hidden");
     $("game-screen").classList.remove("hidden");
+    // 建立 3D 繪圖器（如果之前的壞掉了就重建）；瀏覽器不支援 WebGL 時會自動改用
+    // 相容畫面。
     try {
       if (!gameRenderer || gameRenderer.lost)
         gameRenderer = new SerpentRenderer($("game-canvas"), {
@@ -1402,6 +1409,8 @@
       training,
       difficulty: profile.difficulty,
     });
+    // 練習模式另外建立教學流程；下面把上一局留下的特效、鏡頭、閃光、震動與結果
+    // 全部清空。
     tutorial = training ? new S.Tutorial(game) : null;
     bossCast = null;
     bolts = [];
@@ -1418,24 +1427,29 @@
     result = null;
     accumulator = 0;
     lastCombo = 0;
+    // 操作方式：滑鼠指向或鍵盤。
     steer = profile.settings.control === "pointer" ? "pointer" : "keys";
     pointerOrigin = pointer ? { ...pointer } : null;
+    // 顯示或隱藏練習模式的教練提示。
     $("training-coach").classList.toggle("hidden", !training);
     $("game-screen").classList.toggle("is-training", training);
     $("damage-notice").classList.add("hidden");
     refreshCoach();
     // 更新角色名稱、技能等介面。
     const c = game.character;
+    // 左上角 HUD：角色頭像、名字與技能。
     $("hud-avatar").innerHTML = avatar(c);
     $("hud-character").textContent = c.name;
     $("skill-label").textContent = c.skill;
     $("skill-button").querySelector("svg").innerHTML =
       `<use href="#i-${c.icon}"/>`;
+    // 小地圖標上目前的地圖名稱，更新操作提示，把鍵盤焦點放到遊戲畫面。
     const w = S.WORLDS[game.world];
     $("minimap-label").textContent = `${w.name}`;
     updateControlHint();
     $("game-canvas").focus();
     updateHUD();
+    // 開場的大字提示：練習、禪模式與一般模式各有不同。
     banner(
       training
         ? "安全練習開始 / 先試著轉彎"
@@ -1443,14 +1457,17 @@
           ? "沒有敵人、不會受傷 / 暫停後可結算獎勵"
           : "咬擊自動發動 / 按住衝刺撞擊 / 繞圈纏繞絞殺",
     );
+    // 第一次玩時提醒可以按 Esc 暫停；瀏覽器不支援 3D 時提醒已改用相容畫面。
     if (gameRenderer.fallback) toast("已啟用相容畫面模式，遊戲玩法不受影響。");
     else if (!training && profile.runs === 0)
       toast("隨時按 Esc，可以在暫停選單打開「本局說明」。");
   }
   // 暫停選單。
   function pauseMenu() {
+    // 遊戲結束、或正在選升級時，不能暫停。
     if (!game || game.over || game.needsUpgrade) return;
     game.paused = true;
+    // 暫停視窗：目前狀態與「繼續、設定、規則、說明、地圖、回大廳」按鈕。
     showModal(
       "pause",
       /* HTML */ `<p class="section-label">世界與倒數已停止。</p>
@@ -1497,6 +1514,7 @@
           </button>
         </div>`,
     );
+    // 暫停視窗上各按鈕要做的事。
     $("resume-button").onclick = resume;
     $("pause-settings").onclick = () => settings(true);
     $("pause-rules").onclick = () => help("damage", true);
@@ -1642,13 +1660,17 @@
   }
   // 結算畫面：分數、死因與獎勵。
   function showResult() {
+    // 結算這一局：計算晶體、成就與紀錄，並存檔。
     result = S.settle(profile, game);
     if (!result) return;
     save();
+    // 播放勝利或失敗的音效，清空按住的按鍵。
     sound.end(game.won);
     resetInput();
+    // died 表示是不是被打倒；damage 是最後一次受傷的原因（用來給建議）。
     const died = game.endReason === "defeated",
       damage = game.lastDamage && S.DAMAGE[game.lastDamage.cause];
+    // 結束原因的說明：被打倒、主動結束、清完四波、打倒首領等。
     const reason = died
       ? `${damage?.label || "生命耗盡"}，最後扣除 ${game.lastDamage?.amount || 0} HP，生命降到 0。`
       : game.endReason === "retired"
@@ -1658,6 +1680,7 @@
           : game.endReason === "boss-cleared"
             ? "三位首領全數擊敗，首領連戰勝利！"
             : "你存活到倒數歸零，完成本次挑戰。";
+    // 結算視窗：分數、時間、擊退數、獲得晶體，以及下一局的建議。
     showModal(
       "result",
       /* HTML */ `<div class="guard-bar" aria-hidden="true"><i></i></div>
@@ -1724,6 +1747,7 @@
       false,
       { guard: 900 },
     );
+    // 「再玩一次」與「回大廳」按鈕。
     $("again-button").onclick = () => startGame();
     $("home-button").onclick = home;
   }
@@ -1762,14 +1786,18 @@
   }
   // 處理規則引擎送來的事件，轉成音效、文字與特效。
   function processEvents() {
+    // game.events 是遊戲規則這一幀發生的事情（吃到東西、受傷、升級…）；這裡把它
+    // 們一次拿出來，轉成音效、文字與特效。
     if (!game) return;
     const events = game.events.splice(0),
       head = game.snake[0];
     for (const e of events) {
+      // 吃到食物：播放音效，吃到晶體時跳出「+1 晶體」。
       if (e.type === "eat") {
         sound.eat(e.food);
         if (e.crystal) addText(head.x, head.z, "+1 晶體", "#e5ed8d");
       }
+      // 吃到能力道具：顯示道具名稱與效果。
       if (e.type === "power") {
         sound.power();
         banner(`${e.name}！${e.desc}`, "power");
@@ -1796,6 +1824,7 @@
         $("damage-notice").classList.remove("hidden");
         addText(head.x, head.z, `−${e.amount} HP`, "#ff9da4", { size: 18 });
       }
+      // 護盾擋下攻擊。
       if (e.type === "shield-break") {
         sound.shield();
         addText(head.x, head.z, "護盾抵擋！", "#8fd3ff", {
@@ -1806,6 +1835,8 @@
       }
       // 打中敵人：依來源決定文字、顏色與震動。
       if (e.type === "hit") {
+        // 造成傷害：依攻擊方式（咬擊、撞擊、反擊、絞殺、爆炸）顯示不同的文字與
+        // 顏色。
         const label =
           {
             bite: "",
@@ -1846,6 +1877,7 @@
             },
           );
         sound.hit(e.source);
+        // 撞擊、絞殺等強力攻擊時，畫面震動並短暫停格（打擊感）。
         if (e.source === "ram") {
           shake = Math.max(shake, motion(0.18));
           hitStop = Math.max(hitStop, motion(0.045));
@@ -1872,6 +1904,7 @@
       if (e.type === "coil") {
         coilFlashes.push({ points: e.points, life: 0.7, max: 0.7 });
         sound.coil(e.count);
+        // 纏繞絞殺：顯示絞了幾隻、每隻扣多少，數量越多震動越大。
         const msg = e.count
           ? `纏繞絞殺${e.count > 1 ? ` ×${e.count}` : ""}！`
           : e.caches
@@ -1918,6 +1951,7 @@
         camera.z = head.z + Math.sin(game.angle) * 3;
         screenFlash = { color: "#c49bff", life: 0.4, max: 0.4 };
       }
+      // 衝刺加速、連擊、受傷原因（例如被閃電打到時畫出閃電）。
       if (e.type === "boost") {
         sound.boost();
         screenFlash = { color: "#d9f77b", life: 0.18, max: 0.18 };
@@ -1994,6 +2028,7 @@
         addText(e.x, e.z, `+回復 ×${e.count}`, "#7dffb0", { size: 14 });
       if (e.type === "block")
         addText(e.x, e.z, "格擋！用衝撞破盾", "#9fc6ff", { size: 13 });
+      // 敵人破盾、暈眩、彈開、首領衝刺。
       if (e.type === "shield-down") {
         addText(e.x, e.z, "破盾！", "#cfe3ff", { size: 18 });
         sound.note(500, 0.15, 0.08, "square", 0, 120);
@@ -2029,6 +2064,7 @@
         banner("女王之盾！小蟲活著時女王只受 35% 傷害", "danger");
       // 首領施放招式的提示。
       if (e.type === "boss-cast") {
+        // 首領施法時在畫面上顯示招式名稱 2.2 秒（until 是消失的時間點）。
         bossCast = {
           name: e.name,
           until: performance.now() + 2200,
@@ -2044,6 +2080,7 @@
         });
         sound.note(260, 0.25, 0.07, "sawtooth", 0, 520);
       }
+      // 首領進入下一階段、施放技能、新的一波敵人出現。
       if (e.type === "phase") {
         banner(`${e.name}・第 ${e.phase} 階段「${e.label}」`, "danger");
         screenFlash = { color: e.color, life: 0.45, max: 0.45 };
@@ -2069,6 +2106,7 @@
           e.kinds?.length ? "danger" : "",
         );
       if (e.type === "boss") showBossIntro(e);
+      // 打倒首領、升級（跳出選升級的視窗）。
       if (e.type === "boss-killed") {
         banner("守衛已擊敗！收下你的戰利品", "power");
         sound.level();
@@ -2082,6 +2120,7 @@
         showUpgrades();
       if (e.type === "end") showResult();
     }
+    // 處理事件時又產生新事件的話，再處理一次。
     if (game?.events.length) processEvents();
   }
   // 把鍵盤、滑鼠、搖桿整理成引擎要的輸入。
@@ -2156,6 +2195,7 @@
 
   // 更新遊戲中的所有介面數字與長條。
   function updateHUD() {
+    // g 是目前這一局；先更新教練提示與目前目標（第幾波、整備倒數等）。
     if (!game) return;
     const g = game;
     refreshCoach();
@@ -2172,15 +2212,18 @@
               : modeGoal(g.mode);
     // 只有真的需要提醒時才顯示提示。
     const hint = statusLine(g);
+    // 左上角的狀態提示（生命偏低、無敵剩幾秒等），危險的提示用警告色。
     $("protection-status").textContent = hint;
     $("hud-hint").classList.toggle("show", !!hint);
     $("hud-hint").classList.toggle(
       "warn",
       /偏低|無敵剩|暈眩|能量環|女王之盾/.test(hint) && !/星環/.test(hint),
     );
+    // 遊戲開始 25 秒後，畫面下方的操作提示變淡。
     $("game-tips").classList.toggle("faded", !g.training && g.time > 25);
     if (!g.lastDamage || g.time - g.lastDamage.time > 3.5)
       $("damage-notice").classList.add("hidden");
+    // 分數、倒數或經過時間、波數與模式名稱。
     $("score").textContent = number(g.score);
     document.querySelector(".score-box>span").textContent = g.training
       ? "練習分數"
@@ -2204,6 +2247,7 @@
       : g.mode === "zen"
         ? `${S.MODES.zen.name}・${S.WORLDS[g.world].name}`
         : `${S.MODES[g.mode].name}・${g.diff.name}`;
+    // 生命條：用 scaleX 把長條縮短；生命低於 30% 時變紅，有護盾或無敵時換顏色。
     const hp = g.health / g.maxHealth,
       track = $("health-track");
     $("health-fill").style.transform = `scaleX(${hp})`;
@@ -2213,6 +2257,7 @@
       "protected",
       g.invulnerable > 0 || (g.characterIndex === 3 && g.activeSkill > 0),
     );
+    // 生命數字、等級、進化經驗與晶體、長度、擊退、連擊。
     $("health-text").textContent = `${Math.ceil(g.health)} / ${g.maxHealth}`;
     $("level-label").textContent = `Lv. ${g.level}`;
     $("xp-fill").style.transform = `scaleX(${Math.min(1, g.xp / g.nextXP)})`;
@@ -2222,6 +2267,7 @@
     $("length-info").textContent = `長度 ${g.snake.length}`;
     $("kills-info").textContent = `擊退 ${g.kills}`;
     $("combo-info").textContent = g.coilKills ? `纏繞擊殺 ${g.coilKills}` : "";
+    // 衝刺能量與技能冷卻（用縱向的長條表示），冷卻好了按鈕會亮起來。
     $("dash-fill").style.transform = `scaleY(${g.dash / 100})`;
     $("dash-button").classList.toggle("free", g.powers.speed > 0);
     $("skill-fill").style.transform =
@@ -2243,6 +2289,7 @@
         color: S.FOODS[id].color,
         name: POWER_LABEL[id],
       }));
+    // 身上的增益效果（加速、技能、凍結等）做成小圖示。
     if (g.boost > 0)
       buffs.push({
         id: "boost",
@@ -2278,6 +2325,7 @@
     // 連擊計數。
     const combo = g.combo,
       meter = $("combo-meter");
+    // 連擊 3 次以上時顯示連擊數與分數倍率。
     meter.classList.toggle("show", combo >= 3);
     if (combo >= 3) {
       $("combo-count").textContent = combo;
@@ -2293,6 +2341,7 @@
     lastCombo = combo;
     // 首領血條。
     const boss = g.enemies.find((e) => e.boss);
+    // 有首領時顯示上方的首領血條；首領有護衛時血條變成防護狀態。
     $("boss-hud").classList.toggle("hidden", !boss);
     if (boss) {
       const def = S.BOSSES[boss.variant],
@@ -2322,15 +2371,18 @@
   }
   // ---------- 小地圖 ----------
   function mapTerrain(g, size, dpr) {
+    // 小地圖：先建立一個畫布（dpr 是螢幕像素倍率，高解析度螢幕會畫得比較細）。
     const c = document.createElement("canvas");
     c.width = c.height = Math.round(size * dpr);
     const ctx = c.getContext("2d");
     ctx.scale(dpr, dpr);
+    // P(位置) 把遊戲裡的座標換成小地圖上的座標。
     const w = S.WORLDS[g.world],
       pad = 4,
       scale = (size - pad * 2) / (g.bound * 2),
       P = (p) => [size / 2 + p.x * scale, size / 2 + p.z * scale],
       big = size > 260;
+    // 塗上背景與地面，畫出格線。
     ctx.fillStyle = w.background;
     ctx.fillRect(0, 0, size, size);
     ctx.fillStyle = w.floor;
@@ -2363,6 +2415,7 @@
         r = z.r * scale;
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
+      // 治癒泉與其他區域。
       if (z.type === "spring") {
         ctx.fillStyle = "#1f6d5c";
         ctx.fill();
@@ -2386,6 +2439,7 @@
         ctx.stroke();
       }
     }
+    // 障礙物與地標。
     ctx.fillStyle = "#d9f77b";
     // 加速板。
     for (const p of g.pads) {
@@ -2456,6 +2510,7 @@
         ctx.fill();
       }
     }
+    // 外框，回傳畫好的小地圖與換算工具。
     ctx.strokeStyle = w.crystal + "aa";
     ctx.lineWidth = 1.5;
     ctx.strokeRect(pad, pad, size - pad * 2, size - pad * 2);
@@ -2711,6 +2766,8 @@
 
   // 把危險預警、傷害文字、道具名稱等畫在 3D 畫面上方。
   function drawFX(dt) {
+    // 特效畫布：疊在 3D 畫面上面，專門畫光暈、預警範圍、文字與箭頭。視窗大小改
+    // 變時重設畫布大小。
     const canvas = $("fx-canvas"),
       ctx = canvas.getContext("2d"),
       w = gameRenderer.width,
@@ -2727,6 +2784,8 @@
       canvas.width = Math.round(w * ratio);
       canvas.height = Math.round(h * ratio);
     }
+    // 每一幀先清空；P(x, y, z) 把 3D 位置換算成螢幕上的位置，onScreen 判斷是否
+    // 在畫面內。
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     ctx.clearRect(0, 0, w, h);
     const fdt = g.paused || g.needsUpgrade ? 0 : dt,
@@ -2746,6 +2805,8 @@
       ctx.globalAlpha = alpha;
       ctx.drawImage(glowSprite(color), p.x - r, p.y - r, r * 2, r * 2);
     };
+    // 各種物件的光暈：治癒泉、傳送門、跳躍板、寶箱、地標、能力道具、子彈、菁英
+    // 敵人、首領與蛇頭。
     const wc = S.WORLDS[g.world].crystal;
     for (const z of g.zones)
       if (z.type === "spring")
@@ -2846,6 +2907,7 @@
       ctx.lineTo(b.x, b.y);
       ctx.stroke();
     };
+    // 攻擊預警範圍：圓形、直線、扇形、環形等，越接近發動顏色越深。
     const tn = performance.now() / 1000;
     // Enemy attacks: every danger shows its exact footprint before it lands.
     // 危險區域的預警，會隨時間填滿。
@@ -2971,6 +3033,8 @@
     }
     // 敵人衝撞、瞄準與自爆的預警。
     for (const e of g.enemies) {
+      // 敵人蓄力衝撞時畫出前進方向；瞄準時畫出瞄準線（鎖定時變紅）；自爆蟲倒數
+      // 時畫出爆炸範圍。
       if (e.windup > 0 || e.charge > 0) {
         const len = e.chargeLen || 12,
           wid = e.r,
@@ -3035,6 +3099,7 @@
       ctx.restore();
       c.life -= fdt;
     }
+    // 絞殺時的光圈。
     coilFlashes = coilFlashes.filter((c) => c.life > 0);
     // 咬擊範圍：有東西靠近時淡淡顯示，咬下去時變亮。
     const near =
@@ -3075,6 +3140,7 @@
       ctx.setLineDash([]);
       ctx.lineDashOffset = 0;
     }
+    // 寶箱的血條與食物的名稱標籤（標籤互相錯開，不重疊）。
     ctx.textAlign = "center";
     // 敵人血條與名稱。
     for (const e of g.enemies) {
@@ -3172,6 +3238,7 @@
       ctx.font = '11px "Microsoft JhengHei","Segoe UI",sans-serif';
       ctx.fillText(effect, p.x, by + 31);
     }
+    // 打擊閃光與閃電。
     ctx.globalAlpha = 1;
     for (const f of flashes) {
       const a = f.life / f.max;
@@ -3234,6 +3301,7 @@
       b.life -= fdt;
     }
     bolts = bolts.filter((b) => b.life > 0);
+    // 飄起來的文字（傷害、晶體等）：一開始大，慢慢變小變淡。
     for (const text of texts) text.life -= fdt;
     texts = texts.filter((t) => t.life > 0);
     for (const text of texts) {
@@ -3249,6 +3317,7 @@
       ctx.fillText(text.text, p.x, p.y - text.offset);
     }
     ctx.globalAlpha = 1;
+    // 開局或練習時，在蛇頭上方顯示操作提示。
     if ((g.time < 4 || g.training) && !g.over) {
       const p = P(head.x, 2.3, head.z);
       ctx.font = '12px "Microsoft JhengHei",sans-serif';
@@ -3260,6 +3329,8 @@
     }
     // 畫面外的重要目標，在邊緣畫箭頭。
     const marks = [];
+    // 畫面外的重要東西（首領、附近的能力道具、生命低時最近的治癒泉）：在畫面邊
+    // 緣畫箭頭指向它。
     for (const e of g.enemies)
       if (e.boss)
         marks.push({ x: e.x, z: e.z, color: "#ff4d5e", label: e.name });
@@ -3330,6 +3401,7 @@
       ctx.fillStyle = m.color;
       ctx.fillText(`${m.label} ${dist}m`, lx, ly);
     }
+    // 受傷時畫面四周閃紅；生命低於 30% 時四周持續泛紅。
     if (hurtFlash > 0) {
       // 低血量的紅色邊緣。
       const grad = ctx.createRadialGradient(
@@ -3363,6 +3435,7 @@
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
     }
+    // 全畫面閃光（例如升級、首領換階段）與衝刺時的速度線。
     if (screenFlash) {
       ctx.globalAlpha = (0.2 * screenFlash.life) / screenFlash.max;
       ctx.fillStyle = screenFlash.color;
@@ -3679,7 +3752,10 @@
     });
   // 鍵盤操作：視窗開著時先處理視窗，否則處理遊戲。
   document.addEventListener("keydown", (e) => {
+    // 按著 Ctrl、Alt 或 Command 時不處理，讓瀏覽器自己的快捷鍵可以用。
     if (e.ctrlKey || e.altKey || e.metaKey) return;
+    // 有視窗打開時：用鍵盤選擇按鈕、翻頁或關閉視窗（剛打開的短暫時間會忽略按鍵，
+    // 避免誤按）。
     if (modalType) {
       if (
         guarded() &&
@@ -3726,6 +3802,7 @@
           return;
         }
       }
+      // 結算畫面不接受空白鍵，避免一按就直接開新局。
       if (modalType === "result" && e.code === "Space") {
         e.preventDefault();
         return;
@@ -3770,6 +3847,7 @@
         openMap(true);
         return;
       }
+      // Esc：暫停時繼續遊戲，其他視窗就關閉。
       if (e.code === "Escape") {
         e.preventDefault();
         if (modalType === "pause") resume();
@@ -3780,6 +3858,7 @@
         else if (modalType === "result") home();
         return;
       }
+      // 選升級時，按 1、2、3 直接選。
       if (
         modalType === "upgrade" &&
         [
@@ -3799,6 +3878,8 @@
     }
     // 遊戲中的按鍵。
     if (game && !game.over) {
+      // 遊戲會用到的按鍵：WASD 與方向鍵移動、空白鍵衝刺、Shift、E 技能、H、Esc
+      // 與 P 暫停、M 地圖。
       const codes = [
         "KeyW",
         "KeyA",

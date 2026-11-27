@@ -986,6 +986,8 @@ class MapKit {
 
   // 火焰：持續噴出火焰粒子、往上飄的黑煙與火星；會加一盞閃爍的火光
   fire(x, y, z, scale = 1, light = true) {
+    // flame、smoke、ember 累計「該產生幾顆粒子了」，超過 1 就產生一顆；fc、ec、
+    // sc 是火焰、火星與黑煙的顏色。
     let flame = this.rnd(),
       smoke = 0,
       ember = 0;
@@ -2269,6 +2271,8 @@ const Maps = {
         ["grenade", -10, 0],
         ["grenade", 10, 0],
       ],
+      // 蓋出這張地圖：k 是地圖工具（MapKit），P 是這張地圖的配色。依序放外牆、
+      // 建築、掩體、補給與各種裝飾。
       build(k) {
         const P = k.pal;
         const A1 = P.accent1,
@@ -2664,6 +2668,7 @@ const Maps = {
         ["grenade", -20, -30],
         ["grenade", 20, 30],
       ],
+      // 蓋出這張地圖（焦土）：外牆、殘破建築、掩體與燃燒的火焰。
       build(k) {
         const P = k.pal;
         const FIRE = P.accent1,
@@ -3154,6 +3159,7 @@ const Maps = {
         ["grenade", -12, -26],
         ["grenade", 12, 26],
       ],
+      // 蓋出這張地圖（軌道環站）：外殼、艙體、橋與頭頂的桁架。
       build(k) {
         const P = k.pal;
         const A1 = P.accent1,
@@ -3535,6 +3541,7 @@ const Maps = {
         ["grenade", -36, 24],
         ["grenade", 36, -24],
       ],
+      // 蓋出這張地圖（海底研究站）：圓頂、玻璃隧道、研究大樓與海床裝飾。
       build(k) {
         const P = k.pal;
         const AQ = P.accent1,

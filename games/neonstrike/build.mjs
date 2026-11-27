@@ -17,6 +17,8 @@ if (
     "Build requires esbuild 0.28.2. Pass its executable path as the first argument.",
   );
 }
+// 用 esbuild 把 browser-entry.js 和所有模組打包成一個 browser.js（iife 格式，一
+// 般網頁直接載入就能執行）。
 const result = spawnSync(
   binary,
   [

@@ -17,6 +17,7 @@
   display: none;
 }
 
+/* 起始武器摺疊區的標題與「點此展開」提示。 */
 .loadout-summary-title {
   display: flex;
   align-items: center;
@@ -38,6 +39,7 @@
   white-space: nowrap;
 }
 
+/* 摺疊區右邊的箭頭：展開時轉向。 */
 .loadout-config summary::after {
   content: "⌄";
   flex: 0 0 24px;
@@ -113,6 +115,7 @@
   height: 36px;
 }
 
+/* Boss 資訊列：名字、「戰況」按鈕、血條與護盾條，名字太長就截斷。 */
 .boss-hud-info {
   display: grid;
   gap: 3px;
@@ -179,6 +182,7 @@
   color: #efc1d6;
 }
 
+/* 自適應說明只在「戰況」視窗裡顯示，資訊列上不顯示。 */
 .boss-hud-info > .boss-adaptation {
   display: none;
 }
@@ -248,6 +252,7 @@
   opacity: 0.45;
 }
 
+/* 手機電腦版下方的大搖桿（--touch-ui-scale 是依螢幕縮小比例放大的倍率）。 */
 .dock-joystick {
   position: relative;
   width: calc(104px * var(--touch-ui-scale));

@@ -571,6 +571,8 @@ const MUSIC = {
     // Boss：每隻的調性、速度、鼓點都不一樣
     // 不在名單內的首領用第一首。
     const i = Math.max(0, BOSS_IDS.indexOf(bossId));
+    // 產生一首戰鬥曲的設定：速度（bpm）、根音、和弦進行等，每一波用不同的組合，
+    // 聽起來不會一直重複。
     return {
       // bpm = 速度；root 從十個音裡依 Boss 編號挑一個，所以每隻 Boss 的調都不同
       bpm: 138 + ((i * 7) % 22),

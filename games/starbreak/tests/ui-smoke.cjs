@@ -11,9 +11,12 @@ let all = [];
 const viewport = { width: 960, height: 650, coarse: false, reduced: false };
 // 記下畫布上的每一次繪圖。
 const drawingCalls = [];
+// 假的畫布繪圖工具：遊戲呼叫的每一個畫圖指令（例如畫圓、畫線）都只記錄下來，不
+// 真的畫。測試再檢查有沒有畫出東西。
 const context2d = new Proxy(
   { createRadialGradient: () => ({ addColorStop() {} }) },
   {
+    // 遊戲取用任何畫圖指令時，回傳一個「只記錄名稱與參數」的函式。
     get: (o, k) =>
       k in o
         ? o[k]
@@ -25,6 +28,7 @@ const context2d = new Proxy(
 );
 // 假的網頁元素。
 class Element {
+  // 假的網頁元素：記下標籤、屬性、子元素、樣式與事件，夠遊戲程式使用就好。
   constructor(tag = "div", attrs = {}) {
     this.tagName = tag.toUpperCase();
     this.attrs = attrs;
@@ -49,6 +53,7 @@ class Element {
     this.naturalWidth = tag === "img" ? 1254 : 0;
     all.push(this);
   }
+  // 設定 innerHTML 時，把 HTML 文字解析成假的子元素，測試才能找到裡面的按鈕。
   set innerHTML(html) {
     this._html = html;
     const old = this.descendants();
@@ -84,6 +89,8 @@ class Element {
   descendants() {
     return this.children.flatMap((c) => [c, ...c.descendants()]);
   }
+  // 判斷這個元素符不符合選擇器（支援 #id、[屬性]、.class、標籤名稱這幾種簡單寫
+  // 法）。
   matches(s) {
     if (s.startsWith("#")) return this.id === s.slice(1);
     const a = s.match(/^\[([\w-]+)(?:="([^"]*)")?\]$/);
@@ -96,6 +103,7 @@ class Element {
   querySelectorAll(s) {
     return this.descendants().filter((x) => x.matches(s));
   }
+  // 找第一個符合的子元素。
   querySelector(s) {
     if (s === "#joystick i")
       return this.querySelector("#joystick")?.querySelector("i");
@@ -118,6 +126,7 @@ class Element {
   }
   focus() {}
   setPointerCapture() {}
+  // 元素的大小一律當成整個視窗大小。
   getBoundingClientRect() {
     return {
       width: viewport.width,
@@ -131,6 +140,7 @@ class Element {
   getContext() {
     return context2d;
   }
+  // 模擬點一下：執行 onclick 與用 addEventListener 加上的 click。
   click() {
     const e = { target: this, preventDefault() {} };
     this.onclick?.(e);
@@ -140,6 +150,7 @@ class Element {
 // 用實際的 index.html 建立元素。
 const root = new Element("body");
 root.innerHTML = fs.readFileSync("index.html", "utf8");
+// 假的 document：用 id 或選擇器在假的元素裡找東西。
 const document = {
   getElementById: (id) => all.find((x) => x.id === id) || null,
   querySelectorAll: (s) => root.querySelectorAll(s),
@@ -152,6 +163,8 @@ const windowEvents = {},
 document.addEventListener = (k, fn) => (documentEvents[k] = fn);
 // 假的存檔與瀏覽器環境。
 const storage = new Map(),
+  // 遊戲執行的環境：假的 localStorage（存在記憶體裡）、固定的時間，以及其他瀏覽
+  // 器功能。
   sandbox = {
     console,
     document,
@@ -178,6 +191,7 @@ const storage = new Map(),
     requestAnimationFrame: (fn) => {
       sandbox.frame = fn;
     },
+    // matchMedia：依測試設定回答「是否減少動態」「是否為觸控裝置」。
     matchMedia: (q) => ({
       matches: q.includes("reduced-motion")
         ? viewport.reduced
@@ -295,6 +309,7 @@ console.log(
 
 // 觸控與鍵盤事件走的是遊戲實際使用的處理函式。
 const arena = document.getElementById("arena");
+// 建立一次模擬的手指觸控事件（pointerId 是第幾根手指）。
 const pointer = (id, x, y) => ({
   pointerId: id,
   clientX: x,
@@ -326,6 +341,7 @@ engine.r.p.dashTime = 0;
 const stopX = engine.r.p.x;
 sandbox.frame(400);
 assert.equal(engine.r.p.x, stopX);
+// 建立一次模擬的按鍵事件。
 const key = (k) => ({
   key: k,
   target: arena,
@@ -553,6 +569,7 @@ function lastDrawScale() {
 // 以 560 單位為準（390 寬 → 390 / 560），讓手機看得到更遠的敵人。
 const desktopZoom = 650 / 600,
   mobileZoom = 390 / 560,
+  // 判斷兩個小數是不是幾乎相等（電腦算小數會有極小的誤差）。
   near = (a, b) => Math.abs(a - b) < 1e-9;
 engine.zoomPulse = 0.65;
 engine.screenPulse = 0.3;

@@ -282,6 +282,7 @@ function statPairs(key, tier) {
 
 // ===== 商店畫面 =====
 function drawShop(c, dt) {
+  // 商店背景：暖色漸層與淡淡的格紋。
   const t = G.time;
   let g = c.createLinearGradient(0, 70, 0, H);
   g.addColorStop(0, "#3a1e10");
@@ -317,6 +318,7 @@ function drawShop(c, dt) {
   const LX = 20,
     LY = 84,
     LW = 1040;
+  // 左邊的塔之商店：只賣一星塔；已經有同一種的話，買下就能馬上升星。
   rr(c, LX, LY, LW, 896, 20);
   c.fillStyle = "rgba(30,16,8,.82)";
   c.fill();
@@ -331,6 +333,7 @@ function drawShop(c, dt) {
     LY + 76,
     { size: 16, align: "left", color: "#ffe0b0", weight: 700 },
   );
+  // 刷新商品要花的金幣（會越來越貴）。
   const rc = refreshCost();
   // 刷新按鈕。
   button(
@@ -347,10 +350,12 @@ function drawShop(c, dt) {
       tip: "換一批新的塔（每波結束會自動免費刷新）",
     },
   );
+  // groups 是玩家已經有的塔，uc1 是一星升二星的費用（含遺物打折）。
   const groups = ownedGroups(),
     uc1 = Math.round(upgradeCost(1) * (1 - R.mods.shopDisc));
   // 六個塔的商品卡。
   R.shop.offers.forEach((o, i) => {
+    // 每一張商品卡：滑過放大，已經擁有的有綠色外框，特價的有紅色標籤。
     const cw = 196,
       chh = 430,
       x = LX + 18 + i * 204,
@@ -405,6 +410,7 @@ function drawShop(c, dt) {
     c.globalCompositeOperation = "lighter";
     glow(c, x + cw / 2, y + 112, 90, col, 0.35);
     c.restore();
+    // 卡片中間的塔圖案、名稱、攻擊方式、說明與主要數值。
     drawTower(c, o.key, 1, x + cw / 2, y + 128, 1.6, t + i, -Math.PI / 4, {
       flat: true,
       noTierScale: true,
@@ -440,6 +446,7 @@ function drawShop(c, dt) {
           weight: 800,
         }),
       );
+    // 已經擁有幾座。
     if (own) {
       rr(c, x + 18, y + 334, cw - 36, 24, 12);
       c.fillStyle = "rgba(40,160,90,.35)";
@@ -451,6 +458,7 @@ function drawShop(c, dt) {
       });
     }
     c.restore();
+    // 價格與購買按鈕：已售出、「只買下來」、「買＋升星」三種。
     const p = shopPrice(o.key, o.sale),
       fx = x + cw / 2,
       fy = y + 150;
@@ -491,6 +499,7 @@ function drawShop(c, dt) {
   });
   // 道具櫃
   const IY = LY + 554;
+  // 下方的道具櫃：每波更新，也可以在賭場抽到。
   goldText(c, "🧪 道具櫃", LX + 30, IY + 20, 28, { align: "left" });
   txt(c, "每波更新・也可以在賭場免費抽到", LX + 200, IY + 22, {
     size: 14,
@@ -500,6 +509,7 @@ function drawShop(c, dt) {
   });
   // 道具櫃。
   R.shop.items.forEach((o, i) => {
+    // 每個道具一張卡片：名稱、稀有度、分類、說明與價格。
     const x = LX + 18 + i * 254,
       y = IY + 44,
       w = 244,
@@ -636,6 +646,7 @@ function drawShop(c, dt) {
     RY = 84,
     RW = 824,
     RH = 896;
+  // 右邊的面板：升級與合成。
   rr(c, RX, RY, RW, RH, 20);
   c.fillStyle = "rgba(20,10,30,.86)";
   c.fill();
@@ -648,6 +659,7 @@ function drawShop(c, dt) {
   button("stUp", RX + RW - 400, RY + 16, 180, 50, "⬆ 升星", {
     style: R.shopTab === "up" ? "gold" : "dark",
     size: 20,
+    // 切換到「升級」分頁。
     fn: () => {
       R.shopTab = "up";
       R.shopScroll = 0;
@@ -656,6 +668,7 @@ function drawShop(c, dt) {
   button("stFuse", RX + RW - 210, RY + 16, 180, 50, "⚗ 融合", {
     style: R.shopTab === "fuse" ? "purple" : "dark",
     size: 20,
+    // 切換到「合成」分頁。
     fn: () => {
       R.shopTab = "fuse";
       R.shopScroll = 0;

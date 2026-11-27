@@ -407,6 +407,7 @@ function drawCasino(c, dt) {
 }
 // 左側的遊戲選單、賭運加成與最近戰績。
 function drawCasinoSidebar(c) {
+  // 賭場左邊的側欄：x、w 是位置與寬度。先畫深色底與霓虹框，再畫「幸運賭場」標題。
   const x = 16,
     w = 362,
     t = G.time;
@@ -423,6 +424,7 @@ function drawCasinoSidebar(c) {
     color: "rgba(255,220,255,.7)",
     weight: 700,
   });
+  // y 從上往下累加，每個區（例如拉霸區、桌上遊戲區）先畫區名，再列出裡面的遊戲。
   let y = 172;
   // 依分區列出遊戲。
   for (const z of CZONES) {
@@ -435,6 +437,7 @@ function drawCasinoSidebar(c) {
     c.fillStyle = rgba(z.col, 0.4);
     c.fillRect(x + 120, y + 14, w - 140, 2);
     y += 32;
+    // 每個遊戲一列：圖示、名稱、說明與目前的中獎率；選中的發亮，圖示會輕輕搖擺。
     for (const gm of CGAMES.filter((q) => q.z === z.id)) {
       const sel = CZ.game === gm.id,
         hov = !UI.noHover && hit(x + 12, y, w - 24, 76);
@@ -486,6 +489,7 @@ function drawCasinoSidebar(c) {
         color: "#7affb0",
         weight: 800,
       });
+      // 點別的遊戲就切換過去；這一局還沒結束時不能切換。
       if (!sel)
         UI.nh.push({
           id: "cg_" + gm.id,
@@ -509,6 +513,7 @@ function drawCasinoSidebar(c) {
   }
   // 賭運狀態與戰績
   y = Math.max(y, 860);
+  // 側欄下方：賭運加成（遺物、天賦帶來的效果）與最近 7 局的輸贏紀錄。
   c.fillStyle = "rgba(255,255,255,.08)";
   c.fillRect(x + 16, y - 6, w - 32, 1);
   txt(c, "🍀 賭運加成", x + 18, y + 12, {
@@ -558,12 +563,14 @@ function drawCasinoSidebar(c) {
 }
 // 下方的押注列：籌碼、說明、自動與主要按鈕。
 function drawBetBar(c) {
+  // 下方押注列：X、Y 是位置；gid 是目前的遊戲，g 是它的規則與畫面設定。
   const X = STG.x,
     Y = 864,
     Wd = STG.w,
     Hd = 204,
     gid = CZ.game,
     g = GM[gid];
+  // 深紫色漸層底與金色霓虹框。
   rr(c, X, Y, Wd, Hd, 18);
   const bg = c.createLinearGradient(0, Y, 0, Y + Hd);
   bg.addColorStop(0, "rgba(30,10,56,.95)");
@@ -571,9 +578,12 @@ function drawBetBar(c) {
   c.fillStyle = bg;
   c.fill();
   neonRR(c, X, Y, Wd, Hd, 18, { col: "#ffcf3a", w: 2, a: 0.8 });
+  // busy 表示這一局正在進行（不能改押注），bet 是目前的押注金額，opts 是可以選
+  // 的金額。
   const busy = g.busy(),
     bet = curBet(gid),
     opts = g.betOpts || BET_OPTS;
+  // 左邊：押注金額按鈕。
   txt(c, "選擇押注", X + 28, Y + 26, {
     size: 17,
     align: "left",
@@ -600,6 +610,7 @@ function drawBetBar(c) {
         },
       });
   });
+  // 目前押注與道具品質（押越多，抽到的道具越好）；下面是這個遊戲的押注說明。
   const stars = qualStars(bet);
   txt(c, `目前押注 ${fmtComma(bet)} 金`, X + 28, Y + 140, {
     size: 20,
@@ -627,6 +638,7 @@ function drawBetBar(c) {
   );
   // 自動
   const ax = X + 740;
+  // 中間：全自動（連續玩 10、25、50 局；中大獎或錢不夠時自動停下）。
   txt(c, "全自動", ax, Y + 26, {
     size: 17,
     align: "left",
@@ -678,6 +690,8 @@ function drawBetBar(c) {
   const a = g.action();
   // 主要按鈕。
   if (a) {
+    // 右邊：大大的主要按鈕（例如「轉動！」），內容由各遊戲的 action() 決定；有
+    // 些遊戲還有第二個按鈕。
     const bx = X + Wd - 400,
       by = Y + 30,
       bw = 372,
@@ -890,7 +904,9 @@ function slNudgeChance() {
 }
 // 依目前三條滾輪「逐一列舉所有停輪位置」算出精確機率（自動停輪時）
 function slStats() {
+  // 計算拉霸的中獎率與期望回收：還沒有滾輪資料時回傳 0。
   if (!SL.reels.length) return { hit: 0, win: 0, rtp: 0, bonus: 0, sym: {} };
+  // key 記下目前會影響機率的設定；設定沒變就直接用上次算好的結果，不用重算。
   const ch = slNudgeChance(),
     mr = maryRoundEV(),
     key =
@@ -902,6 +918,7 @@ function slStats() {
       "|" +
       mr.toFixed(3);
   if (SL.stat && SL.statKey === key) return SL.stat;
+  // S 是三條滾輪的圖案排列，L 是每條的長度。
   const S = SL.reels.map((r) => r.strip),
     L = S.map((s) => s.length),
     sym = {};
@@ -916,6 +933,8 @@ function slStats() {
     win = 0,
     rtp = 0,
     bonus = 0;
+  // 把三條滾輪所有可能停下的位置組合都試一次（窮舉），統計中獎次數、平均獎金與
+  // 大抽獎機率。這是精確的機率，不是估計。
   for (let a = 0; a < L[0]; a++)
     for (let b = 0; b < L[1]; b++)
       for (let c = 0; c < L[2]; c++) {
@@ -959,6 +978,7 @@ function slStats() {
         if (pay >= 1 || rounds || prize) win++;
         rtp += pay + rounds * mr;
       }
+  // 次數除以總組合數，就是機率。記下來下次直接用。
   for (const k in sym) sym[k] /= N;
   SL.stat = { hit: hit / N, win: win / N, rtp: rtp / N, bonus: bonus / N, sym };
   SL.statKey = key;
@@ -1243,9 +1263,12 @@ function slCell(i, row) {
 }
 // 畫出拉霸機、滾輪、拉桿與賠率表。
 function slDraw(c) {
+  // 拉霸機畫面：manual 是「SLOT 目押」模式（自己按停），hot 是快要中大獎（聽牌）
+  // 時的特效。
   const t = G.time,
     manual = slMode() === "slot",
     hot = SL.reach && SL.reach.big && SL.spinning;
+  // 機台本體：位置與大小，深色漸層底（聽牌時變紅），外框與一圈閃爍的燈泡。
   const X = 440,
     Y = 160,
     Wd = 780,
@@ -1277,6 +1300,7 @@ function slDraw(c) {
     SL.spinning ? (hot ? 50 : 26) : SL.winT < 3 && SL.lastLevel ? 12 : 5,
     hot,
   );
+  // 上方的機台名稱與兩個模式按鈕（拉霸機、SLOT 目押）。
   neonText(
     c,
     manual ? "命運 SLOT" : "命運拉霸",
@@ -1314,6 +1338,7 @@ function slDraw(c) {
     color: "#e0d0ff",
     weight: 700,
   });
+  // 三條滾輪的窗口。
   const rx = SLG.x,
     ry = SLG.y,
     RW = SLG.cw * 3 + SLG.gap * 2,
@@ -1360,6 +1385,8 @@ function slDraw(c) {
     g.addColorStop(1, "#c8c0d8");
     c.fillStyle = g;
     c.fillRect(x, ry, SLG.cw, RH);
+    // 每一條滾輪：依目前轉到的位置畫出圖案；轉得很快時圖案拉長、變淡（動態模糊）；
+    // 中獎的那一格發光。
     const fast = r.state === "spin" && r.spd > 12,
       base = Math.floor(r.pos),
       bo = r.bounce > 0 ? Math.sin(r.bounce * Math.PI) * 6 : 0;
@@ -1427,6 +1454,7 @@ function slDraw(c) {
     g.addColorStop(1, "rgba(20,0,40,.75)");
     c.fillStyle = g;
     c.fillRect(x, ry, SLG.cw, RH);
+    // 聽牌時，還在轉的滾輪外面加上閃光。
     if (r.ant && r.state !== "idle") {
       c.globalCompositeOperation = "lighter";
       const col = SL_COL[SL.reach ? SL.reach.s : "seven"] || "#f22";
@@ -1443,6 +1471,7 @@ function slDraw(c) {
       c.fillStyle = "rgba(80,40,120,.85)";
       c.fillRect(x - SLG.gap, ry, SLG.gap, RH);
     }
+    // 目押模式：每條滾輪下面有「停」按鈕。
     if (SL.manual && SL.spinning) {
       const can = r.state === "spin" && SL.t >= 0.35;
       button(
@@ -1512,6 +1541,7 @@ function slDraw(c) {
   // 拉桿
   // 拉桿。
   if (!manual) {
+    // 右邊的拉桿：可以點拉桿開始轉動。
     const lx = X + Wd - 40,
       ly0 = ry + 30,
       pull = SL.lever > 0 ? Math.sin(Math.min(1, SL.lever) * Math.PI) : 0,
@@ -1550,6 +1580,7 @@ function slDraw(c) {
   }
   // 中獎顯示
   const wy = ry + RH + 86;
+  // 滾輪下方的訊息列（中了什麼、贏多少）。
   rr(c, rx - 16, wy, RW + 32, 54, 27);
   c.fillStyle = "rgba(0,0,0,.6)";
   c.fill();
@@ -1578,6 +1609,7 @@ function slDraw(c) {
     pw = 640,
     ph = 690,
     st = slStats();
+  // 右邊的賠率表：每種圖案的倍數、說明與出現機率；剛剛中的那一列會亮起來。
   rr(c, px, py, pw, ph, 22);
   c.fillStyle = "rgba(10,4,24,.85)";
   c.fill();
@@ -1665,6 +1697,7 @@ function slDraw(c) {
       weight: 900,
     });
   });
+  // 最下面的總結：中獎率、回收率，滑過時說明機率怎麼算。
   const sy = py + ph - 66;
   rr(c, px + 12, sy, pw - 24, 56, 12);
   c.fillStyle = "rgba(255,255,255,.07)";
@@ -1990,9 +2023,11 @@ function maryEnd() {
 }
 // 畫出轉盤、中央資訊與機率表。
 function maryDraw(c) {
+  // 小瑪莉：run 表示燈光正在繞圈，PS 是每一格停下來的機率。
   const t = G.time,
     run = MARY.state === "run" || MARY.state === "intro",
     PS = maryProbs();
+  // 大獎模式時背景放出彩虹光束。
   if (MARY.bonus && MARY.state !== "idle")
     godRays(
       c,
@@ -2004,6 +2039,7 @@ function maryDraw(c) {
       1100,
       0.1,
     );
+  // 外框：一圈格子圍成的大方框，四周有燈泡。
   const bx = MB.cx - MB.size / 2 - 18,
     byy = MB.cy - MB.size / 2 - 18,
     bs = MB.size + 36;
@@ -2014,6 +2050,8 @@ function maryDraw(c) {
   bulbs(c, bx, byy, bs, bs, 56, run ? 30 : 6, MARY.bonus);
   // 每一格獎品。
   MARY_TILES.forEach((p, i) => {
+    // 每一格：燈光停在的那一格最亮，剛經過的格子留下漸淡的尾巴；中獎時那一格跳
+    // 動。
     const r = maryRect(i),
       tr = MARY.trail.find((q) => q.i === i),
       lit = i === MARY.pos && MARY.state !== "idle";
@@ -2049,6 +2087,7 @@ function maryDraw(c) {
       c.strokeStyle = rgba(p.col, 0.5);
       c.stroke();
     }
+    // 格子上的圖案、獎品名稱與左上角的機率。
     if (p.ic.length > 2)
       c.drawImage(getSym(p.ic), r.x + r.w / 2 - 38, r.y + 8, 76, 76);
     else {
@@ -2077,6 +2116,7 @@ function maryDraw(c) {
     });
     c.restore();
   });
+  // 中間的面板：還沒開始時是說明，進行中顯示第幾回合、本局獎金與最近拿到的東西。
   const cs = MB.size / 5,
     cx0 = MB.cx - cs * 1.5 + 8,
     cy0 = MB.cy - cs * 1.5 + 8,
@@ -2178,6 +2218,7 @@ function maryDraw(c) {
   const lx = STG.x + 20,
     ly = STG.y + 20,
     b = curBet("mary");
+  // 右邊的獎品與機率表。
   rr(c, lx, ly, 380, 666, 18);
   c.fillStyle = "rgba(10,4,24,.82)";
   c.fill();
@@ -2197,6 +2238,7 @@ function maryDraw(c) {
     color: "#7affb0",
     weight: 800,
   });
+  // 把同名的格子合在一起，計算每種獎品的總機率。
   const grp = {};
   // 把相同獎品的機率合併顯示。
   MARY_TILES.forEach((p, i) => {
@@ -2207,6 +2249,7 @@ function maryDraw(c) {
     MARY.lastHit >= 0 && MARY.state !== "idle"
       ? MARY_TILES[MARY.lastHit].t
       : null;
+  // 每一種獎品一列：名稱、獎勵內容與機率；剛中的那一列亮起來。
   MARY_ORDER.forEach((name, i) => {
     const gq = grp[name],
       p = gq.tile,
@@ -2246,6 +2289,7 @@ function maryDraw(c) {
       weight: 900,
     });
   });
+  // 最下面：中獎率與「拉霸 777 會觸發小瑪莉」的說明。
   c.fillStyle = "rgba(255,255,255,.1)";
   c.fillRect(lx + 16, ly + 596, 348, 1);
   txt(
@@ -2392,10 +2436,12 @@ function rlUpdate(dt) {
 }
 // 畫出輪盤、押注選項與紀錄。
 function rlDraw(c) {
+  // 輪盤：cx、cy 是中心，37 格（0～36），t 是時間。
   const { cx, cy } = RLG,
     Rr = RLG.R,
     seg = TAU / 37,
     t = G.time;
+  // 輪盤外圈的木框與金色霓虹。
   c.save();
   c.globalCompositeOperation = "lighter";
   glow(c, cx, cy, Rr * 1.6, "#ffcf3a", 0.2);
@@ -2411,6 +2457,7 @@ function rlDraw(c) {
     col: "#ffcf3a",
     w: 3,
   });
+  // 輪盤本體依目前角度旋轉：每一格的顏色與號碼。
   c.save();
   c.translate(cx, cy);
   c.rotate(RL.wa);
@@ -2432,6 +2479,7 @@ function rlDraw(c) {
     txt(c, "" + n, 0, 0, { size: 17, weight: 900, color: "#ffffff" });
     c.restore();
   });
+  // 輪盤中間的木頭圓盤與八根金色輻條。
   c.beginPath();
   c.arc(0, 0, Rr - 52, 0, TAU);
   g = c.createRadialGradient(-30, -30, 10, 0, 0, Rr - 52);
@@ -2449,6 +2497,7 @@ function rlDraw(c) {
   c.fillStyle = "#ffe080";
   c.fill();
   c.restore();
+  // 白色小球：位置由角度與半徑決定，半徑從外圈慢慢掉到格子裡。
   const br = lerp(Rr - 40, Rr + 16, RL.br),
     bx = cx + Math.cos(RL.ba) * br,
     by = cy + Math.sin(RL.ba) * br;
@@ -2488,6 +2537,7 @@ function rlDraw(c) {
   c.fillStyle = "rgba(10,30,20,.88)";
   c.fill();
   neonRR(c, px, py, 640, 690, 22, { col: "#2aff7a", w: 2 });
+  // 右邊的押注面板：兩個分頁（押顏色／大小、選號碼）。
   RL.view = RL.view || "out";
   button("rlvOut", px + 24, py + 18, 290, 56, "🎨 押顏色／大小", {
     style: RL.view === "out" ? "green" : "dark",
@@ -2511,6 +2561,7 @@ function rlDraw(c) {
       AU.play("coin");
     },
   });
+  // 押顏色／大小：紅黑、單雙、大小等選項；選號碼：0～36 的格子。
   if (RL.view === "out") {
     txt(c, "點一個押注目標（押中拿回 = 押注 × 倍率）", px + 320, py + 98, {
       size: 16,
@@ -2636,6 +2687,7 @@ function rlDraw(c) {
       cell(n, gx + col * (cw + gap), gy + (row + 1) * (ch + gap), cw, ch);
     }
   }
+  // 目前押的目標與機率，下面是最近開出的號碼。
   const cur = RL_BETS.find((q) => q.id === RL.sel),
     lbl = cur.id === "num" ? `號碼 ${RL.num}` : cur.n;
   rr(c, px + 24, py + 500, 592, 44, 12);
@@ -2670,6 +2722,7 @@ function rlDraw(c) {
     c.stroke();
     txt(c, "" + r, hx, hy + 1, { size: 15, weight: 900 });
   });
+  // 說明：押中號碼（包含綠色 0）的規則。
   txt(
     c,
     "押中號碼（包含綠色 0）還會額外送道具！每一局都可以重新選",
@@ -2816,6 +2869,7 @@ function drawDie(c, x, y, s, v, rot = 0) {
 }
 // 畫出骰盅、押注選項與紀錄。
 function dcDraw(c) {
+  // 骰寶：桌面中心位置，綠色絨布的漸層。
   const cx = 830,
     cy = 480,
     t = G.time;
@@ -2834,6 +2888,7 @@ function dcDraw(c) {
     w: 2,
     a: 0.6,
   });
+  // 三顆骰子：搖骰中會抖動並隨機翻面。
   const sh = DC.state === "shake";
   DC.dice.forEach((v, i) =>
     drawDie(
@@ -2892,6 +2947,7 @@ function dcDraw(c) {
     neonText(c, "押大還是押小？", cx, cy - 190, 46, "#3ae8ff", {
       core: "#ffffff",
     });
+  // 右邊的押注面板：押大、押小、押點數等。
   const px = 1250,
     py = 160,
     bet = curBet("dice");
@@ -2977,6 +3033,7 @@ function dcDraw(c) {
         },
       });
   }
+  // 押點數的說明與最近開出的紀錄。
   txt(
     c,
     "押點數：出現 1 顆 34.7%・2 顆 6.9%・3 顆 0.46%（任一顆 42.1%）",
@@ -3007,6 +3064,7 @@ function dcDraw(c) {
       { size: 14, weight: 900, color: s >= 11 ? "#ff8a8a" : "#8ab8ff" },
     );
   });
+  // 豹子（三顆一樣）的特別規則說明。
   txt(
     c,
     "開出豹子時，押大／押小都算輸；押中豹子還送史詩級道具！",
@@ -3120,6 +3178,7 @@ function dbUpdate(dt) {
 }
 // 畫出牌、彩池與階梯。
 function dbDraw(c) {
+  // 紅黑翻倍：中心位置與背景光束。
   const cx = 830,
     cy = 470,
     t = G.time;
@@ -3133,6 +3192,7 @@ function dbDraw(c) {
     900,
     DB.state === "choose" ? 0.07 : 0.04,
   );
+  // 中間的牌：翻牌動畫時用水平縮放模擬翻面（cos 從 1 變 0 再變回來）。
   const cw = 260,
     ch = 380;
   let sx = 1,
@@ -3146,6 +3206,7 @@ function dbDraw(c) {
   c.save();
   c.translate(cx, cy);
   c.scale(Math.max(0.03, sx), 1);
+  // 輸掉時牌會抖一下。
   if (DB.state === "lost")
     c.rotate(Math.sin(DB.t * 30) * 0.05 * (1 - DB.t / 1.6));
   rr(c, -cw / 2, -ch / 2, cw, ch, 22);
@@ -3184,6 +3245,7 @@ function dbDraw(c) {
     });
   }
   c.restore();
+  // 狀態文字：猜中、全部歸零等。
   if (DB.state === "lost")
     neonText(c, "全部歸零……", cx, cy - 250, 52, "#ff2a2a", { core: "#ffffff" });
   else if (DB.state === "idle")
@@ -3205,6 +3267,7 @@ function dbDraw(c) {
   c.fillStyle = "rgba(0,0,0,.65)";
   c.fill();
   neonRR(c, cx - 260, cy + 210, 520, 84, 42, { col: "#ffcf3a", w: 3 });
+  // 彩池：目前累積的獎金。
   txt(c, "彩池", cx - 200, cy + 252, {
     size: 22,
     color: "#ffe080",
@@ -3213,6 +3276,7 @@ function dbDraw(c) {
   goldText(c, fmtComma(DB.pot), cx + 30, cy + 254, 46, {
     glow: DB.pot ? "#ffcf3a" : null,
   });
+  // 選紅或選黑的按鈕。
   if (DB.state === "choose") {
     button("dbRed", cx - 420, cy - 70, 140, 140, "♥ 紅", {
       style: "red",
@@ -3234,6 +3298,7 @@ function dbDraw(c) {
   c.fillStyle = "rgba(10,4,24,.85)";
   c.fill();
   neonRR(c, lx, ly, 590, 676, 22, { col: "#ffcf3a", w: 2 });
+  // 右邊的翻倍階梯：每次猜中 48%，獎金一路翻倍。
   neonText(c, "翻倍階梯（每次猜中 48%）", lx + 295, ly + 32, 24, "#ffcf3a", {
     core: "#ffffff",
   });
@@ -3389,6 +3454,7 @@ function pkPlayFree(bet, risk) {
 }
 // 畫出釘子、落點、彈珠與機率表。
 function pkDraw(c) {
+  // 彈珠台：釘子排成三角形，每一列多一顆。
   const t = G.time,
     sp = PKG.sp;
   c.save();
@@ -3404,6 +3470,7 @@ function pkDraw(c) {
       c.fill();
     }
   c.restore();
+  // 最下面的落點格：倍數越高顏色越亮，剛落下的格子閃一下。
   const mul = PK_MUL[PK.risk];
   mul.forEach((m, k) => {
     const x = PKG.cx + (k - 6) * sp - sp / 2 + 3,
@@ -3428,6 +3495,7 @@ function pkDraw(c) {
       sw: 3,
     });
   });
+  // 彈珠與它的光尾巴。
   for (const b of PK.balls) {
     c.save();
     c.globalCompositeOperation = "lighter";
@@ -3444,6 +3512,7 @@ function pkDraw(c) {
     c.fillStyle = g;
     c.fill();
   }
+  // 右邊的面板：選風險（低、中、高），以及每個落點的倍數與機率。
   const px = 1290,
     py = 168,
     bet = curBet("plinko");
@@ -3525,6 +3594,7 @@ function pkDraw(c) {
       weight: 900,
     });
   }
+  // 賺到的機率（落在倍數大於 1 的格子）與不虧本的機率。
   const back = m.reduce((a, v, k) => a + (v >= 1 ? PB[k] : 0), 0),
     gain = m.reduce((a, v, k) => a + (v > 1 ? PB[k] : 0), 0);
   txt(
@@ -3534,6 +3604,7 @@ function pkDraw(c) {
     py + 404,
     { size: 15, align: "left", color: "#ffe080", weight: 900 },
   );
+  // 不同風險的特別說明，以及最近的倍率紀錄。
   const ex =
     PK.risk === "high"
       ? "高風險掉到最邊邊：送傳說級道具＋限定塔！"
@@ -3748,6 +3819,7 @@ function scCheck() {
 }
 // 畫出卡片與機率表。
 function scDraw(c) {
+  // 刮刮樂：卡片位置與漸層底色。
   const t = G.time,
     cd = SCR.card;
   const cx = 830,
@@ -3761,6 +3833,7 @@ function scDraw(c) {
   c.fillStyle = g;
   c.fill();
   neonRR(c, x0, y0, 600, 660, 26, { w: 4, speed: 2 });
+  // 卡片上的標題與玩法。
   goldText(c, "幸運刮刮樂", cx, y0 + 52, 48, {
     cols: ["#ffffff", "#fff2a0", "#ffcf3a"],
     stroke: "#6a0a2a",
@@ -3772,6 +3845,7 @@ function scDraw(c) {
     stroke: "rgba(80,0,40,.6)",
     sw: 4,
   });
+  // 九格：還沒刮開的是銀色刮漆，刮開後露出圖案。
   for (let i = 0; i < 9; i++) {
     const p = scCell(i),
       cell = cd ? cd.cells[i] : null;
@@ -3834,6 +3908,7 @@ function scDraw(c) {
       });
     }
   }
+  // 刮完後顯示結果：三連中獎或沒中。
   if (cd && cd.done)
     txt(
       c,
@@ -3856,6 +3931,7 @@ function scDraw(c) {
       stroke: "rgba(80,0,40,.6)",
       sw: 4,
     });
+  // 右邊的中獎一覽：每種圖案三連的獎金與機率。
   const px = 1290,
     py = 168,
     bet = curBet("scratch");
@@ -3872,6 +3948,7 @@ function scDraw(c) {
     color: "#7affb0",
     weight: 800,
   });
+  // 刮刮樂的獎金表：錢袋 50 倍、七 20 倍、鑽石…。
   const rows = [
     ["money", `×50 = ${fmtComma(bet * 50)} 金`],
     ["seven", `×20 = ${fmtComma(bet * 20)} 金`],
@@ -3912,6 +3989,7 @@ function scDraw(c) {
   rr(c, px + 14, py + 604, 562, 56, 12);
   c.fillStyle = "rgba(255,255,255,.07)";
   c.fill();
+  // 最下面：中獎率、回收率，以及「買卡當下就決定結果」的說明。
   txt(
     c,
     `中獎率 ${pct(scWinP())}・退回 ${pct(SCS.lemon.p / 100)}・沒中 ${pct(scLoseP())}`,
@@ -3939,10 +4017,12 @@ const GM = {
       "同一條線三個一樣就中獎・🌈 彩色球可以變成任何圖案・三個皇冠拿限定塔",
     betInfo: (b) =>
       `777 = ${fmtComma((b / 5) * SL_PAY.seven)} 金＋大抽獎 ${SL_BONUS.seven + R.mods.lottoRounds} 回合；彩色球×3 = ${fmtComma((b / 5) * SL_PAY.wild)} 金＋${SL_BONUS.wild + R.mods.lottoRounds} 回合`,
+    // 拉霸的中獎率說明（顯示在側欄）。
     odds: () => {
       const st = slStats();
       return `中獎率 ${pct(st.hit)}・大抽獎 ${pct(st.bonus)}`;
     },
+    // 拉霸的主要按鈕：轉動中顯示「停」（目押模式依序停輪），否則顯示「轉動」。
     action: () =>
       SL.spinning
         ? SL.manual
@@ -3971,6 +4051,7 @@ const GM = {
     betInfo: (b) =>
       `最大 JACKPOT ×100 = ${fmtComma(b * 100)} 金；每回合中獎率 ${pct(maryWinP())}`,
     odds: () => `中獎率 ${pct(maryWinP())}・最高 ×100`,
+    // 小瑪莉的主要按鈕。
     action: () =>
       MARY.state === "idle" || MARY.state === "end"
         ? {
@@ -3987,6 +4068,7 @@ const GM = {
     update: rlUpdate,
     draw: rlDraw,
     headline: () => "右邊選「押顏色／大小」或「選我的號碼」，選好後按「轉動」",
+    // 輪盤的押注說明與主要按鈕。
     betInfo: (b) => {
       const x = RL_BETS.find((q) => q.id === RL.sel);
       return `押「${x.id === "num" ? "號碼 " + RL.num : x.n}」：機率 ${pct(x.p)}，押中拿回 ${fmtComma(b * x.m)} 金${x.id === "num" ? "＋道具" : ""}`;
@@ -4008,6 +4090,7 @@ const GM = {
     update: dcUpdate,
     draw: dcDraw,
     headline: () => "大：11～17　小：4～10　豹子：三顆一樣",
+    // 骰寶的押注說明與主要按鈕。
     betInfo: (b) => {
       const x = DC_BETS.find((q) => q.id === DC.sel);
       return x.id === "num"
@@ -4035,6 +4118,7 @@ const GM = {
     betInfo: (b) =>
       `每次猜中機率 48%；連勝 10 次 = ${fmtComma(b * 1024)} 金！第 3、5、7、10 勝送道具`,
     odds: () => "每次猜中 48%・最高 ×1024",
+    // 紅黑翻倍的主要按鈕。
     action: () =>
       DB.state === "idle"
         ? {
@@ -4063,6 +4147,7 @@ const GM = {
     headline: () => "彈珠落下會隨機左右彈，最後掉進哪一格就拿那一格的倍率",
     betInfo: (b) =>
       `每顆彈珠 ${fmtComma(b)} 金；${PK_RISK[PK.risk]}最高 ×${PK_MUL[PK.risk][0]} = ${fmtComma(b * PK_MUL[PK.risk][0])} 金（機率 0.05%）`,
+    // 彈珠台的機率說明與主要按鈕。
     odds: () => {
       const m = PK_MUL[PK.risk],
         PB = pkProbs();
@@ -4086,6 +4171,7 @@ const GM = {
     betInfo: (b) =>
       `一張 ${fmtComma(b)} 金；中獎率 ${pct(scWinP())}；三個 💰 = ${fmtComma(b * 50)} 金，三個 👑 = 限定塔`,
     odds: () => `中獎率 ${pct(scWinP())}・最高 ×50`,
+    // 刮刮樂的主要按鈕：還沒刮完時可以「全部刮開」。
     action: () =>
       SCR.card && !SCR.card.done
         ? {

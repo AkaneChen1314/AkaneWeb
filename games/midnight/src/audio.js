@@ -480,8 +480,11 @@
 
     // ---------- 比賽事件的音效 ----------
     cue(event) {
+      // 音效關閉或瀏覽器還沒允許播放聲音時，不發出聲音。
       if (!this.enabled || this.context?.state !== "running") return;
       const id = event.fighter?.profile?.id;
+      // 依事件種類播放不同的合成音效：選擇、開戰、出招、命中、防禦、閃避、跳躍、
+      // 落地、K.O. 等。聲音都是用程式即時合成，不需要音效檔。
       switch (event.type) {
         case "select":
           this.tone(525, 710, 0.075, 0.16);

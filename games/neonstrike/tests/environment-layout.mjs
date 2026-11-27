@@ -85,6 +85,7 @@ test("every elevated freight container rests on aligned lower containers", () =>
     // 中央與四個角落都要檢查；只壓到一小角不算疊好。
     for (const u of [0.01, 0.5, 0.99])
       for (const v of [0.01, 0.5, 0.99]) {
+        // 上層貨櫃底部的一個點：檢查它下面真的有貨櫃撐著（不是懸空）。
         const point = new THREE.Vector3(
           THREE.MathUtils.lerp(
             container.geometry.boundingBox.min.x,
@@ -197,6 +198,7 @@ test("sign mounts contact the ground or their actual supporting structure", () =
         `${sign.name} posts do not reach ground level`,
       );
     } else {
+      // 每一塊標示牌的支架：檢查有碰到地面或建築，不是飄在空中。
       const anchors = [...physicalMeshes]
         .filter(
           (mesh) =>
@@ -252,6 +254,7 @@ test("maintenance fans are backed by the service wall instead of hanging beyond 
 
 // 乾塢的甲板要壓在船身上，並有足夠的支撐面積。
 test("dry-dock deck plates sit on the hull and retain substantial supported area", () => {
+  // 乾船塢甲板的每一塊鋼板：要放在船體上，而且有足夠的面積被撐住。
   const plates = meshes.filter((mesh) => {
     const p = mesh.geometry?.parameters;
     return (
@@ -278,6 +281,7 @@ test("dry-dock deck plates sit on the hull and retain substantial supported area
 
 // 西側矮牆的壓頂要貼著牆。
 test("western breaker wall caps touch their walls instead of levitating above them", () => {
+  // 西側防波堤的牆與牆頂：牆頂要貼著牆，不能浮在上面。
   const walls = meshes.filter((mesh) => {
     const p = mesh.geometry?.parameters;
     return (

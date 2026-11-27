@@ -34,10 +34,12 @@
   --muted: #8b969b;
 }
 
+/* 所有元素的寬高都包含內距與框線。 */
 * {
   box-sizing: border-box;
 }
 
+/* 遊戲畫面佔滿整個視窗，不出現捲軸。 */
 html,
 body {
   width: 100%;
@@ -49,6 +51,7 @@ body {
   font-family: "Barlow Condensed", "Noto Sans TC", sans-serif;
 }
 
+/* 按鈕與輸入框沿用頁面字型。 */
 button,
 input {
   font: inherit;
@@ -82,6 +85,7 @@ button {
   mix-blend-mode: multiply;
 }
 
+/* 加上 hidden 一律隱藏。 */
 .hidden {
   display: none !important;
 }
@@ -125,6 +129,7 @@ button {
   font-weight: 800;
   white-space: nowrap;
 }
+/* 直接開啟本機檔案時，部署按鈕停用並變淡。 */
 .file-mode .deploy-button {
   opacity: 0.45;
   pointer-events: none;
@@ -230,6 +235,7 @@ button {
   padding: 22px;
   z-index: 1;
 }
+/* 作戰準備的標題列。 */
 .setup-heading {
   display: flex;
   align-items: end;
@@ -253,6 +259,7 @@ button {
   font-size: 13px;
   letter-spacing: 0.12em;
 }
+/* 四個步驟分頁（幹員、地圖、模式、確認）。 */
 .setup-tabs {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -290,6 +297,7 @@ button {
 .setup-tabs button.active b {
   color: var(--acid);
 }
+/* 準備畫面的內容區：太長時捲動。 */
 .setup-content {
   overflow: auto;
   min-height: 0;
@@ -319,6 +327,7 @@ button {
 .setup-content .loadout .operator-profile {
   margin-bottom: 2px;
 }
+/* 下方按鈕列：上一步、下一步與部署。 */
 .setup-actions {
   display: flex;
   gap: 8px;
@@ -351,6 +360,7 @@ button {
   flex: 1;
   padding: 12px 16px;
 }
+/* 準備畫面的說明文字。 */
 .setup-copy {
   font:
     11px/1.7 "Noto Sans TC",
@@ -379,6 +389,7 @@ button {
     11px "Noto Sans TC",
     sans-serif;
 }
+/* 地圖預覽圖與上面的文字。 */
 .map-preview {
   display: flex;
   align-items: end;
@@ -492,6 +503,7 @@ button {
     sans-serif;
   letter-spacing: 0.16em;
 }
+/* 地圖選擇卡片：滑過變亮，選中時右上角出現標記。 */
 .map-card {
   display: block;
   min-width: 0;
@@ -558,6 +570,7 @@ button {
   outline: 2px solid var(--cyan);
   outline-offset: 3px;
 }
+/* 卡片上方的標題列與「已選擇」標記。 */
 .map-card-top {
   display: flex;
   align-items: center;
@@ -585,6 +598,7 @@ button {
 .map-card input:checked + .map-card-body .map-selected {
   visibility: visible;
 }
+/* 卡片下方的地圖名稱、說明與標籤。 */
 .map-card-info {
   display: flex;
   flex-direction: column;
@@ -653,6 +667,7 @@ button {
     11px/1.5 "Noto Sans TC",
     sans-serif;
 }
+/* 任務簡報：兩欄的資訊格；首領資訊用橘色。 */
 .briefing-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -722,6 +737,7 @@ button {
   gap: 3px;
   font-size: 12px;
 }
+/* 自訂遭遇抽屜：標題、說明與設定分組。 */
 .drawer-kicker {
   color: var(--cyan);
   font:
@@ -777,6 +793,7 @@ button {
   font-size: 10px;
   line-height: 1.7;
 }
+/* 每一個設定欄位與下方的摘要。 */
 .encounter-controls label {
   padding: 8px 9px;
   border: 1px solid rgba(138, 178, 187, 0.15);
@@ -800,6 +817,7 @@ button {
   font-size: 10px;
   line-height: 1.55;
 }
+/* 抽屜的標題列。 */
 .settings-drawer.encounter-drawer > summary {
   min-height: 53px;
   padding: 10px 13px;
@@ -951,6 +969,7 @@ button {
   box-shadow: 0 0 15px var(--acid);
   border-radius: 50%;
 }
+/* 大廳左邊的地點與標籤。 */
 .brand-location {
   display: flex;
   align-items: center;
@@ -1010,6 +1029,7 @@ button {
   height: 3px;
   background: var(--acid);
 }
+/* 面板的標題列。 */
 .panel-title {
   display: flex;
   gap: 10px;
@@ -1036,6 +1056,7 @@ button {
   gap: 10px;
   margin-top: 18px;
 }
+/* 槍枝塗裝的色塊按鈕與下方的名稱。 */
 .swatch {
   position: relative;
   height: 62px;
@@ -1106,6 +1127,7 @@ button {
     sans-serif;
   cursor: pointer;
 }
+/* 用鍵盤移到按鈕時，外面加一圈青色亮框。 */
 button:focus-visible,
 select:focus-visible {
   outline: 2px solid var(--cyan);
@@ -1172,6 +1194,7 @@ select:focus-visible {
   background: var(--cyan);
   box-shadow: 0 0 8px rgba(47, 243, 255, 0.6);
 }
+/* 技能發動時，畫面下方閃一下。 */
 .hud.ability-flash::before {
   content: "";
   position: absolute;
@@ -1187,6 +1210,7 @@ select:focus-visible {
   gap: 8px;
   margin-top: 14px;
 }
+/* 幹員選擇按鈕與下方的幹員資料。 */
 .operator {
   position: relative;
   height: 66px;
@@ -1275,6 +1299,7 @@ select:focus-visible {
   gap: 7px;
   margin-top: 13px;
 }
+/* 難度按鈕與說明。 */
 .difficulty-button {
   position: relative;
   padding: 11px 5px;
@@ -1311,6 +1336,7 @@ select:focus-visible {
     sans-serif;
 }
 
+/* 任務模式按鈕（兩欄）與說明。 */
 .mode-options {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1396,6 +1422,7 @@ select:focus-visible {
   flex-direction: column;
   min-height: 0;
 }
+/* 任務資訊區：太長時捲動；部署按鈕固定在下面。 */
 .mission-body {
   overflow: auto;
   min-height: 0;
@@ -1477,6 +1504,7 @@ select:focus-visible {
   color: var(--muted);
   letter-spacing: 0.1em;
 }
+/* 情報標籤。 */
 .intel-tags {
   display: flex;
   flex-wrap: wrap;
@@ -1521,6 +1549,7 @@ select:focus-visible {
   border-color: var(--cyan);
   background: rgba(47, 243, 255, 0.07);
 }
+/* 操作說明清單（兩欄）。 */
 .controls-list {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1670,6 +1699,7 @@ kbd {
   outline: 2px solid var(--cyan);
   outline-offset: 2px;
 }
+/* 自訂設定的欄位、說明與摘要。 */
 .encounter-controls {
   display: grid;
   gap: 9px;
@@ -1797,6 +1827,7 @@ kbd {
     sans-serif;
   letter-spacing: 0.1em;
 }
+/* 首領血條：等待登場時變暗，弱點暴露時發光；首領警告文字的位置。 */
 .boss-health-track {
   height: 5px;
   background: rgba(255, 255, 255, 0.1);
@@ -1849,6 +1880,7 @@ kbd {
   white-space: nowrap;
   box-shadow: 0 0 25px rgba(255, 38, 74, 0.1);
 }
+/* 首領出現時，擊殺提示往下移，避免重疊。 */
 .hud.boss-active .kill-notice {
   top: 246px;
 }
@@ -1875,6 +1907,7 @@ kbd {
   background: linear-gradient(90deg, #32bebb, #a0fff5);
   box-shadow: 0 0 12px rgba(98, 246, 238, 0.6);
 }
+/* 大廳最下面的說明列。 */
 .lobby-footer {
   grid-column: 1/-1;
   display: flex;
@@ -1916,6 +1949,7 @@ kbd {
   justify-content: space-between;
   align-items: flex-start;
 }
+/* 上方的任務卡與分數卡；紅點表示進行中。 */
 .match-card,
 .score-card {
   display: flex;
@@ -1966,6 +2000,7 @@ kbd {
     rgba(4, 10, 14, 0.9)
   );
 }
+/* 敵人數量面板：剩餘、總數、擊殺三格，下面是進度條；剩很少時變色。 */
 .enemy-readout {
   width: 100%;
 }
@@ -2049,6 +2084,7 @@ kbd {
 .enemy-counter.critical .remaining {
   background: rgba(255, 62, 83, 0.09);
 }
+/* 分數區與計時器。 */
 .score-cluster {
   display: flex;
   gap: 8px;
@@ -2106,6 +2142,7 @@ kbd {
     10px/1.35 "Noto Sans TC",
     sans-serif;
 }
+/* 手機寬度時，連殺狀態移到右上角。 */
 @media (max-width: 700px) {
   .streak-status {
     top: 100px;
@@ -2197,6 +2234,7 @@ kbd {
     sans-serif;
   letter-spacing: 0.07em;
 }
+/* 左側的任務設定摘要。 */
 .mission-config {
   position: absolute;
   left: 28px;
@@ -2279,6 +2317,7 @@ kbd {
 .crosshair.firing i:nth-child(4) {
   transform: translateY(4px);
 }
+/* 開鏡瞄準時隱藏準星。 */
 .hud.aiming .crosshair i {
   opacity: 0;
 }
@@ -2436,6 +2475,7 @@ kbd {
 .buff-status span {
   filter: drop-shadow(0 0 6px #b66cff);
 }
+/* 回血時生命條發光。 */
 .hud.healing .health-bar {
   box-shadow: 0 0 16px rgba(78, 255, 146, 0.8);
 }
@@ -2452,6 +2492,7 @@ kbd {
   align-items: flex-end;
   gap: 14px;
 }
+/* 左下角：幹員徽章、生命與護甲。 */
 .operator-badge {
   width: 54px;
   height: 62px;
@@ -2479,6 +2520,7 @@ kbd {
   color: #aeb6b8;
   letter-spacing: 0.1em;
 }
+/* 生命與護甲的長條。 */
 .bar {
   position: relative;
   height: 7px;
@@ -2520,6 +2562,7 @@ kbd {
   min-width: 250px;
   text-align: right;
 }
+/* 右下角：武器名稱、彈藥數字與彈匣格子。 */
 .weapon-label {
   display: flex;
   justify-content: flex-end;
@@ -2607,6 +2650,7 @@ kbd {
   border-color: var(--acid);
   color: var(--acid);
 }
+/* 瞄準手榴彈時，隱藏換彈與撿拾提示。 */
 .hud.grenade-aiming .reload-prompt,
 .hud.grenade-aiming .pickup-prompt,
 .hud.grenade-aiming .weapon-blocked-hint {
@@ -2709,6 +2753,7 @@ kbd {
 .pause-settings .volume-control input {
   min-height: 24px;
 }
+/* 暫停視窗的標題。 */
 .modal-card h2 {
   margin: 12px 0 8px;
   font-size: 46px;
@@ -2724,6 +2769,7 @@ kbd {
 .help-modal {
   z-index: 40;
 }
+/* 操作說明視窗：最大寬度與高度，太長時捲動。 */
 .help-card {
   width: min(900px, calc(100vw - 44px));
   max-height: calc(100vh - 44px);
@@ -2738,6 +2784,7 @@ kbd {
   margin: 0 0 18px;
   line-height: 1.7;
 }
+/* 視窗右上角的關閉按鈕。 */
 .modal-close {
   position: absolute;
   right: 14px;
@@ -2754,6 +2801,7 @@ kbd {
   border-color: var(--acid);
   color: var(--acid);
 }
+/* 說明內容：兩欄的說明格、按鍵、補給與規則。 */
 .help-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2865,6 +2913,7 @@ kbd {
   margin-left: 14px;
   list-style: square;
 }
+/* 說明視窗最下面的按鈕。 */
 .help-card > .deploy-button {
   max-width: 320px;
   margin-left: auto;
@@ -2891,6 +2940,7 @@ kbd {
   color: var(--muted);
   letter-spacing: 0.1em;
 }
+/* 結算畫面的小字。 */
 .result-meta {
   margin: -1px 0 0 !important;
   color: #7f8a8e !important;
@@ -2975,6 +3025,7 @@ kbd {
 .kill-notice.headshot > small {
   color: #ffd26a;
 }
+/* 擊殺確認時隱藏戰鬥橫幅；右側的擊殺紀錄。 */
 .hud.kill-confirmed .combat-banner {
   opacity: 0;
 }
@@ -3130,6 +3181,7 @@ kbd {
     0 28px 80px rgba(0, 0, 0, 0.5),
     inset 0 1px rgba(211, 248, 255, 0.04);
 }
+/* 新版準備畫面：標題、分頁與按鈕的過渡動畫。 */
 .setup-heading h2 {
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -3205,6 +3257,7 @@ kbd {
 .attribute i b {
   background: linear-gradient(90deg, #87ad2d, var(--acid));
 }
+/* 各設定欄位的小字。 */
 .quality-control small,
 .encounter-controls small,
 .mix-control small {
@@ -3220,6 +3273,7 @@ kbd {
 .score-card {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
 }
+/* 新版分數卡、方位、小地圖與目標框。 */
 .score-card {
   background: linear-gradient(
     145deg,
@@ -3260,6 +3314,7 @@ kbd {
   color: #edf6f3;
   line-height: 1.55;
 }
+/* 區域與任務設定的小字。 */
 .sector-readout small {
   color: #9bb1b7;
 }
@@ -3288,6 +3343,7 @@ kbd {
     transparent
   );
 }
+/* 右下角的背景漸層；生命與護甲條的顏色。 */
 .bottom-right::before {
   background: linear-gradient(
     270deg,
@@ -3302,6 +3358,7 @@ kbd {
 .armor .bar i {
   background: linear-gradient(90deg, #178997, var(--cyan));
 }
+/* 手榴彈數量、武器名稱與彈藥的顏色。 */
 .grenade-count {
   color: #a7b9bd;
 }
@@ -3311,6 +3368,7 @@ kbd {
 .ammo b {
   color: #bdced1;
 }
+/* 撿拾與換彈提示的外框。 */
 .pickup-prompt {
   border-left: 2px solid var(--cyan);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
@@ -3335,6 +3393,7 @@ kbd {
     opacity: 0.35;
   }
 }
+/* 各種動畫：封面淡入、技能閃光、命中標記、擊殺紀錄滑入、受擊方向、危急閃爍。 */
 @keyframes coverReveal {
   from {
     opacity: 0;
@@ -3704,6 +3763,7 @@ kbd {
 .result-card {
   width: min(520px, calc(100vw - 40px));
 }
+/* 結算卡片：左邊標題、右邊評等（大字母）。 */
 .result-head {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -3752,6 +3812,7 @@ kbd {
 .result-grade[data-grade="D"] b {
   color: var(--red);
 }
+/* 結算數據與下方的小提示。 */
 .result-stats strong {
   font-size: 26px;
 }

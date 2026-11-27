@@ -13,12 +13,14 @@ const port = 4173;
 // 發出 GET 請求，回傳狀態、標頭與內容。
 function get(path) {
   return new Promise((resolve, reject) => {
+    // 對本機伺服器送出一個 GET 請求，收集回應的內容。
     const request = http.get({ host, port, path, agent: false }, (response) => {
       let body = "";
       response.setEncoding("utf8");
       response.on("data", (chunk) => {
         body += chunk;
       });
+      // 收完回應：回傳狀態碼、標頭與內容。
       response.on("end", () =>
         resolve({
           status: response.statusCode,
@@ -46,6 +48,7 @@ function rawRequest(requestText) {
       socket.destroy(new Error("Raw HTTP request timed out")),
     );
     socket.on("connect", () => socket.write(requestText));
+    // 收集原始回應；超過 64KB 就中斷連線。
     socket.on("data", (chunk) => {
       response += chunk;
       if (response.length > 65536)

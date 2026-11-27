@@ -47,6 +47,7 @@
   <body>
     <!-- 背景極光。 -->
     <div class="aurora"></div>
+    <!-- 整個遊戲畫面：上方標題列，下面是左中右三欄。 -->
     <main class="game-shell">
       <!-- ===== 上方列：遊戲名稱、目前樓層與功能按鈕 ===== -->
 
@@ -99,6 +100,7 @@
       <section class="layout">
         <!-- 左欄：角色。 -->
         <aside class="hero-panel glass">
+          <!-- 角色卡片：頭像、職業名稱與等級。 -->
           <div class="hero-card">
             <div class="portrait-wrap">
               <div
@@ -364,6 +366,7 @@
               </div>
               <p>破勢可中斷敵人的蓄力或防禦，請依照敵人意圖選擇戰術。</p>
             </div>
+            <!-- 戰術按鈕列，按鈕由程式產生。 -->
             <div
               class="tactic-bar"
               id="tacticBar"
@@ -384,6 +387,7 @@
             class="potion-mode-backdrop hidden"
             id="potionModeBackdrop"
           ></div>
+          <!-- 戰鬥中選藥水的面板（平常隱藏）。 -->
           <section
             class="potion-mode-panel hidden"
             id="potionModePanel"
@@ -522,6 +526,7 @@
                 素材
               </button>
             </div>
+            <!-- 背包清單，內容由程式產生。 -->
             <div
               class="inventory-list"
               id="inventoryList"
@@ -565,6 +570,7 @@
                 盔甲
               </button>
             </div>
+            <!-- 商店清單。 -->
             <div
               class="inventory-list"
               id="shopList"
@@ -579,6 +585,7 @@
               <b>裝備強化</b>
               <small>最高可強化至＋9</small>
             </div>
+            <!-- 強化清單。 -->
             <div
               class="inventory-list"
               id="upgradeList"
@@ -644,6 +651,7 @@
       class="modal"
       id="itemModal"
     >
+      <!-- 物品視窗：圖示、名稱、稀有度、說明、能力表與按鈕。 -->
       <div class="modal-card">
         <button
           class="modal-close"
@@ -686,6 +694,7 @@
       aria-modal="true"
       aria-labelledby="bossDialogueName"
     >
+      <!-- Boss 對話視窗：頭像、台詞與回應選項。 -->
       <div
         class="boss-dialogue-card"
         id="bossDialogueCard"
@@ -744,6 +753,7 @@
       class="modal"
       id="eventModal"
     >
+      <!-- 隨機事件視窗：圖示、標題、說明與選項。 -->
       <div class="modal-card">
         <button
           class="modal-close hidden"
@@ -799,6 +809,7 @@
           RPG。你將選擇一種職業，擊敗大量不同小兵取得素材、製作與強化裝備，並在每
           50 層迎戰一隻完全不同的大型 Boss；擊敗第 1000 層的無名王即算破關。
         </p>
+        <!-- 遊戲說明的重點格子。 -->
         <div class="intro-grid">
           <div>
             <span>⚔️</span>
@@ -864,6 +875,7 @@
         </button>
         <p class="eyebrow">冒險指南</p>
         <h2>戰鬥方式</h2>
+        <!-- 戰鬥方式的條列說明。 -->
         <ul>
           <li>普通攻擊不消耗資源，還能恢復少量體力、魔力或其他職業能量。</li>
           <li>除了三個職業技能，還有猛力重擊、破勢斬、防禦架勢與集中蓄力。</li>
@@ -957,6 +969,7 @@
         >
           <option value="all">全部魔物</option>
         </select>
+        <!-- 圖鑑的怪物清單，由程式產生。 -->
         <div
           class="codex-list"
           id="codexList"
@@ -971,6 +984,7 @@
       aria-modal="true"
       aria-labelledby="settingsTitle"
     >
+      <!-- 演出設定視窗：特效與音效開關。 -->
       <div class="modal-card">
         <button
           class="modal-close"

@@ -108,6 +108,7 @@
   $("game").addEventListener("pointerdown", (e) => {
     if (e.pointerType !== "mouse" && G.state === "hangar") spinX = e.clientX;
   });
+  // 機庫裡用手指左右拖曳：旋轉展示中的機體。
   addEventListener("pointermove", (e) => {
     if (spinX === null || G.state !== "hangar") return;
     const d = (e.clientX - spinX) * 0.01;

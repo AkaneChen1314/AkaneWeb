@@ -13,8 +13,9 @@ function getSym(id) {
   return c;
 }
 
-// ---------- 基本圖形 == ----------
+// ---------- 基本圖形 ----------
 
+// 畫一團火焰的形狀（用貝茲曲線連成水滴狀），給火焰圖案共用。
 function flamePath(g, cx, cy, w, h) {
   g.beginPath();
   g.moveTo(cx, cy - h * 0.5);
@@ -99,8 +100,10 @@ function sparkle(g, x, y, r, col = "#fff") {
   g.restore();
 }
 
-// ---------- 拉霸與卡片的符號 == ----------
+// ---------- 拉霸與卡片的符號 ----------
 
+// 畫一個拉霸圖案到 200×200 的小畫布上（畫好之後會存起來重複使用）。glowBg 在圖
+// 案後面加光暈，outline 畫外框。
 function paintSym(g, id) {
   g.save();
   g.translate(100, 100);
@@ -121,6 +124,8 @@ function paintSym(g, id) {
     g.stroke();
   };
   let gr;
+  // 依圖案代號畫出不同的東西：火、冰、雷、毒、風、土、7、櫻桃、鈴鐺、BAR、鑽石、
+  // 皇冠、百搭、寶箱、金幣等。
   switch (id) {
     // 火焰。
     case "fire": {
@@ -156,6 +161,7 @@ function paintSym(g, id) {
     // 雪花。
     case "ice": {
       glowBg("#48c8ff", 90, 0.6);
+      // 雷電圖案的分岔。
       const arm = () => {
         g.beginPath();
         g.moveTo(0, 0);
@@ -210,6 +216,7 @@ function paintSym(g, id) {
     // 閃電。
     case "thunder": {
       glowBg("#ffe03a", 92, 0.65);
+      // 閃電的折線頂點。
       const P = [
         [18, -84],
         [-44, 10],
@@ -289,6 +296,7 @@ function paintSym(g, id) {
     case "wind": {
       glowBg("#5affc8", 90, 0.5);
       g.lineCap = "round";
+      // 風的漩渦（螺旋線）。
       const arm = () => {
         g.beginPath();
         for (let a = 0; a <= 4.4; a += 0.08) {
@@ -329,6 +337,7 @@ function paintSym(g, id) {
     // 岩石。
     case "earth": {
       glowBg("#d8923a", 86, 0.45);
+      // 岩石的多邊形頂點。
       const P = [
         [-72, 40],
         [-60, -18],
@@ -404,6 +413,7 @@ function paintSym(g, id) {
     case "gem":
     case "diamond": {
       glowBg("#5ab8ff", 92, 0.6);
+      // 鑽石的外形與各個切面的顏色。
       const out = [
         [-72, -20],
         [-42, -60],
@@ -550,6 +560,7 @@ function paintSym(g, id) {
     // 轉盤。
     case "wheel": {
       glowBg("#ff4ad8", 94, 0.55);
+      // 彩虹百搭球的七種顏色。
       const cols = [
         "#ff3a5a",
         "#ffcf3a",
@@ -1117,11 +1128,13 @@ function cyl(c, rx, ry, h, y, M, rim) {
 }
 // 地面的魔法陣（★3 以上）；星級越高越華麗。
 function magicCircle(c, tier, col, tc, t) {
+  // 防禦塔腳下的魔法陣：星級越高越大，六星以上是彩虹色。
   const R1 = 26 + tier * 5,
     hc = tier >= 6 ? rainbow(t * 90) : tc;
   c.save();
   c.translate(0, 12);
   c.scale(1, 0.42);
+  // 發光的內圈、虛線外圈與一圈旋轉的小符文。
   c.globalCompositeOperation = "lighter";
   glow(c, 0, 0, R1 * 1.6, hc, 0.25 + 0.1 * Math.sin(t * 3));
   c.lineWidth = 2.4;
@@ -1672,6 +1685,7 @@ function drawTower(c, key, tier, x, y, sc, time, ang, o = {}) {
 
 // 塔頂的核心：依類型與元素畫出不同外觀。
 function drawCoreOrb(c, key, els, kind, tier, time, oy) {
+  // 防禦塔頂端的元素核心：r 是大小（星級越高越大），col 是元素顏色。
   const r = 7 + tier * 1.6;
   c.save();
   c.translate(0, oy);
@@ -1683,6 +1697,7 @@ function drawCoreOrb(c, key, els, kind, tier, time, oy) {
   if (kind === "class" || kind === "special") {
     const D = tDef(key),
       sz = r * (kind === "special" ? 2.6 : 2.3);
+    // 特殊塔（賭場限定）有彩虹光暈。
     if (kind === "special") {
       c.save();
       c.globalCompositeOperation = "lighter";
@@ -1745,6 +1760,8 @@ function drawCoreOrb(c, key, els, kind, tier, time, oy) {
     // 單一元素：每種元素有自己的核心造型。
     const e = els[0],
       E = ELEM[e];
+    // 依元素畫核心：火焰會跳動、冰是菱形結晶、雷有電弧、毒會冒泡、風是旋轉的氣
+    // 流、土是多邊形石頭。
     if (e === "fire") {
       const f = 1 + 0.08 * Math.sin(time * 14);
       flamePath(c, 0, -2, r * 1.6, r * 2.4 * f);
@@ -1922,6 +1939,7 @@ function drawCoreOrb(c, key, els, kind, tier, time, oy) {
     c.beginPath();
     c.arc(0, 0, r, 0, TAU);
     let g;
+    // 多元素塔：核心用環形漸層把各元素顏色排成一圈，外面有小球環繞。
     if (c.createConicGradient) {
       g = c.createConicGradient(time * 2, 0, 0);
       els.forEach((e, i) => g.addColorStop(i / 3, ELEM[e].c));
@@ -1981,6 +1999,7 @@ function drawCoreOrb(c, key, els, kind, tier, time, oy) {
     c.restore();
     c.save();
     c.rotate(time * 1.2);
+    // 稜鏡塔：菱形核心，彩虹環形漸層。
     poly(c, [
       [0, -r * 1.5],
       [r * 1.1, 0],
@@ -2047,6 +2066,7 @@ function drawEnemy(c, e, time) {
   const dir = Math.cos(e.dir || 0) >= 0 ? 1 : -1;
   // 身體的漸層；lt 可以指定亮部顏色。
   const body = (col, lt) => {
+    // 敵人身體的立體漸層（左上亮、右下暗）。
     const g = c.createRadialGradient(
       -r * 0.35,
       -r * 0.45,
@@ -2720,6 +2740,7 @@ function samplePath(pts, step) {
 }
 // 畫一個裝飾物。
 function drawDeco(g, d, th, rnd) {
+  // 地圖裝飾的位置：cx、cy 是格子中心；先在下面畫一個影子。
   const cx = d.x * TS + TS / 2,
     cy = d.y * TS + TS / 2,
     v = d.v;
@@ -2728,12 +2749,14 @@ function drawDeco(g, d, th, rnd) {
   g.beginPath();
   g.ellipse(cx + 4, cy + 18, 26, 10, 0, 0, TAU);
   g.fill();
+  // 依裝飾種類畫：樹、石頭、花、水池、岩漿池、蒸汽口、水晶、方尖碑等。
   switch (d.type) {
     // 闊葉樹。
     case "tree": {
       g.fillStyle = "#5a3418";
       rr(g, cx - 5, cy + 2, 10, 18, 3);
       g.fill();
+      // 樹冠由幾個圓組成（[左右, 上下, 半徑]）。
       const blobs = [
         [0, -8, 24],
         [-14, 0, 17],
@@ -2749,6 +2772,7 @@ function drawDeco(g, d, th, rnd) {
         g.fill();
       }
       for (const [dx, dy, r] of blobs) {
+        // 樹冠每個圓的立體漸層。
         const gr = g.createRadialGradient(
           cx + dx - r * 0.4,
           cy + dy - r * 0.5,
@@ -2852,6 +2876,7 @@ function drawDeco(g, d, th, rnd) {
         [10, 4, 14],
         [0, -6, 15],
       ]) {
+        // 石頭的立體漸層。
         const gr = g.createRadialGradient(
           cx + dx - 4,
           cy + dy - 5,
@@ -3471,10 +3496,12 @@ function paintMap(map) {
 }
 // 動態地圖光效（每幀）
 function drawMapFX(c, t) {
+  // 地圖的動態效果，依主題不同：th 是主題，lay 是地圖配置，P 是敵人走的路線。
   const th = R.map.theme,
     lay = mapLayout(R.map),
     P = R.path;
   c.save();
+  // 草原：飄過的雲影、飛舞的蝴蝶與光點，水池閃光。
   if (th === "meadow") {
     // 草原：雲影、蝴蝶、光束與水面反光。
     for (let k = 0; k < 3; k++) {
@@ -3541,6 +3568,7 @@ function drawMapFX(c, t) {
     c.strokeStyle = rgba("#ff9a3a", 0.12);
     c.stroke();
     c.setLineDash([]);
+    // 火山：岩漿池發光、蒸汽口偶爾噴出火星。
     for (const d of lay.deco) {
       const x = MX + d.x * TS + TS / 2,
         y = MY + d.y * TS + TS / 2;
@@ -3577,6 +3605,8 @@ function drawMapFX(c, t) {
     }
   } else {
     c.globalCompositeOperation = "lighter";
+    // 星界：天空的彩虹光幕、偶爾劃過的流星、沿著路線流動的光點，水晶與方尖碑發
+    // 光。
     for (let k = 0; k < 3; k++) {
       const ag = c.createLinearGradient(0, MY, 0, MY + 260);
       const hc = rainbow(150 + k * 60 + Math.sin(t * 0.3 + k) * 40);

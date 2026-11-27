@@ -17,6 +17,7 @@
 * {
   box-sizing: border-box;
 }
+/* 頁面的底色、文字顏色與字型。 */
 body {
   margin: 0;
   background: var(--bg);
@@ -26,6 +27,7 @@ body {
   font-size: 16px;
   line-height: 1.6;
 }
+/* 按鈕、輸入框與下拉選單沿用頁面字型。 */
 button,
 input,
 select {
@@ -47,6 +49,7 @@ button {
     transform 0.15s,
     border-color 0.15s;
 }
+/* 按鈕：滑過變亮、按下往下壓一點、停用時變淡。 */
 button:hover {
   background: #26314f;
   border-color: #667899;
@@ -58,6 +61,7 @@ button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
+/* 用鍵盤移到按鈕或輸入框時，外面加一圈青色亮框。 */
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
@@ -65,6 +69,7 @@ select:focus-visible {
   outline: 3px solid var(--cyan);
   outline-offset: 3px;
 }
+/* 連結沿用外面的顏色，不加底線。 */
 a {
   color: inherit;
   text-decoration: none;
@@ -142,6 +147,7 @@ main {
   grid-template-columns: 1fr 1fr;
   align-items: center;
 }
+/* 首頁大圖（星艦插畫）與上面的漸層暗影。 */
 .hero-art {
   position: absolute;
   inset: 0;
@@ -160,6 +166,7 @@ main {
     #0b102400
   );
 }
+/* 首頁大圖上的文字：遊戲名稱與說明。 */
 .hero-copy {
   position: relative;
   z-index: 1;
@@ -197,6 +204,7 @@ h1 span {
   color: #062e30;
   border-color: #b3fff5;
 }
+/* 首頁的按鈕列與右下角的小徽章。 */
 .hero-actions {
   display: flex;
   gap: 10px;
@@ -219,6 +227,7 @@ h1 span {
   font-size: 14px;
   color: #c3ceeb;
 }
+/* 首頁下方：左邊出航設定（較寬）、右邊紀錄（較窄）。 */
 .home-layout {
   display: grid;
   grid-template-columns: 1.6fr 1fr;
@@ -232,6 +241,7 @@ h1 span {
   border-radius: 14px;
   padding: 24px;
 }
+/* 面板標題列與各級標題的大小。 */
 .panel-heading {
   display: flex;
   align-items: center;
@@ -251,6 +261,7 @@ h3 {
   font-size: 18px;
   margin: 0 0 8px;
 }
+/* 次要的灰色小字。 */
 .muted,
 small {
   color: var(--muted);
@@ -264,6 +275,7 @@ small {
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
 }
+/* 星艦選擇卡片：滑過或選中時框線變亮。 */
 .ship-card {
   text-align: left;
   padding: 17px 15px;
@@ -365,6 +377,7 @@ input {
   gap: 12px;
   margin-bottom: 12px;
 }
+/* 戰鬥上方資訊列：左邊標題與計時，右邊按鈕。 */
 .hud-left {
   display: flex;
   align-items: center;
@@ -374,6 +387,7 @@ input {
   font-size: 18px;
   margin: 0;
 }
+/* 計時器：數字等寬，跳動時不會左右晃。 */
 .timer {
   font-variant-numeric: tabular-nums;
   font-size: 24px;
@@ -445,6 +459,7 @@ canvas {
   background: var(--cyan);
   transition: width 0.12s;
 }
+/* 生命條與經驗條。 */
 .hpbar {
   height: 9px;
   min-width: 100px;
@@ -480,6 +495,7 @@ canvas {
   gap: 9px;
   margin-top: 13px;
 }
+/* 技能按鈕與右邊的操作提示。 */
 .ability {
   min-width: 140px;
   background: #18243e;
@@ -504,6 +520,7 @@ canvas {
 .game-side h3 {
   font-size: 16px;
 }
+/* 右側面板的武器清單：每一列是一把武器與等級。 */
 .weapons-list {
   display: flex;
   flex-direction: column;
@@ -534,6 +551,7 @@ canvas {
   font-size: 13px;
   color: var(--purple);
 }
+/* 還沒有武器的空格（虛線框）。 */
 .empty-slot {
   color: #657698;
   border: 1px dashed #2b3856;
@@ -541,6 +559,7 @@ canvas {
   border-radius: 8px;
   font-size: 13px;
 }
+/* 本局統計（兩欄）與戰鬥紀錄（最高 170px，超過就捲動）。 */
 .run-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -580,6 +599,7 @@ canvas {
   overflow: auto;
   touch-action: auto;
 }
+/* 升級、暫停、結算等覆蓋畫面的內容。 */
 .overlay-inner {
   max-width: 840px;
   width: 100%;
@@ -599,6 +619,7 @@ canvas {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
+/* 升級選項卡片：滑過或用鍵盤選到時發光。 */
 .choice {
   text-align: left;
   padding: 22px 18px;
@@ -634,6 +655,7 @@ canvas {
   border-color: #ecb365;
   background: linear-gradient(145deg, #493042, #1d1f39);
 }
+/* 覆蓋畫面最下面的按鈕列。 */
 .overlay-footer {
   display: flex;
   justify-content: center;
@@ -682,6 +704,7 @@ canvas {
   top: 34px;
   border-radius: 50%;
 }
+/* 第一次出航時的操作提示，幾秒後自動淡出。 */
 .floating-hint {
   position: absolute;
   bottom: 20px;
@@ -715,6 +738,7 @@ dialog {
   padding: 30px;
   box-shadow: 0 30px 100px #0009;
 }
+/* 視窗背後的半透明模糊遮罩與右上角的關閉按鈕。 */
 dialog::backdrop {
   background: #020614cc;
   backdrop-filter: blur(4px);
@@ -728,6 +752,7 @@ dialog::backdrop {
   font-size: 25px;
   padding: 0 9px;
 }
+/* 視窗裡的兩欄格子。 */
 .modal-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -768,6 +793,7 @@ dialog::backdrop {
   font-size: 14px;
   margin: 3px 0;
 }
+/* 晶礦數字用橘色。 */
 .money {
   color: var(--orange);
 }
@@ -828,6 +854,7 @@ dialog::backdrop {
   opacity: 1;
   transform: translate(-50%, 0);
 }
+/* 頁尾說明與警告文字（粉紅色）。 */
 .footer-note {
   color: #7e90b1;
   font-size: 13px;
@@ -867,6 +894,7 @@ dialog::backdrop {
 .guide-steps b {
   color: var(--cyan);
 }
+/* 視窗標題列、每日挑戰標籤、駕駛員台詞與效果說明。 */
 .screen-title {
   display: flex;
   justify-content: space-between;
@@ -1234,6 +1262,7 @@ dialog::backdrop {
   border-color: #3b4c6b;
   box-shadow: 0 20px 80px #02050f66;
 }
+/* 新版首頁大圖：比較矮，文字比較小。 */
 .hero-copy {
   padding: 34px 42px;
 }
@@ -1319,6 +1348,7 @@ dialog::backdrop {
   gap: 10px;
   align-self: center;
 }
+/* 出航設定的勾選框與進階設定摺疊區。 */
 .check-label input {
   width: 19px;
   height: 19px;
@@ -1362,6 +1392,7 @@ dialog::backdrop {
   padding: 16px;
   border-radius: 10px;
 }
+/* 目前裝備的模組：左邊圖示、右邊說明。 */
 .module-emblem {
   font-size: 32px;
   color: var(--cyan);
@@ -1390,6 +1421,7 @@ dialog::backdrop {
   font-size: 14px;
   color: #c5d3eb;
 }
+/* 首頁的小提示框與佔滿整列的按鈕。 */
 .base-tip {
   border: 1px dashed #3d4b67;
   padding: 15px;
@@ -1421,6 +1453,7 @@ dialog::backdrop {
   border-bottom: 0;
   padding: 0;
 }
+/* Boss 預覽：4 欄的卡片。 */
 .boss-gallery-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1481,6 +1514,7 @@ dialog::backdrop {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 13px;
 }
+/* 模組商城的卡片。 */
 .module-card {
   border: 1px solid #364764;
   border-radius: 10px;
@@ -1602,6 +1636,7 @@ dialog::backdrop {
   object-fit: contain;
   flex-shrink: 0;
 }
+/* 戰場上方 Boss 資訊列：名字、血條與招式名稱。 */
 .boss-hud-info {
   flex: 1;
   min-width: 0;
@@ -1674,6 +1709,7 @@ dialog::backdrop {
   border-color: #354361;
   box-shadow: inset 3px 0 0 #7691c633;
 }
+/* 新版的武器清單與右側面板間距。 */
 .weapons-list {
   gap: 10px;
 }
@@ -1707,6 +1743,7 @@ dialog::backdrop {
 .shop-heading .market-wallet {
   margin: 0;
 }
+/* 升級商店：3 欄的卡片，最下面的購買列固定在底部。 */
 .shop-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1765,6 +1802,7 @@ dialog::backdrop {
 .shop-footer button {
   font-size: 14px;
 }
+/* 商店的小字說明與比較寬的商店畫面。 */
 .shop-note {
   font-size: 12px !important;
   margin: 10px 0 0 !important;
@@ -1775,6 +1813,7 @@ dialog::backdrop {
 .overlay:has(.shop-heading) {
   padding: 22px;
 }
+/* 右側戰鬥紀錄的高度上限；圖鑑裡的效果說明用橘色。 */
 .game-side .log {
   max-height: 170px;
 }

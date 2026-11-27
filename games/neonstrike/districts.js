@@ -104,9 +104,12 @@ function materialKey(material) {
  * 不透明 Mesh；會擋子彈的物件合併後仍加入 worldMeshes。回傳合併前後的數量。
  */
 export function batchStaticMeshes({ scene, objects, worldMeshes, tile = 37 }) {
+  // solid 是會擋東西的物件；buckets 把「同一種材質」的物件分在同一組，等一下每
+  // 組合併成一個。
   const solid = new Set(worldMeshes),
     buckets = new Map(),
     center = new THREE.Vector3();
+  // 跳過不能合併的：不是一般網格、會動的、有子物件的、半透明的、特殊混色的。
   for (const mesh of objects) {
     if (
       !mesh.isMesh ||
@@ -142,9 +145,11 @@ export function batchStaticMeshes({ scene, objects, worldMeshes, tile = 37 }) {
     if (!buckets.has(key)) buckets.set(key, []);
     buckets.get(key).push(mesh);
   }
+  // 合併前後各有幾個物件（用來確認繪圖次數減少多少）。
   let before = 0,
     after = 0;
   const removed = new Set();
+  // 每一組超過一個就合併成一個大網格，原本的小物件從場景移除。
   for (const meshes of buckets.values()) {
     if (meshes.length < 2) continue;
     // 合併後的網格。
@@ -171,6 +176,7 @@ export function batchStaticMeshes({ scene, objects, worldMeshes, tile = 37 }) {
     before += meshes.length;
     after++;
   }
+  // 被合併掉的物件也要從「會擋子彈」的清單中換成合併後的網格。
   if (removed.size) {
     for (let i = worldMeshes.length - 1; i >= 0; i--)
       if (removed.has(worldMeshes[i])) worldMeshes.splice(i, 1);
@@ -311,9 +317,12 @@ export function createDistrictBuilder(ctx) {
     }
     // 直立圓柱；collide 會加圓形碰撞，axis 設成 "x" 或 "z" 就橫躺（裝飾）。
     cylinder(x, y, z, radius, height, material, options = {}) {
+      // 圓柱：segments 是邊數（越多越圓），axis 是朝哪個方向（y 直立，x、z 橫放），
+      // collide 表示要不要加碰撞（只有直立的會加）。
       const segments = options.segments ?? 12,
         axis = options.axis || "y",
         collide = options.collide !== false && axis === "y";
+      // 依方向算出旋轉。
       euler.set(
         axis === "z" ? Math.PI / 2 : 0,
         options.rot || 0,
@@ -323,6 +332,7 @@ export function createDistrictBuilder(ctx) {
       quaternion.setFromEuler(euler);
       euler.order = "XYZ";
       matrix.compose(position.set(x, y, z), quaternion, unitScale);
+      // 把圓柱形狀加進這一組，等一下一起合併繪製。
       this.push(
         new THREE.CylinderGeometry(
           options.top ?? radius,
@@ -339,6 +349,7 @@ export function createDistrictBuilder(ctx) {
         options.solid ?? (collide || options.solid === true),
         options.shadow !== false,
       );
+      // 記錄這個零件（之後用來自動補碰撞）。
       record({
         shape: "cylinder",
         batch: this.name,
@@ -357,6 +368,7 @@ export function createDistrictBuilder(ctx) {
         const rot = (options.rot || 0) + (axis === "z" ? Math.PI / 2 : 0);
         ctx.registerCollisionBox(x, y, z, height, radius * 2, radius * 2, rot);
       }
+      // 需要碰撞的話，加一個圓形的碰撞範圍。
       if (collide) {
         const r = options.colliderRadius ?? radius;
         ctx.collisionBoxes.push(
@@ -491,6 +503,8 @@ export function createDistrictBuilder(ctx) {
   }
   // 檢查看得到卻沒有碰撞的零件，補上碰撞。
   function sealUncoveredParts() {
+    // 找出「看得到、會擋子彈，但沒有碰撞」的零件，替它們補上碰撞（否則玩家會穿
+    // 過去）。先把現有的碰撞依位置分格，方便快速查詢。
     const cell = 4,
       grid = new Map(),
       key = (i, j) => i * 4096 + j;
@@ -514,7 +528,10 @@ export function createDistrictBuilder(ctx) {
       (grid.get(key(Math.floor(x / cell), Math.floor(z / cell))) || []).some(
         (box) => bodyOverlapsCollider(box, x, z, 0.03, y - 0.03, y + 0.03),
       );
+    // sealed 是補了幾個。
     let sealed = 0;
+    // 逐一檢查零件：太細小的跳過；在零件上取幾個點，只要有點沒被任何碰撞包住，
+    // 就替這個零件補上同形狀的碰撞。
     for (const part of parts) {
       if (part.collide || !part.visibleSolid) continue;
       if (part.shape === "box") {
@@ -1089,6 +1106,7 @@ export function rack(
   height = 3.2,
   rot = 0,
 ) {
+  // 貨架的材質：藍色立柱、橘色橫樑。
   const steel = kit.standard("rack-blue", 0x2c5a86, 0.5, 0.5),
     beam = kit.standard("rack-orange", 0xd2702c, 0.55, 0.35),
     cargo = [
@@ -1096,6 +1114,7 @@ export function rack(
       kit.standard("cargo-b", 0x5d6e74, 0.75, 0.1),
       kit.standard("cargo-c", 0x3f5e4b, 0.8, 0.05),
     ];
+  // sub 是這座貨架自己的座標系統（位置與轉向）；先加一個整體的碰撞。
   const sub = kit.frame(f.x(lx, lz), f.z(lx, lz), f.rot + rot);
   // 第三層的貨物可能比矮的架子高。
   const colliderHeight = Math.max(height, 3.25);
@@ -1108,6 +1127,7 @@ export function rack(
     depth,
     sub.rot,
   );
+  // 立柱：每隔約 2.7 公尺一根。
   const bays = Math.max(1, Math.round(length / 2.7));
   for (let i = 0; i <= bays; i++) {
     const px = -length / 2 + (i * length) / bays;
@@ -1123,6 +1143,7 @@ export function rack(
         { rot: sub.rot, collide: false, solid: true },
       );
   }
+  // 四層層板：每層有前後橫樑與板子，上面隨機放一些貨箱。
   const levels = [0.15, 1.2, 2.25, height - 0.05];
   levels.forEach((y, level) => {
     for (const s of [-1, 1])
@@ -1213,6 +1234,7 @@ export function palletStack(
 
 // 停放的廂型車，或車頭加拖車；車頭與貨箱有碰撞。
 export function truck(kit, b, x, z, rot, color = 0x9c3b31, trailer = false) {
+  // 卡車：f 是座標系統，body 是車身顏色，下面依序做出駕駛室、車窗、保險桿與車燈。
   const f = kit.frame(x, z, rot),
     body = kit.standard(`truck-${color}`, color, 0.5, 0.35),
     dark = kit.standard("truck-dark", 0x15191b, 0.6, 0.3),
@@ -1221,6 +1243,7 @@ export function truck(kit, b, x, z, rot, color = 0x9c3b31, trailer = false) {
     box = kit.standard("truck-box", trailer ? 0xc9cbc4 : 0xd5d6cf, 0.6, 0.15),
     head = kit.glow("headlight", 0xfff3c4),
     tail = kit.glow("taillight", 0xff3344);
+  // 有拖車的比較長；cabZ 是駕駛室的位置。
   const cargoLength = trailer ? 11 : 6.2,
     cabZ = -(cargoLength / 2 + 1.35);
   // 車頭。
@@ -1246,6 +1269,7 @@ export function truck(kit, b, x, z, rot, color = 0x9c3b31, trailer = false) {
     );
   // 貨箱或拖車。
   b.box(f.x(0, 0.3), 1.95, f.z(0, 0.3), 2.5, 2.8, cargoLength, box, { rot });
+  // 底盤：從駕駛室後面一路到車尾。
   const chassisStart = cabZ - 0.8,
     chassisEnd = 0.3 + cargoLength / 2 - 0.05,
     chassisMid = (chassisStart + chassisEnd) / 2;
@@ -1259,6 +1283,7 @@ export function truck(kit, b, x, z, rot, color = 0x9c3b31, trailer = false) {
     dark,
     { rot, collide: false },
   );
+  // 貨斗兩側的護欄與後門。
   for (const s of [-1, 1]) {
     b.box(
       f.x(s * 1.27, 0.3),
@@ -1281,6 +1306,7 @@ export function truck(kit, b, x, z, rot, color = 0x9c3b31, trailer = false) {
       { rot, collide: false, shadow: false },
     );
   }
+  // 輪軸與輪子（有拖車的多兩組）。
   const axles = trailer
     ? [cabZ + 0.2, cabZ + 1.8, cargoLength / 2 - 1.2, cargoLength / 2 - 2.6]
     : [cabZ + 0.3, cargoLength / 2 - 1.3];
@@ -1292,6 +1318,7 @@ export function truck(kit, b, x, z, rot, color = 0x9c3b31, trailer = false) {
         segments: 14,
         collide: false,
       });
+  // 後照鏡與排氣管。
   for (const s of [-1.3, 1.3])
     b.box(
       f.x(s, cabZ - 0.4),

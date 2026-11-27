@@ -281,6 +281,7 @@ function buildRipper(P) {
   // 上半身 / 砲塔：這個關節會獨立轉向，用來瞄準目標
   const waist = grp("waist", hips, 0, 0.4, 0),
     s = new Seg();
+  // 撕裂者：底座、身體（梯形）、頭部與發光的眼睛、背上的尖刺。
   s.cyl(0.3, 0.4, 0.3, P.dark, 0, 0.1, 0, 0, 0, 0, 10);
   s.setBase(0, 0.9, 0.2, 0, 1, 0.35, 0);
   s.trap(0.9, 1.5, 1.4, 1.1, P.main, 0, 0, 0);
@@ -303,6 +304,7 @@ function buildRipper(P) {
       0,
       0,
     );
+  // 兩側的大鐮刀手臂（mir 會左右翻轉形狀）。
   s.clearBase();
   for (const sd of [-1, 1]) {
     s.sph(0.4, P.sub, sd * 1.0, 1.35, 0.5);
@@ -346,6 +348,7 @@ function buildRipper(P) {
       0,
     );
   }
+  // 把剛才組好的形狀合成一個模型，放進身體。
   s.into(waist);
   // 動畫用資料：type = 骨架類型（決定怎麼走路）、height = 整體高度（頭上血條的位置）
   root.userData = {
@@ -485,6 +488,7 @@ function buildDrone(P) {
 
 // ---------- 殉爆黃蜂：三角翼自爆無人機 ----------
 function buildWasp(P) {
+  // 黃蜂：細長的身體、紅色的眼睛與尾部。
   const root = new THREE.Group(),
     inner = grp("inner", root),
     s = new Seg();
@@ -492,6 +496,7 @@ function buildWasp(P) {
   s.bev(0.6, 0.5, 1.2, P.dark, 0, 0.3, -0.5, 0, 0, 0, 0.1);
   s.gsph(0.36, 0xff3020, 0, 0, 1.75);
   s.cyl(0.4, 0.3, 0.4, P.dark, 0, 0, 1.4, PI / 2, 0, 0, 10);
+  // 兩對翅膀與黑黃相間的條紋。
   for (const sd of [-1, 1]) {
     s.poly(
       mir(
@@ -551,6 +556,7 @@ function buildWasp(P) {
 
 // ---------- 武裝砲艇 ----------
 function buildGunship(P) {
+  // 武裝直升機：機身、機頭、駕駛艙玻璃、尾翼。
   const root = new THREE.Group(),
     inner = grp("inner", root, 0, 1.4, 0),
     s = new Seg();
@@ -576,6 +582,7 @@ function buildGunship(P) {
     0,
   );
   s.box(3.0, 0.14, 0.9, P.sub, 0, 0.6, -6.6);
+  // 兩側的短翼、武器莢艙與飛彈。
   for (const sd of [-1, 1]) {
     s.bev(3.2, 0.3, 1.8, P.sub, sd * 2.5, 0.1, -0.2, 0, 0, sd * 0.08, 0.1);
     s.bev(1.0, 0.9, 2.4, P.dark, sd * 2.6, -0.55, 0, 0, 0, 0, 0.12);
@@ -614,6 +621,7 @@ function buildGunship(P) {
     s.box(1.0, 0.16, 0.3, P.accent, sd * 3.6, 0.3, -0.2);
     s.gbox(0.1, 0.3, 0.6, 0xff3020, sd * 1.12, 0.1, 1.5);
   }
+  // 機頭下方的機砲；muzzleL 是開火位置。
   s.bev(0.6, 0.5, 0.8, P.dark, 0, -1.1, 2.4, 0, 0, 0, 0.1);
   s.cyl(0.12, 0.12, 1.6, GUNMETAL, 0, -1.15, 3.4, PI / 2, 0, 0, 8);
   s.into(inner);
@@ -842,6 +850,7 @@ function buildMedic(P, col = 0x5dff8a) {
 //  Boss 1：巨像・毀滅者 ─ 猩猩體型的陸戰巨兵
 // ============================================================
 function buildColossus(P) {
+  // 巨像的身材比例：大腿、小腿、腳掌長度、臀寬、腿粗細等。
   const g = {
     thigh: 4.6,
     shin: 5.0,
@@ -852,6 +861,7 @@ function buildColossus(P) {
     tb: -0.25,
     kb: 0.55,
   };
+  // 骨架：臀部、骨盆與雙腿，回傳腿長。
   const root = new THREE.Group(),
     inner = grp("inner", root),
     hips = grp("hips", inner);
@@ -863,6 +873,7 @@ function buildColossus(P) {
     th = 6.4,
     td = 6.6,
     cy = 1.0 + th / 2;
+  // 腰部與胸部：腰部的環、胸口發光的核心與周圍的裝甲片。
   let s = new Seg();
   s.cyl(2.2, 2.6, 1.4, P.dark, 0, 0.5, 0, 0, 0, 0, 16);
   for (let j = 0; j < 3; j++)
@@ -888,6 +899,7 @@ function buildColossus(P) {
       0.1,
     );
   }
+  // 兩側的肩甲、背後的排氣管與尖刺。
   for (const sd of [-1, 1]) {
     for (let j = 0; j < 3; j++)
       s.bev(
@@ -971,6 +983,7 @@ function buildColossus(P) {
 
   // 頭部
   const head = grp("head", waist, 0, cy + th * 0.5 - 0.3, 3.2);
+  // 頭部：發光的眼睛與兩側的角。
   s = new Seg();
   s.bev(2.4, 1.9, 2.6, P.dark, 0, 0.8, 0, 0.1, 0, 0, 0.3);
   s.trap(2.6, 1.6, 0.9, 2.4, P.main, 0, 1.9, -0.2);
@@ -1023,6 +1036,7 @@ function buildColossus(P) {
     s.bev(0.6, 3.6, 4.6, P.sub, sd * 1.7, 0.2, 2.6, 0, 0, 0, 0.15);
     s.box(0.64, 0.5, 4.62, P.accent, sd * 1.7, 0.2, 2.6);
     s.cyl(1.3, 1.3, 1.2, P.dark, 0, 0, 5.8, PI / 2, 0, 0, 14);
+    // 手臂上的三管加特林砲。
     for (let j = 0; j < 3; j++) {
       const a = (j / 3) * TAU + PI / 2;
       s.cyl(
@@ -1072,6 +1086,7 @@ function buildColossus(P) {
     hipY,
     height: hipY + 2.7 + cy + th * 0.5 + 3.4,
   };
+  // 腰部放在腿上方，回傳整個模型。
   hips.position.y = hipY;
   return root;
 }
@@ -1080,6 +1095,7 @@ function buildColossus(P) {
 //  Boss 2：天災・暴風之翼 ─ 巨型飛翼砲艇
 // ============================================================
 function buildTempest(P) {
+  // 暴風戰機：巨大的機身、機頭、駕駛艙與背上的發光線條。
   const root = new THREE.Group(),
     inner = grp("inner", root, 0, 3, 0),
     s = new Seg();
@@ -1091,6 +1107,7 @@ function buildTempest(P) {
   s.gbox(0.3, 0.1, 9, P.glow, 0, 1.92, -1.0);
   for (let j = 0; j < 6; j++)
     s.box(4.44, 0.2, 0.3, P.accent, 0, -0.4, -6 + j * 2.2);
+  // 兩側的大翅膀、發光邊緣與翼尖，以及翅膀下的引擎。
   for (const sd of [-1, 1]) {
     s.poly(
       mir(
@@ -1260,6 +1277,7 @@ function buildTempest(P) {
     );
     s.gbox(0.2, 0.4, 1.0, 0xff3020, sd * 2.25, 0.2, 5.5);
   }
+  // 尾翼。
   s.poly(
     [
       [-5, 0],
@@ -1889,6 +1907,7 @@ function buildWyrmHead(P) {
   root.userData = { type: "static", height: 6.4 };
   return root;
 }
+// 巨蟲的一節身體：圓筒形的外殼與一圈尖刺。
 function buildWyrmSeg(P) {
   const root = new THREE.Group(),
     inner = grp("inner", root),
@@ -2046,6 +2065,7 @@ function buildCarrier(P) {
 //  Boss 9：斷罪劍皇・亞修拉 ─ 持巨劍的騎士型決鬥機
 // ============================================================
 function buildKnight(P) {
+  // 騎士的身材比例。
   const g = {
     thigh: 3.7,
     shin: 4.0,

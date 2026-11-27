@@ -30,6 +30,7 @@ function element(value = "") {
     scrollTop: 0,
     selectedOptions: [{ textContent: "" }],
     classList: {
+      // 假元素的 class 開關。
       toggle(name, on) {
         if (on) classes.add(name);
         else classes.delete(name);
@@ -57,6 +58,7 @@ function element(value = "") {
 }
 // 依網頁上的 id 建立假元素。
 const elements = new Map(ids.map((id) => [id, element()]));
+// 用 id 取得假元素。
 const get = (id) => elements.get(id);
 // 先填入一組已儲存的設定。
 get("operatorName").textContent = "VANTA // 夜襲";
@@ -83,6 +85,7 @@ let mode = "首領討伐 WARLORD",
 const document = {
   getElementById: get,
   addEventListener() {},
+  // 假的 querySelectorAll 與 querySelector：只支援大廳程式會用到的幾種查詢。
   querySelectorAll(q) {
     return q === "[data-step-tab]"
       ? tabs

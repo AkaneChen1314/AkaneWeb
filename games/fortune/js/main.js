@@ -209,6 +209,8 @@ function worldDown(x, y) {
   if (g) {
     const cd = g.hand.find((q) => q.anim >= 1);
     if (cd) {
+      // 開始拖曳手牌：記下是哪一張、從哪裡開始拖；還沒移動之前不算拖曳（可能只
+      // 是點一下）。
       G.drag = {
         kind: "card",
         idx: R.hand.indexOf(cd),
@@ -258,6 +260,7 @@ function worldDown(x, y) {
       return;
     }
     if (tw) {
+      // 開始拖曳地圖上的塔：記下是哪一座、從哪裡開始拖，以及原本是不是已經選中。
       G.drag = {
         kind: "tower",
         tw,

@@ -15,6 +15,8 @@ assert.equal(new Set(ids).size, ids.length, "duplicate HTML id");
 const eventListeners = new Map();
 // 假的網頁元素；只實作遊戲會用到的部分。
 class Element {
+  // 建立一個假元素：記下名稱、data-* 屬性、是否停用、子元素與 class，夠遊戲程式
+  // 呼叫就好，不會真的畫在畫面上。
   constructor(name = "") {
     this.name = name;
     this.dataset = {};
@@ -26,6 +28,7 @@ class Element {
     };
     const classes = new Set();
     this._classes = classes;
+    // classList 的 add、remove、contains、toggle，和瀏覽器裡的用法一樣。
     this.classList = {
       add: (...names) => names.forEach((name) => classes.add(name)),
       remove: (...names) => names.forEach((name) => classes.delete(name)),
@@ -38,6 +41,7 @@ class Element {
       },
     };
   }
+  // 設定 className 時，把一串用空白隔開的 class 拆開存起來。
   set className(value) {
     this._classes.clear();
     for (const name of value.split(/\s+/).filter(Boolean))
@@ -46,6 +50,7 @@ class Element {
   get className() {
     return [...this._classes].join(" ");
   }
+  // 設定 innerHTML 時只記下文字內容，並清空子元素。
   set innerHTML(value) {
     this.markup = value;
     this.children = [];
@@ -53,6 +58,7 @@ class Element {
   get innerHTML() {
     return this.markup || "";
   }
+  // append 把子元素加到最後面，remove 把自己從父元素拿掉。
   append(child) {
     this.children.push(child);
     child.parent = this;
@@ -125,11 +131,14 @@ const getNode = (selector) => {
 // 假的 document。
 const document = {
   querySelector: getNode,
+  // querySelectorAll 只支援遊戲會用到的「目前打開的視窗」查詢，其他一律回傳空清
+  // 單。
   querySelectorAll: (selector) =>
     selector === ".modal.open"
       ? [...nodes.values()].filter((node) => node.classList.contains("open"))
       : [],
   createElement: () => new Element(),
+  // addEventListener 先把事件處理程式存起來，測試要模擬按鍵時再拿出來執行。
   addEventListener(type, listener) {
     if (!eventListeners.has(type)) eventListeners.set(type, []);
     eventListeners.get(type).push(listener);
@@ -148,6 +157,7 @@ const sandbox = {
     removeItem: (key) => storage.delete(key),
   },
   window: {
+    // matchMedia 一律回答「沒有符合」，例如不是手機、沒有開啟減少動態。
     matchMedia: () => ({
       matches: false,
       addEventListener() {},
@@ -319,6 +329,8 @@ async function main() {
       );
       assert.ok(run("stats().poisonResist") > 0);
       let rolls = 0;
+      // 把隨機數固定成 0.99，讓「閃避」這類靠運氣的結果每次都一樣（不會閃開），
+      // 並記錄被抽了幾次。
       sandbox.Math.random = () => {
         rolls++;
         return 0.99;

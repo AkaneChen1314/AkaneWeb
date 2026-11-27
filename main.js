@@ -212,15 +212,22 @@ function setPaused(frame, paused) {
 
 // 同一款遊戲的 iframe 會重用，讓玩家可以返回遊戲館後再接續原局。
 function openGame(id) {
+  // 找出要開的是哪一款遊戲；網址寫錯、找不到時就什麼都不做。
   const game = games[id];
   if (!game) return;
+  // 先關掉介紹視窗。如果是從收藏館第一次進遊戲，記住目前捲到哪裡，等一下返回時
+  // 才能回到同一個位置。
   details.close();
   if (!activeGame) homeScroll = window.scrollY;
+  // 把收藏館藏起來、顯示遊戲區，並通知背景星光等效果先暫停（lounge-visibility
+  // 事件）。
   activeGame = id;
   lounge.hidden = true;
   player.hidden = false;
   document.body.classList.add("playing");
   document.dispatchEvent(new Event("lounge-visibility"));
+  // 遊戲區上方的標題列：顯示遊戲名稱、操作方式（例如「鍵鼠・觸控」）與返回的小
+  // 提示。
   document.getElementById("player-title").textContent = game.name;
   document.getElementById("player-version").textContent =
     game.version || "v1.2";
@@ -231,11 +238,15 @@ function openGame(id) {
         ? "按 Esc 放開滑鼠，就能返回遊戲館"
         : "休息一下，隨時回來";
 
+  // 每款開過的遊戲都有自己的 iframe（嵌在網頁裡的小視窗）。只顯示這一款，其他的
+  // 藏起來並通知它們休息，這樣才能保留進度又不會在背景偷跑。
   frames.forEach((frame, key) => {
     frame.hidden = key !== id;
     setPaused(frame, key !== id);
   });
 
+  // 這款遊戲第一次打開：建立新的 iframe 載入遊戲，先顯示「載入中」，等遊戲載入
+  // 完再拿掉。之前開過的話，直接把原本的 iframe 叫出來，進度還在。
   let frame = frames.get(id);
   if (!frame) {
     loading.hidden = false;
@@ -256,6 +267,7 @@ function openGame(id) {
     frame.hidden = false;
     setPaused(frame, false);
   }
+  // 把鍵盤焦點放到「返回遊戲館」按鈕上，用鍵盤的人按 Enter 就能離開。
   document.getElementById("return-lounge").focus({
     preventScroll: true,
   });
@@ -294,6 +306,7 @@ function returnToLounge() {
 // hash 讓瀏覽器的「上一頁」也能回到遊戲館。
 // 由網址 # 後的片段選擇專區；保留段落 id 才能讓書籤和瀏覽器上一頁正常運作。
 function showZone() {
+  // 讀出網址 # 後面的文字，例如網址是 …/index.html#gallery，hash 就是 "gallery"。
   const hash = location.hash.slice(1);
   const seasonMatch = /^season-([123])$/.exec(hash);
   // 這些網址錨點都屬於「黑川茜專區」。
@@ -313,6 +326,8 @@ function showZone() {
     "outfit-room",
     "chibi-room",
   ];
+  // 決定要顯示哪個專區：角色相關段落與 #season-1～3 → 黑川茜專區；#games → 小遊
+  // 戲專區；#main-content（鍵盤的「跳到主要內容」）→ 維持目前專區；其他 → 首頁。
   const zone =
     characterSections.includes(hash) || seasonMatch
       ? "akane"
@@ -329,18 +344,24 @@ function showZone() {
     "season-2",
     "season-3",
   ];
+  // 記下專區有沒有換，接著只留下目前專區，其他專區都藏起來。
   const changed = selectedZone !== zone;
   selectedZone = zone;
   document.body.dataset.zoneView = zone;
   document.querySelectorAll("[data-zone]").forEach((panel) => {
     panel.hidden = panel.dataset.zone !== zone;
   });
+  // 導覽列上標出目前所在的專區；aria-current 是給螢幕報讀軟體看的「你在這裡」標
+  // 記。
   document.querySelectorAll("[data-zone-link]").forEach((link) => {
     if (link.dataset.zoneLink === zone)
       link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
   });
+  // 通知其他程式（背景影片、閱讀書籤等）專區已經換了，讓它們跟著暫停或更新。
   document.dispatchEvent(new Event("zone-change"));
+  // 等瀏覽器把新專區畫好（下一個畫面）再捲動：網址指到某個段落就捲到那裡（季數
+  // 會先切換圖庫，劇情筆記會先展開）；只是換專區就回到頁面最上方。
   if (changed || sectionHashes.includes(hash)) {
     requestAnimationFrame(() => {
       if (sectionHashes.includes(hash)) {

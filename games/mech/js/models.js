@@ -786,6 +786,7 @@ function bipedLegs(hips, P, g, style) {
     let s = new Seg();
     s.cyl(T * 0.72, T * 0.72, T * 1.5, P.dark, 0, 0, 0, 0, 0, PI / 2, 14);
     s.cyl(T * 0.4, T * 0.4, T * 1.7, P.accent, 0, 0, 0, 0, 0, PI / 2, 10);
+    // 大腿：外殼、側面裝甲、後面的液壓桿與關節。
     s.bev(
       T * 1.25,
       L1 * 0.8,
@@ -889,6 +890,7 @@ function bipedLegs(hips, P, g, style) {
     s.cyl(T * 0.3, T * 0.3, T * 1.75, STEEL, 0, 0, 0, 0, 0, PI / 2, 8);
     // 護膝：逆關節機體的膝蓋朝後，所以護膝裝在後面
     const kz = rap ? -1 : 1;
+    // 膝蓋護板。
     s.trap(
       T * 1.0,
       T * 0.6,
@@ -904,6 +906,7 @@ function bipedLegs(hips, P, g, style) {
     );
     s.trap(T * 1.55, T * 1.05, L2 * 0.85, T * 1.4, P.main, 0, -L2 * 0.52, 0);
     s.trap(T * 0.9, T * 0.5, L2 * 0.7, T * 0.38, P.sub, 0, -L2 * 0.5, T * 0.78);
+    // 小腿：外殼、推進器噴口與液壓桿。
     s.bev(
       T * 0.9,
       L2 * 0.5,
@@ -1002,6 +1005,7 @@ function bipedLegs(hips, P, g, style) {
     const foot = grp("foot" + nm, shin, 0, -L2, 0);
     s = new Seg();
     s.cyl(T * 0.55, T * 0.55, T * 1.3, P.dark, 0, 0, 0, 0, 0, PI / 2, 12);
+    // 腳掌：腳底、腳尖、腳跟與兩側的腳趾。
     s.bev(
       T * 1.7,
       fH,
@@ -1095,6 +1099,7 @@ function bipedLegs(hips, P, g, style) {
   // 回傳「站立時髖部離地面多高」，用來把整台機體放在正確的高度
   // 腿伸直後的總長度，用來決定髖部高度。
   const ext = L1 * Math.cos(g.tb) + L2 * Math.cos(g.tb + g.kb);
+  // 回傳腿的總長度（用來決定腰部離地多高）。
   return ext + fH + 0.1 * k;
 }
 
@@ -1247,6 +1252,7 @@ function buildArms(waist, P, o) {
     switch (o.style) {
       // 英雄機：方形肩甲 + 向上的尖角
       case "hero":
+        // 肩膀：外殼、上蓋、彩色飾條、螺栓與肩甲尖角。
         s.bev(
           1.5 * k,
           1.25 * k,
@@ -1322,6 +1328,7 @@ function buildArms(waist, P, o) {
         break;
       // 重型：超大的箱型肩甲
       case "heavy":
+        // 重型肩甲：比較大、比較厚，前面有一排散熱片。
         s.bev(
           2.0 * k,
           1.9 * k,
@@ -1434,6 +1441,7 @@ function buildArms(waist, P, o) {
       // 圓球型肩甲
       case "round":
         s.sph(1.25 * k, P.main, sd * 0.25, 0.3 * k, 0, 1, 0.95, 1.05);
+        // 圓形肩甲：環形外框與中間發光的核心。
         s.tor(
           1.22 * k,
           0.12 * k,
@@ -1487,6 +1495,7 @@ function buildArms(waist, P, o) {
             6,
           );
         }
+        // 盾形肩甲：多邊形的盾牌與發光的紋路。
         s.bev(
           1.6 * k,
           0.4 * k,
@@ -1562,6 +1571,7 @@ function buildArms(waist, P, o) {
       0,
       0.1,
     );
+    // 上臂與手肘。
     s.bev(
       0.94 * k,
       0.8 * k,
@@ -1612,6 +1622,7 @@ function buildArms(waist, P, o) {
     s.box(1.0 * k, 0.1 * k, 0.1 * k, P.dark, 0, 0.3 * k, 1.6 * k);
     s.box(1.0 * k, 0.1 * k, 0.1 * k, P.dark, 0, -0.3 * k, 1.6 * k);
     s.cyl(0.4 * k, 0.4 * k, 0.3 * k, P.dark, 0, 0, 2.1 * k, PI / 2, 0, 0, 10);
+    // 手臂的液壓桿。
     s.cyl(
       0.07 * k,
       0.07 * k,
@@ -1832,6 +1843,7 @@ function buildVanguard(P, pri, sec) {
   // 光翼：左右各四片翼刃，推進時會展開
   // 背後的光翼。
   for (const sd of [-1, 1]) {
+    // 背後的翅膀（左右各一）：grp 建立一個可以單獨轉動的部件。
     const wing = grp(
       sd > 0 ? "wingL" : "wingR",
       waist,
@@ -2551,6 +2563,7 @@ function buildPhantom(P, pri, sec) {
     pri,
     sec,
   });
+  // 這台機體的骨架資料：腿的長度、關節彎曲方向等，給走路動畫使用。
   root.userData = {
     type: "biped",
     leg: {
@@ -2771,6 +2784,7 @@ function buildThor(P, pri, sec) {
     pri,
     sec,
   });
+  // 這台機體的骨架資料（給走路動畫使用）。
   root.userData = {
     type: "biped",
     leg: {

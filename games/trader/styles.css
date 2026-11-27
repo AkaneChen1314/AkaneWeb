@@ -26,6 +26,7 @@
   box-sizing: border-box;
 }
 
+/* 整個頁面的底色與文字顏色（var(--text) 是上面定義的顏色變數）。 */
 body {
   margin: 0;
   background:
@@ -33,6 +34,7 @@ body {
   color: var(--text);
 }
 
+/* 按鈕與輸入框沿用頁面字型。 */
 button,
 input {
   font: inherit;
@@ -53,6 +55,7 @@ button {
   touch-action: manipulation;
 }
 
+/* 按鈕：滑過變亮、按下往下壓一點、停用時變淡且不能按。 */
 button:hover {
   background: #33405e;
 }
@@ -73,6 +76,7 @@ button:disabled {
   outline-offset: 3px;
 }
 
+/* 標題與段落先拿掉預設的上下空白，再各自設定大小。 */
 h1,
 h2,
 h3,
@@ -88,6 +92,7 @@ small {
   font-size: 0.75rem;
 }
 
+/* 連結不加底線、沿用外面的顏色；em 用黃色強調，不用斜體。 */
 a {
   color: inherit;
   text-decoration: none;
@@ -124,6 +129,7 @@ em {
   letter-spacing: 0.03em;
 }
 
+/* 左上角的遊戲標誌（黃色方塊）與小字。 */
 .brand-mark {
   padding: 8px;
   background: var(--yellow);
@@ -142,6 +148,7 @@ em {
   margin-top: 2px;
 }
 
+/* 右上角的按鈕列（音效、特效、設定、教學）。 */
 .header-actions {
   display: flex;
   gap: 9px;
@@ -181,6 +188,7 @@ main {
   margin: 0 0 24px;
 }
 
+/* 最上面故事區的小標、大標題與說明。 */
 .eyebrow {
   font-size: 0.75rem;
   letter-spacing: 0.08em;
@@ -227,6 +235,7 @@ h1 {
   color: var(--muted);
 }
 
+/* 右邊「第幾天」卡片裡的進度條。 */
 .day-progress {
   height: 4px;
   background: #303852;
@@ -251,6 +260,7 @@ h1 {
   margin-bottom: 22px;
 }
 
+/* 資產卡片：總資產（大）與四個小卡（現金、持倉、欠款、今日）。 */
 .wealth-card,
 .money-mini {
   border: 1px solid var(--line);
@@ -265,6 +275,7 @@ h1 {
   background: linear-gradient(115deg, #3b3123, #202439);
 }
 
+/* 卡片上方的標題列。 */
 .wealth-label {
   display: flex;
   align-items: center;
@@ -409,6 +420,7 @@ h1 {
   padding: 22px 16px 15px;
 }
 
+/* 角色區：頭像表情與名字。 */
 .avatar {
   font-size: 3.6rem;
   line-height: 1.4;
@@ -444,6 +456,7 @@ h1 {
   color: var(--green);
 }
 
+/* 健康與壓力的長條；壓力用粉紅色。 */
 .meter-track {
   height: 11px;
   background: #0c1221;
@@ -487,6 +500,7 @@ h1 {
   margin-top: 3px;
 }
 
+/* 身體部件清單：兩欄。 */
 .body-parts {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -494,6 +508,7 @@ h1 {
   padding: 0 16px;
 }
 
+/* 每一個部件：還在身上、已經失去，用不同的外觀。 */
 .body-part {
   display: flex;
   align-items: center;
@@ -547,6 +562,7 @@ h1 {
   font-size: 0.875rem;
 }
 
+/* 比較低調的按鈕（soft）與生活區下方的小字。 */
 .soft {
   background: #242e48;
   border: 1px solid #3b4869;
@@ -589,6 +605,7 @@ h1 {
   line-height: 1.7;
 }
 
+/* 借款清單的每一列。 */
 .loan-row {
   padding: 13px 16px;
   border-bottom: 1px solid var(--line);
@@ -641,6 +658,7 @@ h1 {
   padding: 16px;
 }
 
+/* 標的卡片（股票、加密幣等）：圖示、名稱與今日漲跌。 */
 .asset-card {
   border: 1px solid #34405c;
   background: #1d263b;
@@ -700,6 +718,7 @@ h1 {
   color: var(--muted);
 }
 
+/* 目前價格靠右對齊。 */
 .price-now {
   text-align: right;
 }
@@ -727,6 +746,7 @@ h1 {
   align-items: center;
 }
 
+/* 價格圖表與下方的說明列。 */
 .chart {
   padding: 0 14px;
   width: 100%;
@@ -750,6 +770,7 @@ h1 {
   color: var(--muted);
 }
 
+/* 標的的補充說明。 */
 .asset-note {
   padding: 15px 20px;
   background: #101727;
@@ -769,6 +790,7 @@ h1 {
   padding: 11px 14px;
 }
 
+/* 還沒有持倉時的提示。 */
 .holdings-empty {
   text-align: center;
   padding: 29px 20px;
@@ -802,6 +824,7 @@ h1 {
   border: 0;
 }
 
+/* 每一筆持倉：標題、損益（靠右）、細節。 */
 .position-title {
   display: flex;
   align-items: center;
@@ -874,6 +897,7 @@ h1 {
   white-space: nowrap;
 }
 
+/* 交易紀錄最多 330px 高，超過就捲動；成就以兩欄的小格顯示，還沒達成的變淡。 */
 .ledger-scroll {
   max-height: 330px;
   overflow: auto;
@@ -908,6 +932,7 @@ h1 {
   line-height: 1.6;
 }
 
+/* 新聞的每一則。 */
 .news-item {
   padding: 14px 18px;
   border-bottom: 1px solid var(--line);
@@ -1095,6 +1120,7 @@ h1 {
   color: var(--yellow);
 }
 
+/* 槓桿倍數的滑桿與下方刻度。 */
 #leverage {
   width: 100%;
   accent-color: var(--yellow);
@@ -1150,6 +1176,7 @@ h1 {
   background: #ffe592;
 }
 
+/* 「下單」大按鈕與下方的小字。 */
 #trade-button {
   display: block;
   width: calc(100% - 32px);
@@ -1262,6 +1289,7 @@ h1 {
   margin-top: 4px;
 }
 
+/* 上方時間列右邊的按鈕。 */
 .session-actions {
   display: flex;
   gap: 10px;
@@ -1306,6 +1334,7 @@ h1 {
   box-shadow: inset 0 0 150px #a9063199;
 }
 
+/* 交易結果的大字回饋（賺錢、虧錢）與灑彩紙動畫。 */
 .feedback-message {
   text-align: center;
   text-shadow: 0 3px 20px #0009;
@@ -1438,6 +1467,7 @@ h1 {
   margin-top: 10px;
 }
 
+/* 教學卡片下方的步驟點。 */
 .coach-track {
   display: flex;
   gap: 5px;
@@ -1471,6 +1501,7 @@ h1 {
   display: none;
 }
 
+/* 「假斷線」畫面：中間的大符號、字與讀取條。 */
 .glitch-inner {
   width: min(540px, 100%);
   text-align: center;
@@ -1531,6 +1562,7 @@ h1 {
   animation: loading 1.5s ease-in-out infinite alternate;
 }
 
+/* 讀取條來回移動的動畫。 */
 @keyframes loading {
   to {
     transform: translateX(150%);
@@ -1551,6 +1583,7 @@ h1 {
   gap: 8px;
 }
 
+/* 右上角跳出的提示訊息。 */
 .toast {
   background: #292d48;
   border: 1px solid #a490bc;
@@ -1565,6 +1598,7 @@ h1 {
   border-color: var(--red);
 }
 
+/* 所有視窗（dialog）的大小、外框與背後的半透明遮罩。 */
 dialog {
   width: min(620px, calc(100% - 28px));
   max-height: calc(100dvh - 30px);
@@ -1581,6 +1615,7 @@ dialog::backdrop {
   backdrop-filter: blur(7px);
 }
 
+/* 視窗內容：小標、標題、內容框與按鈕列。 */
 .modal-content {
   padding: 28px;
 }
@@ -1663,6 +1698,7 @@ dialog::backdrop {
   margin: 18px 0;
 }
 
+/* 借款種類的按鈕與條件說明。 */
 .loan-type {
   border: 1px solid #46516f;
   padding: 14px 8px;
@@ -1706,6 +1742,7 @@ dialog::backdrop {
   margin-top: 18px;
 }
 
+/* 可以賣出的身體部件選項：左邊圖示、中間說明、右邊價格。 */
 .organ-option {
   display: grid;
   grid-template-columns: 38px 1fr auto;
@@ -1748,6 +1785,7 @@ dialog::backdrop {
   margin: 15px;
 }
 
+/* 結局畫面的數據（兩欄）；猝死結局的標題用紅色。 */
 .end-values {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2678,6 +2716,8 @@ body {
   box-shadow: inset 0 0 95px #980c2444;
 }
 
+/* 「恐怖模式」：越接近崩潰（dread-1 → dread-3），背景越紅、畫面上的暗影越濃，
+   面板框線也變紅。 */
 body.dread-1 {
   background: radial-gradient(ellipse at 80% 0, #291626, #080c17 70%);
 }
@@ -2713,6 +2753,7 @@ body.dread-3 .character-panel {
   box-shadow: 0 0 24px #94042238;
 }
 
+/* 恐怖模式時，最上面出現的警告橫幅。 */
 .dread-banner {
   margin: 0 0 14px;
   padding: 13px 16px;
@@ -2772,6 +2813,7 @@ body.dread-3 .character-panel {
   font-size: 1.35rem;
 }
 
+/* 身體圖下方的說明小字。 */
 .body-caption {
   font-size: 0.75rem;
   color: var(--muted);
@@ -2790,6 +2832,7 @@ body.dread-3 .character-panel {
   padding: 6px 16px;
 }
 
+/* 圖表上方的時間與按鈕列。 */
 .market-clock {
   display: flex;
   align-items: center;
@@ -2805,6 +2848,7 @@ body.dread-3 .character-panel {
   font-variant-numeric: tabular-nums;
 }
 
+/* 圖表工具按鈕至少 44px 高，手指好按。 */
 .tape-toolbar button,
 .archive-controls button {
   min-height: 44px;
@@ -2828,6 +2872,7 @@ body.dread-3 .character-panel {
   transition: filter 0.6s;
 }
 
+/* 手指或滑鼠指在圖表上時，左上角顯示那一天的價格。 */
 .chart-tooltip {
   position: absolute;
   left: 14px;
@@ -2886,6 +2931,7 @@ body.dread-3 .character-panel {
   accent-color: var(--yellow);
 }
 
+/* 圖表下方的操作提示。 */
 .chart-hint {
   font-size: 0.75rem;
   line-height: 1.8;
@@ -2899,6 +2945,8 @@ body.vision-one .chart svg {
   filter: blur(1.8px) brightness(0.8);
 }
 
+/* 視力受損時（vision-one、vision-two）圖表與價格會變模糊：這是故事設計，表
+   示身體透支。 */
 body.vision-two .chart svg {
   filter: blur(4px) brightness(0.52);
 }
@@ -2941,6 +2989,7 @@ body.vision-two #selected-price {
   background: linear-gradient(90deg, #73edb8, #ffdc69);
 }
 
+/* 打工題目卡片、答案按鈕（兩欄）與回饋文字。 */
 .job-order {
   padding: 20px;
   border: 1px solid #776441;
@@ -2998,6 +3047,7 @@ body.vision-two #selected-price {
   display: none;
 }
 
+/* 手機的下方導覽列；section 捲動時留出上方標題列的空間。 */
 #vision-assist[hidden] {
   display: none;
 }
@@ -3006,10 +3056,12 @@ section {
   scroll-margin-top: 74px;
 }
 
+/* 頁尾按鈕至少 44px 高。 */
 .footer button {
   min-height: 44px;
 }
 
+/* 用鍵盤移到按鈕或輸入框時，外面加一圈黃色亮框。 */
 button:focus-visible,
 input:focus-visible,
 summary:focus-visible,
@@ -3420,6 +3472,7 @@ body {
   box-shadow: 0 12px 32px #05091655;
 }
 
+/* 新版外觀：標誌、上方列、主要按鈕、故事區與天數卡片改成漸層。 */
 .brand-mark {
   background: linear-gradient(130deg, #ffe081, #ffafc9, #a99bff);
   box-shadow: 0 0 24px #cc9fff32;
@@ -3493,6 +3546,7 @@ body {
   font-size: 0.75rem;
 }
 
+/* 資產卡片在電腦上排成一列（總資產比較寬）。 */
 .money-dashboard {
   grid-template-columns: 1.3fr repeat(4, minmax(0, 1fr));
 }
@@ -3547,6 +3601,7 @@ body {
   font-size: 0.875rem;
 }
 
+/* 標的清單上方的標題列。 */
 .asset-list-label {
   display: flex;
   justify-content: space-between;
@@ -3556,6 +3611,7 @@ body {
   font-size: 0.75rem;
 }
 
+/* 標的清單最多 292px 高，超過就捲動。 */
 .asset-cards {
   max-height: 292px;
   overflow: auto;
@@ -3564,6 +3620,7 @@ body {
   scrollbar-width: thin;
 }
 
+/* 新版標的卡片：上方有一條該標的代表色的線。 */
 .asset-card {
   background: linear-gradient(140deg, #273451, #1b2340);
   border-color: color-mix(in srgb, var(--card-accent, #8f9fff) 40%, #3c4057);
@@ -3582,6 +3639,7 @@ body {
   background: linear-gradient(130deg, #374260, #282c50);
 }
 
+/* 篩選後沒有標的時的提示。 */
 .asset-empty {
   grid-column: 1/-1;
   padding: 25px;
@@ -3601,6 +3659,7 @@ body {
   font-size: 0.75rem;
 }
 
+/* 誘惑卡片（例如「翻本寶箱」）的外觀。 */
 .temptation-card {
   background:
     radial-gradient(ellipse at 15% 0, #5b35616b, transparent 60%),
@@ -3626,6 +3685,7 @@ body {
   font-size: 0.875rem;
 }
 
+/* 取名視窗：名字輸入框與虛構身分證。 */
 .name-input {
   width: 100%;
   padding: 15px;
@@ -3704,6 +3764,7 @@ body {
   color: #c0c7df;
 }
 
+/* 借據的簽名欄。 */
 .signature-preview {
   margin: 18px 0;
   padding: 18px;
@@ -3726,6 +3787,7 @@ body {
   position: relative;
 }
 
+/* 催收畫面：上方是催收人頭像與標題。 */
 .collector-top {
   display: flex;
   gap: 14px;
@@ -3749,6 +3811,7 @@ body {
   display: block;
 }
 
+/* 催收的壓力條與欠款資訊。 */
 .collector-meter {
   height: 6px;
   margin: 18px 0;
@@ -3790,6 +3853,7 @@ body {
   margin-top: 18px;
 }
 
+/* 對話紀錄：每一則訊息泡泡。 */
 .chat-bubble {
   max-width: 92%;
   padding: 11px 14px;
@@ -3816,6 +3880,7 @@ body {
   border-color: #508488;
 }
 
+/* 目前這一則（要回覆的那一則）。 */
 .chat-current {
   margin: 16px 0;
   padding: 20px;
@@ -3857,6 +3922,7 @@ body {
   background: #384d64;
 }
 
+/* 對話下方的說明小字。 */
 .conversation-foot {
   margin: 18px 0 0;
   color: #a2abc7;
@@ -3990,6 +4056,7 @@ body {
   margin: 4px 0 14px;
 }
 
+/* 賭場選單：三欄的遊戲選項。 */
 .casino-menu {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -4022,6 +4089,7 @@ body {
   background: linear-gradient(140deg, #644343, #36334b);
 }
 
+/* 賭場的輸贏紀錄。 */
 .casino-record {
   display: flex;
   justify-content: space-between;
@@ -4078,6 +4146,7 @@ body {
   background: #494139;
 }
 
+/* 賭桌上的提示文字、離開按鈕與手牌標籤。 */
 .table-prompt {
   font-size: 0.95rem;
   line-height: 1.9;
@@ -4157,6 +4226,7 @@ body {
   color: var(--yellow);
 }
 
+/* 踩地雷：3×3 的格子。 */
 .mine-board {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -4608,6 +4678,7 @@ body {
   box-shadow: 0 0 20px #b493ff40;
 }
 
+/* 「檢查我的身體」按鈕。 */
 .body-open {
   display: flex;
   align-items: center;
@@ -4626,6 +4697,7 @@ body {
   font-size: 0.7rem;
 }
 
+/* 角色區下方的生活按鈕（兩欄）。 */
 .character-panel > .life-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4633,6 +4705,7 @@ body {
   margin-top: 14px;
 }
 
+/* 每個生活按鈕的大小與字。 */
 .life-actions button {
   min-width: 0;
   min-height: 48px;
@@ -4665,12 +4738,14 @@ body {
   white-space: normal;
 }
 
+/* 身體清單的摘要列。 */
 .body-inventory summary {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
 }
 
+/* 身體視窗上方的三個數值（健康、壓力、可用部件）。 */
 .body-vitals {
   display: grid;
   grid-template-columns: 1.3fr 1fr 1fr;
@@ -4693,6 +4768,7 @@ body {
   margin-top: 5px;
 }
 
+/* 身體視窗：左邊人體圖、右邊說明。 */
 .body-explorer {
   display: grid;
   grid-template-columns: 160px minmax(0, 1fr);
@@ -4758,6 +4834,7 @@ body {
   font-size: 0.75rem;
 }
 
+/* 身體部位的分頁按鈕。 */
 .body-zone-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -4778,6 +4855,7 @@ body {
   border-color: #ffe098;
 }
 
+/* 部位裡的器官清單（兩欄），每一項是一個可以點的卡片。 */
 .body-detail-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4823,6 +4901,7 @@ body {
   color: #ffa1b5;
 }
 
+/* 身體視窗下方的說明。 */
 .body-explorer-note {
   font-size: 0.8rem;
   color: #bbc4dc;
@@ -4830,6 +4909,7 @@ body {
   margin-top: 16px;
 }
 
+/* 器官詳細頁上方的大圖示與名稱。 */
 .body-organ-hero {
   display: grid;
   justify-items: center;
@@ -4884,6 +4964,7 @@ body {
   color: #ffd6b0;
 }
 
+/* 器官失去的紀錄（左邊粉紅線）。 */
 .organ-loss-record {
   border-left: 3px solid #ff819e;
   background: #421e3344;

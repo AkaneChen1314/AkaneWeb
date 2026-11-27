@@ -84,10 +84,13 @@ export function createGrenadeMotion(origin, direction, boxes = []) {
 
 // 推進物理：重力、反彈、摩擦與停住。
 export function advanceGrenadeMotion(state, dt, boxes = []) {
+  // 累計要模擬的時間；每次固定前進 STEP 秒，畫面卡頓時也算得一樣。
   state.accumulator += Number.isFinite(dt) ? Math.max(0, dt) : 0;
   while (state.accumulator + 1e-9 >= STEP && state.life > 1e-9) {
     const step = Math.min(STEP, state.life);
     state.accumulator = Math.max(0, state.accumulator - STEP);
+    // 已經停在地上：檢查腳下的東西還在不在（例如被炸掉的箱子），不在就重新開始
+    // 下落。
     if (state.grounded && state.supportBox) {
       const box = state.supportBox;
       if (
@@ -113,12 +116,14 @@ export function advanceGrenadeMotion(state, dt, boxes = []) {
     let remaining = step;
     // 同一步最多處理六次碰撞。
     for (let collision = 0; collision < 6 && remaining > 1e-6; collision++) {
+      // 這一小步要移動的距離；找出最先撞到的表面。
       const delta = {
         x: state.velocity.x * remaining,
         y: state.velocity.y * remaining,
         z: state.velocity.z * remaining,
       };
       const hit = firstCollision(state.position, delta, boxes);
+      // normalVelocity 是撞向表面的速度（負的表示正在撞進去）。
       const normalVelocity = hit
         ? state.velocity.x * hit.normal.x +
           state.velocity.y * hit.normal.y +
@@ -138,24 +143,29 @@ export function advanceGrenadeMotion(state, dt, boxes = []) {
       for (const axis of ["x", "y", "z"])
         state.position[axis] += delta[axis] * fraction;
       if (!hit) break;
+      // 如果已經卡進表面裡，先把它推出來。
       if (hit.penetration)
         for (const axis of ["x", "y", "z"])
           state.position[axis] += hit.normal[axis] * hit.penetration;
+      // 沒有撞進去（擦過或往外）就繼續移動。
       if (normalVelocity >= 0) {
         remaining *= 1 - hit.time;
         continue;
       }
       state.bounces++;
       const restitution = hit.normal.y > 0 ? 0.42 : 0.48;
+      // 反彈：撞進表面的速度反過來，乘上彈性（restitution）。
       for (const axis of ["x", "y", "z"])
         state.velocity[axis] -=
           (1 + restitution) * normalVelocity * hit.normal[axis];
+      // 撞到地面時，水平速度減少（摩擦力）。
       if (hit.normal.y > 0) {
         state.velocity.x *= 0.72;
         state.velocity.z *= 0.72;
       }
       for (const axis of ["x", "y", "z"])
         state.position[axis] += hit.normal[axis] * 0.0002;
+      // 往上的速度很小時就停在地上，不再彈跳。
       if (hit.normal.y > 0 && state.velocity.y < REST_SPEED) {
         state.grounded = true;
         state.supportBox = hit.box || null;
@@ -169,6 +179,7 @@ export function advanceGrenadeMotion(state, dt, boxes = []) {
     state.life = Math.max(0, state.life - step);
     if (state.life < 1e-9) state.life = 0;
   }
+  // 回傳更新後的狀態。
   return state;
 }
 

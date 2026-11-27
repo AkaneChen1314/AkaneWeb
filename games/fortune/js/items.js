@@ -730,32 +730,38 @@ function askUseItem(id) {
 }
 // 確認是否使用道具的視窗。
 function drawUseItem(c, m) {
+  // def 是道具資料，n 是還剩幾個；用完了就直接關閉視窗。
   const def = ITEM_BY[m.id],
     n = itemCount(m.id);
   if (!def || n <= 0) {
     closeModal();
     return;
   }
+  // 視窗的顏色（依稀有度）、大小與位置（畫面正中央稍微偏上）。
   const col = rarCol(def.r),
     pw = 640,
     ph = 420,
     px = W / 2 - pw / 2,
     py = H / 2 - ph / 2 - 30;
+  // 背景慢慢變暗；點視窗外面就取消。
   dim(c, Math.min(0.62, m.t * 5));
   // 點視窗外面＝取消
   button("uiBg", 0, 0, W, H, "", {
     invisible: true,
+    // 點到視窗外面時關閉。
     fn: () => {
       const p = G.mouse;
       if (p.x < px || p.x > px + pw || p.y < py || p.y > py + ph) closeModal();
     },
   });
   c.save();
+  // 視窗後面的光暈、外框與標題。
   c.globalCompositeOperation = "lighter";
   glow(c, W / 2, py + ph / 2, 420, col, 0.22);
   c.restore();
   panel(c, px, py, pw, ph, { r: 24, border: col, lw: 3 });
   goldText(c, "要使用這個道具嗎？", W / 2, py + 50, 34);
+  // 道具圖示、名稱、稀有度、分類與說明。
   drawItemIcon(c, def, px + 40, py + 100, 128, n);
   txt(c, `${def.e} ${def.n}`, px + 196, py + 118, {
     size: 30,
@@ -783,6 +789,7 @@ function drawUseItem(c, m) {
         weight: 600,
       }),
     );
+  // 提示：需要指定目標的道具，確定後還要再點一座塔。
   txt(
     c,
     def.target ? "確定後，再點地圖上的一座塔" : "確定後會用掉 1 個",
@@ -790,11 +797,13 @@ function drawUseItem(c, m) {
     py + ph - 116,
     { size: 16, color: "rgba(255,255,255,.55)", weight: 600 },
   );
+  // 「取消」與「確定使用」按鈕。
   const by = py + ph - 96;
   button("uiNo", px + 40, by, 260, 72, "✖ 取消", { size: 26, fn: closeModal });
   button("uiYes", px + pw - 300, by, 260, 72, "✔ 確定使用", {
     style: "green",
     size: 26,
+    // 確定使用：關閉視窗並使用道具。
     fn: () => {
       closeModal();
       useItem(m.id);

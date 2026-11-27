@@ -1011,12 +1011,14 @@ function arcFurnace(kit, b, x, z) {
 
 // 高架管廊：柱子有碰撞，管子在頭上。
 function pipeRack(kit, b, x1, x2, z, height = 4.6, walkway = false) {
+  // 管架的材質：鋼架與三種顏色的管線。
   const steel = kit.standard("rack-steel", 0x3d3936, 0.55, 0.6),
     pipes = [
       kit.standard("pipe-copper", 0x9b6a45, 0.45, 0.7),
       kit.standard("pipe-grey", 0x6f7477, 0.42, 0.68),
       kit.standard("pipe-red", 0x8a2f2a, 0.5, 0.5),
     ];
+  // 每隔 6 公尺一組支架。
   for (let x = x1; x <= x2 + 0.01; x += 6) {
     for (const s of [-0.9, 0.9])
       b.box(x, height / 2, z + s, 0.3, height, 0.3, steel);
@@ -1025,6 +1027,7 @@ function pipeRack(kit, b, x1, x2, z, height = 4.6, walkway = false) {
       solid: true,
     });
   }
+  // 三根橫跨的管線。
   [-0.55, 0, 0.55].forEach((s, i) =>
     b.cylinder(
       (x1 + x2) / 2,
@@ -1036,11 +1039,13 @@ function pipeRack(kit, b, x1, x2, z, height = 4.6, walkway = false) {
       { axis: "x", collide: false, solid: true, segments: 10 },
     ),
   );
+  // 沒有走道的版本到這裡結束。
   if (!walkway) return;
   // 管子上方的維修走道，從西端的梯子上去，或從分揀機屋頂助跑跳過去。
   const grate = kit.standard("rack-grate", 0x4a4541, 0.7, 0.55),
     deckTop = height + 0.66,
     mid = (x1 + x2) / 2;
+  // 上方的檢修走道：格柵地板、兩側的黃色護欄。
   b.box(mid, deckTop - 0.04, z, x2 - x1 + 0.6, 0.08, 1.9, grate);
   for (const s of [-0.97, 0.97])
     b.box(
@@ -1053,6 +1058,7 @@ function pipeRack(kit, b, x1, x2, z, height = 4.6, walkway = false) {
       kit.standard("hazard-yellow", 0xd8b52a, 0.55, 0.2),
       { collide: false, shadow: false },
     );
+  // 走道一端的梯子：兩根直桿、一格一格的踏桿，並登記為可以攀爬。
   const lx = x1 - 0.35;
   for (const s of [-0.25, 0.25])
     b.box(lx, deckTop / 2 + 0.3, z + s, 0.05, deckTop + 0.6, 0.05, steel, {
@@ -1079,6 +1085,7 @@ function pipeRack(kit, b, x1, x2, z, height = 4.6, walkway = false) {
 
 // 鑄造廠的所有建築與道具。
 export function createFoundryDistricts(ctx) {
+  // kit 是蓋地圖的工具組；下面先準備鑄造廠用的材質。
   const kit = createDistrictBuilder(ctx);
   const { placeZoneSign } = ctx;
   const trimDark = kit.standard("f-trim", 0x221c19, 0.65, 0.45),
@@ -1160,6 +1167,7 @@ export function createFoundryDistricts(ctx) {
       });
     },
   });
+  // 鑄造廠北側：熔鑄廳。
   placeZoneSign(
     "CASTING HALL",
     "MOLTEN METAL // PPE ONLY",
@@ -1217,6 +1225,7 @@ export function createFoundryDistricts(ctx) {
       palletStack(kit, detail, f.x(5.6, 3.6), f.z(5.6, 3.6), 0.1, 1);
     },
   });
+  // 西側：模具工坊。
   placeZoneSign(
     "PATTERN SHOP",
     "MOULDS & TOOLING",
@@ -1230,6 +1239,7 @@ export function createFoundryDistricts(ctx) {
 
   // 東北冷卻塔與淬火池。
   coolingTower(kit, props, 36, -58, 4.2, 11);
+  // 冷卻塔與淬火池（發光的水面）。
   coolingTower(kit, props, 48.5, -62, 3.4, 9);
   props.box(45, 0.45, -48.4, 8.4, 0.9, 0.4, concrete);
   props.box(45, 0.45, -43.6, 8.4, 0.9, 0.4, concrete);
@@ -1246,11 +1256,13 @@ export function createFoundryDistricts(ctx) {
     { collide: false, shadow: false },
   );
   kit.pool(45, -46, 5, 0x6fe9ff, 0.7);
+  // 管架與標示牌。
   pipeRack(kit, props, 38, 62, -51.5, 5.2);
   placeZoneSign("QUENCH", "COOLING TOWERS", 45, 2.4, -41.6, 0, 0x7ce9ff);
 
   // 東南渣場：鐵水車、渣堆與工字鋼。
   ladleCar(kit, props, 38, 58, 0);
+  // 爐渣堆（外層暗色、頂部發光）。
   for (const [x, z, r] of [
     [50, 63, 3],
     [29, 64.5, 2.4],
@@ -1277,6 +1289,7 @@ export function createFoundryDistricts(ctx) {
       { top: r * 0.9, segments: 14, collide: false, shadow: false },
     );
   }
+  // 鋼樑堆與油桶。
   beamStack(kit, props, 47, 50.5, 0.1, 3);
   drums(
     kit,
@@ -1293,6 +1306,7 @@ export function createFoundryDistricts(ctx) {
 
   // 西側產線：輸送帶、分揀機與高架管廊。
   conveyor(kit, props, -56, -48.6, 1.5);
+  // 西側組裝線：輸送帶與分揀機。
   conveyor(kit, props, -45.4, -38, 1.5);
   props.box(
     -47,
@@ -1327,11 +1341,13 @@ export function createFoundryDistricts(ctx) {
 
   // 東側電弧爐與隔熱板。
   arcFurnace(kit, props, 51, -4);
+  // 東側的生鏽擋板。
   props.box(43.5, 1.1, -9, 4.2, 2.2, 0.35, rust, { rot: 0.35 });
   props.box(43.5, 1.1, 1.5, 4.2, 2.2, 0.35, rust, { rot: -0.35 });
 
   // 北側中央的鋼捲區，上面有小型龍門架。
   coilRow(kit, props, 0, -60.5, 5);
+  // 鋼捲、天車、卡車、鋼樑、氣瓶籠、水泥護欄與油桶等掩體。
   coilRow(kit, props, 0, -55, 4);
   gantryCrane(kit, new kit.Batch("coil-crane"), -9.5, 9.5, -65.5, -50.5, 8.5);
 
@@ -1405,6 +1421,7 @@ export function createFoundryDistricts(ctx) {
     g.fillStyle = "rgba(255,120,40,.55)";
     g.font = "800 " + 1.1 * s + "px Arial";
     g.fillText("HOT METAL", px(-44), pz(-45.4));
+    // 這些位置的地面加上車輪痕跡與油漬。
     [
       [-17, -31, 2.3, 0.4],
       [19, 32, 2.3, 0.4],
@@ -1415,5 +1432,6 @@ export function createFoundryDistricts(ctx) {
     ].forEach(([x, z, r, a]) => stain(x, z, r, a));
   });
 
+  // 完成：合併繪製、補碰撞、畫地面標線。
   kit.finish({ paintResolution: ctx.paintResolution });
 }

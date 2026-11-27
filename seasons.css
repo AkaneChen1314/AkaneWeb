@@ -28,6 +28,7 @@ body {
   filter: blur(25px);
   pointer-events: none;
 }
+/* 首頁大標題裡的強調字。 */
 .hero-type h1 span {
   color: #e6eaff;
   text-shadow: 0 0 45px #82b7ff27;
@@ -43,6 +44,7 @@ body {
   background-clip: text;
   filter: drop-shadow(0 8px 28px #3c7eff30);
 }
+/* 人物圖外框的邊線、底色與陰影。 */
 .hero-character {
   border: 1px solid #a2caff7d;
   background:
@@ -98,12 +100,14 @@ body {
 .gateway:focus-visible::before {
   opacity: 1;
 }
+/* 入口卡片左半邊的文字。 */
 .gateway-copy {
   position: relative;
   z-index: 2;
   width: 52%;
   pointer-events: none;
 }
+/* 入口卡片的小標、標題與說明。 */
 .gateway-kicker {
   font-size: 8px;
   letter-spacing: 1.1px;
@@ -122,6 +126,7 @@ body {
   line-height: 1.9;
   text-shadow: 0 2px 9px #061523;
 }
+/* 入口卡片右邊的人物圖（引導圖）。 */
 .gateway-guide {
   position: absolute;
   right: 0;
@@ -172,6 +177,7 @@ body {
   object-position: center bottom;
   filter: drop-shadow(0 0 28px #899cff24);
 }
+/* 引導圖上方的小圖說。 */
 .guide-caption {
   position: absolute;
   right: 18px;
@@ -225,6 +231,7 @@ body {
   border-top: 1px solid #85bff12e;
   border-bottom: 1px solid #85bff12e;
 }
+/* 三季捷徑列：左邊的小標題。 */
 .strip-title {
   align-self: center;
   font-size: 9px;
@@ -237,6 +244,7 @@ body {
   color: #7398b2;
   letter-spacing: 1px;
 }
+/* 三季捷徑的每一個連結。 */
 .home-season-strip a {
   display: flex;
   align-items: center;
@@ -320,6 +328,7 @@ body {
   white-space: nowrap;
   color: #a2dcdf;
 }
+/* 季數標題列：左邊季名、右邊說明。 */
 .season-heading {
   display: flex;
   justify-content: space-between;
@@ -335,6 +344,7 @@ body {
   font-size: 26px;
   margin: 9px 0 12px;
 }
+/* 季數的說明文字。 */
 #season-description {
   font-size: 12px;
   color: #a0b7cf;
@@ -381,6 +391,7 @@ select:focus-visible {
   margin-top: 0;
   color: #93b3cf;
 }
+/* 圖庫裡的分組標題（例如「動畫劇照」）。 */
 .gallery-group-title {
   display: flex;
   gap: 16px;
@@ -395,6 +406,7 @@ select:focus-visible {
   letter-spacing: 2px;
   color: #6b96b7;
 }
+/* 劇照分組與下方的說明。 */
 #visual-section {
   margin-top: 35px;
 }
@@ -408,6 +420,7 @@ select:focus-visible {
   height: auto;
   aspect-ratio: 16 / 9;
 }
+/* 圖庫卡片的文字區、分類小字與標題。 */
 .gallery-card-content {
   padding: 20px;
 }

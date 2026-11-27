@@ -2,6 +2,7 @@
 [hidden] {
   display: none !important;
 }
+/* 星艦卡片上的能力數值與說明小字。 */
 .ship-stats {
   display: flex;
   flex-wrap: wrap;
@@ -54,6 +55,7 @@
   outline-offset: 2px;
   border-radius: 6px;
 }
+/* 起始武器設定展開後的內容。 */
 .loadout-body {
   padding: 3px 15px 16px;
 }
@@ -97,6 +99,7 @@
 .loadout-advantage {
   color: #b4e6d5;
 }
+/* 起始武器的代價說明（橘色）與補充小字。 */
 .loadout-cost {
   color: #f6c493;
 }
@@ -119,6 +122,7 @@
     #0c1527
   );
 }
+/* 難度說明區：標題列、說明與各項倍率。 */
 .difficulty-heading {
   display: flex;
   align-items: center;
@@ -199,6 +203,7 @@
 .handbook-section .guide-steps p {
   line-height: 1.8;
 }
+/* 操作手冊底部的「開始出航」按鈕固定在最下面。 */
 .handbook-launch {
   position: sticky;
   bottom: -30px;
@@ -215,6 +220,7 @@
 .handbook-launch button {
   min-height: 45px;
 }
+/* 操作手冊裡的表格：太寬時可以左右捲動。 */
 .handbook-table {
   overflow: auto;
   margin: 15px 17px;

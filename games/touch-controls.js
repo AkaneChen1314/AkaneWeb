@@ -54,6 +54,9 @@
     keep.addEventListener("click", () => box.remove());
   }
 
+  // 建立整套觸控介面：左半邊的搖桿、右半邊的視角滑動區，以及各遊戲指定的按鈕。
+  // 電腦（不是觸控裝置）上會直接回傳 null，什麼都不建立。回傳的 layer 是整個觸
+  // 控層，releaseAll() 會放開所有按著的手指。
   function create(opt) {
     if (!enabled) return null;
     const layer = el("div", "akane-touch-layer", document.body);

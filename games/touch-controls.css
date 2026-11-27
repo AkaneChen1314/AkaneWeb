@@ -1,14 +1,14 @@
+/* ---------- 觸控裝置的頁面設定 ---------- */
+
 /* ============================================================
  *  games/touch-controls.css ── 手機觸控共用元件的外觀
  *  （搭配 touch-controls.js；只有手機／平板才會出現這些元素）
  * ============================================================ */
-
-/* ---------- 觸控裝置的頁面設定 ---------- */
-
 .akane-touch body {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
 }
+/* 對戰中：關掉手指拖動頁面、雙擊放大與選取文字，避免玩到一半畫面跑掉。 */
 .akane-touch-playing body {
   touch-action: none;
   overscroll-behavior: none;
@@ -16,6 +16,8 @@
   user-select: none;
 }
 
+/* 整個觸控層：--tc-scale 是縮放倍率，--tc-accent 是按鈕顏色，--tc-safe-* 是
+   避開手機瀏海與圓角的安全距離。 */
 .akane-touch-layer {
   --tc-scale: 1;
   --tc-accent: #7fe3ff;
@@ -73,6 +75,7 @@
     0 0 0 1px rgba(0, 0, 0, 0.25),
     0 0 22px color-mix(in srgb, var(--tc-accent) 55%, transparent);
 }
+/* 搖桿中間的圓形握把。 */
 .akane-stick-knob {
   position: absolute;
   left: 50%;

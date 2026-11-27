@@ -1292,9 +1292,11 @@ Object.assign(MapKit.prototype, {
       },
       0.4,
     );
+    // 位置不適合（壓到補給、出生點等）就整個不放。
     if (!ok) return;
     // 投影：一顆線框星球與一圈軌道，獨立成一個會轉動的物件
     const hb = new Builder();
+    // 桌子上方的全像投影：三個交錯的光環，加上一個傾斜的外環。
     for (let i = 0; i < 3; i++) {
       hb.torus(0.42, 0.012, {
         r: [0, (i * Math.PI) / 3, 0],
@@ -1318,6 +1320,7 @@ Object.assign(MapKit.prototype, {
       e: 1.2,
       seg: 24,
     });
+    // 做成一個物件放到桌子上方，慢慢旋轉並上下浮動。
     const g = hb.build({ cast: false });
     g.position.set(x, 1.75, z);
     this.dynamic(g, (dt, t) => {
@@ -1561,8 +1564,10 @@ Object.assign(MapKit.prototype, {
       },
       0.3,
     );
+    // 位置不適合就不放；下面是浮標上半部（會搖晃的部分）。
     if (!ok) return;
     const fb = new Builder();
+    // 浮標的錨鏈、頂端的黃色浮球、外圈與閃爍的燈。
     for (let y = 0.2; y < h - 0.5; y += 0.34) {
       // 鐵鍊：一節橫、一節直
       fb.torus(0.07, 0.016, {
@@ -1594,6 +1599,7 @@ Object.assign(MapKit.prototype, {
       m: "metal",
       seg: 6,
     });
+    // 做成一個物件，每個浮標各自有不同的搖晃節奏（ph）。
     const g = fb.build({ cast: false });
     g.position.set(x, 0.8, z);
     const ph = this.rnd() * 6;

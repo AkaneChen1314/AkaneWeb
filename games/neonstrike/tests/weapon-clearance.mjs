@@ -343,6 +343,8 @@ test("the complete rigid rifle retracts on first close-cover update and returns 
 
 // 在掩體前開鏡不會反覆切換，瞄具也不會跑到鏡頭後面。
 test("front-cover ADS hysteresis prevents toggling and keeps the retained optic in front of the camera", () => {
+  // 槍前面有牆時：靠近到一定距離自動取消開鏡，退開到更遠才恢復（中間有一段緩衝，
+  // 不會一直切換）。
   const h = weaponHarness();
   h.run(`
     const movingWall = new THREE.Mesh(
@@ -361,6 +363,7 @@ test("front-cover ADS hysteresis prevents toggling and keeps the retained optic 
     setCenterClearance(1.45);
     for (let i = 0; i < 90; i++) updateWeaponPose(1 / 60, i * 16);
   `);
+  // 一開始可以開鏡；靠近牆之後取消開鏡。
   assert.equal(h.run("adsWallSuppressed"), false);
   assert.ok(h.run("adsAmount") > 0.995);
   h.run(
@@ -371,6 +374,7 @@ test("front-cover ADS hysteresis prevents toggling and keeps the retained optic 
   );
   assert.equal(h.run("adsWallSuppressed"), true);
   assert.ok(h.run("adsAmount") < 0.005);
+  // 在緩衝區間內前後移動，開鏡狀態維持不變。
   for (const clearance of [1.18, 1.22, 1.28, 1.2, 1.25]) {
     h.run(`
       setCenterClearance(${clearance});
@@ -382,6 +386,7 @@ test("front-cover ADS hysteresis prevents toggling and keeps the retained optic 
       "the exit state holds throughout the hysteresis band",
     );
   }
+  // 退到夠遠的地方，開鏡恢復。
   h.run(
     `
       setCenterClearance(1.45);
@@ -415,6 +420,7 @@ test("front-cover ADS hysteresis prevents toggling and keeps the retained optic 
 
 // 貼牆收槍時，畫面上仍看得到槍身。
 test("point-blank high-ready keeps visible rigid gun detail in the viewport", () => {
+  // 貼著牆時：槍舉高（high ready），但畫面上仍看得到槍的零件，不會整把消失。
   const h = weaponHarness();
   h.run(`
     addBox(0, 2, -0.53, 4, 4, 0.1, 0x666666);
@@ -442,6 +448,7 @@ test("point-blank high-ready keeps visible rigid gun detail in the viewport", ()
     h.run("visibleWeaponPoints") > 0,
     "close cover should stow the gun visibly rather than hiding it behind the camera",
   );
+  // 檢查槍管與牆保持距離。
   h.run(
     `
       const barrel = weapon.getObjectByName("barrel"),
@@ -465,6 +472,7 @@ test("point-blank high-ready keeps visible rigid gun detail in the viewport", ()
     true,
     "upright stow cannot rotate an arm through the eye",
   );
+  // 離開牆之後恢復正常握法。
   h.run(
     `
       collisionBoxes.length = 0;

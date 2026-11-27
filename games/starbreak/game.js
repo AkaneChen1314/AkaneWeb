@@ -1240,13 +1240,16 @@
     // 合法的數字；位置必須在場地範圍內。
     const finite = (v) =>
       typeof v === "number" && Number.isFinite(v) && Math.abs(v) < 1e15;
+    // validPoint 檢查一個位置是不是有正常的 x、y 數字。
     const validPoint = (o) => o && finite(o.x) && finite(o.y);
+    // 星艦、模式、星域都必須是遊戲裡真的有的；任何一項不對，整份遠征存檔就不讀。
     if (
       !SHIPS.some((x) => x.id === r.ship) ||
       !["campaign", "endless", "daily"].includes(r.mode) ||
       !REGIONS.some((x) => x.id === r.region)
     )
       return false;
+    // 波數、時間、晶礦、擊破數都必須是正常、不為負的數字。
     if (
       !Number.isInteger(r.wave) ||
       r.wave < 1 ||
@@ -1258,6 +1261,7 @@
       !finite(r.rng)
     )
       return false;
+    // 玩家的位置、生命、經驗、等級都要合理（生命不能超過上限）。
     if (
       !validPoint(r.p) ||
       !finite(r.p.hp) ||
@@ -1296,6 +1300,7 @@
       "difficulty",
     ])
       if (!finite(r[k])) return false;
+    // 每一項能力（傷害、速度等）都要在允許的範圍內。
     if (
       !r.stats ||
       Object.keys(STATS).some(
@@ -1304,6 +1309,7 @@
       )
     )
       return false;
+    // 武器 1～6 把、不能重複，而且等級合理。
     if (
       !Array.isArray(r.weapons) ||
       r.weapons.length < 1 ||
@@ -1332,6 +1338,7 @@
       hazards: 100,
       burns: 150,
     };
+    // 敵人、子彈、寶石等清單不能超過上限，裡面每一個都要有正常的位置。
     for (const [k, cap] of Object.entries(caps)) {
       if (
         !Array.isArray(r[k]) ||
@@ -1381,6 +1388,7 @@
       )
     )
       return false;
+    // 戰鬥紀錄要是文字，遺物要是遊戲裡有的。
     if (
       !Array.isArray(r.log) ||
       r.log.some((s) => typeof s !== "string") ||
@@ -1402,6 +1410,7 @@
         ))
     )
       return false;
+    // 依目前階段（選遺物、選航線、事件）檢查對應的選項資料。
     if (
       r.phase === "relic" &&
       (!Array.isArray(r.relicOffers) ||
@@ -1467,6 +1476,7 @@
       for (const key of ["bossSecondPhase", "bossThirdPhase"])
         if (c[key] !== undefined && typeof c[key] !== "boolean") return false;
     }
+    // 這波已擊破數與目標數要是合理的整數。
     for (const key of ["waveKills", "killTarget"])
       if (
         r[key] !== undefined &&
@@ -1474,6 +1484,7 @@
       )
         return false;
     if (r.killTarget !== undefined && r.killTarget < 1) return false;
+    // 每個敵人的菁英類型、護盾、自適應數值、彈幕等都要合理。
     if (
       r.enemies.some(
         (e) =>
@@ -1581,6 +1592,7 @@
       )
         return false;
     }
+    // 模組、波次類型、補給箱與研究等級也要合理；全部通過才回傳 true（可以讀）。
     if (r.module && !["none", ...MODULES.map((x) => x.id)].includes(r.module))
       return false;
     if (r.waveType && !WAVE_TYPES.some((x) => x.id === r.waveType))
@@ -2058,6 +2070,8 @@
     }
     // 每隻 Boss 輪流施放五種主招，高難度再疊加獨立攻擊通道。
     bossAttack(e, angle, phase) {
+      // r 是這局的資料、p 是玩家、pattern 是這次輪到第幾招（每隻 Boss 有 5 招輪
+      // 流出），density 是彈幕密度設定。
       const r = this.r,
         p = r.p,
         d = difficultyRule(r),
@@ -2069,6 +2083,7 @@
           (e.adaptive?.density || 1),
         count = (n) => Math.max(1, Math.round(n * density)),
         layers = bossLayers(r, phase, e);
+      // 記下出到第幾招，並在畫面上顯示招式名稱（有連攻時加上「幾重連攻」）。
       e.attackCycle = (e.attackCycle || 0) + 1;
       e.activeLayers = layers;
       // 各頭目五種主招的名稱。
@@ -2124,6 +2139,8 @@
         });
       // 第一位：裂隙系招式。
       if (index === 0) {
+        // 下面依 Boss 編號（0～3）與招式（0～4）決定要發射什麼：衝撞、環狀彈幕、
+        // 地面危險區、螺旋彈、雷射等。
         if (pattern === 0) {
           e.angle = angle;
           e.bossCharge = Math.max(0.35, 1.05 * bossWarningScale(r, e));
@@ -2164,6 +2181,7 @@
             150,
             phase > 1 ? 0.2 : 0,
           );
+        // 第 4 招：兩道雷射加一圈彈幕。
         if (pattern === 4) {
           beam(angle - 0.38);
           beam(angle + 0.38, 1.4);
@@ -2172,6 +2190,8 @@
       }
       // 第二位：熔核系招式。
       if (index === 1) {
+        // 第二隻 Boss 的五招：扇形射擊、地面陷阱、召喚小兵、扇形彈＋雷射、環形
+        // 彈。
         if (pattern === 0) {
           const n = count(10);
           for (let i = 0; i < n; i++)
@@ -2209,6 +2229,7 @@
       }
       // 第三位：召喚與彈幕。
       if (index === 2) {
+        // 第三隻 Boss 的五招：以召喚與扇形、螺旋彈幕為主。
         if (pattern === 0)
           this.bossSummon(e, Math.min(10, count(3 + phase)), [
             "runner",
@@ -2248,6 +2269,8 @@
       }
       // 第四位：環形與螺旋。
       if (index === 3) {
+        // 第四隻 Boss 的五招：環形彈、連續地面陷阱、十字雷射、雙螺旋、雷射加陷
+        // 阱。
         if (pattern === 0) {
           ring(18 + phase * 3, 130, e.age * 0.13, 0.14);
           this.queueBarrage(
@@ -2320,6 +2343,7 @@
           150 + phase * 10,
           d.id >= 2 ? 0.15 : 0,
         );
+      // 連攻層數越多（3 層、4 層），額外再加地面陷阱與雷射。
       if (layers >= 3) {
         this.addHazard(p.x, p.y, 62, 1.15, 23 + r.wave, { bossOwner: e.id });
         circles(2 + phase, 46, 160);
@@ -2328,6 +2352,7 @@
         beam(angle + 0.5, 1.35, 19);
         this.queueBarrage(e, "fan", count(7), 3, 0.48, 0, -0.15, 220);
       }
+      // 「流星」自適應模式：在玩家行進方向前面放一個陷阱。
       if (e.adaptive?.modeId === "comet" && e.attackCycle % 2 === 0)
         this.addHazard(
           clamp(p.x - p.dx * 80, 30, 2370),
@@ -2344,6 +2369,7 @@
         style: index,
         life: 0.55,
       });
+      // 出招時的衝擊特效與光圈。
       this.combatImpact(
         e.x,
         e.y,
@@ -2370,9 +2396,11 @@
       // 找不到指定的星艦就用第一艘。
       const s = SHIPS.find((s) => s.id === shipId) || SHIPS[0],
         m = this.profile.research;
+      // 依設定決定起始武器與起始生命（模組可以加血）。
       const cfg = normalizeConfig(config),
         weapon = startingWeapon(s, cfg),
         hp = startingHp(s, weapon) + (m.hull || 0) * 8;
+      // 難度限制在 -1～4 之間。
       difficulty = clamp(Math.round(Number(difficulty) || 0), -1, 4);
       // 這一局的所有狀態，也是存檔內容。
       this.r = {
@@ -2464,6 +2492,7 @@
         eventDone: false,
         damageTotal: 0,
       };
+      // 套用出航模組、準備第一波，並清空所有畫面特效。
       this.applyStartingModule();
       this.prepareWave();
       this.fx = [];
@@ -2473,6 +2502,7 @@
       this.hitStop = 0;
       this.lastImpact = -10;
       this.nextId = 1;
+      // 記錄出航次數與用過的星艦，然後進入遊戲階段。
       this.profile.runs++;
       if (!this.profile.ships.includes(shipId)) this.profile.ships.push(shipId);
       // 開場就有一小隊偵察機，第一波不必等敵人慢慢出現。
@@ -2577,6 +2607,7 @@
     }
     // Boss 與小怪共用入口；Boss 在生成時固定自適應配置。
     spawnEnemy(type = null, radius = null) {
+      // cap 是場上同時最多幾隻敵人（依「敵人數量」設定）。
       const r = this.r,
         cap = ENEMY_AMOUNTS[r.config.enemyAmount].cap;
       // 敵人太多時就不再生成；頭目例外，會先清掉一隻。
@@ -2586,10 +2617,13 @@
           if (i >= 0) r.enemies.splice(i, 1);
         } else return null;
       }
+      // 這一波的難度規則與波次類型（例如「重裝波」血比較多）。
       const wave = r.wave,
         d = difficultyRule(r),
         variant = waveType(r);
+      // 沒有指定種類就從這一波可出現的敵人中隨機挑。
       if (!type) type = pick(r, enemyPool(r));
+      // 在玩家周圍、畫面外一點的地方隨機找一個位置出生；太靠近玩家就改到另一邊。
       const angle = seeded(r) * Math.PI * 2,
         // 在可見範圍外 90 單位生成；上限 820，手機橫向拉遠鏡頭後也不會在畫面內冒出。
         rad = radius || Math.min(820, this.viewRadius + 90);
@@ -2599,6 +2633,7 @@
         x = clamp(r.p.x - Math.cos(angle) * rad, 30, 2370);
         y = clamp(r.p.y - Math.sin(angle) * rad, 30, 2370);
       }
+      // 基本生命與速度：波數越後面越強，再乘上難度與波次類型的倍率。
       const hp = (16 + wave * 4.2) * d.hp * variant.hp,
         speed = (56 + wave * 2) * d.speed * (this.region().speed || 1);
       // 共用的基本數值。
@@ -2630,6 +2665,8 @@
         e.radius = 10;
         e.contact *= 0.8;
       }
+      // 依敵人種類調整：重裝血厚但慢、狙擊脆、衝鋒快、分裂、迷你、護盾、治療、
+      // 自爆、砲手。
       if (type === "tank") {
         e.hp *= 3;
         e.speed *= 0.66;
@@ -2683,6 +2720,7 @@
           : ((r.config.eliteRate === "many" ? 0.24 : 0.075) +
               (variant.id === "hunt" ? 0.12 : 0)) *
             d.elite;
+      // 第 3 波以後的一般敵人有機會變成菁英（裝甲、迅捷、爆裂、再生）。
       if (
         type !== "boss" &&
         type !== "mini" &&
@@ -2704,6 +2742,7 @@
       if (type === "boss") {
         const c = r.config,
           choice = BOSS_DATA.findIndex((x) => x.id === c.bossRoster);
+        // Boss：決定是哪一隻、生命與攻擊力依玩家當下的戰力自動調整。
         e.bossIndex =
           choice >= 0
             ? choice
@@ -2748,6 +2787,7 @@
         this.log(`${BOSSES[e.bossIndex]}接近。避開紅色預警！`);
         this.onSound("boss");
       }
+      // 記下最大生命，放進場上的敵人清單。
       e.maxHp = e.hp;
       r.enemies.push(e);
       return e;
@@ -2834,14 +2874,18 @@
     }
     // 傷害順序：武器增幅 → 暴擊 → 護盾阻擋 → 本體裝甲。
     hitEnemy(e, amount, weapon = "", effects = {}) {
+      // 已經死掉的敵人不再受傷。
       if (e.dead) return;
       const r = this.r;
+      // 傷害＝武器傷害 × 加成；暴擊機率由基礎、能力與星艦決定。
       let dmg = amount * this.damageMult(weapon),
         critChance =
           0.04 +
           this.stat("crit") * 0.08 +
           (r.ship === "storm" ? 0.12 : 0) +
           (this.has("crit") ? 0.15 : 0);
+      // 裝甲菁英與護盾兵比較耐打；暴擊時傷害 2 倍（有暴擊遺物時 2.6 倍）；被冰
+      // 凍的敵人受到冰霜加成。
       if (e.elite === "armored") dmg *= 0.8;
       if (e.type === "shield") dmg *= 0.7;
       const crit = seeded(r) < critChance;
@@ -2873,12 +2917,15 @@
           });
         return;
       }
+      // Boss 依難度有額外的減傷。
       if (e.type === "boss")
         dmg *= 1 - (e.adaptive?.armor ?? difficultyRule(r).bossArmor);
+      // 扣血並累計總傷害。
       e.hp -= dmg;
       r.damageTotal += dmg;
       // 受擊、減速與暈眩；頭目的控制效果較短。
       e.hit = 0.11;
+      // 武器附帶的減速、暈眩效果（對 Boss 效果比較弱）。
       if (effects.slow)
         e.slow = Math.max(
           e.slow,
@@ -2889,6 +2936,7 @@
           e.stun,
           e.type === "boss" ? Math.min(0.2, effects.stun) : effects.stun,
         );
+      // 在敵人頭上跳出傷害數字（同時最多 28 個，避免太亂）；血量歸零就擊破。
       if (this.fx.filter((x) => x.type === "text").length < 28)
         this.addFx("text", e.x, e.y - 15, {
           text: Math.round(dmg),
@@ -2900,6 +2948,7 @@
     }
     // 擊破敵人：計分、掉落、任務與特殊效果。
     killEnemy(e) {
+      // 標記為已擊破，計入擊破數與連鎖數（4 秒內連續擊破才算連鎖）。
       if (e.dead) return;
       e.dead = true;
       const r = this.r;
@@ -2908,10 +2957,12 @@
       r.combo = r.comboTimer > 0 ? r.combo + 1 : 1;
       r.comboTimer = 4;
       r.maxCombo = Math.max(r.maxCombo, r.combo);
+      // 每連鎖 20 次額外給晶礦。
       if (r.combo % 20 === 0) {
         r.gold += 8;
         this.log(`連鎖擊破 ${r.combo}！額外晶礦 +8。`);
       }
+      // 任務是「擊破幾隻」或「擊破菁英」時，進度 +1。
       if (
         r.objective &&
         (r.objective.kind === "kills" ||
@@ -2929,6 +2980,7 @@
               : e.type === "tank"
                 ? 3
                 : 1;
+      // 晶礦獎勵：依遺物、星域、研究與航線加成。
       r.gold +=
         reward *
         (this.has("harvest") ? 1.3 : 1) *
@@ -2946,6 +2998,7 @@
           value: e.type === "boss" ? 35 : e.type === "tank" ? 4 : 2,
           kind: "xp",
         });
+      // 爆裂菁英死掉時會留下爆炸範圍。
       if (e.elite === "volatile")
         this.addHazard(e.x, e.y, 58, 1, 12 + r.wave, { life: 0.3 });
       // 頭目：清除敵彈並掉落大量獎勵。
@@ -2981,10 +3034,12 @@
           }
         }
       }
+      // 吸血遺物：每擊破 12 隻回復 4 點生命；另有小機率掉落回復寶石。
       if (this.has("vamp") && r.kills % 12 === 0)
         r.p.hp = Math.min(r.p.maxHp, r.p.hp + 4);
       if (seeded(r) < 0.025 && r.gems.length < 250)
         r.gems.push({ x: e.x + 10, y: e.y, kind: "heal", value: 10 });
+      // 擊破的火花特效與音效。
       this.addFx("spark", e.x, e.y, {
         color: e.type === "boss" ? "#ffb479" : e.elite ? "#ffd48c" : "#bb9fff",
         radius: e.radius,
@@ -3079,6 +3134,8 @@
     }
     // 發射一把武器。
     fireWeapon(w) {
+      // w 是這把武器目前的狀態，base 是武器的固定資料；target 是最近的敵人，
+      // damage 是這把武器目前的傷害。
       const r = this.r,
         p = r.p,
         base = WEAPONS[w.id],
@@ -3086,9 +3143,11 @@
         extra = this.stat("projectile"),
         target = this.closest(p.x, p.y),
         damage = base.damage * (1 + (lv - 1) * 0.24) * (w.evolved ? 1.5 : 1);
+      // 沒有目標就不射擊（新星與環繞武器不需要目標）。
       if (!target && w.id !== "nova" && w.id !== "orbit") return;
       // 脈衝、霜彈與飛彈：朝最近的敵人發射。
       if (w.id === "pulse" || w.id === "frost" || w.id === "missile") {
+        // 依武器種類與等級決定一次射出幾發、角度怎麼散開。
         const count =
           (w.id === "pulse"
             ? w.evolved
@@ -3102,6 +3161,7 @@
                 ? 4
                 : 1 + Math.floor(lv / 3)) + extra;
         const angle = Math.atan2(target.y - p.y, target.x - p.x);
+        // 一發一發建立子彈：位置從玩家開始，速度朝向目標（場上子彈最多 350 發）。
         for (let i = 0; i < count; i++) {
           const a =
             w.id === "frost" && w.evolved
@@ -3135,6 +3195,7 @@
         }
         this.onSound("shot");
       } else if (w.id === "lightning") {
+        // 連鎖閃電：從玩家開始，一隻接一隻跳到附近的敵人。
         let current = target,
           ids = [],
           x = p.x,
@@ -3155,6 +3216,7 @@
         }
         this.onSound("electric");
       } else if (w.id === "nova") {
+        // 新星：以玩家為中心爆炸。
         this.explode(
           p.x,
           p.y,
@@ -3220,16 +3282,20 @@
     }
     // 一隻敵人每一步的行動。
     updateEnemy(e, dt) {
+      // r 是這局資料、p 是玩家；warningScale 是預警時間的倍率（難度越低預警越久）。
       const r = this.r,
         p = r.p,
         warningScale = difficultyRule(r).warning;
+      // 各種計時器隨時間減少：受擊閃爍、減速、暈眩、攻擊冷卻。
       e.age += dt;
       e.hit = Math.max(0, e.hit - dt);
       e.slow = Math.max(0, e.slow - dt);
       e.stun = Math.max(0, e.stun - dt);
       e.cd -= dt;
+      // d 是與玩家的距離、angle 是朝向玩家的方向。
       const d = dist(e, p),
         angle = Math.atan2(p.y - e.y, p.x - e.x);
+      // 移動速度：被減速時變慢、被暈眩時停止；再生菁英會慢慢回血。
       let speed = e.speed * (e.slow > 0 ? (e.type === "boss" ? 0.8 : 0.48) : 1);
       if (e.stun > 0) speed = 0;
       if (e.elite === "regenerating")
@@ -3259,6 +3325,7 @@
       }
       // 衝鋒機：蓄力後突進。
       if (e.type === "charger") {
+        // 衝鋒兵：先停下來瞄準（地上出現預警線），再朝那個方向衝刺。
         if (e.cd <= 0 && e.charge === 0) {
           e.charge = 0.55 * warningScale;
           e.angle = angle;
@@ -3285,12 +3352,14 @@
           speed = 0;
         }
       }
+      // 護盾兵靠近玩家時會放慢。
       if (e.type === "shield" && d < 150) speed *= 0.5;
       // 治療機：躲遠並幫同伴補血。
       if (e.type === "healer") {
         if (d < 250) speed = -speed;
         else if (d < 380) speed = 0;
         if (e.cd <= 0) {
+          // 治療機找身邊 190 距離內、受傷的隊友（不含 Boss），最多同時補 3 個。
           const allies = r.enemies
             .filter(
               (a) =>
@@ -3357,6 +3426,7 @@
       if (e.type === "boss") {
         if (d < 170) speed *= 0.25;
         const phase = bossPhase(r, e);
+        // Boss 血量掉到某個階段時進入下一階段，護盾也會重新計算。
         if (phase > e.phaseLevel) {
           e.phaseLevel = phase;
           e.shieldRecharges = 0;
@@ -3376,6 +3446,7 @@
             e.bossIndex,
           );
         }
+        // Boss 正在蓄力時不移動。
         if (e.bossCharge > 0) {
           e.bossCharge -= dt;
           speed = 0;
@@ -3388,6 +3459,7 @@
         }
         this.updateBarrages(e, dt);
         e.guardTimer -= dt;
+        // Boss 每隔一段時間召喚護衛。
         if (e.guardTimer <= 0) {
           const rule = difficultyRule(r);
           this.bossSummon(
@@ -3408,6 +3480,7 @@
             (phase > 1 ? 1.2 : 1) /
             (e.adaptive?.pressure || 1);
         }
+        // 護盾被打破後可以重新充能（最多 2 次，依設定）。
         if (
           e.maxShield &&
           e.shieldHp <= 0 &&
@@ -3420,11 +3493,13 @@
             this.restoreBossShield(e, 0.35);
           }
         }
+        // Boss 的攻擊冷卻好了就出招。
         if (e.cd <= 0) {
           this.bossAttack(e, angle, phase);
           e.cd = bossCooldown(r, phase, e);
         }
       }
+      // 依速度與方向移動，並限制在 2400×2400 的戰場裡。
       e.x = clamp(e.x + Math.cos(angle) * speed * dt, 0, 2400);
       e.y = clamp(e.y + Math.sin(angle) * speed * dt, 0, 2400);
       // 碰到玩家造成接觸傷害。
@@ -4072,6 +4147,8 @@
     finish(win, retreat = false) {
       const r = this.r;
       if (!r || r.rewarded) return;
+      // 結算獎勵：本局拿到的晶礦 × 難度與設定的倍率；打贏再加一筆完成獎勵（波數
+      // 越多越多，最多 2 倍）。
       r.result = {
         win,
         retreat,
@@ -4335,8 +4412,10 @@
   }
   // 低音衝擊與高頻破盾使用不同包絡；節流避免密集攻擊堆疊音量。
   function sound(type) {
+    // 音效關閉、遊戲館要求暫停、或分頁在背景時不播放。
     if (!profile.settings.sound || window.akanePortalPaused || document.hidden)
       return;
+    // 同一種音效太密集時跳過（射擊 0.1 秒內只播一次），避免聲音疊成一團。
     try {
       const now = performance.now();
       sound.lastByType = sound.lastByType || {};
@@ -4367,6 +4446,7 @@
         kill: [720, 190],
         eliteKill: [560, 120],
       };
+      // 依音效種類決定兩個頻率（高低音）與長度；重擊類的比較長、比較低沉。
       const f = freqs[type] || [440, 660],
         heavy = ["slam", "phase", "shieldBreak"].includes(type),
         duration = heavy ? 0.36 : quick ? 0.11 : 0.22;
@@ -4385,6 +4465,7 @@
         o.start(t);
         o.stop(t + duration + 0.02);
       };
+      // 用瀏覽器內建的合成器發出聲音，不需要音效檔。
       voice(
         f[0],
         f[1],
@@ -4423,18 +4504,23 @@
   }
   // 4. 瀏覽器介面：出航設定、HUD、商城、說明與控制輸入。
   function showHome() {
+    // 回到首頁：清掉按住的按鍵與手機操作，停止監看戰場大小。
     resetControls();
     document.body?.classList.remove("wide-touch-game", "sb-battle");
     arenaObserver?.disconnect();
     screen = "home";
     canvas = null;
     ctx = null;
+    // 正在戰鬥中就先暫停並存檔。
     if (engine.r?.phase === "play") engine.pause();
     save();
+    // p 是永久資料，active 表示有沒有可以接續的遠征，records 是最近三筆紀錄，c
+    // 是目前的出航設定。
     const p = profile,
       active = hasActiveRun(),
       records = p.records.slice(0, 3),
       c = selectedConfig;
+    // 首頁的整段 HTML：標題、星艦選擇、航行方案、難度、進階設定與按鈕。
     app.innerHTML = /* HTML */ `<section class="hero">
         <div
           class="hero-art"
@@ -4849,6 +4935,8 @@
         進度保存在此瀏覽器；舊版研究與存檔可繼續使用。換裝置或換本機資料夾前，請匯出備份。
       </p>`;
     // 設定欄位對應的設定名稱。
+    // 出航設定欄位的 id 對應到設定資料的名稱（例如畫面上的 wave-count 是
+    // totalWaves「總波數」）。
     const inputs = {
         "starting-weapon": "startingWeapon",
         "wave-count": "totalWaves",
@@ -4872,6 +4960,7 @@
         mutator: "mutator",
       },
       checks = ["final-boss", "boss-second", "boss-third"];
+    // 把目前的設定值填進每個輸入欄位；之後每次修改都存回設定。
     for (const [id, key] of Object.entries(inputs)) {
       const el = document.getElementById(id);
       if (checks.includes(id)) el.checked = !!c[key];
@@ -4888,6 +4977,7 @@
         syncPlan();
       };
     }
+    // 進階設定的幾個摺疊區：打開一個時，其他的自動收起。
     const sections = document.querySelectorAll('[name="flight-advanced"]');
     sections.forEach((d) =>
       d.addEventListener("toggle", () => {
@@ -4910,6 +5000,7 @@
           syncPlan();
         }),
     );
+    // 預設方案按鈕（快速、經典、長征、試煉）：一次套用一組設定。
     document.querySelectorAll("[data-preset]").forEach(
       (b) =>
         (b.onclick = () => {
@@ -4958,6 +5049,7 @@
           showHome();
         }),
     );
+    // 模式與難度下拉選單。
     const mode = document.getElementById("mode"),
       diff = document.getElementById("difficulty");
     mode.value = selectedMode;
@@ -4972,6 +5064,7 @@
       selectedDifficulty = Number(diff.value);
       syncPlan();
     };
+    // 首頁各按鈕：出航、接續、研究、成就、設定、商城、Boss 圖鑑。
     document.getElementById("launch").onclick = requestStart;
     document.getElementById("continue")?.addEventListener("click", continueRun);
     document.getElementById("research").onclick = showResearch;
@@ -4984,14 +5077,17 @@
       .forEach(
         (b) => (b.onclick = () => showBossCodex(Number(b.dataset.bossPreview))),
       );
+    // 依目前設定更新首頁上的說明文字與音效按鈕。
     syncPlan();
     syncSound();
   }
   // 依目前設定更新摘要、說明與可用的欄位。
   function syncPlan() {
+    // c 是目前的設定；set(id, 文字) 是把文字放進某個元素的小工具。
     const c = selectedConfig,
       mode = selectedMode,
       set = (id, text) => (document.getElementById(id).textContent = text);
+    // 依模式與 Boss 規則，停用用不到的欄位（例如無盡模式沒有總波數）。
     document.getElementById("wave-count").disabled = mode === "endless";
     document.getElementById("boss-every").disabled = c.bossRule !== "interval";
     document.getElementById("boss-every-field").hidden =
@@ -5000,6 +5096,7 @@
       mode === "endless" || c.bossRule !== "interval";
     document.getElementById("final-boss-field").hidden =
       mode === "endless" || c.bossRule !== "interval";
+    // Boss 關閉時，所有 Boss 相關設定都停用。
     for (const id of [
       "boss-strength",
       "boss-roster",
@@ -5015,6 +5112,7 @@
       c.bossRule === "none" || !c.bossSecondPhase;
     document.getElementById("shield-recovery").disabled =
       c.bossRule === "none" || c.bossShield === "none";
+    // 組合各種摘要文字，顯示在首頁與各設定區的標題上。
     const bossText = bossRuleText(c, mode);
     const names = DIFFICULTIES.map((d) => d.name);
     set(
@@ -5064,6 +5162,7 @@
         glass: "紅線航線",
       }[c.mutator],
     );
+    // 模式說明（每日、無盡、戰役各有不同）。
     set(
       "mode-note",
       mode === "daily"
@@ -5100,6 +5199,7 @@
       b.classList.toggle("active", active);
       b.setAttribute("aria-pressed", String(active));
     });
+    // 出航預覽：依選的星艦與設定，算出起始武器、生命等數值。
     const ship = SHIPS.find((s) => s.id === selectedShip),
       preview = launchPreview(profile, ship, c),
       build = WEAPON_LOADOUTS[preview.weapon],
@@ -5115,6 +5215,7 @@
       ><span>暴擊 <b>${preview.crit}%</b></span>`;
     set("loadout-advantage", `優勢：${build.advantage}`);
     set("loadout-cost", `代價：${build.cost}`);
+    // 難度說明區：顏色與各項倍率表。
     const info = document.getElementById("difficulty-info");
     info.style.setProperty("--difficulty-color", d.color);
     // 難度說明。
@@ -5159,10 +5260,12 @@
       difficulty: selectedDifficulty,
       config: selectedConfig,
     };
+    // 把設定存起來，下次打開還在。
     save();
   }
   // 敵人圖鑑。
   function showEnemyCodex() {
+    // 小怪圖鑑：每種敵人的名字與一句說明。
     const enemies = [
       ["偵察機", "均衡的追蹤型敵人。"],
       ["疾行機", "高速近身，生命較少。"],
@@ -5563,6 +5666,7 @@
     };
     document.getElementById("boss-status-details").onclick = showBossStatus;
     // 衝刺。
+    // 衝刺：用目前按住的方向鍵決定往哪裡衝。
     const useDash = () => {
         const move = keyboardInput();
         engine.dash(move.x, move.y);
@@ -6272,6 +6376,7 @@
   }
   // 玩法說明；launch 為 true 時看完就出發。
   function showGuide(launch = false) {
+    // 操作手冊視窗：操作方式、難度倍率表、敵人與 Boss 說明。
     openDialog(/* HTML */ `<div class="eyebrow">PILOT HANDBOOK / v1.2</div>
         <h2>駕駛操作手冊</h2>
         <p class="muted">先熟悉移動、衝刺與過載，再展開你需要的戰鬥說明。</p>
@@ -6487,6 +6592,7 @@
             ? '<div class="handbook-launch"><button class="primary" id="guide-launch">了解，開始出航</button><button id="guide-skip">直接出航</button></div>'
             : ""
         }`);
+    // 從「開始出航」打開的手冊：按「出航」或「略過」都直接開始遊戲。
     if (launch) {
       document.getElementById("guide-launch").onclick = document.getElementById(
         "guide-skip",
@@ -6672,6 +6778,7 @@
     // 匯出備份檔。
     document.getElementById("export-save").onclick = () => {
       save();
+      // 把永久資料與目前的遠征打包成 JSON 檔，讓玩家下載備份。
       const blob = new Blob(
           [
             JSON.stringify(
@@ -6697,8 +6804,11 @@
       document.getElementById("save-file").click();
     // 匯入備份檔，先檢查再確認。
     document.getElementById("save-file").onchange = async (e) => {
+      // 玩家選的備份檔；沒選就結束。
       const f = e.target.files[0];
       if (!f) return;
+      // 讀取備份檔：太大（超過 5MB）、版本不對、資料不完整都會拒絕，避免讀到壞
+      // 檔。
       try {
         if (f.size > 5000000) throw Error("備份檔案太大");
         const d = JSON.parse(await f.text());
@@ -6718,10 +6828,12 @@
           if (!Number.isInteger(lv) || lv < 0 || lv > 5)
             throw Error("研究資料不正確");
         }
+        // 備份裡有遠征的話，先試著讀一次，確定是完整的。
         if (d.run) {
           const test = new Engine(d.profile);
           if (!test.loadRun(d.run)) throw Error("遠征資料不完整");
         }
+        // 先問玩家要不要用這份備份取代目前的資料。
         openDialog(
           '<h2>使用這份備份？</h2><p class="muted">匯入會取代此瀏覽器的永久研究、紀錄與遠征進度。</p><button class="primary" id="confirm-import">取代並匯入</button>',
         );
@@ -6998,16 +7110,20 @@
   }
   // 畫整個戰場：背景、預警、掉落物、敵人、子彈、星艦與特效。
   function draw() {
+    // 還沒有畫布或沒有進行中的遠征就不畫。
     if (!ctx || !engine.r) return;
+    // r 是這局資料、p 是玩家、w 和 h 是畫布大小、t 是遊戲時間。
     const r = engine.r,
       p = r.p,
       w = canvasWidth,
       h = canvasHeight,
       t = r.time,
       region = engine.region();
+    // 依畫質設定（0 低、1 中、2 高）決定要畫多少效果。
     const visual = presentationSettings(),
       quality = visual.quality;
     visual.motion = visual.motion && r.phase === "play";
+    // 鏡頭縮放：依螢幕大小，受擊時再輕微放大一下。
     const zoom =
       viewZoom(w, h) *
       (1 +
@@ -7038,9 +7154,11 @@
       view.x = clamp(view.x, p.x - slackX, p.x + slackX);
       view.y = clamp(view.y, p.y - slackY, p.y + slackY);
     }
+    // 先把整個畫布塗成深色背景，再加上星域顏色的漸層。
     ctx.save();
     ctx.fillStyle = "#080d1d";
     ctx.fillRect(0, 0, w, h);
+    // 背景的放射狀漸層：左上偏亮，顏色跟著目前星域變化。
     const gradient = ctx.createRadialGradient(
       w * 0.3,
       h * 0.25,
@@ -7056,6 +7174,7 @@
     // 震動。
     let sx = 0,
       sy = 0;
+    // 畫面震動（可以在設定關閉）。
     if (visual.motion && profile.settings.shake && engine.shake) {
       const shake = Math.min(
         engine.shake,
@@ -7064,6 +7183,8 @@
       sx = Math.sin(performance.now() * 0.09) * shake;
       sy = Math.cos(performance.now() * 0.13) * shake;
     }
+    // cam 是鏡頭左上角在戰場上的位置；之後的東西都用戰場座標畫，translate、
+    // scale 會自動換算到畫面上。
     const cam = { x: view.x - w / 2 / zoom, y: view.y - h / 2 / zoom };
     ctx.translate(sx, sy);
     ctx.scale(zoom, zoom);
@@ -7083,6 +7204,7 @@
       ctx.fillStyle = "#ccd9ff";
       ctx.fillRect(x, y, s.size, s.size);
     }
+    // 背景格線：每 100 單位一條。
     ctx.globalAlpha = 1;
     // 格線。
     ctx.strokeStyle = "#556b9e15";
@@ -7105,6 +7227,7 @@
       ctx.lineTo(cam.x + w / zoom, y);
     }
     ctx.stroke();
+    // 模式專屬的背景裝飾、戰場邊界與燃燒區域。
     drawModeAccent(r, cam, w, h, zoom, quality);
     ctx.strokeStyle = "#8396d455";
     ctx.lineWidth = 3;
@@ -7172,6 +7295,7 @@
     // 敵人。
     for (const e of r.enemies) {
       const margin = e.type === "boss" ? 160 : 80;
+      // 不在畫面裡的敵人跳過不畫，節省效能。
       if (
         e.x < cam.x - margin ||
         e.x > cam.x + w / zoom + margin ||
@@ -7180,6 +7304,7 @@
       )
         continue;
       // 各種敵人的顏色。
+      // 小地圖上每種敵人的顏色。
       const colors = {
           scout: "#c483d8",
           runner: "#f68cbc",
@@ -7193,6 +7318,7 @@
         c = e.hit > 0 ? "#ffffff" : e.slow > 0 ? "#8dcfff" : colors[e.type];
       // 被擊中的小怪瞬間放大一點，命中更有感覺；Boss 維持原尺寸。
       const squash = e.type !== "boss" && e.hit > 0;
+      // 剛被打中的敵人會短暫放大一下。
       if (squash) {
         const s = 1 + e.hit * 2.2;
         ctx.save();
@@ -7202,6 +7328,7 @@
       }
       // 頭目：圖片、護盾與光圈。
       if (e.type === "boss") {
+        // Boss：用圖片畫，外面加光圈；有護盾時多一圈藍色。
         const data = BOSS_DATA[e.bossIndex],
           sprite = bossImages[e.bossIndex],
           size = 215 + e.bossIndex * 10 + (e.phaseLevel === 3 ? 15 : 0);
@@ -7241,6 +7368,7 @@
           polygon(e.x, e.y - 95, 9, 4, Math.PI / 4, "#173c56", "#8deaff");
         }
       } else if (e.type === "runner") {
+        // 一般敵人依種類畫成不同的形狀與顏色。
         polygon(
           e.x,
           e.y,
@@ -7330,6 +7458,7 @@
       if (squash) ctx.restore();
       // 精英標記。
       if (e.elite) {
+        // 菁英敵人外面有彩色圈，頭上有「甲、速、爆、癒」或「冠軍」字樣。
         circle(
           e.x,
           e.y,
@@ -7363,6 +7492,7 @@
       }
       // 一般敵人的血條。
       if (e.bossGuard) circle(e.x, e.y, e.radius + 8, null, "#8deaff88", 1);
+      // 受傷的一般敵人頭上顯示小血條。
       if (e.hp < e.maxHp && e.type !== "boss") {
         ctx.fillStyle = "#29192d";
         ctx.fillRect(e.x - e.radius, e.y - e.radius - 8, e.radius * 2, 3);
@@ -7377,6 +7507,7 @@
     }
     // 我方子彈：較長的發光尾跡加上亮白核心，在敵群中也容易看清楚。
     ctx.save();
+    // 畫子彈：高畫質時用發光混色。
     if (quality === 2) ctx.globalCompositeOperation = "lighter";
     ctx.lineCap = "round";
     for (const b of r.bullets) {
@@ -7413,6 +7544,7 @@
       if (quality > 0) circle(b.x, b.y, Math.max(1, b.radius * 0.3), "#fff0f4");
       circle(b.x, b.y, b.radius + 3, null, (b.color || "#ff6e96") + "55");
     }
+    // 環繞武器：在玩家周圍旋轉的光球。
     const orbit = r.weapons.find((w) => w.id === "orbit");
     // 環繞武器的光球。
     if (orbit) {
@@ -7451,10 +7583,12 @@
         color: p.dashTime > 0 ? "#d9fff8" : "#7fe9df",
         size: p.dashTime > 0 ? 3.4 : 2.4,
       });
+    // 畫玩家的星艦：移到玩家位置、轉向前進方向。
     ctx.save();
     ctx.translate(p.x, p.y);
     ctx.rotate(Math.atan2(p.dy, p.dx) + Math.PI / 2);
     ctx.scale(1.18, 1.18);
+    // 移動時尾巴有推進火焰，衝刺時更長。
     if (moving) {
       ctx.beginPath();
       ctx.moveTo(-7, 15);
@@ -7463,6 +7597,7 @@
       ctx.fillStyle = "#88f4e680";
       ctx.fill();
     }
+    // 無敵時間閃爍；星艦本體是一個三角形。
     ctx.globalAlpha = p.inv > 0 && Math.sin(t * 32) > 0 ? 0.55 : 1;
     ctx.beginPath();
     ctx.moveTo(0, -22);
@@ -7482,8 +7617,10 @@
     ctx.stroke();
     polygon(0, 0, 7, 4, 0, "#2f4d72");
     ctx.restore();
+    // 有護盾或衝刺時，外面多一圈。
     if (p.shield) circle(p.x, p.y, 31, null, "#d7c0ff", 2);
     if (p.dashTime > 0) circle(p.x, p.y, 28, null, "#8cf5e8aa", 2);
+    // 畫各種特效：光圈、閃電、瞄準線、傷害數字、火花（畫面外的跳過）。
     for (const f of engine.fx) {
       const extent = (f.radius || 40) * 1.5;
       if (
@@ -7607,6 +7744,7 @@
       ctx.restore();
       debris = debris.filter((d) => d.life > 0);
     }
+    // 地面危險區與雷射（預警時是虛線，生效後是實心）。
     for (const hz of r.hazards) {
       if (hz.shape === "beam") drawBeam(hz, true, quality);
       else
@@ -7639,6 +7777,7 @@
       ctx.fillRect(0, 0, w, h);
       ctx.restore();
     }
+    // Boss 在畫面外時，在畫面邊緣畫一個箭頭指向它。
     const boss = r.enemies.find((e) => e.type === "boss" && !e.dead);
     if (boss) {
       const bx = (boss.x - view.x) * zoom + w / 2,
@@ -7663,6 +7802,7 @@
         );
       }
     }
+    // Boss 登場時，畫面中央顯示名字與稱號。
     if (r.bossIntro > 0 && h > 400) {
       const info = BOSS_DATA[r.bossIndexNext || 0];
       ctx.save();

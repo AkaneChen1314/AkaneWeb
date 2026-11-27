@@ -2108,6 +2108,8 @@ function enhancedGearValue(g, key, level = 0) {
 
 // 算出包含裝備的最終能力，畫面與戰鬥都用這個結果。
 function stats() {
+  // out 是最後要回傳的能力值：先放入角色本身的基礎數值，下面再一項一項加上裝備、
+  // 強化與狀態的效果。
   const out = {
     maxHp: S.baseHp,
     atk: S.baseAtk,
@@ -2177,10 +2179,10 @@ function migrateGearId(id, classId) {
   return legacy[id] || null;
 }
 
-// 讀取舊進度並檢查資料，避免不存在的裝備或過期設定直接進入戰鬥。
-
 // ---------- 存檔與開始遊戲 ----------
 
+// 讀取舊進度並檢查資料，避免不存在的裝備或過期設定直接進入戰鬥。
+// 存檔放在瀏覽器的 localStorage（同一個瀏覽器、同一個網址才讀得到）。
 function load() {
   try {
     let raw =
@@ -2301,10 +2303,13 @@ function load() {
 
 // 建立新冒險者的起始狀態；職業選擇會影響初始能力與可用技能。
 function startGame(id) {
+  // 上帝模式（god）要先解鎖；還沒解鎖就改成詢問解鎖，不開始遊戲。
   if (id === "god" && !godUnlocked) {
     requestGodMode();
     return;
   }
+  // c 是選到的職業資料（生命、攻擊、技能等），busy 表示「正在播放動作、暫時不能
+  // 按」，開新遊戲時先清掉。
   const c = CLASSES[id];
   busy = false;
   activeBossDialogue = null;
@@ -2369,6 +2374,7 @@ function startGame(id) {
       Object.keys(POTIONS).map((key) => [key, 99]),
     );
   }
+  // 關掉選職業的視窗，寫一則開場紀錄，切到探索畫面並存檔。
   closeModal("startModal");
   log(`你以「${c.name}」開始了冒險。`, true);
   showExplore();
@@ -2435,10 +2441,12 @@ function bossForFloor(floor) {
 
 // 產生下一個敵人並開始戰鬥。
 function createEnemy(elite = false) {
+  // 已經打完第 1000 層就不再產生敵人。
   if (S.completed || S.floor >= MAX_FLOOR) {
     toast("你已完成 1000 層深境冒險！");
     return;
   }
+  // 往下走一層；下面依新的樓層決定這一戰要遇到什麼敵人。
   S.floor++;
   // 決定是不是 Boss 或菁英，並依樓層與難度放大能力。
   const encounterFloor = Math.max(1, S.floor),
@@ -2453,11 +2461,14 @@ function createEnemy(elite = false) {
       1 + 0.018 * (encounterFloor - 1) + 0.000015 * (encounterFloor - 1) ** 2,
     statusScale = 1 + encounterFloor / 120,
     eliteM = actualElite ? 1.38 : 1;
+  // 敵人的生命與攻擊：基礎值 × 樓層成長 × 怪物本身的倍率 × 難度倍率（菁英再乘一
+  // 點）。Math.round 是四捨五入成整數。
   const maxHp = Math.round(43 * growth * m.hp * d.hp * eliteM),
     atk = Math.max(
       3,
       Math.round(7 * attackGrowth * m.atk * d.atk * (actualElite ? 1.16 : 1)),
     );
+  // 打到菁英之後，排定下一隻菁英出現在 3～5 層之後。
   if (actualElite) S.nextEliteAt = S.floor + 3 + Math.floor(Math.random() * 3);
   const enemyTemplate = {
     ...m,
@@ -2491,16 +2502,21 @@ function createEnemy(elite = false) {
     intent: null,
     turns: 0,
   };
+  // 把這隻怪物登記到圖鑑（遇過才會解鎖）。
   discoverMonster(m);
   // 每場戰鬥開始時，清掉上一場的護盾、增益、異常與冷卻。
   S.shield = 0;
+  // 每場戰鬥開始前，清掉上一場留下的增益、異常、冷卻與連擊數。
   S.buffs = {};
   S.debuffs = {};
   S.debuffTurns = {};
   S.cooldowns = [0, 0, 0];
   S.tacticCooldowns = {};
   S.combo = 0;
+  // 決定敵人第一回合要做什麼（攻擊、防禦或大招），顯示在畫面上讓玩家預判。
   rollIntent();
+  // 切到戰鬥畫面、寫一則紀錄並存檔；50 層一隻的大型 Boss 會先播放對話，對話結束
+  // 才能行動。
   busy = worldBoss;
   showBattle();
   log(
@@ -2839,10 +2855,13 @@ async function useSkill(key) {
 }
 // 使用一個技能：檢查資源與冷卻 → 造成效果 → 敵人回合 → 存檔。
 async function performSkill(key) {
+  // 正在播放動作、沒有敵人、或正在選藥水時，不能出招。
   if (busy || !S.enemy || potionMode) return;
+  // key 是按下的按鈕："basic" 是普通攻擊，"0"～"2" 是三個技能。
   const c = baseClass(),
     skill = key === "basic" ? null : c.skills[+key];
   if (key !== "basic" && !skill) return;
+  // 技能需要的職業資源（怒氣、法力等）不夠，或還在冷卻中，就提示原因並取消。
   if (skill && (S.res < skill.c || S.cooldowns[+key] > 0)) {
     toast(
       S.cooldowns[+key] > 0
@@ -2851,6 +2870,7 @@ async function performSkill(key) {
     );
     return;
   }
+  // 開始出招：先鎖住按鈕（busy），播放攻擊特效。
   busy = true;
   render();
   battleFX(
@@ -2860,6 +2880,7 @@ async function performSkill(key) {
         ? "magic"
         : "slash",
   );
+  // total 累計這一回合造成的總傷害，下面依技能內容逐項執行。
   let total = 0;
   // 普通攻擊回資源；技能則扣資源並套用各種效果。
   if (!skill) {
@@ -2916,6 +2937,7 @@ async function performSkill(key) {
       true,
     );
   }
+  // 有打出傷害就增加連擊數；敵人生命歸零就勝利。
   if (total) advanceCombo();
   render();
   if (S.enemy.hp <= 0) {
@@ -2923,6 +2945,7 @@ async function performSkill(key) {
     busy = false;
     return;
   }
+  // 稍等一下（0.28 秒）讓玩家看清楚，再輪到敵人行動；全部結束後解鎖按鈕並存檔。
   await wait(280);
   await enemyTurn();
   busy = false;
@@ -3112,6 +3135,7 @@ function checkBossPhase() {
 }
 // 敵人的回合：異常結算 → 行動 → 玩家異常結算 → 冷卻減少 → 決定下一步。
 async function enemyTurn() {
+  // e 是目前的敵人。敵人身上的中毒先結算；毒死就直接勝利。
   const e = S.enemy;
   if (!e) return;
   if (e.effects.poison) {
@@ -3146,11 +3170,13 @@ async function enemyTurn() {
           (1 - st.damageReduce / 100),
       ),
     );
+    // 閃避機率：速度越高越容易閃開，最多 45%。
     const dodge = clamp(
       (st.speed * 0.55 + (S.buffs.evade || 0)) / 100,
       0,
       0.45,
     );
+    // 閃避成功就不受傷；沒閃開時，先由護盾吸收傷害，剩下的才扣生命。
     if (chance(dodge)) {
       floatText("閃避", "block", 30, 52);
       log("你閃開了攻擊！");
@@ -3195,6 +3221,7 @@ async function enemyTurn() {
       }
     }
   }
+  // 記錄敵人已經行動幾回合（有些 Boss 的倒數詛咒會在第幾回合發動）。
   e.turns = (e.turns || 0) + 1;
   if (e.doomAfter && e.turns === e.doomAfter)
     log(`☠️ ${e.n} 的倒數詛咒已發動！從下一次命中開始追加傷害。`, true);
@@ -3220,11 +3247,14 @@ async function enemyTurn() {
       log(`${label}造成 ${n} 點持續傷害。`);
     }
   }
+  // 一回合結束：技能與戰術的冷卻各減 1，暫時閃避歸零，虛弱少一回合。
   S.cooldowns = S.cooldowns.map((x) => Math.max(0, x - 1));
   for (const id of Object.keys(TACTICS))
     S.tacticCooldowns[id] = Math.max(0, (S.tacticCooldowns[id] || 0) - 1);
   S.buffs.evade = 0;
   if (S.debuffs.weak > 0) S.debuffs.weak--;
+  // 結算勝負：玩家生命歸零就失敗；敵人被持續傷害打倒就勝利；都沒有就決定敵人下
+  // 一步要做什麼。
   if (S.hp <= 0) {
     defeat();
     return;
@@ -3351,6 +3381,7 @@ async function victory() {
           label: "站上終焉王座",
           hint: "存檔會保留，可繼續查看裝備與戰報",
           primary: true,
+          // 按下後關閉事件視窗，回到探索畫面，更新畫面並存檔。
           run: () => {
             closeModal("eventModal");
             showExplore();
@@ -3383,6 +3414,7 @@ function defeat() {
   openEvent("☠️", "冒險失敗", "你被送回兩區前，損失25%金幣；素材與裝備保留。", [
     {
       label: "重新整備",
+      // 按下後關閉事件視窗，回到探索畫面，更新畫面並存檔。
       run: () => {
         closeModal("eventModal");
         showExplore();
@@ -3482,6 +3514,7 @@ function treasure() {
     [
       {
         label: "收下補給",
+        // 收下補給：金幣與素材加進背包，顯示結果。
         run: () => {
           S.gold += reward.gold;
           addMaterial(reward.mat, reward.amount);
@@ -3506,6 +3539,7 @@ function scheduleNextEventFloor(fromFloor) {
 function event() {
   S.floor++;
   S.nextEventAt = scheduleNextEventFloor(S.floor);
+  // 可能遇到的事件種類；filter 會拿掉上一次遇到的那一種，避免連續兩次一樣。
   const types = [
       "fountain",
       "gamble",
@@ -3566,6 +3600,7 @@ function eventFountain() {
     {
       label: "恢復生命",
       hint: `恢復 ${heal} HP`,
+      // 喝泉水：回復生命，但不會超過最大生命（Math.min 取比較小的那個）。
       run: () => {
         S.hp = Math.min(stats().maxHp, S.hp + heal);
         finishEvent("傷口逐漸癒合。");
@@ -3574,6 +3609,7 @@ function eventFountain() {
     {
       label: "汲取能量",
       hint: "職業資源全滿",
+      // 選擇恢復力量：職業資源（怒氣、法力等）直接補滿。
       run: () => {
         S.res = baseClass().maxRes;
         finishEvent("力量重新充滿全身。");
@@ -3594,6 +3630,8 @@ function eventGambleChest() {
         label: "賭一把",
         hint: "50% 大獎／50% 陷阱",
         primary: true,
+        // 賭一把：good 在打開事件時就決定好了（一半機率）。大獎給金幣、素材與強
+        // 化石；陷阱扣 15% 生命（最少留 1 點）並遺失 12% 金幣。
         run: () => {
           if (good) {
             const gold = 80 + S.floor * 4,
@@ -3634,6 +3672,7 @@ function eventCaravan() {
     {
       label: "護送商隊",
       hint: `支付 ${aidCost} 金幣，獲得素材與藥水`,
+      // 護送商隊：金幣不夠就提示並取消；夠的話付錢，換到素材與紅、藍藥水各一瓶。
       run: () => {
         if (S.gold < aidCost) {
           toast("金幣不足，無法準備護送物資");
@@ -3651,6 +3690,7 @@ function eventCaravan() {
     {
       label: "交換情報",
       hint: "免費恢復 25% 生命與資源",
+      // 交換情報：免費回復四分之一的生命與職業資源。
       run: () => {
         S.hp = Math.min(stats().maxHp, S.hp + Math.round(stats().maxHp * 0.25));
         S.res = Math.min(
@@ -3674,6 +3714,7 @@ function eventAltar() {
       {
         label: "獻上生命換取力量",
         hint: `失去 ${sacrifice} HP，永久攻擊＋1並獲得強化石`,
+        // 獻上生命：扣生命（最少留 1 點），換永久攻擊＋1 與強化石。
         run: () => {
           S.hp = Math.max(1, S.hp - sacrifice);
           S.baseAtk += 1;
@@ -3684,6 +3725,7 @@ function eventAltar() {
       {
         label: "請求淨化",
         hint: "解除全部異常並恢復 20% 生命",
+        // 請求淨化：清除所有異常狀態，並回復 20% 生命。
         run: () => {
           S.debuffs = {};
           S.hp = Math.min(
@@ -3709,6 +3751,7 @@ function eventForge() {
       {
         label: "重新點燃爐心",
         hint: `花費 ${cost} 金幣，獲得強化石×4`,
+        // 點燃爐心：金幣不夠就取消；夠的話付錢換 4 顆強化石。
         run: () => {
           if (S.gold < cost) {
             toast("金幣不足，無法啟動鍛造爐");
@@ -3722,6 +3765,7 @@ function eventForge() {
       {
         label: "搜索冷卻殘料",
         hint: `免費獲得隨機素材`,
+        // 搜索殘料：免費拿到 3 個隨機素材。
         run: () => {
           addMaterial(mat, 3);
           finishEvent(`你從灰燼中找到 ${MATERIALS[mat].n}×3。`);
@@ -3747,6 +3791,7 @@ function eventMeteor() {
       {
         label: "徒手取出核心",
         hint: "受到 10% 最大生命傷害，獲得大量稀有素材",
+        // 徒手取出核心：受到最大生命 10% 的傷害（最少留 1 點），換 6 個稀有素材。
         run: () => {
           const damage = Math.max(1, Math.round(stats().maxHp * 0.1));
           S.hp = Math.max(1, S.hp - damage);
@@ -3757,6 +3802,7 @@ function eventMeteor() {
       {
         label: "等待核心冷卻",
         hint: "安全獲得少量素材並回滿資源",
+        // 等待冷卻：拿到 2 個素材，並把職業資源補滿。
         run: () => {
           addMaterial(mat, 2);
           S.res = baseClass().maxRes;
@@ -3813,6 +3859,7 @@ function eventChanges(before) {
 function finishEvent(msg) {
   // 結果本身也存檔，重開只會再顯示結果，不會重新扣款或領獎。
   if (S.pendingEvent?.type === "result") return;
+  // 結果卡的內容：標題、圖示、說明文字，以及這次事件前後金幣、生命、素材的增減。
   S.pendingEvent = {
     type: "result",
     title: $("#eventTitle").textContent,
@@ -4743,6 +4790,7 @@ function renderShop() {
     return;
   }
   const filter = $("[data-shop-filter].active")?.dataset.shopFilter || "all";
+  // 商店的藥水清單：每一種藥水做成一列（名稱、價格、購買按鈕），再接成一段 HTML。
   const potions = Object.entries(POTIONS)
     .map(
       ([id, p]) => /* HTML */ `<div class="shop-row potion-shop">
@@ -4875,10 +4923,12 @@ function renderUpgrade() {
 
 // 打開物品詳細視窗，依種類顯示內容與按鈕。
 function openItem(kind, id) {
+  // 記住目前打開的是哪一個物品（藥水、素材或裝備）。
   selected = {
     kind,
     id,
   };
+  // 下面依物品種類，準備視窗要顯示的名稱、圖示、說明、能力表與主要按鈕。
   let name,
     icon,
     desc,
@@ -4901,6 +4951,7 @@ function openItem(kind, id) {
     icon = m.i;
     desc = materialSourceText(id);
     statsHtml = `<div>持有<br><b>${S.materials[id] || 0}</b></div>`;
+    // 素材的主要按鈕：打開圖鑑，查看哪些怪物會掉這個素材。
     primary = {
       label: "查看來源圖鑑",
       run: () => {
@@ -4945,6 +4996,7 @@ function openItem(kind, id) {
       run: () => equip(inst.uid),
     };
   }
+  // 把準備好的內容放進物品視窗，最下面放「關閉」與主要按鈕，然後打開視窗。
   $("#itemIcon").textContent = icon;
   $("#itemTitle").textContent = name;
   $("#itemRarity").textContent =
@@ -5236,6 +5288,8 @@ function usesTouchTooltip() {
 
 // 計算提示框放在目標的上下左右哪一邊，不超出畫面。
 function positionGlobalTooltip(target, tooltip, mobile) {
+  // viewport 是手機上實際看得到的範圍（放大時會比整頁小），提示框要放在這個範圍
+  // 裡。
   const viewport = window.visualViewport,
     viewLeft = viewport?.offsetLeft || 0,
     viewTop = viewport?.offsetTop || 0,
@@ -5247,6 +5301,7 @@ function positionGlobalTooltip(target, tooltip, mobile) {
       ? Math.min(238, viewWidth - margin * 2)
       : Math.min(300, viewWidth - margin * 2),
     rect = target.getBoundingClientRect();
+  // 先把提示框放到左上角，量出它真正的寬高，再決定放哪裡。
   tooltip.style.left = "0px";
   tooltip.style.right = "auto";
   tooltip.style.top = "0px";
@@ -5307,6 +5362,7 @@ function positionGlobalTooltip(target, tooltip, mobile) {
             y: centerY,
           },
         ];
+  // 從候選位置中挑第一個完全放得下的；都放不下就用第一個，再用 clamp 推回畫面內。
   let chosen = candidates.find(
     (p) => p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY,
   );
@@ -5413,6 +5469,8 @@ function openEvent(i, t, d, opts) {
   const b = $("#eventOptions");
   b.innerHTML = "";
   for (const o of opts) {
+    // 每個選項做成一個按鈕：按下時先記錄事件前的金幣與生命（用來算增減），執行
+    // 選項，防止連按兩次。
     const x = button(
       o.label,
       () => {
@@ -5576,6 +5634,7 @@ window.addEventListener("unhandledrejection", (e) => {
 // 啟動時自我檢查：元素、裝備、Boss 等資料有沒有缺。
 function validateGameBuild() {
   // 頁面上一定要有的元素。
+  // 檢查頁面上一定要有的元素 id；少了任何一個，表示 HTML 被改壞了。
   const requiredIds = [
       "arena",
       "skillBar",
@@ -5673,10 +5732,12 @@ $("#helpBtn").onclick = () => openModal("helpModal");
 $("#codexBtn").onclick = () => openCodex();
 $("#codexMaterial").onchange = renderCodex;
 $("#settingsBtn").onclick = () => openModal("settingsModal");
+// 設定視窗的「特效」開關：改變後立刻套用。
 $("#effectsToggle").onchange = (e) => {
   preferences.effects = e.target.checked;
   applyPreferences();
 };
+// 設定視窗的「音效」開關：打開時播放一聲提示音。
 $("#soundToggle").onchange = (e) => {
   preferences.sound = e.target.checked;
   applyPreferences();
@@ -5768,6 +5829,8 @@ document.addEventListener("keydown", (event) => {
     }
   }
   if (event.key !== "Tab") return;
+  // 視窗裡可以用 Tab 移動到的按鈕與輸入框；按 Tab 到最後一個時跳回第一個，焦點
+  // 不會跑出視窗。
   const focusable = [
       ...dialog.querySelectorAll(
         "button:not(:disabled), input, select, [tabindex='0']",

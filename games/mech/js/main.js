@@ -170,6 +170,7 @@ const Hangar = {
     addEventListener("mouseup", () => {
       this.drag = false;
     });
+    // 機庫裡按住滑鼠左右拖曳：旋轉展示中的機體。
     addEventListener("mousemove", (e) => {
       if (this.drag && G.state === "hangar") {
         const d = (e.clientX - this.lx) * 0.01;

@@ -210,6 +210,7 @@ test("bosses have three phases, roar invulnerably between them and keep fighting
 
 // 首領的每一招都會產生對應的攻擊。
 test("every boss move produces its own attack", () => {
+  // 每一招首領技能各自的檢查方式：例如地震要產生衝擊波、裂地要產生直線範圍。
   const check = {
     quake: (g) => g.hazards.some((h) => h.cause === "shockwave"),
     fissure: (g) => g.hazards.some((h) => h.type === "line"),
@@ -262,6 +263,7 @@ test("the queen guard reduces damage while her minions live", () => {
 
 // 可以衝過環形攻擊；雷射會掃動，毒池會持續傷害。
 test("rings can be dashed through, lasers sweep and poison pools tick", () => {
+  // 建立一個擴散環（測試衝刺能不能穿過）。
   const ring = () => ({
     type: "ring",
     x: 0,
@@ -331,6 +333,7 @@ test("hard bosses unlock their big moves one phase earlier and have more health"
 
 // 難度會存進個人資料與紀錄。
 test("difficulty is saved with the profile and run history", () => {
+  // 建立一份含難度與歷史紀錄的存檔，檢查讀回來後是否保留。
   const p = S.sanitizeProfile({
     difficulty: "hard",
     history: [

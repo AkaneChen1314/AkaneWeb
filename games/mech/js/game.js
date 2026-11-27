@@ -172,6 +172,7 @@ function projMesh(kind, color) {
   if (!PROJ.geos) {
     const mg = new THREE.CylinderGeometry(0.2, 0.28, 1.9, 8);
     mg.rotateX(PI / 2);
+    // 每種子彈的形狀：一般子彈、能量彈、飛彈等，用細長的方塊或球體表示。
     PROJ.geos = {
       bullet: new THREE.BoxGeometry(0.17, 0.17, 3.4),
       bolt: new THREE.BoxGeometry(0.34, 0.34, 2.4),
@@ -199,6 +200,8 @@ function projMesh(kind, color) {
 // 發射一發子彈。o 裡面要有：kind 種類、team 陣營（0 我方 / 1 敵方）、位置 x y z、方向 dx dy dz、
 // speed 速度、dmg 傷害、life 最多飛幾秒、color 顏色；可選：splash 爆炸半徑、grav 重力、target 追蹤目標、turn 轉彎速度
 function spawnProj(o) {
+  // 建立一顆子彈：沒有指定的屬性用預設值（splash 爆炸範圍、grav 重力、target 追
+  // 蹤目標、turn 轉向速度、trail 尾煙…）。
   const p = Object.assign(
     {
       splash: 0,
@@ -717,6 +720,7 @@ function killEnt(e, from) {
       FX.sphere(e.x, cy, e.z, 0xffffff, 2, 60, 0.9, 2);
       FX.ring(e.x, 0.6, e.z, d.paint.glow, 3, 70, 1.0, 3);
       FX.light(e.x, cy, e.z, 0xffe0a0, 10, 260, 1.0);
+      // Boss 被打倒：在身上連續引爆 9 次爆炸，每次間隔 0.16 秒。
       for (let i = 0; i < 9; i++)
         G.timers.push({
           t: 0.12 + i * 0.16,
@@ -735,6 +739,7 @@ function killEnt(e, from) {
           p.alive = false;
           G.timers.push({
             t: 0.08 * i,
+            // 小兵被打倒：依序爆炸並移除模型。
             fn: () => {
               FX.explosion(p.x, p.y + 3, p.z, 8, 0xff8a30);
               disposeRig(p.rig);
@@ -779,6 +784,7 @@ function killEnt(e, from) {
       for (let i = 0; i < d.split.n; i++) {
         // 分裂母體：裂成數隻幼體
         const a = (i / d.split.n) * TAU,
+          // 會分裂的敵人：被打倒後在周圍生出幾隻小的。
           s = spawnEnemy(
             d.split.kind,
             clamp(e.x + Math.cos(a) * 2.5, -388, 388),
@@ -1135,6 +1141,7 @@ function updatePlayer(dt) {
   rig.root.rotation.y = P.yaw;
   // 在地上才播放走路動作。
   const grounded = P.onGround || rig.type === "hover";
+  // 依移動速度播放走路動畫，回傳這一步有沒有踩到地面（用來播放腳步聲）。
   const stepped = animRig(
     rig,
     dt,
@@ -1372,6 +1379,7 @@ function updateCamera(dt) {
   // 找出準星指到的敵人。
   for (const e of G.enemies) {
     if (!e.alive) continue;
+    // 鏡頭與機體之間如果有敵人擋住，就把鏡頭拉近，避免看不到自己。
     const tt = segHitEnt(
       sx,
       sy,
@@ -1485,6 +1493,8 @@ function updateWeapons(dt) {
       for (let i = 0; i < 2; i++)
         G.timers.push({
           t: i * 0.22,
+          // 每一發延遲一點點射出（G.timers 是「幾秒後要做的事」清單）；先更新模
+          // 型位置，從砲口的位置發射。
           fn: () => {
             if (!P.alive) return;
             P.rig.root.updateMatrixWorld(true);
@@ -1807,14 +1817,18 @@ function pickTargets(n, maxDist = 230, cone = 0.86) {
 
 // 副武器開火
 function fireSecondary(P, d, dm) {
+  // 副武器：依種類發射。
   const rig = P.rig;
   switch (d.type) {
     // 追蹤飛彈：鎖定準星附近的敵人，每 0.09 秒射出一枚
+    // 飛彈：鎖定幾個目標，每 0.09 秒射出一發會追蹤的飛彈。
     case "missile": {
       const tg = pickTargets(d.count);
       for (let i = 0; i < d.count; i++)
         G.timers.push({
           t: i * 0.09,
+          // 每一發延遲 0.09 秒射出：先更新模型位置，從飛彈莢艙（或左手砲口）發
+          // 射。
           fn: () => {
             if (!P.alive) return;
             rig.root.updateMatrixWorld(true);
@@ -1849,6 +1863,7 @@ function fireSecondary(P, d, dm) {
       break;
     }
     // 榴彈：依準星位置算出拋物線的初速，讓榴彈剛好落在準星指的地方
+    // 榴彈：往前方拋出，落地爆炸。
     case "grenade": {
       const m = rig.muzzleL.getWorldPosition(_v),
         v = 85,
@@ -1890,6 +1905,7 @@ function fireSecondary(P, d, dm) {
       break;
     }
     // 光束軍刀：對前方扇形範圍內的敵人造成傷害，並消除範圍內的敵方子彈
+    // 光劍：往前方揮砍，範圍內的敵人受到傷害。
     case "saber": {
       P.saberT = 0.32;
       if (rig.blade) rig.blade.visible = true;
@@ -1951,6 +1967,7 @@ function fireSecondary(P, d, dm) {
       break;
     }
     // 連鎖電弧：打中第一個目標後，跳到 30 公尺內最近的下一個敵人，每跳一次傷害剩八成
+    // 電弧：從機體放出電流，連鎖打到附近的敵人。
     case "arc": {
       const m = rig.muzzleL.getWorldPosition(_v);
       let t = pickTargets(1, d.range, 0.93)[0],
@@ -2852,6 +2869,8 @@ function spawnEnemy(kind, x, z, owner, quiet) {
       pr.inner.scale.setScalar(sc);
       pr.root.position.set(x, -20, z);
       G.scene.add(pr.root);
+      // 巨蟲的每一節身體：越往尾巴越小，先放在地底下（y = -20），再一節一節鑽出
+      // 來。
       const p = {
         kind: "wyrmseg",
         def: PART_DEF,
@@ -2889,6 +2908,7 @@ function spawnEnemy(kind, x, z, owner, quiet) {
     for (let i = 0; i < 7; i++)
       G.timers.push({
         t: i * 0.11,
+        // 雷電召喚：連續落下 7 道閃電。
         fn: () =>
           FX.bolt(
             x + rand(-14, 14),
@@ -4435,8 +4455,10 @@ function applyPickup(type) {
   // 道具的效果。
   const P = G.player,
     d = PICKUPS[type];
+  // 撿到補給：依種類生效，msg 是畫面上要顯示的文字。
   let msg = d.msg;
   switch (type) {
+    // 回復 20% 生命、回復指揮點數、攻擊加成、加速。
     case "hp":
       P.hp = Math.min(P.maxHp, P.hp + P.maxHp * 0.2);
       break;
@@ -4449,12 +4471,14 @@ function applyPickup(type) {
     case "haste":
       P.buff.haste = d.dur;
       break;
+    // 臨時武器：隨機拿到一把強力武器，用幾秒後消失。
     case "weapon": {
       const w = pick(TEMP_WEAPONS);
       P.temp = { def: w, t: w.dur, max: w.dur };
       msg = w.icon + " " + w.name + "（" + w.dur + " 秒，彈藥無限）";
       break;
     }
+    // 護盾、技能冷卻歸零、援軍。
     case "shield":
       P.shield = Math.min(1500, Math.max(0, P.shield) + 900);
       P.shieldMax = Math.max(900, P.shield);
@@ -4470,6 +4494,7 @@ function applyPickup(type) {
       deployMinion(0, true);
       deployMinion(1, true);
       break;
+    // 核彈：以自己為中心炸開一大圈，範圍內所有敵人受傷。
     case "nuke": {
       const R = 95;
       FX.sphere(P.x, P.y + 4, P.z, 0xfff0c0, 4, R, 0.9, 2.5);
@@ -4492,6 +4517,7 @@ function applyPickup(type) {
   }
   // 顯示提示。
   UI.toast(d.icon, d.name, msg);
+  // 播放撿到的音效與光圈。
   SND.play("pickup");
   FX.ring(P.x, P.y + 1, P.z, d.color, 1, 8, 0.45);
 }

@@ -74,6 +74,7 @@ const cases =
 for (const { ship, difficulty, config } of cases) {
   const profile = defaultProfile();
   if (process.env.STARBREAK_RESEARCH === "max")
+    // 模擬玩家的永久研究全部升到 5 級。
     profile.research = {
       hull: 5,
       reactor: 5,
@@ -131,6 +132,8 @@ for (const { ship, difficulty, config } of cases) {
       if (fight.b.dead && fight.duration === null)
         fight.duration = +(r.time - fight.start).toFixed(1);
     if (r.phase === "upgrade") {
+      // 模擬玩家選升級：為每個選項打分數（武器進化最優先，其次是新武器），選分
+      // 數最高的。
       const scored = r.offers.map((c, i) => {
         let n =
           c.kind === "evolve"

@@ -20,6 +20,7 @@
     `<article class="rule-block"><h3>${title}</h3><p>${text}</p></article>`;
   // 碰撞示意圖：安全、危險與纏繞三種。
   function diagram(kind) {
+    // 纏繞示意圖：蛇身圍成一圈，把敵人困在中間。
     if (kind === "coil")
       return /* HTML */ `<svg
         class="collision-diagram"
@@ -46,6 +47,7 @@
           蛇頭碰到自己的身體 → 圈內全部受傷
         </text>
       </svg>`;
+    // 其他兩種：撞到蛇頭（危險，紅色）與撞到蛇身（安全）。
     const dangerous = kind === "head";
     return /* HTML */ `<svg
       class="collision-diagram"

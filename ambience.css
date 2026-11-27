@@ -82,6 +82,7 @@ body {
   inset: 65px;
   border-style: solid;
 }
+/* 左右兩個星軌光環的位置。 */
 .orbit-left {
   left: -370px;
   top: 31%;
@@ -129,6 +130,7 @@ body.playing .ambient-scene {
     0 24px 70px #0004,
     0 0 60px #4da5ff09;
 }
+/* 首頁主視覺上的小星光閃爍。 */
 .hero-sparkles {
   position: absolute;
   inset: 0;
@@ -211,6 +213,7 @@ body.playing .ambient-scene {
   border-radius: 16px;
   background: #102541c9;
 }
+/* 心情推薦列左邊的標題。 */
 .mood-title {
   display: flex;
   align-items: center;
@@ -231,6 +234,7 @@ body.playing .ambient-scene {
   font-size: 11px;
   color: #8da9c6;
 }
+/* 心情推薦的按鈕。 */
 .mood-buttons {
   display: flex;
   flex-wrap: wrap;
@@ -337,6 +341,7 @@ body.playing .ambient-scene {
   color: #aaccdf;
   margin-top: 3px;
 }
+/* 遊戲卡片封面左上角的編號。 */
 .card-number {
   width: 35px;
   height: 35px;
@@ -347,9 +352,11 @@ body.playing .ambient-scene {
   border: 1px solid #a4d5ff55;
   backdrop-filter: blur(8px);
 }
+/* 遊戲卡片上的版本小標籤（毛玻璃效果）。 */
 .card-version {
   backdrop-filter: blur(8px);
 }
+/* 遊戲卡片的按鈕底色。 */
 .card-button {
   background: linear-gradient(100deg, #1a4265, #163654);
 }
@@ -384,6 +391,7 @@ body.playing .ambient-scene {
   object-fit: cover;
   object-position: 83% center;
 }
+/* 人物房間圖片上的名牌。 */
 .portrait-label {
   position: absolute;
   z-index: 1;
@@ -399,6 +407,7 @@ body.playing .ambient-scene {
   color: #a6d4f4;
   letter-spacing: 4px;
 }
+/* 人物房間圖片右上角的星號。 */
 .portrait-star {
   position: absolute;
   z-index: 1;
@@ -426,6 +435,7 @@ body.playing .ambient-scene {
   line-height: 1.95;
   color: #b1c7df;
 }
+/* 人物房間說明下方的小標籤。 */
 .room-chips {
   display: flex;
   flex-wrap: wrap;
@@ -439,6 +449,7 @@ body.playing .ambient-scene {
   border-radius: 20px;
   color: #9ed1f4;
 }
+/* 人物房間的「前往」連結。 */
 .room-link {
   display: inline-flex;
   align-items: center;
@@ -451,6 +462,7 @@ body.playing .ambient-scene {
 .room-link:hover {
   color: #fff;
 }
+/* 遊戲專區上方的歡迎提示框。 */
 .welcome-note {
   background: linear-gradient(100deg, #0e2843c9, #0b1e3680);
 }

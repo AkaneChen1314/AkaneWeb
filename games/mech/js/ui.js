@@ -224,6 +224,7 @@ const UI = {
       for (const sfx of ["", "2"]) {
         const el = $("vol-" + k + sfx);
         el.value = Math.round(LOADOUT.vol[k] * 100);
+        // 拉動音量滑桿：存到設定並立刻套用，旁邊的數字跟著更新。
         el.oninput = () => {
           LOADOUT.vol[k] = el.value / 100;
           SND.setVol(k, LOADOUT.vol[k]);
@@ -435,6 +436,7 @@ const UI = {
       .join("");
     // 點卡片 = 選取；滑鼠移上去 = 在右下角顯示詳細資料
     for (const c of $("items").children) {
+      // 點選卡片：記下選了哪一個（有些卡片還能選子選項，例如武器的模式）。
       c.onclick = (e) => {
         const op = e.target.dataset.opt;
         this.pick(tab, c.dataset.id, op !== undefined ? +op : undefined);
@@ -484,6 +486,7 @@ const UI = {
 
   // 在右下角的「詳細資料」顯示某個選項的完整數值
   showDetail(tab, o) {
+    // 沒有選東西就不顯示；t 是說明表格的內容，pk 是額外的特色說明。
     if (!o) return;
     // row：產生表格的一列（左邊名稱、右邊數值）
     const row = (a, b) => `<tr><td>${a}</td><td>${b}</td></tr>`;
@@ -492,6 +495,8 @@ const UI = {
     // 每個分頁顯示不同的數值。
     switch (tab.id) {
       case "mode":
+        // 依分頁顯示不同的數據：模式顯示勝利條件與波數；機體顯示耐久、速度、能
+        // 量；武器顯示傷害、射速與每秒傷害；技能顯示冷卻；小兵顯示消耗與數量。
         t =
           row(
             "勝利條件",

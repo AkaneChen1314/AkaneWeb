@@ -79,6 +79,7 @@ body.playing .ambient-motion-toggle {
   margin: 70px 0 60px;
   scroll-margin-top: 24px;
 }
+/* 表情觀察室：左邊圖片、右邊說明，兩欄排列。 */
 .actor-room-layout {
   display: grid;
   grid-template-columns: 1.08fr 1fr;
@@ -89,6 +90,7 @@ body.playing .ambient-motion-toggle {
     radial-gradient(ellipse at 85% 0, #4b347b50, transparent 65%),
     linear-gradient(125deg, #183853c9, #11273bdb);
 }
+/* 左邊的表情圖片與圖說。 */
 .actor-room-art {
   position: relative;
   min-width: 0;
@@ -116,10 +118,12 @@ body.playing .ambient-motion-toggle {
   font-size: 10px;
   letter-spacing: 1px;
 }
+/* 右邊的說明文字區。 */
 .actor-room-copy {
   min-width: 0;
   padding: 30px 32px;
 }
+/* 切換表情的按鈕。 */
 .actor-room-choices {
   display: flex;
   gap: 8px;
@@ -139,6 +143,7 @@ body.playing .ambient-motion-toggle {
   border-color: transparent;
   color: #09233c;
 }
+/* 每個表情的說明內容。 */
 .actor-room-note {
   min-height: 190px;
   padding-top: 25px;
@@ -158,6 +163,7 @@ body.playing .ambient-motion-toggle {
   font-size: 13px;
   line-height: 1.95;
 }
+/* 說明下方的按鈕列（前往對應的季數與話數）。 */
 .actor-room-actions {
   display: flex;
   flex-wrap: wrap;
@@ -215,6 +221,7 @@ body.playing .ambient-motion-toggle {
   font-size: 12px;
   line-height: 1.9;
 }
+/* 表情觀察室最下面的補充說明。 */
 .actor-room-footnote {
   margin-top: 14px;
   color: #86a2b9;
@@ -310,17 +317,20 @@ body.playing .ambient-motion-toggle {
   margin: 60px 0;
   scroll-margin-top: 24px;
 }
+/* 特別收藏：兩欄的插畫卡片。 */
 .special-art-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 22px;
 }
+/* 每張插畫卡片的外框。 */
 .special-art-card {
   overflow: hidden;
   border: 1px solid #b6b9ff30;
   border-radius: 24px;
   background: linear-gradient(145deg, #162c44, #231d3b);
 }
+/* 插畫本身是按鈕，按下會放大。 */
 .special-art-image {
   display: block;
   width: 100%;
@@ -341,6 +351,7 @@ body.playing .ambient-motion-toggle {
 .special-art-image:hover img {
   filter: saturate(1.12) brightness(1.05);
 }
+/* 插畫下方的標題、日期與來源。 */
 .special-art-copy {
   padding: 8px 27px 27px;
 }
@@ -380,6 +391,7 @@ button.text-link {
   border-radius: 24px;
   background: linear-gradient(120deg, #19384b, #282147);
 }
+/* Q 版圖片按鈕（點一下會換表情或送星）。 */
 .chibi-image-button {
   position: relative;
   width: 100%;
@@ -399,6 +411,7 @@ button.text-link {
   aspect-ratio: 1;
   mask-image: radial-gradient(ellipse, #000 55%, transparent 76%);
 }
+/* Q 版圖片下方的「點一下」提示。 */
 .chibi-tap {
   position: absolute;
   bottom: 7px;
@@ -411,6 +424,7 @@ button.text-link {
   color: #c8efff;
   font-size: 12px;
 }
+/* Q 版旁邊的標題與說明。 */
 .chibi-copy h3 {
   font-size: clamp(23px, 3vw, 31px);
 }
@@ -419,11 +433,13 @@ button.text-link {
   font-size: 13px;
   line-height: 1.9;
 }
+/* 送星後顯示的祝福文字。 */
 .chibi-star-note {
   min-height: 26px;
   margin-top: 14px;
   color: #b2e7ff;
 }
+/* 送星時飄起來的小星星；位置由程式隨機決定（--spark-x）。 */
 .chibi-spark {
   position: absolute;
   bottom: 25px;
@@ -467,12 +483,14 @@ button.text-link {
   object-fit: contain;
   background: #081327;
 }
+/* 特別收藏放大視窗下方的說明區。 */
 .special-viewer-info {
   padding: 21px 25px;
 }
 .special-viewer-info h2 {
   font-size: 23px;
 }
+/* 放大視窗的操作列（上一張、下一張、原頁連結）。 */
 .special-viewer-actions {
   display: flex;
   flex-wrap: wrap;

@@ -686,6 +686,8 @@ test("reload sounds follow magazine and bolt stages once and freeze during pause
 
 // 槍聲包含步槍與彈殼兩層，播完會釋放。
 test("weapon audio emits rifle and casing layers, caches impacts and releases nodes", () => {
+  // 開槍一次，檢查有播放步槍聲與彈殼落地聲兩層、命中聲有快取，播完後聲音節點會
+  // 釋放。
   const h = createHarness();
   h.run(`
     const audioNodes = [],
@@ -901,6 +903,7 @@ test("lobby controls persist configuration and cannot change a running encounter
 
 // 首領模式：清完護衛後出現一次首領，擊破首領才算勝利。
 test("warlord guards lead to one supplied boss finale and victory waits for the boss", () => {
+  // 首領模式：先打完護衛，首領才登場（只登場一次），而且打倒首領才算勝利。
   const h = createHarness();
   h.run(
     `
@@ -915,12 +918,14 @@ test("warlord guards lead to one supplied boss finale and victory waits for the 
       startGame();
     `,
   );
+  // 一開始有 7 隻（6 隻護衛＋1 隻首領），場上先出現 6 隻，其中 2 隻是菁英。
   assert.equal(h.run("matchTotalEnemies"), 7);
   assert.equal(h.run("enemies.length"), 6);
   assert.equal(
     h.run("enemies.filter(e=>e.userData.state.rank==='elite').length"),
     2,
   );
+  // 把護衛全部打倒，首領登場倒數開始。
   h.run(
     `
       enemies.forEach((enemy) => (enemy.userData.state.alive = false));
@@ -943,6 +948,7 @@ test("warlord guards lead to one supplied boss finale and victory waits for the 
     Math.abs(h.run("bossArrivalRemaining") - 2.2) < 1e-7,
     "repeated completion checks cannot restart the countdown",
   );
+  // 倒數結束：首領出現，玩家拿到補給（生命 60、護甲 25）。
   h.run("updateCombatTimers(2.3,4300);");
   assert.equal(h.run("enemies.length"), 7);
   assert.equal(h.run("bossPending"), false);

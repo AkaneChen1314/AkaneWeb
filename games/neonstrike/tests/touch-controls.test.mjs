@@ -28,6 +28,7 @@ function node(action) {
     addEventListener(type, callback) {
       listeners.set(type, callback);
     },
+    // 模擬觸發一個事件（例如手指按下），預設是第 1 根手指。
     emit(type, event = {}) {
       listeners.get(type)?.({
         pointerType: "touch",

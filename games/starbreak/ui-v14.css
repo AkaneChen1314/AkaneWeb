@@ -10,6 +10,7 @@
   height: 5px;
   margin: 2px 0 3px;
 }
+/* Boss 護盾條：藍色。 */
 #boss-shield-label {
   color: #a2edff;
 }
@@ -19,6 +20,7 @@
 .boss-shieldbar i {
   background: linear-gradient(90deg, #3f9dd1, #8deaff);
 }
+/* Boss 資訊列的底色與文字區。 */
 .boss-hud {
   background: #101429ef;
 }
@@ -30,6 +32,7 @@
   line-height: 1.5;
   font-size: 12px;
 }
+/* 難度說明裡的 Boss 倍率小字。 */
 .boss-difficulty-note {
   border-top: 1px solid #8da9cc35;
   padding-top: 10px;

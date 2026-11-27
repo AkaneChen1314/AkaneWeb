@@ -9,6 +9,8 @@ class FX {
   // 加入一個粒子；數量已滿時忽略（除非指定 force）。
   add(o) {
     if (this.p.length >= this.max && !o.force) return null;
+    // 建立一個粒子：沒有指定的屬性用預設值。x、y 位置，vx、vy 速度，g 重力，
+    // drag 空氣阻力，life 存活秒數，size 大小，col 顏色，a 透明度，rot 旋轉角度。
     const p = Object.assign(
       {
         x: 0,
@@ -258,7 +260,7 @@ function drawParticle(c, p) {
   }
 }
 
-// ---------- 兩組粒子：地圖與介面各一組 == ----------
+// ---------- 兩組粒子：地圖與介面各一組 ----------
 
 const fxW = new FX(2600); // 戰場
 const fxU = new FX(2200); // 介面 / 慶祝
@@ -326,6 +328,7 @@ function boltPts(x1, y1, x2, y2, jit = 14) {
 }
 // 煙火；big 是大小倍率。
 function fireworks(x, y, big = 1) {
+  // 煙火的顏色從這幾種裡隨機挑。
   const col = pick([
     "#ff3a5a",
     "#ffcf3a",

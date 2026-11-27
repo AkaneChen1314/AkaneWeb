@@ -23,6 +23,7 @@
         })[c],
     );
   // 商品圖示。
+  // 每種標的在畫面上用的小圖示（例如 sky 是「天空鑽石」，用 💎）。
   const ICONS = {
       sky: "💎",
       moon: "🚀",
@@ -212,7 +213,10 @@
 
   // 依身家、健康與日子決定稱號、頭像與章節。
   function rank() {
+    // 依目前的總資產（現金＋持倉－欠款）與身體狀況，決定玩家現在的稱號、表情與
+    // 故事章節。
     const eq = E.equity(s);
+    // 遊戲已經結束：依結局種類（猝死、破產等）顯示最後一章。
     if (s.ended)
       return s.endType === "death"
         ? {
@@ -231,6 +235,7 @@
             title: "你終於離開牌桌。",
             detail: "從百億大戶，到一無所有。",
           };
+    // 健康低於 25：身體先撐不住。
     if (s.health < 25)
       return {
         name: "透支的人",
@@ -240,6 +245,7 @@
         title: "健康也沒有了。",
         detail: "休息或繼續加碼，現在都在付代價。",
       };
+    // 總資產變成負數：欠的比有的多。
     if (eq < 0)
       return {
         name: "負債負翁",
@@ -249,6 +255,7 @@
         title: "連未來的錢都輸了。",
         detail: "利息繼續跑，健康卻沒有一起增加。",
       };
+    // 資產不到 10 億：快要破產；接下來越有錢，稱號越好。
     if (eq < 1e9)
       return {
         name: "破產邊緣",
@@ -267,6 +274,7 @@
         title: "本金少了，膽子反而大了。",
         detail: "每一次借錢，都是把下一天押進去。",
       };
+    // 以上都不是：還是有錢的「百億大戶」。
     return {
       name: "百億大戶",
       avatar: "🧑‍💼",
@@ -705,6 +713,7 @@
     let tip = "";
     // 游標或手指停留處的數值提示。
     if (chartHover !== null) {
+      // n 是滑鼠或手指目前指在圖表上的第幾天（從 0 開始），用來顯示那一天的價格。
       const n = Math.max(
           0,
           Math.min(
@@ -819,9 +828,11 @@
   }
   // 打工畫面：題目、選項與失誤次數。
   function jobScreen(message = "") {
+    // j 是目前正在做的打工；def 是這份工作的固定資料（名稱、題目、薪水）。
     const j = s.job;
     if (!j) return;
     const def = E.JOBS.find((x) => x.id === j.id);
+    // 打工視窗：上面是工作名稱與進度，下面是這一題的選項按鈕。
     modal(
       "work",
       /* HTML */ `<div class="modal-kicker">
@@ -1242,6 +1253,8 @@
   }
   // 手機畫面：虛構社群貼文與訊息。
   function phoneModal() {
+    // 手機視窗：顯示收到的訊息（朋友、不明群發帳號、催收通知用不同圖示），下面
+    // 是「找朋友幫忙」等按鈕。
     modal(
       "phone",
       /* HTML */ `<div class="phone-head">
@@ -2100,8 +2113,10 @@
   }
   // 借款視窗的內容。
   function renderLoanModal() {
+    // t 是目前選的借款種類（銀行、網貸、地下錢莊…），max 是這種最多能借多少。
     const t = E.LOAN_TYPES[loanType],
       max = E.loanLimit(s, loanType);
+    // 借款視窗：上方切換借款種類，中間輸入金額，下面顯示利息與條件。
     modal(
       "loan",
       /* HTML */ `<div class="modal-kicker">借錢不是賺錢</div>
@@ -2171,6 +2186,7 @@
           }
         </div>`,
     );
+    // 先算一次借據的內容；之後每次輸入金額都重新計算。
     loanReceipt();
     $("loan-amount").addEventListener("input", loanReceipt);
   }
@@ -2529,10 +2545,12 @@
 
   // 依待處理事件的種類，打開對應的畫面。
   function pendingScreen() {
+    // 「假斷線」事件：顯示斷線畫面就結束。
     if (s.pending.type === "glitch") {
       showGlitch();
       return;
     }
+    // 劇情事件：顯示事件內容與選項按鈕。
     if (s.pending.type === "event") {
       const ev = E.EVENTS[s.pending.day];
       modal(
@@ -2555,6 +2573,7 @@
     } else if (s.pending.type === "debt") {
       collectionModal();
     } else {
+      // 健康快撐不住時的「生存選擇」：找出一個還能賣的身體部件。
       const organ = E.ORGANS.find(
         (x) =>
           x.id !== "core" && x.id !== "liver_whole" && E.organAvailable(s, x),
@@ -2873,6 +2892,8 @@
     }
     // 真正送出這筆交易。
     const perform = () => {
+      // 依目前選的標的、金額、槓桿、商品與方向（買漲或買跌）下單；r 是結果，裡
+      // 面有成功與否和訊息。
       const r = E.open(s, {
         asset: selected,
         amount: amt,
@@ -2941,8 +2962,11 @@
 
   // 所有按鈕的點擊都在這裡處理，依 data-… 屬性分派。
   document.addEventListener("click", (event) => {
+    // 整個畫面只用一個點擊處理程式：找出被點到的按鈕，再依按鈕上的 data-* 標記
+    // 決定要做什麼。被停用的按鈕不處理。
     const b = event.target.closest("button");
     if (!b || b.disabled) return;
+    // 點選標的（股票、加密幣等）：切換目前選的標的並重畫市場與下單區。
     if (b.dataset.asset) {
       selected = b.dataset.asset;
       renderAssets();
@@ -2950,6 +2974,7 @@
       renderOrder();
       lessonAction("asset");
     }
+    // 切換標的分類：自動選該分類的第一個標的。
     if (b.dataset.filter) {
       filter = b.dataset.filter;
       selected = E.ASSETS.find((a) => a.kind === filter).id;
@@ -2957,6 +2982,7 @@
       renderMarket();
       renderOrder();
     }
+    // 選擇買漲或買跌、商品種類、預算金額。
     if (b.dataset.direction) {
       direction = b.dataset.direction;
       renderOrder();
@@ -2968,6 +2994,7 @@
       renderOrder();
       lessonAction("budget");
     }
+    // 依比例下單（例如 25%、50%、全部）：用現金扣掉手續費後能買多少來算。
     if (b.dataset.percent) {
       const max = s.cash / (1 + E.orderFee(1, leverage(), product));
       $("amount").value = (
@@ -2975,6 +3002,7 @@
       ).toFixed(4);
       renderOrder();
     }
+    // 切換圖表種類（線圖、K 線）與期間。
     if (b.dataset.chart) {
       chartMode = b.dataset.chart;
       chartHover = null;
@@ -2985,6 +3013,7 @@
       chartHover = null;
       renderChart();
     }
+    // 開始打工；答題時把答案交給引擎，做完就發薪水。
     if (b.dataset.job) {
       const r = E.work(s, b.dataset.job);
       if (r.ok) {
@@ -3001,11 +3030,13 @@
         feedback(r.pay, "這次靠自己的雙手領到薪水。");
       } else jobScreen(r.message);
     }
+    // 切換設定（音效、特效）並重畫設定視窗。
     if (b.dataset.setting) {
       prefs[b.dataset.setting] = !prefs[b.dataset.setting];
       render();
       settingsModal();
     }
+    // 「跳到」按鈕：捲動到市場、下單、身體、持倉等區塊。
     if (b.dataset.jump) {
       const selectors = {
         market: ".market-panel",
@@ -3018,6 +3049,7 @@
         behavior: prefs.effects ? "smooth" : "instant",
       });
     }
+    // 切換持倉分頁、賣出某一筆持倉。
     if (b.dataset.tab) {
       tab = b.dataset.tab;
       renderPortfolio();
@@ -3027,10 +3059,12 @@
       after(r);
       if (r.ok) lessonAction("sell");
     }
+    // 切換借款種類。
     if (b.dataset.loanType) {
       loanType = b.dataset.loanType;
       renderLoanModal();
     }
+    // 身體相關：查看部位、打開身體圖、選擇要賣的部件、確認賣出。
     if (b.dataset.bodyPart) bodyDetail(b.dataset.bodyPart);
     if (b.dataset.bodyZone) bodyModal(b.dataset.bodyZone);
     if (b.dataset.organ) confirmOrgan(b.dataset.organ);
@@ -3067,6 +3101,7 @@
         }
       } else toast(r.message, true);
     }
+    // 借據上的勾選（同意抵押身分證、通訊錄）。
     if (b.dataset.contractAck && contractDraft) {
       contractDraft[b.dataset.contractAck === "id" ? "idAck" : "contactsAck"] =
         !contractDraft[
@@ -3074,6 +3109,7 @@
         ];
       contractModal();
     }
+    // 回覆催收訊息。
     if (b.dataset.debtReply) {
       const r = E.collectorReply(s, b.dataset.debtReply);
       if (r.ok) {
@@ -3082,6 +3118,7 @@
         collectionModal();
       } else toast(r.message, true);
     }
+    // 切換賭場遊戲種類（保留剛才輸入的賭注）。
     if (b.dataset.casinoMode) {
       if ($("casino-stake")) casinoStake = $("casino-stake").value;
       casinoType = b.dataset.casinoMode;
@@ -3089,6 +3126,7 @@
     }
     // 賭局動作。
     if (b.dataset.gambleAction) {
+      // 把賭局裡按的動作（例如翻開第幾格）交給引擎處理；r 是結果。
       const r = E.gambleAction(
         s,
         b.dataset.gambleAction,
@@ -3109,6 +3147,7 @@
     }
     // 一般按鈕用 data-action 分派。
     const a = b.dataset.action;
+    // data-action 的動作：取名、取消或簽下借據、打開手機、找朋友幫忙。
     if (a === "choose-name") chooseName();
     if (a === "cancel-contract") {
       contractDraft = null;
@@ -3122,6 +3161,7 @@
       phoneModal();
       toast(r.message, !r.ok);
     }
+    // 賭場：再玩一次、開始一局、暫停保留這一局。
     if (a === "casino-again") casinoModal();
     if (a === "start-gamble") {
       casinoStake = $("casino-stake").value;
@@ -3136,6 +3176,7 @@
       render();
       toast("本局已保留；回遊戲館繼續。結束前不能交易或過一天。");
     }
+    // 打工：暫停保留、放棄這一班。
     if (a === "pause-work") {
       dismiss(true);
       render();
@@ -3147,6 +3188,7 @@
       render();
       toast("放棄這班，沒有發薪。");
     }
+    // 教學：關閉視窗、開始、完成、跳過、下一步。
     if (a === "dismiss") dismiss();
     if (a === "start-lesson") {
       if (!s.named) nameModal();
@@ -3162,11 +3204,13 @@
       dismiss(true);
       lessonAction(LESSONS[lessonStep].key);
     }
+    // 還款、人生戰報、開始新人生、返回上一層視窗。
     if (a === "open-repay") repayModal();
     if (a === "report") report();
     if (a === "new-life") newLife();
     if (a === "back-organs") organModal();
     if (a === "back-body") bodyModal();
+    // 切換特效開關，並存到偏好設定。
     if (a === "effects") {
       prefs.effects = !prefs.effects;
       save();
@@ -3198,6 +3242,7 @@
         } else toast(r.message, true);
       }
     }
+    // 還款：把輸入的金額（單位是億）交給引擎扣款。
     if (a === "repay") {
       const r = E.payDebt(s, Number($("repay-amount").value) * 1e8);
       if (r.ok) {
@@ -3383,6 +3428,7 @@
   shortcut.className = "purple-button mobile-loan-button";
   shortcut.textContent = "借錢再拚一次";
   document.querySelector(".character-panel").append(shortcut);
+  // 快捷列的「借錢」：教學進行中只算完成一步，否則打開借款視窗。
   shortcut.addEventListener("click", () => {
     if (lesson) lessonAction("loan");
     else loanModal();
@@ -3487,6 +3533,7 @@
   });
   $("chart").addEventListener("pointermove", inspectChart);
   $("chart").addEventListener("pointerdown", inspectChart);
+  // 滑鼠離開圖表：取消指著的那一天，圖表恢復顯示最新價格。
   $("chart").addEventListener("pointerleave", () => {
     chartHover = null;
     renderChart();
@@ -3535,6 +3582,7 @@
     chartHover = null;
     renderChart();
   });
+  // 切到別的分頁再回來時，把「正在操作中」的狀態清掉，圖表重畫一次。
   document.addEventListener("visibilitychange", () => {
     interacting = false;
     renderChart();
@@ -3548,6 +3596,7 @@
     },
     { passive: true },
   );
+  // 手指或滑鼠放開（或被系統取消）時，表示已經不在拖動圖表了。
   document.addEventListener(
     "pointerup",
     () => {

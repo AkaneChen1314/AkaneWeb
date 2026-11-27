@@ -349,6 +349,9 @@
           new Uint16Array(mesh.indices),
           gl.STATIC_DRAW,
         );
+        // 每種形狀（球、方塊、圓錐…）各自一組 GPU 緩衝區：vbo 放形狀的點、ibo
+        // 放三角形的連法、instances 放這一幀要畫的每一個物件的位置與顏色（一次
+        // 最多 16384 個數字）。
         this.meshes[key] = {
           vbo,
           ibo,
@@ -514,13 +517,19 @@
     }
     // 2D 備援畫法：由遠到近逐一畫。
     endFallback() {
+      // 相容畫面（瀏覽器不支援 WebGL 時）：用 2D 畫布模擬 3D。ratio 是畫布像素
+      // 與畫面大小的比例。
       const ctx = this.ctx,
         ratio = this.canvas.width / this.width;
       ctx.save();
       ctx.scale(ratio, ratio);
+      // 先把所有物件換算成螢幕位置，再依遠近排序：遠的先畫，近的後畫，近的才會
+      // 蓋住遠的。
       const items = this.fallbackItems
         .map((item) => ({ ...item, p: this.project(...item.pos) }))
         .sort((a, b) => b.p.depth - a.p.depth);
+      // 每個物件依形狀畫成 2D：方塊畫成四邊形，其他畫成帶漸層的圓（看起來有立體
+      // 感）。
       for (const o of items) {
         const { x, y } = o.p,
           edge = this.project(o.pos[0] + o.scale[0], o.pos[1], o.pos[2]),
@@ -579,6 +588,7 @@
           ctx.fill();
         }
       }
+      // 畫完恢復畫布原本的設定。
       ctx.restore();
     }
 
@@ -586,6 +596,8 @@
 
     // 畫蛇：身體、角色專屬裝飾、頭部與眼睛。
     snake(points, char, angle, time, options = {}) {
+      // scale 是大小倍率，base 是離地高度；model 是角色種類（例如 ember 赤焰），
+      // flashing 是受傷閃白。
       const scale = options.scale || 1,
         base = options.y || 0.6;
       const model = char.id,
@@ -593,6 +605,7 @@
         active = options.active;
       // 身體由尾到頭逐節畫。
       for (let i = points.length - 1; i >= 0; i--) {
+        // 從尾巴往頭一節一節畫：每節身體有輕微的上下起伏，頭最大、越往尾巴越細。
         const p = points[i],
           y = (p.y ?? base) + Math.sin(time * 3 - i * 0.3) * 0.04,
           radius =
@@ -600,21 +613,26 @@
             (i === 0
               ? 0.69
               : 0.48 * (1 - Math.pow(i / points.length, 3) * 0.65));
+        // yaw 是這一節面向的方向（朝向前一節）。
         const yaw =
           i === 0
             ? angle
             : Math.atan2(points[i - 1].z - p.z, points[i - 1].x - p.x);
+        // 身體顏色：受傷時整條閃白，每 5 節有一節深色花紋。
         const bodyColor = flashing
           ? "#f9e6e2"
           : i % 5 === 3
             ? char.dark
             : char.color;
+        // 每一節下面先畫一個扁平的深色影子。
         this.draw(
           "sphere",
           [p.x, 0.035, p.z],
           [radius * 1.14, 0.018, radius * 0.88],
           "#0b191d",
         );
+        // 畫這一節的身體（一個稍微壓扁的球），再依角色加上專屬的裝飾（尖刺、火
+        // 焰、冰晶等）。
         this.draw(
           "sphere",
           [p.x, y, p.z],
@@ -662,6 +680,7 @@
             );
         }
       }
+      // 蛇頭：at(前後, 高度, 左右) 把相對於頭的位置換算成世界座標。
       const h = points[0],
         y = (h.y ?? base) + Math.sin(time * 3) * 0.04,
         c = Math.cos(angle),
@@ -674,6 +693,7 @@
       ];
       // 兩側的眼睛與角色專屬頭飾。
       for (const side of [-1, 1]) {
+        // 兩隻眼睛：白色眼白、深色瞳孔、白色反光點。
         this.draw(
           "sphere",
           at(0.25, 0.4, side * 0.43),
@@ -697,6 +717,7 @@
           angle,
           1,
         );
+        // 依角色加上頭部裝飾：翡翠的葉子、赤焰的角、霜嵐的冰冠、曜金的頭盔。
         if (model === "verdant")
           this.draw(
             "cone",
@@ -731,6 +752,7 @@
             angle,
           );
       }
+      // 舌頭。
       this.draw(
         "sphere",
         at(0.78, 0.05, 0),
@@ -989,18 +1011,23 @@
         pal = BUG_PALETTE[e.kind] || ["#3a1c24", "#ffffff"],
         dark = frozen ? "#4d8fa3" : pal[0],
         glow = pal[1];
+      // grow 是剛出生時從小長大的動畫；s 是大小（菁英大 25%），squash 是受傷時
+      // 壓扁一下。
       const grow = e.age < 0.8 ? 0.4 + (Math.max(0, e.age) / 0.8) * 0.6 : 1,
         s = (e.elite ? 1.25 : 1) * grow,
         squash = e.flash > 0 ? 0.86 : 1;
+      // a 是敵人面向的方向：蓄力衝撞或瞄準時面向目標方向，其他時候面向蛇頭。
       const a =
         (e.windup > 0 || e.charge > 0) && Number.isFinite(e.chargeAngle)
           ? e.chargeAngle
           : e.aim > 0 && Number.isFinite(e.aimAngle)
             ? e.aimAngle
             : e.angle;
+      // at(前後, 左右, 高度) 把相對於敵人的位置換算成世界座標。
       const c = Math.cos(a),
         sn = Math.sin(a),
         at = (f, sd, y) => [e.x + c * f - sn * sd, y, e.z + sn * f + c * sd];
+      // walk 控制腳步擺動（被凍結或暈眩時不動），breathe 是待機時的呼吸起伏。
       const walk = frozen || e.stunned > 0 ? 0 : still,
         breathe = Math.sin(t * 3 + (e.seed || 0)) * 0.025 * still;
       // 剛出現的光圈。
@@ -1013,6 +1040,7 @@
           0,
           1,
         );
+      // 蛇形敵人另外畫成蜈蚣；其他敵人先畫影子，再依種類畫身體。
       if (e.serpent) this.centipede(e, hex, dark, glow, t, s, walk);
       else {
         this.draw(
@@ -1023,6 +1051,7 @@
         );
         switch (e.kind) {
           case "swarm": {
+            // 蜂群：小小的飛蟲，翅膀快速拍動，上下飄動。
             const y = 0.95 * s + Math.sin(t * 9 + e.seed) * 0.16 * still,
               flap =
                 0.4 +
@@ -1099,6 +1128,7 @@
           }
           case "splitter":
           case "mini": {
+            // 分裂蟲與迷你蟲：圓滾滾的身體，會一伸一縮。
             const R = e.r * grow,
               sq = 1 + Math.sin(t * 5 + e.seed) * 0.1 * still,
               y = R * 0.78;
@@ -1172,6 +1202,7 @@
             break;
           }
           case "charger": {
+            // 衝鋒甲蟲：蓄力時抖動、發紅，衝撞時身體前傾。
             const winding = e.windup > 0,
               rush = e.charge > 0,
               hot = winding || rush,
@@ -1275,6 +1306,7 @@
             break;
           }
           case "bomber": {
+            // 自爆蟲：倒數時身體膨脹、閃爍，越接近爆炸閃得越快。
             const lit =
                 e.fuse > 0 &&
                 Math.floor(t * (e.fuse < 0.4 ? 22 : 10)) % 2 === 0,
@@ -1339,6 +1371,7 @@
             break;
           }
           case "shield": {
+            // 盾甲蟲：前面有一面盾，盾被打破時顯示裂開。
             const y = 0.42 * s + breathe,
               broken = e.shieldBreak > 0;
             this.bugLegs(
@@ -1433,6 +1466,7 @@
             break;
           }
           case "healer": {
+            // 治療蛾：飄在空中，翅膀慢慢拍動，替同伴治療時發光。
             const y = s + Math.sin(t * 2.2 + e.seed) * 0.12 * still,
               flap = Math.sin(t * 5 + e.seed) * 0.35 * walk,
               charge = e.special < 0.4 ? 1 - Math.max(0, e.special) / 0.4 : 0;
@@ -1544,6 +1578,7 @@
             break;
           }
           case "sniper": {
+            // 狙擊蟲：瞄準時長長的砲管對準目標，鎖定時變紅。
             const aiming = e.aim > 0,
               locked = aiming && e.aim <= 0.3,
               y = 0.55 * s;
@@ -1627,6 +1662,7 @@
             break;
           }
           case "ranged": {
+            // 射手蟲：射擊後砲管往後縮（後座力）。
             const y = 0.5 * s + breathe,
               recoil = Math.max(0, Math.min(1, (e.shot - 2.35) / 0.45));
             this.bugLegs(
@@ -1809,7 +1845,9 @@
         pulse = roar ? 1 + Math.sin(t * 30) * 0.07 * still : 1,
         flash = e.flash > 0,
         frozen = g.frozen > 0;
+      // tint 依狀態換顏色：被凍結變藍、受傷閃白。
       const tint = (hex) => (frozen ? "#91e2f5" : flash ? "#fff2d6" : hex);
+      // 首領面向的方向（衝撞時面向衝撞方向）。
       const a =
           (e.windup > 0 || e.charge > 0) && Number.isFinite(e.chargeAngle)
             ? e.chargeAngle
@@ -1822,6 +1860,7 @@
         y,
         e.z + sn * f + c * sd,
       ];
+      // 首領腳下的影子、階段光圈與環繞的三顆寶石。
       this.draw("sphere", [e.x, 0.04, e.z], [3.2, 0.025, 2.7], "#10171d");
       this.draw(
         "ring",
@@ -1844,6 +1883,7 @@
       }
       // 第一位：熔岩巨像。
       if (e.variant === 0) {
+        // 熔岩巨像：岩石身體，裂縫裡的熔岩隨階段越來越亮。
         const lava = p === 1 ? "#ff7a2e" : p === 2 ? "#ff9a3d" : "#ffd27a",
           glow = 0.6 + p * 0.14,
           rock = tint("#352a25"),
@@ -1988,6 +2028,7 @@
           }
         // 第二位。
       } else if (e.variant === 1) {
+        // 蟲后：紫色的大身體、翅膀與環繞的蟲卵，有護衛時外面多三層防護環。
         this.draw(
           "sphere",
           at(-1.5, 0, 1.4),
@@ -2099,6 +2140,8 @@
             );
         // 第三位。
       } else {
+        // 冰晶核心：懸浮的巨大晶體，外面有旋轉的冰環與碎片；蓄力時變白，暈眩時
+        // 落地。
         const charging = e.windup > 0 || e.charge > 0,
           stunned = e.stunned > 0,
           y = stunned ? 1.3 : 2.4 + Math.sin(t) * 0.2 * still;
@@ -2187,6 +2230,7 @@
       // 道具共用：顏色、上下浮動與底座。
       const rainbow = ["#ff8fb1", "#ffd27a", "#9df5a8", "#8fd3ff", "#c7a6ff"],
         col = f.type === "rainbow" ? rainbow[Math.floor(t * 6) % 5] : def.color;
+      // 能力道具：懸浮並慢慢旋轉；下面是影子、光圈與一道光柱，方便遠遠就看到。
       const y = 1.05 + Math.sin(t * 2.4 + f.phase) * 0.15 * still,
         spin = t * 1.6 + f.phase,
         c = Math.cos(spin),
@@ -2200,6 +2244,7 @@
       this.draw("box", [f.x, 2.4, f.z], [0.025, 2.3, 0.025], col, 0, 1);
       switch (f.type) {
         case "speed": {
+          // 加速道具：閃電形狀。
           const tilt = Math.sin(t * 3 + f.phase) * 0.06 * still;
           this.draw(
             "box",
@@ -2248,6 +2293,7 @@
           break;
         }
         case "magnet": {
+          // 磁鐵道具：U 形磁鐵。
           for (const side of [-1, 1]) {
             const arm = side > 0 ? "#e04f6f" : col;
             this.draw(
@@ -2307,6 +2353,7 @@
           break;
         }
         case "fury": {
+          // 狂暴道具：火焰形狀。
           for (const [fw, dy, r] of [
             [0.18, 0.14, 0.11],
             [0.08, 0.05, 0.12],
@@ -2360,6 +2407,7 @@
           break;
         }
         case "shield": {
+          // 護盾道具：盾牌形狀。
           this.draw(
             "box",
             at(0, 0, y + 0.04),
@@ -2412,6 +2460,7 @@
           break;
         }
         case "bomb": {
+          // 炸彈道具：圓形炸彈與引信。
           this.draw(
             "sphere",
             [f.x, y, f.z],
@@ -2490,11 +2539,14 @@
 
     // 畫整個遊戲場景，只畫鏡頭看得到的東西。
     gameScene(g, camera, reducedMotion, zoom = 1) {
+      // w 是目前地圖的顏色設定，h 是蛇頭，t 是遊戲時間，still 為 0 時表示「減少
+      // 動態」（不播放裝飾動畫）。
       const w = Serpent.WORLDS[g.world],
         FOODS = Serpent.FOODS,
         h = g.snake[0],
         t = g.time,
         still = reducedMotion ? 0 : 1;
+      // 鏡頭高度（手機畫面窄，看近一點），並記下來給特效畫布換算位置用。
       const viewHeight = (this.canvas.clientWidth < 650 ? 36 : 43) * zoom;
       this.viewHeight = viewHeight;
       // 鏡頭位置。
@@ -2504,12 +2556,14 @@
         viewHeight,
         w.background,
       );
+      // 鏡頭看得到的範圍，visible() 判斷某個位置在不在畫面裡，不在的就不畫。
       const bound = g.bound,
         halfW = ((viewHeight * this.width) / this.height) * 0.55,
         halfH = viewHeight * 0.7;
       const visible = (p, margin = 5) =>
         Math.abs(p.x - camera.x) < halfW + margin &&
         Math.abs(p.z - camera.z) < halfH + margin;
+      // 地面。
       this.draw("box", [0, -0.28, 0], [bound + 1, 0.25, bound + 1], w.floor);
       // 地面花紋。
       for (const p of g.patches)
@@ -2526,6 +2580,7 @@
         gx1 = Math.min(bound, camera.x + halfW + 6),
         gz0 = Math.max(-bound, Math.ceil((camera.z - halfH - 6) / 3) * 3),
         gz1 = Math.min(bound, camera.z + halfH + 6);
+      // 只畫畫面看得到的那一段格線，每 3 單位一條。
       const zLo = Math.max(-bound, camera.z - halfH - 6),
         zHi = Math.min(bound, camera.z + halfH + 6),
         xLo = Math.max(-bound, camera.x - halfW - 6),
@@ -2565,6 +2620,7 @@
         if (!visible(z, z.r)) continue;
         // 治癒泉：水位會隨使用減少。
         if (z.type === "spring") {
+          // 治癒泉：一圈石頭、水面（水越滿越亮）、往外擴散的波紋與往上冒的光點。
           const fill = z.charge / z.max,
             water = fill > 0.2 ? "#3fc9a3" : "#2a6f60",
             stones = 14;
@@ -2653,6 +2709,7 @@
           this.draw("box", [z.x, cy, z.z], [0.07, 0.07, 0.24], "#7ef0c8", t, 1);
         } else {
           const zw = w.zone;
+          // 其他區域（減速區等）：扁平的色塊與外框。
           this.draw(
             "sphere",
             [z.x, -0.005, z.z],
@@ -2735,6 +2792,7 @@
       // 加速板：有框的金屬板，箭頭依序發亮。
       for (const p of g.pads) {
         if (!visible(p, 2)) continue;
+        // 跳躍板：底座、四個角的燈與中間的箭頭；使用後冷卻中會發亮。
         const c = Math.cos(p.angle),
           s = Math.sin(p.angle),
           hot = p.cooldown > 0,
@@ -2820,6 +2878,7 @@
           deep = p.pair ? "#163049" : "#24173a";
         this.draw("sphere", [p.x, -0.005, p.z], [2.05, 0.04, 2.05], "#2a2638");
         this.draw("sphere", [p.x, 0.01, p.z], [1.75, 0.03, 1.75], deep);
+        // 傳送門：地上的光圈、兩層旋轉的環與頂端的寶石。
         this.draw(
           "sphere",
           [p.x, 0.03, p.z],
@@ -2884,6 +2943,7 @@
         if (!visible(d)) continue;
         const sz = d.size,
           ph = d.phase;
+        // 地圖裝飾（不影響遊戲）：三張地圖各有不同的石頭、草叢、水晶等。
         if (g.world === 0) {
           if (d.type === 0) {
             this.draw(
@@ -3049,6 +3109,7 @@
       // 障礙物，依戰場有不同外觀。
       for (const o of g.obstacles) {
         if (!visible(o, o.landmark ? 10 : 5)) continue;
+        // 障礙物：先畫影子，地標是比較大的特殊造型。
         this.draw(
           "sphere",
           [o.x, 0.01, o.z],
@@ -3250,6 +3311,7 @@
       // 寶箱：受傷會裂開並搖晃。
       for (const c of g.caches) {
         if (c.dead || !visible(c, 2)) continue;
+        // 寶箱：受傷時閃白並搖晃，血越少蓋子打開越大，裡面發出金光。
         const flash = c.flash > 0,
           dmg = 1 - Math.max(0, c.hp) / c.maxHp,
           shake = flash ? Math.sin(t * 70) * 0.05 : 0,
@@ -3348,6 +3410,8 @@
       for (const f of g.food) {
         if (!visible(f, 1)) continue;
         const def = FOODS[f.type] || FOODS.energy;
+        // 食物：能力道具另外畫；快消失時閃爍。其他食物依種類畫成不同形狀（治療
+        // 十字、晶體、果實等）。
         if (def.power) {
           if (!(f.life < 5 && Math.floor(t * 8) % 2 === 0))
             this.powerModel(f, def, t, still);
@@ -3411,6 +3475,7 @@
       for (const p of g.projectiles) {
         const col = p.color || "#ffad85",
           r = (p.r || 0.25) * 0.95;
+        // 敵人的子彈：狙擊彈是細長的光束，其他是圓形光球，後面拖著殘影。
         if (p.kind === "snipe") {
           const a = Math.atan2(p.vz, p.vx);
           this.draw("gem", [p.x, 0.6, p.z], [0.7, 0.12, 0.12], col, a, 1);
@@ -3450,6 +3515,7 @@
           g.invulnerable > 0 && !reducedMotion && Math.floor(t * 10) % 2 === 0,
         active: g.activeSkill > 0,
       });
+      // 蛇頭下方的光圈：生命低於 30% 時變紅。
       this.draw(
         "ring",
         [h.x, 0.07, h.z],
@@ -3501,6 +3567,7 @@
         );
         this.draw("ring", [h.x, 1.6, h.z], [0.6, 2, 0.6], "#8fd3ff", t, 1);
       }
+      // 磁吸範圍：有磁吸道具或技能時，畫出吸取食物的範圍圈。
       if (
         g.powers.magnet > 0 ||
         (g.activeSkill > 0 && g.characterIndex === 0)
@@ -3560,6 +3627,7 @@
       }
       // 粒子與飄浮的小光點。
       if (this.quality !== "low" && !reducedMotion) {
+        // 粒子（擊破碎片等），以及畫面裡飄浮的環境光點。
         for (const p of g.particles) {
           const size = p.size * Math.min(1, p.life * 3);
           this.draw(
@@ -3596,6 +3664,7 @@
           this.draw("gem", [x, y, z], [0.05, 0.07, 0.05], mote, t + i, 1);
         }
       }
+      // 把這一幀收集到的所有物件一次交給 GPU 畫出來。
       this.end();
     }
   }

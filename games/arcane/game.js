@@ -60,6 +60,7 @@ window.visualViewport?.addEventListener("resize", scheduleViewportUpdate, {
 
 // 多位角色共用的基本卡牌。
 const shared = {
+  // 星紋斬：花 1 點行動力，造成傷害並獲得 12 星能。
   strike: () =>
     card("star-slash", "星紋斬", "攻擊", 1, {
       damage: 78,
@@ -68,6 +69,7 @@ const shared = {
       color: "#6da6ff",
       desc: "造成傷害，獲得 12 星能。",
     }),
+  // 相位護壁：花 1 點行動力，獲得護盾（角色防禦越高，護盾越厚）。
   guard: () =>
     card("phase-wall", "相位護壁", "防禦", 1, {
       block: 88,
@@ -75,6 +77,7 @@ const shared = {
       color: "#63d7ff",
       desc: "獲得護盾，數值受角色防禦影響。",
     }),
+  // 星脈共鳴：不花行動力，獲得 20 星能並多抽 1 張牌。
   focus: () =>
     card("astral-focus", "星脈共鳴", "術法", 0, {
       energyGain: 20,
@@ -1144,6 +1147,8 @@ function showScreen(id) {
 
 // 畫出角色卡片，點選後更新說明。
 function renderFighters() {
+  // 把每一位角色做成一張選角卡片（頭像、稱號、能力值、天賦），全部接成 HTML 一
+  // 次放進畫面。
   $("#fighterGrid").innerHTML = fighters
     .map(
       (fighter) => /* HTML */ ` <article
@@ -1205,6 +1210,8 @@ function renderFighters() {
         </article>`,
     )
     .join("");
+  // 點選角色卡片：記下選到的角色，標示選中狀態，並更新下方的說明與「下一步」按
+  // 鈕。
   $$(".fighter-card").forEach(
     (node) =>
       (node.onclick = () => {
@@ -1385,6 +1392,7 @@ function renderDifficulty() {
       "selected",
       node.dataset.difficulty === selectedDifficulty,
     );
+    // 點選難度按鈕：記下難度，再重畫一次讓選中的按鈕變亮。
     node.onclick = () => {
       selectedDifficulty = node.dataset.difficulty;
       renderDifficulty();
@@ -1441,10 +1449,10 @@ function chooseIntent() {
   return scaleIntent(pick(moves.slice(0, Math.min(3, moves.length))));
 }
 
-// 依目前隊伍與難度建立戰鬥；試煉接續和一般新局共用這個入口。
-
 // ---------- 戰鬥開始、抽牌與洗牌 ----------
 
+// 依目前隊伍與難度建立戰鬥；試煉接續和一般新局共用這個入口。
+// continuingTrial 為 true 表示「試煉模式打贏後接著下一關」，會保留部分狀態。
 function startBattle(continuingTrial = false) {
   if (
     !selectedFighter ||
@@ -1671,6 +1679,8 @@ function renderBattle() {
 
 // 把單位身上的增益與異常做成標籤。
 function buffMarkup(unit) {
+  // 依角色身上的狀態，一個一個加入狀態小圖示：上半是好的（護盾、劍勢、反擊、召
+  // 喚、再生、逆命），下半是壞的（灼燒、中毒、流血、破綻、弱化）。
   const buffs = [];
   if (unit.block)
     buffs.push({
@@ -1760,6 +1770,7 @@ function buffMarkup(unit) {
       type: "negative",
       tip: "造成的傷害降低 28%",
     });
+  // 每個狀態做成一個小標籤（圖示＋數值），滑過會顯示說明。
   return buffs
     .map(
       (buff) => /* HTML */ `<span class="buff ${buff.type}" title="${buff.tip}"
@@ -1787,6 +1798,8 @@ const cardTypeMeta = {
 
 // 卡牌上的效果標籤，最多四個。
 function cardEffectBadges(item) {
+  // 依卡牌的效果，一個一個加入效果標籤（傷害、護盾、星能、抽牌、異常狀態等），
+  // 最後只取前四個顯示在卡面上。
   const effects = [];
   if (item.damage)
     effects.push({
@@ -1857,7 +1870,9 @@ function cardEffectBadges(item) {
 
 // 畫出手牌，不能出的牌會變暗並說明原因。
 function renderHand() {
+  // 這回合最多能出幾張牌（被敵人限制時會減少，但至少 1 張）。
   const limit = Math.max(1, player.cardLimit - player.limitPenalty);
+  // 把手牌一張一張畫出來：星能或行動力不夠、或已經到出牌上限的牌會變暗，不能按。
   $("#hand").innerHTML = hand
     .map((item, index) => {
       const noEnergy = (item.energyCost || 0) > player.energy;
@@ -1944,6 +1959,8 @@ function renderHand() {
       </article>`;
     })
     .join("");
+  // 點卡牌就出牌；點卡牌上的「i」只看說明，不會出牌（stopPropagation 讓這次點擊
+  // 不要傳到卡牌本身）。
   $$(".battle-card").forEach(
     (node) => (node.onclick = () => playCard(Number(node.dataset.index))),
   );
@@ -2213,6 +2230,7 @@ function endPlayerTurn() {
 
 // 敵人回合：行動、特殊機制、持續傷害，再進入下一回合。
 function enemyTurn() {
+  // 戰鬥已經結束就不再行動。
   if (battleOver) return;
   // 被封鎖就不能行動。
   if (enemy.stunned) {
@@ -2229,6 +2247,7 @@ function enemyTurn() {
     const visualBefore = Spectacle.attack(currentIntent, enemy, "enemy");
     const hits = currentIntent.hits || 1;
     let total = 0;
+    // 依敵人這回合的意圖，打出一下或好幾下（hits），累計造成的傷害。
     for (let i = 0; i < hits; i++) {
       if (currentIntent.damage)
         total += dealDamage(player, currentIntent.damage, enemy, {
@@ -2246,6 +2265,7 @@ function enemyTurn() {
     if (currentIntent.vuln) player.vulnerable += currentIntent.vuln;
     if (currentIntent.energyDrain)
       player.energy = Math.max(0, player.energy - currentIntent.energyDrain);
+    // 有些敵人會讓玩家下一回合少抽牌、或少出牌。
     if (currentIntent.drawPenalty)
       player.drawPenalty = Math.max(
         player.drawPenalty,
@@ -2261,6 +2281,7 @@ function enemyTurn() {
       "enemy",
     );
     Spectacle.outcome(visualBefore, enemy, "enemy", currentIntent, total);
+    // 敵人身上有流血時，每次行動後都會受到傷害。
     if (enemy.bleed) {
       const amount = enemy.bleed * 10;
       enemy.hp = clamp(enemy.hp - amount, 0, enemy.maxHp);
@@ -2288,6 +2309,8 @@ function enemyTurn() {
     );
     addLog("血月魔相覺醒：血月魔尊的攻擊永久提高！", "enemy");
   }
+  // 回合結束：雙方身上的持續傷害（灼燒、中毒等）結算；有人倒下就結束，否則 0.54
+  // 秒後進入下一回合。
   applyDots(enemy, "enemy");
   applyDots(player, "player");
   if (checkEnd()) return;
@@ -2553,6 +2576,7 @@ function continueTrial() {
 
 // ---------- 按鈕事件 ----------
 
+// 「開始」：顯示選角畫面。
 $("#startBtn").onclick = () => {
   renderFighters();
   showScreen("selectScreen");
@@ -2562,11 +2586,13 @@ function closeRules() {
   $("#rulesModal").classList.remove("open");
   $("#rulesModal").setAttribute("aria-hidden", "true");
 }
+// 「玩法說明」：打開說明視窗，並把焦點移到關閉按鈕。
 $("#rulesBtn").onclick = () => {
   $("#rulesModal").classList.add("open");
   $("#rulesModal").setAttribute("aria-hidden", "false");
   $("#closeRules").focus();
 };
+// 關閉說明視窗後，焦點回到「玩法說明」按鈕。
 $("#closeRules").onclick = () => {
   closeRules();
   $("#rulesBtn").focus();
@@ -2609,12 +2635,14 @@ $("#quitBtn").onclick = () => {
   abortBattle();
   showScreen("startScreen");
 };
+// 「再戰一次」：重新顯示對手與難度，回到挑戰設定畫面。
 $("#againBtn").onclick = () => {
   renderVillains();
   renderDifficulty();
   updateSetupState();
   showScreen("challengeScreen");
 };
+// 「回到首頁」：中止戰鬥並回到開始畫面。
 $("#homeBtn").onclick = () => {
   abortBattle();
   showScreen("startScreen");
@@ -2630,6 +2658,7 @@ function setLogOpen(open) {
 }
 $("#logToggle").onclick = () =>
   setLogOpen(!$("#logPanel").classList.contains("open"));
+// 關閉戰鬥紀錄後，焦點回到「紀錄」按鈕。
 $("#closeLog").onclick = () => {
   setLogOpen(false);
   $("#logToggle").focus();

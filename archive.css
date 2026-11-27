@@ -26,6 +26,7 @@ html {
   color: #e9faff;
   border-bottom-color: #7bd9fb;
 }
+/* 網站名稱「Blue World」與下面的小字。 */
 .brand {
   font-size: 22px;
   letter-spacing: 4px;
@@ -33,9 +34,11 @@ html {
 .brand small {
   font-size: 9px;
 }
+/* 主要內容區：限制最大寬度，太寬的螢幕也不會拉得太開。 */
 main {
   max-width: 1440px;
 }
+/* 鍵盤「跳到主要內容」時，內容區本身不顯示外框。 */
 main:focus {
   outline: none;
 }
@@ -175,6 +178,7 @@ body.playing .stage-beam {
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+/* 標題下方的日文副標。 */
 .hero-japanese {
   font-size: 22px;
   letter-spacing: 4px;
@@ -208,6 +212,7 @@ body.playing .stage-beam {
   color: #071c32;
   border: 0;
 }
+/* 次要連結：比主要按鈕低調的文字連結。 */
 .secondary-link {
   font-size: 13px;
   color: #b4d4eb;
@@ -239,6 +244,7 @@ body.playing .stage-beam {
   color: #759db5;
   letter-spacing: 1px;
 }
+/* 首頁右側放人物圖的舞台。 */
 .hero-stage {
   min-height: 570px;
   position: relative;
@@ -246,6 +252,7 @@ body.playing .stage-beam {
   align-items: center;
   justify-content: center;
 }
+/* 人物圖的外框、圖片與圖說。 */
 .hero-character {
   width: min(88%, 410px);
   height: 550px;
@@ -379,6 +386,7 @@ body.playing .stage-beam {
   border-color: #8cdcff80;
   transform: translateY(-4px);
 }
+/* 入口卡片上方的小標（英文提示字）。 */
 .gateway-kicker {
   display: block;
   font-size: 10px;
@@ -386,6 +394,7 @@ body.playing .stage-beam {
   color: #88b6cf;
   margin-bottom: 23px;
 }
+/* 入口卡片的標題與說明文字。 */
 .gateway h3 {
   font-size: 26px;
 }
@@ -394,6 +403,7 @@ body.playing .stage-beam {
   color: #9fb7cd;
   line-height: 1.9;
 }
+/* 入口卡片下方的「前往」連結列。 */
 .gateway-link {
   display: flex;
   justify-content: space-between;
@@ -403,6 +413,7 @@ body.playing .stage-beam {
   font-size: 12px;
   color: #ace1f3;
 }
+/* 入口卡片右上角的裝飾光環。 */
 .gateway-orbit {
   position: absolute;
   top: 52px;
@@ -460,6 +471,7 @@ body.playing .stage-beam {
   font-weight: 400;
   margin-top: 6px;
 }
+/* 收藏區緊接在標題下方，不再多留上方空白。 */
 .collection {
   padding-top: 0;
 }
@@ -473,6 +485,7 @@ body.playing .stage-beam {
   margin-top: 32px;
   align-items: center;
 }
+/* 人物介紹左邊的肖像框；::before 是框裡的柔光。 */
 .profile-portrait {
   margin: 0;
   position: relative;
@@ -536,6 +549,7 @@ body.playing .stage-beam {
   font-size: 10px;
   color: #7eabbe;
 }
+/* 人物介紹右邊的文字：名字、簡介。 */
 .profile-content h3 {
   font-size: 34px;
   line-height: 1.5;
@@ -546,6 +560,7 @@ body.playing .stage-beam {
   line-height: 1.95;
   color: #aabed1;
 }
+/* 人物基本資料表（例如生日、身高），兩欄排列；dt 是項目名稱，dd 是內容。 */
 .profile-facts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -565,6 +580,7 @@ body.playing .stage-beam {
   font-size: 14px;
   color: #d1e6f2;
 }
+/* 人物的特徵小標籤。 */
 .profile-tags {
   display: flex;
   gap: 10px;
@@ -577,6 +593,7 @@ body.playing .stage-beam {
   color: #91c9e2;
   font-size: 11px;
 }
+/* 介紹文字後面的資料來源小字與連結。 */
 .profile-content .source-inline {
   font-size: 10px !important;
   color: #708ba3 !important;
@@ -591,11 +608,13 @@ body.playing .stage-beam {
 .feature-heading {
   margin-top: 65px;
 }
+/* 角色特點卡片：三欄排列。 */
 .trait-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
 }
+/* 每一張特點卡片的外框、編號、標題與說明。 */
 .trait-card {
   padding: 25px;
   border: 1px solid #78acd72e;
@@ -698,6 +717,7 @@ body.playing .stage-beam {
 .gallery-heading {
   margin-top: 65px;
 }
+/* 圖庫標題下方的工具列：左邊篩選、右邊提示。 */
 .gallery-toolbar {
   display: flex;
   justify-content: space-between;
@@ -705,6 +725,7 @@ body.playing .stage-beam {
   gap: 18px;
   margin: 20px 0 23px;
 }
+/* 圖庫的篩選按鈕；aria-pressed="true" 是目前選中的那一個。 */
 .gallery-filters {
   display: flex;
   flex-wrap: wrap;
@@ -729,6 +750,7 @@ body.playing .stage-beam {
   color: #89cce2;
   font-size: 10px;
 }
+/* 工具列右邊的操作提示小字。 */
 .gallery-hint {
   font-size: 10px;
   color: #62889f;
@@ -755,6 +777,7 @@ body.playing .stage-beam {
   transform: translateY(-4px);
   border-color: #70c6e973;
 }
+/* 圖片本身是一個按鈕，按下會放大。 */
 .gallery-image-button {
   position: relative;
   padding: 0;
@@ -773,6 +796,7 @@ body.playing .stage-beam {
   padding: 18px;
   transition: transform 0.5s;
 }
+/* 動畫劇照的圖片高度較矮，配合橫向畫面。 */
 .gallery-still .gallery-image-button {
   height: 290px;
 }
@@ -780,9 +804,11 @@ body.playing .stage-beam {
   padding: 0;
   object-fit: contain;
 }
+/* 滑鼠移到圖片上時，圖片微微放大。 */
 .gallery-image-button:hover img {
   transform: scale(1.025);
 }
+/* 圖片左上角的編號。 */
 .gallery-number {
   position: absolute;
   z-index: 1;
@@ -814,21 +840,26 @@ body.playing .stage-beam {
   flex-direction: column;
   flex: 1;
 }
+/* 卡片文字區最上面的小分類字（例如「第一季」）。 */
 .gallery-label {
   color: #6b9cb5;
   font-size: 8px;
   letter-spacing: 1.5px;
   margin: 0 0 12px;
 }
+/* 卡片標題。 */
 .gallery-card h3 {
   font-size: 18px;
 }
+/* 卡片的說明文字。 */
 .gallery-card-content > p:not(.gallery-label) {
   font-size: 12px;
   line-height: 1.9;
   color: #90aabf;
   margin-bottom: 18px;
 }
+/* 卡片最下面一列：左邊原頁連結，右邊收藏（愛心）按鈕；按下收藏後
+   aria-pressed 會變成 true。 */
 .gallery-card-footer {
   display: flex;
   justify-content: space-between;
@@ -853,6 +884,7 @@ body.playing .stage-beam {
 .gallery-card-footer button[aria-pressed="true"] {
   color: #86ddff;
 }
+/* 圖庫下方的狀態文字（例如目前顯示幾張）。 */
 .gallery-status {
   color: #7c9cb1;
   font-size: 12px;
@@ -890,10 +922,12 @@ body.playing .stage-beam {
   border-bottom: 1px solid #7bc0da3b;
   padding-bottom: 5px;
 }
+/* 資料來源區的小字。 */
 .archive-sources small {
   color: #607b94;
   font-size: 10px;
 }
+/* 段落最下面的補充說明。 */
 .section-footnote {
   font-size: 11px;
   color: #62839c;
@@ -940,6 +974,7 @@ body.playing .stage-beam {
   margin: 20px 20px 0;
   border-radius: 13px;
 }
+/* 放大視窗右邊的文字說明。 */
 .viewer-info {
   padding: 25px 30px 30px;
 }
@@ -954,6 +989,7 @@ body.playing .stage-beam {
   color: #9ab9d1;
   line-height: 1.9;
 }
+/* 放大視窗的操作列：上一張、下一張、張數、原頁連結。 */
 .viewer-controls {
   display: flex;
   flex-wrap: wrap;
@@ -979,6 +1015,7 @@ body.playing .stage-beam {
   font-size: 11px;
   color: #84bed4;
 }
+/* 已收藏時，放大視窗裡的收藏按鈕改成亮藍色。 */
 #viewer-favorite[aria-pressed="true"] {
   background: #22526c;
   border-color: #84cde9;

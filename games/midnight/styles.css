@@ -40,6 +40,7 @@
 *::after {
   box-sizing: border-box;
 }
+/* 頁面不出現左右捲軸；選取文字時用主題色。 */
 html,
 body {
   overflow-x: clip;
@@ -51,6 +52,7 @@ html {
   background: var(--color-accent);
   color: var(--color-accent-ink);
 }
+/* 頁面背景、文字顏色與最小高度。 */
 body {
   min-height: 100vh;
   margin: 0;
@@ -81,6 +83,7 @@ h2 {
   line-height: 1.15;
   text-wrap: balance;
 }
+/* 段落換行時避免最後一行只剩一兩個字；hidden 一律隱藏；圖片不超出外框。 */
 p,
 dd,
 li {
@@ -138,6 +141,7 @@ h1[tabindex="-1"]:focus-visible,
   align-items: center;
   gap: 12px;
 }
+/* 左上角的標誌、遊戲名稱與英文小字。 */
 .brand-mark {
   width: 32px;
   height: 34px;
@@ -202,6 +206,7 @@ h1[tabindex="-1"]:focus-visible,
   inset: 6px 3px 2px;
   background: currentColor;
 }
+/* 音效開關的喇叭圖示。 */
 .sound-icon {
   position: relative;
   width: 16px;
@@ -231,6 +236,7 @@ h1[tabindex="-1"]:focus-visible,
   transform: rotate(-48deg);
 }
 
+/* 主要內容區的上下空白。 */
 main.shell {
   padding-block: 28px 28px;
 }
@@ -284,6 +290,7 @@ main.shell {
   background: var(--color-paper-3);
   box-shadow: inset 0 -2px var(--color-accent);
 }
+/* 座位（1P／2P）按鈕比較小。 */
 .seats button {
   min-height: 32px;
   padding-inline: 12px;
@@ -293,6 +300,7 @@ main.shell {
 [data-fighter="thunder"] {
   --fighter-tone: var(--color-thunder);
 }
+/* 每位鬥士的代表色（--fighter-tone），畫面上的強調色會跟著換。 */
 [data-fighter="frost"] {
   --fighter-tone: var(--color-frost);
 }
@@ -349,6 +357,7 @@ main.shell {
   pointer-events: none;
   z-index: 1;
 }
+/* 選角大圖區：右邊是鬥士立繪，左邊是說明文字。 */
 .showcase-visual {
   position: absolute;
   inset: 0 0 0 38%;
@@ -410,6 +419,7 @@ main.shell {
   background: var(--fighter-tone);
   transform: skewX(-28deg);
 }
+/* 鬥士名字（大字）與簡介。 */
 #fighter-name {
   font-family: var(--font-display);
   font-size: clamp(57px, 6vw, 83px);
@@ -467,6 +477,7 @@ kbd {
   align-items: baseline;
   gap: 8px;
 }
+/* 招式清單：招式種類與說明。 */
 .move-type {
   color: var(--fighter-tone);
   font-size: 12px;
@@ -491,6 +502,7 @@ kbd {
 .roster-toolbar h2 {
   margin-right: auto;
 }
+/* 難度按鈕選中時下方有一條線；下面是鬥士選擇按鈕（4 欄）。 */
 .difficulty button[aria-pressed="true"] {
   box-shadow: inset 0 -2px var(--color-other);
 }
@@ -534,6 +546,7 @@ kbd {
   clip-path: polygon(0 0, 100% 0, 100% 100%);
   background: var(--fighter-tone);
 }
+/* 鬥士選擇按鈕：上方小圖、名字、定位與「1P／2P／電腦」小標籤。 */
 .choice-art {
   position: relative;
   width: 100%;
@@ -598,6 +611,7 @@ kbd {
   align-items: center;
   gap: 12px;
 }
+/* 下方的對戰組合列：左右兩位與中間的 VS。 */
 .matchup {
   display: flex;
   align-items: center;
@@ -646,6 +660,7 @@ kbd {
 .primary:active:enabled {
   transform: translateY(1px);
 }
+/* 按鈕上的箭頭與「開始對戰」按鈕。 */
 .chevron {
   width: 8px;
   height: 8px;
@@ -678,6 +693,7 @@ kbd {
 .battle-heading p {
   font-size: 14px;
 }
+/* 對戰中，上方空白縮小。 */
 main:has(#battle-screen:not([hidden])) {
   padding-top: 16px;
 }
@@ -722,6 +738,7 @@ main:has(#battle-screen:not([hidden])) {
   flex-direction: row-reverse;
   text-align: right;
 }
+/* 對戰資訊面板：頭像、名字與左右方。右邊的玩家左右相反排列。 */
 .hud-portrait {
   width: 5.7cqw;
   height: 5.7cqw;
@@ -753,6 +770,7 @@ main:has(#battle-screen:not([hidden])) {
   color: var(--color-muted);
   font-size: max(9px, 1.1cqw);
 }
+/* 中間的計時器與回合數。 */
 .hud-center {
   text-align: center;
   min-width: 7.8cqw;
@@ -784,6 +802,7 @@ main:has(#battle-screen:not([hidden])) {
   border: 1px solid var(--color-rule);
   background: var(--color-paper);
 }
+/* 生命條：減少時先出現一段淺色（gauge-lag），再慢慢縮短，看得出剛剛扣了多少。 */
 .health {
   height: max(6px, 1.25cqw);
   margin-top: 0.45cqw;
@@ -802,6 +821,7 @@ main:has(#battle-screen:not([hidden])) {
   background: var(--color-health-loss);
   transition: transform 220ms var(--ease-out);
 }
+/* 右邊玩家的長條從右往左縮。 */
 .right .gauge-fill,
 .right .gauge-lag {
   transform-origin: right;
@@ -815,6 +835,7 @@ main:has(#battle-screen:not([hidden])) {
   gap: 8px;
   margin-top: 0.85cqw;
 }
+/* 已贏的回合點數。 */
 .right .hud-rounds {
   justify-content: flex-end;
 }
@@ -841,6 +862,7 @@ main:has(#battle-screen:not([hidden])) {
   padding: 3cqw 2.8cqw 1.9cqw;
   background: linear-gradient(0deg, var(--color-scrim), transparent);
 }
+/* 下方能量條：標題、數值與長條；能量滿時數字變亮。 */
 .power-label {
   display: flex;
   justify-content: space-between;
@@ -864,6 +886,7 @@ main:has(#battle-screen:not([hidden])) {
 .power-side.right[data-ready="true"] .super-value {
   color: var(--color-other);
 }
+/* 技能好了的提示。 */
 .skill-status[data-ready="true"] {
   color: var(--color-ink);
 }
@@ -930,6 +953,7 @@ main:has(#battle-screen:not([hidden])) {
   padding: 8px;
   background: var(--color-scrim);
 }
+/* 結算畫面：比分與勝負標題。 */
 .result-panel {
   min-width: min(385px, 100%);
   max-width: 100%;
@@ -960,6 +984,7 @@ dialog {
   color: var(--color-ink);
   background: var(--color-paper-2);
 }
+/* 視窗背後的半透明遮罩、暫停視窗、標題列與按鈕列。 */
 dialog::backdrop {
   background: var(--color-scrim);
 }
@@ -999,6 +1024,7 @@ dialog::backdrop {
 .key-table tbody th {
   font-weight: 400;
 }
+/* 操作說明的小提示清單。 */
 .help-tips {
   padding-left: 20px;
   margin-block: 16px 0;
@@ -1014,6 +1040,8 @@ dialog::backdrop {
 .touch-controls {
   display: none;
 }
+/* 觸控按鈕區：左邊方向鍵、右邊攻擊與技能鈕；按鈕不會被選取文字，也不會被當
+   成捲動。 */
 .touch-pad {
   display: grid;
   grid-template-columns: minmax(0, 0.75fr) minmax(0, 1fr);
@@ -1056,6 +1084,7 @@ dialog::backdrop {
   box-shadow: 0 16px 48px
     color-mix(in srgb, var(--color-shadow) 45%, transparent);
 }
+/* 對戰中的資訊面板（新版）：頭像斜切、生命條傾斜，比較有格鬥遊戲的感覺。 */
 .hud {
   padding-top: 1.9cqw;
 }
@@ -1077,6 +1106,7 @@ dialog::backdrop {
     color-mix(in srgb, var(--color-paper) 30%, transparent) calc(10% - 1px) 10%
   );
 }
+/* 中間計時器的底色與下方的線。 */
 .hud-center {
   padding: 0.3cqw 1.2cqw 0.7cqw;
   border-bottom: 2px solid var(--color-accent);
@@ -1105,6 +1135,7 @@ dialog::backdrop {
   color: var(--color-ink);
   font-weight: 700;
 }
+/* 大招能量的數值與爆氣狀態標籤。 */
 .super-value {
   margin-inline-start: auto;
   color: var(--color-ink);
@@ -1123,6 +1154,7 @@ dialog::backdrop {
 .burst-status[data-ready="false"] {
   opacity: 0;
 }
+/* 能量條。 */
 .power-gauge {
   position: relative;
   height: max(7px, 1.15cqw);
@@ -1149,9 +1181,11 @@ dialog::backdrop {
   gap: 0.5cqw;
   margin-top: 0.5cqw;
 }
+/* 技能欄：右邊玩家的順序相反。 */
 .power-side.right .skills {
   direction: rtl;
 }
+/* 每個技能格：冷卻中變暗，好了會閃一下。 */
 .skill-chip {
   position: relative;
   direction: ltr;
@@ -1194,6 +1228,7 @@ dialog::backdrop {
   color: var(--color-ink);
   animation: chip-ready 420ms var(--ease-out);
 }
+/* 技能好了時閃一下的動畫；技能格上的按鍵提示。 */
 @keyframes chip-ready {
   from {
     box-shadow: inset 0 0 0 2px var(--fighter-tone);
@@ -1250,6 +1285,7 @@ dialog::backdrop {
 .combo-display.pop {
   animation: combo-pop 260ms var(--ease-out);
 }
+/* 連擊數字跳出來的動畫；右邊玩家的連擊數放在右邊。 */
 @keyframes combo-pop {
   0% {
     transform: scale(1.55) skewX(-10deg);
@@ -1323,6 +1359,7 @@ dialog::backdrop {
     0 0 18px var(--fighter-tone);
   letter-spacing: 0.04em;
 }
+/* 大招切入畫面的速度線與動畫：從旁邊滑進來、立繪放大、文字展開。 */
 .cutin-streaks {
   position: absolute;
   inset: 0;
@@ -1425,6 +1462,7 @@ dialog::backdrop {
     0 4px 0 var(--color-shadow),
     0 0 40px color-mix(in srgb, var(--color-accent) 60%, transparent);
 }
+/* 「第幾回合」「開戰」「K.O.」大字的出現動畫。 */
 @keyframes announce-round {
   from {
     opacity: 0;
@@ -1840,6 +1878,7 @@ dialog::backdrop {
 .touch-group.move [data-action="crouch"] {
   grid-area: crouch;
 }
+/* 觸控按鈕至少 48px 高。 */
 .touch-button {
   min-height: 48px;
 }

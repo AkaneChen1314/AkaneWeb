@@ -42,6 +42,7 @@ body:not(.playing) {
   border-bottom: 1px solid #a4cafa20;
   margin-bottom: 25px;
 }
+/* 網站名稱與前面的星號符號。 */
 .brand {
   font-size: 19px;
   letter-spacing: 2.5px;
@@ -50,6 +51,7 @@ body:not(.playing) {
   color: var(--world-light);
   text-shadow: 0 0 28px #8cbdfa60;
 }
+/* 頁首導覽列的連結。 */
 .site-header nav {
   gap: 12px;
 }
@@ -210,6 +212,7 @@ body:not(.playing) {
   width: 156px;
   gap: 8px;
 }
+/* 首頁三張收藏筆記：上方小標與每一張筆記的外觀。 */
 .hero-notes-label {
   font-size: 7px;
   line-height: 1.8;
@@ -227,6 +230,7 @@ body:not(.playing) {
 .hero-collection-note:nth-of-type(2) {
   transform: translateX(8px);
 }
+/* 人物圖右下角的編號小字。 */
 .blue-hour-hero .stage-index {
   bottom: 5%;
   right: 0;
@@ -259,6 +263,7 @@ body:not(.playing) {
   font-size: 11px;
   color: #8da9c0;
 }
+/* 三種光色按鈕：每個按鈕前面的小圓點顯示該光色，選中的那一個加上外框。 */
 .world-tones {
   display: flex;
   flex-wrap: wrap;
@@ -328,6 +333,7 @@ body:not(.playing) {
     #8bdfff0c
   );
 }
+/* 首頁入口卡片的「前往」按鈕。 */
 .gateway-link {
   border-radius: 15px;
   background: linear-gradient(100deg, #88b3fb2b, #84e4e81a);
@@ -336,6 +342,7 @@ body:not(.playing) {
 .gateway-link:hover {
   background: linear-gradient(100deg, #88b3fb48, #84e4e82b);
 }
+/* 首頁的三季捷徑列。 */
 .home-season-strip {
   padding: 25px 0;
   border-color: #a5c8e536;
@@ -343,6 +350,7 @@ body:not(.playing) {
 .home-season-strip a:hover {
   background: #83b6e716;
 }
+/* 首頁的影片卡片與收藏筆記：統一圓角與陰影。 */
 .loop-card {
   border-radius: 24px;
   box-shadow: 0 20px 45px #0003;
@@ -423,10 +431,12 @@ body:not(.playing) {
   pointer-events: none;
   box-shadow: inset 0 1px 0 #e3f5ff13;
 }
+/* 遊戲卡片上的按鈕。 */
 .card-button {
   border-radius: 12px;
   min-height: 46px;
 }
+/* 遊戲專區的標題間距與歡迎文字。 */
 .collection > .section-heading {
   padding-top: 38px;
 }
@@ -820,6 +830,7 @@ footer .appearance-settings summary:hover {
   border-color: var(--ui-control-border-strong);
   background: var(--ui-control-bg-hover);
 }
+/* 頁尾「外觀設定」展開後的面板與裡面的光色按鈕。 */
 footer .appearance-settings-panel {
   width: min(100%, 600px);
   margin-top: 12px;

@@ -357,8 +357,10 @@ const Spectacle = (() => {
   }
   // 每一幀重畫所有特效，全部結束就停止。
   function draw(now) {
+    // 每一幀都先清空畫布，再丟掉已經播完的特效。
     ctx.clearRect(0, 0, width, height);
     events = events.filter((e) => now - e.start < e.duration);
+    // 找出玩家與敵人在畫面上的位置，傷害數字也跟著擺好。
     const positions = { player: point("player"), enemy: point("enemy") };
     positionNumbers(positions);
     // 依特效種類畫不同的圖案。
@@ -379,6 +381,7 @@ const Spectacle = (() => {
       ctx.fillStyle = e.color;
       ctx.globalAlpha = fade;
       if (e.type === "slash") {
+        // 斬擊：在目標身上畫一道斜斜的刀光。
         const a = e.rnd[0] * 0.8 - 0.4;
         ctx.translate(x, y);
         ctx.rotate(a);
@@ -392,6 +395,7 @@ const Spectacle = (() => {
         ctx.stroke();
         sparks(e, t, 0, 0);
       } else if (e.type === "arrow") {
+        // 箭矢：從出手的一方飛到目標，travel 是已經飛了多遠（0～1）。
         const travel = Math.min(1, t * 3),
           xx = e.from.x + (x - e.from.x) * travel,
           yy = e.from.y + (y - e.from.y) * travel,
@@ -408,6 +412,7 @@ const Spectacle = (() => {
         ctx.stroke();
         if (travel === 1) sparks(e, t, 0, 0);
       } else if (e.type === "spell" || e.type === "summon") {
+        // 法術與召喚：在目標身上畫一圈旋轉的魔法陣（召喚是八角、法術是六角）。
         sigil(
           x,
           y,
@@ -426,12 +431,14 @@ const Spectacle = (() => {
           ctx.stroke();
         }
       } else if (e.type === "shield") {
+        // 護盾：在自己身上畫一個慢慢展開的魔法陣。
         sigil(x, y, r * (0.7 + t * 0.35), e.color, t * 0.15, 6);
         ctx.globalAlpha = fade * 0.12;
         ctx.beginPath();
         ctx.arc(x, y, r, 0, 7);
         ctx.fill();
       } else if (e.type === "heal") {
+        // 回復：從腳下往上飄的光點。
         for (let i = 0; i < 7; i++) {
           const xx = x + (e.rnd[i] - 0.5) * r * 2,
             yy = y + 25 - t * 90 + e.rnd[i + 4] * 45;
@@ -445,6 +452,7 @@ const Spectacle = (() => {
         }
         ring(x, y, r * (0.5 + t), e.color, fade * 0.55);
       } else {
+        // 其他（爆發、衝擊）：從中心往外擴散的光圈。
         ring(x, y, r * t, e.color, fade, e.type === "nova" ? 5 : 2);
         ring(x, y, r * t * 0.65, e.color, fade * 0.6);
         sparks(e, t, x, y);
@@ -453,6 +461,7 @@ const Spectacle = (() => {
       }
       ctx.restore();
     }
+    // 還有特效沒播完，就預約下一幀繼續畫；都播完了就停止，節省電力。
     frame = events.length ? requestAnimationFrame(draw) : 0;
   }
   const finishDelay = () =>

@@ -41,6 +41,7 @@
   // 上一步、下一步與快速前往任務設定。
   previous.addEventListener("click", () => showStep(step - 1));
   next.addEventListener("click", () => showStep(step + 1));
+  // 按「自訂遭遇」時打開設定抽屜，並捲到看得到的位置。
   document.getElementById("encounterJump").addEventListener("click", () => {
     const drawer = document.querySelector(".encounter-drawer");
     drawer.open = true;

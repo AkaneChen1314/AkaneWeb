@@ -141,8 +141,11 @@
 
   // 依目前選擇更新整個選角畫面。
   function renderSelection() {
+    // fighter 是目前這個座位選的鬥士；街機模式只能選自己（座位 0）。
     const fighter = selection[seat];
     if (mode === "arcade") seat = 0;
+    // 對手的名稱：雙人對戰是「玩家 2」、練習是「木樁」、街機是「街機挑戰」，其
+    // 他是電腦。
     const rival =
       mode === "versus"
         ? "玩家 2"
@@ -153,6 +156,7 @@
             : mode === "watch"
               ? "電腦 2"
               : "電腦";
+    // 選角畫面上方的對戰組合文字。
     text(get("opponent-seat"), rival);
     text(get("matchup-opponent"), rival);
     text(get("matchup-left"), selection[0].name);
@@ -160,6 +164,7 @@
       get("matchup-right"),
       mode === "arcade" ? "連戰其他 3 名鬥士" : selection[1].name,
     );
+    // 依模式顯示或隱藏座位、難度選擇，並標出目前選中的模式、座位與難度。
     get("seat-picker").hidden = mode === "arcade";
     for (const button of modeButtons)
       button.setAttribute("aria-pressed", button.dataset.mode === mode);
@@ -172,10 +177,12 @@
       );
     get("difficulty").hidden = mode !== "solo" && mode !== "watch";
 
+    // 換了鬥士才換大圖，避免重複載入圖片。
     if (showcase.dataset.fighter !== fighter.id) {
       showcase.dataset.fighter = fighter.id;
       portrait.src = fighter.portrait;
     }
+    // 鬥士的定位、名字、簡介，以及兩招技能與大招的名稱與說明。
     text(get("fighter-role"), fighter.role);
     text(get("fighter-name"), fighter.name);
     text(get("fighter-summary"), fighter.summary);
@@ -185,6 +192,7 @@
     text(get("skill2-description"), fighter.skill2.description);
     text(get("super-name"), fighter.super.name);
     text(get("super-description"), fighter.super.description);
+    // 預覽電腦的鬥士時，不顯示按鍵提示；否則顯示這個座位的按鍵。
     const cpuPreview = seat === 1 && mode !== "versus";
     for (const action of ["special", "skill2", "super"]) {
       const key = get(`${action}-key`);
@@ -192,6 +200,7 @@
       text(key, keyLabel(action, seat));
     }
 
+    // 下方的鬥士選擇按鈕：名字、定位，以及「1P」「2P」「電腦」小標籤。
     for (const [index, button] of choiceButtons.entries()) {
       const option = FIGHTERS[index];
       const badges = [];
@@ -392,6 +401,7 @@
 
   // 每一幀更新時間、血條、能量、連段與冷卻。
   function renderHud(dt) {
+    // 剩餘秒數；練習模式顯示 ∞（無限）。只有數字變了才更新畫面，最後 10 秒變紅。
     const seconds = Math.ceil(match.remaining);
     const shown = match.training ? "∞" : String(seconds);
     if (clock.textContent !== shown) {
@@ -399,11 +409,13 @@
       clock.dateTime = `PT${seconds}S`;
     }
     clock.dataset.urgent = !match.training && seconds <= 10;
+    // 每位鬥士的資訊面板：生命、能量、連擊數、技能冷卻與觸控按鈕的文字。
     text(roundLabel, `第 ${match.round} 回合`);
     for (const [index, panel] of hud.entries()) {
       const fighter = match.fighters[index];
       panel.cutinRemaining = Math.max(0, panel.cutinRemaining - dt);
       panel.cutin.hidden = panel.cutinRemaining === 0;
+      // 連擊數 2 以上、而且 1.15 秒內還有再打中時，才顯示連擊數。
       const comboVisible =
         fighter.combo >= 2 &&
         match.elapsed - fighter.lastHit <= 1.15 &&
@@ -421,6 +433,7 @@
       }
       if (!comboVisible) panel.comboShown = 0;
       const { profile } = fighter;
+      // 技能一與技能二的冷卻進度。
       setChip(
         panel.chips.special,
         fighter.specialCooldown,
@@ -440,6 +453,7 @@
       setGauge(panel.meter, panel.meterFill, fighter.meter);
       const skillReady = fighter.specialCooldown <= 0;
       panel.power.dataset.ready = fighter.meter >= 100;
+      // 觸控按鈕上顯示冷卻秒數；好了就只顯示名稱。
       if (panel.touchSkill) {
         text(
           panel.touchSkill,
@@ -465,6 +479,7 @@
         );
         panel.touchSuper.dataset.ready = fighter.meter >= 100;
       }
+      // 能量滿 100 時顯示「就緒」（可以放大招）。
       text(
         panel.meterText,
         fighter.meter >= 100 ? "就緒" : `${Math.floor(fighter.meter)}%`,
@@ -629,11 +644,15 @@
 
   // 建立一場比賽並切換到對戰畫面。
   function startMatch() {
+    // 開始對戰：關掉視窗、清空按住的按鍵、啟動音效。
     closeDialogs();
     clearInputs();
     audio.activate();
+    // 決定對手：街機模式依關卡挑對手，其他模式用選角畫面選的。
     if (mode !== "arcade") arcade = null;
     const { rival, level } = opponentFor();
+    // 建立一場新的對戰（Match）：雙方鬥士、是否由電腦控制、練習模式、觀戰模式與
+    // 難度。
     match = new Match(
       [selection[0], mode === "arcade" ? rival : selection[1]],
       {
@@ -643,10 +662,12 @@
         difficulty: level,
       },
     );
+    // 清掉上一場的統計與計時。
     for (const entry of stats) entry.maxCombo = 0;
     accumulator = 0;
     result.hidden = true;
     pauseButton.disabled = false;
+    // 依目前的操作方式建立觸控按鈕，並更新上方的模式文字。
     buildBattleControls();
     text(
       get("battle-mode"),
@@ -660,6 +681,7 @@
             ].join("・")
           : MODE_LABEL[mode],
     );
+    // 雙方資訊面板的頭像與名字。
     for (const [index, panel] of hud.entries()) {
       panel.portrait.src = match.profiles[index].portrait;
       text(panel.name, match.profiles[index].name);
@@ -682,6 +704,7 @@
       panel.comboShown = 0;
       panel.combo.hidden = true;
     }
+    // 切換到對戰畫面，捲到最上面，把鍵盤焦點放到戰場上，畫出第一幀。
     selectScreen.hidden = true;
     battleScreen.hidden = false;
     window.scrollTo(0, 0);
@@ -1046,6 +1069,7 @@
     audio.setMusicEnabled(!audio.musicEnabled);
     renderSound();
   });
+  // 音效開關：切換後更新按鈕上的文字。
   get("sound-button").addEventListener("click", () => {
     audio.setEnabled(!audio.enabled);
     renderSound();

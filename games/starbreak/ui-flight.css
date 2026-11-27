@@ -67,6 +67,7 @@ body.sb-battle main {
   pointer-events: none;
 }
 
+/* 戰場上方左邊的生命與右邊的波次資訊框（半透明，看得到後面的戰場）。 */
 .flight-vitals,
 .flight-wave {
   padding: 8px 12px 9px;
@@ -91,6 +92,7 @@ body.sb-battle main {
   margin-top: 4px;
 }
 
+/* 生命框裡的經驗條。 */
 .flight-layout .xp-row {
   display: flex;
   align-items: center;
@@ -106,6 +108,7 @@ body.sb-battle main {
   height: 5px;
 }
 
+/* 中間的波次資訊。 */
 .flight-wave {
   min-width: 230px;
   text-align: center;
@@ -147,6 +150,7 @@ body.sb-battle main {
   margin-bottom: 3px;
 }
 
+/* 右上角的暫停等按鈕（可以點，其他地方的點擊會穿過去到戰場）。 */
 .flight-top .hud-actions {
   justify-self: end;
   display: flex;
@@ -229,6 +233,7 @@ body.sb-battle main {
   pointer-events: none;
 }
 
+/* 右下角武器列的每一個圖示；旁邊的數字是等級。 */
 .weapon-chip {
   position: relative;
   display: grid;
@@ -473,10 +478,9 @@ body.sb-battle main {
   display: none;
 }
 
-/* ── 2. 出航頁 ─────────────────────────────────────────────── */
-
 /* ---------- 首頁 ---------- */
 
+/* ── 2. 出航頁 ─────────────────────────────────────────────── */
 .hero {
   min-height: 0;
 }
@@ -579,6 +583,7 @@ body.sb-battle main {
   content: "－";
 }
 
+/* 進階設定展開後的內容。 */
 .flight-more-body {
   display: grid;
   gap: 12px;

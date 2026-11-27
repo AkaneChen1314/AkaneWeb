@@ -63,6 +63,7 @@ test("rotated walls do not fill the empty corners of their bounding rectangle", 
 
 // 手榴彈碰到斜牆時，用實際的牆面方向反彈。
 test("swept grenades collide with a rotated wall using its real outward normal", () => {
+  // 一面斜放的牆（有旋轉），檢查手榴彈撞上去時反彈的方向是牆真正的表面方向。
   const box = orientCollider(
     new THREE.Box3(new THREE.Vector3(-3, 0, -3), new THREE.Vector3(3, 3, 3)),
     0,

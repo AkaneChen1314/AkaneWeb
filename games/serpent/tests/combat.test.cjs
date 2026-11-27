@@ -51,6 +51,7 @@ function tick(g, n = 1, input = {}) {
 // 咬擊只打前方、有距離限制，同一條蛇不會重複計算，並有冷卻。
 test("bite is directional, bounded, deduplicates snake segments and obeys cooldown", () => {
   const g = game(),
+    // 放一隻蛇形敵人在蛇頭正前方，身體有兩節，檢查咬擊不會重複計算同一隻。
     front = enemy(g, 0, -3, {
       serpent: true,
       body: [
@@ -410,6 +411,7 @@ test("caches break from automatic bites and drop loot", () => {
 });
 // 各地圖的減速地形不同。
 test("slow ground differs per world", () => {
+  // 三張地圖各跑一次，量出在減速區裡的速度，確認每張地圖的減速程度不同。
   const speeds = [0, 1, 2].map((world) => {
     const g = new S.Game({ world, mode: "zen", seed: 5 });
     g.obstacles = [];
